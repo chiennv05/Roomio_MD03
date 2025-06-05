@@ -1,9 +1,12 @@
-import {StyleSheet, Text, View} from 'react-native';
 import React from 'react';
-import HomeScreen from './src/screens/HomeScreen';
+import { Provider } from 'react-redux';
+import store from './src/redux/store/store';
+import AppNavigator from './src/navigation/AppNavigator';
 
 export default function App() {
-  return <HomeScreen />;
+  return (
+    <Provider store={store}>
+      <AppNavigator />
+    </Provider>
+  );
 }
-
-const styles = StyleSheet.create({});
