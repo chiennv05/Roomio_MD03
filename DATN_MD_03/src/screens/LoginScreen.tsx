@@ -11,11 +11,10 @@ import {
   Modal,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from '@react-native-vector-icons/Feather';
 import {useDispatch, useSelector} from 'react-redux';
 import {login, register} from '../redux/actions/authAction';
 import {useNavigation} from '@react-navigation/native';
-import Toast from 'react-native-toast-message';
 
 export default function LoginScreen() {
   const [activeTab, setActiveTab] = useState('login');
@@ -31,7 +30,7 @@ export default function LoginScreen() {
   const [role, setRole] = useState('nguoiThue');
   const [dialogVisible, setDialogVisible] = useState(false);
   const [dialogMessage, setDialogMessage] = useState('');
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<any>();
   const auth = useSelector((state: any) => state.auth);
   const navigation = useNavigation() as any;
 
@@ -52,7 +51,7 @@ export default function LoginScreen() {
   }
 
   // Đăng nhập
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!validateUsername(loginUsername)) {
       setDialogMessage('Tên đăng nhập không hợp lệ');
       setDialogVisible(true);
@@ -63,7 +62,12 @@ export default function LoginScreen() {
       setDialogVisible(true);
       return;
     }
-    dispatch(login({username: loginUsername, password: loginPassword}));
+    const result = await dispatch(
+      login({username: loginUsername, password: loginPassword}),
+    );
+    if (result && result.success) {
+      navigation.navigate('Home');
+    }
   };
 
   // Đăng ký
@@ -79,7 +83,9 @@ export default function LoginScreen() {
       return;
     }
     if (!validatePassword(registerPassword)) {
-      setDialogMessage('Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt');
+      setDialogMessage(
+        'Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt',
+      );
       setDialogVisible(true);
       return;
     }
@@ -121,7 +127,7 @@ export default function LoginScreen() {
         setDialogVisible(false);
         navigation.reset({
           index: 0,
-          routes: [{ name: 'HomeScreen' }],
+          routes: [{name: 'HomeScreen'}],
         });
       }, 1500);
     }
@@ -232,7 +238,7 @@ export default function LoginScreen() {
               <Text style={styles.termLink}>điều khoản và điều kiện</Text> của
               Romio
             </Text>
-           
+
             {/* Button cố định dưới cùng */}
             <View style={styles.footerBtn}>
               <View style={styles.buttonRow}>
@@ -341,7 +347,7 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-            
+
             {/* Button cố định dưới cùng */}
             <View style={styles.footerBtn}>
               <View style={styles.buttonRow}>
@@ -365,13 +371,34 @@ export default function LoginScreen() {
         visible={dialogVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setDialogVisible(false)}
-      >
-        <View style={{flex:1,justifyContent:'center',alignItems:'center',backgroundColor:'rgba(0,0,0,0.3)'}}>
-          <View style={{backgroundColor:'#fff',padding:24,borderRadius:12,minWidth:260,alignItems:'center'}}>
-            <Text style={{fontSize:16,marginBottom:16,textAlign:'center'}}>{dialogMessage}</Text>
-            <TouchableOpacity onPress={()=>setDialogVisible(false)} style={{backgroundColor:'#BAFD00',paddingHorizontal:24,paddingVertical:8,borderRadius:8}}>
-              <Text style={{fontWeight:'bold',color:'#191a15'}}>Đóng</Text>
+        onRequestClose={() => setDialogVisible(false)}>
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0,0,0,0.3)',
+          }}>
+          <View
+            style={{
+              backgroundColor: '#fff',
+              padding: 24,
+              borderRadius: 12,
+              minWidth: 260,
+              alignItems: 'center',
+            }}>
+            <Text style={{fontSize: 16, marginBottom: 16, textAlign: 'center'}}>
+              {dialogMessage}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setDialogVisible(false)}
+              style={{
+                backgroundColor: '#BAFD00',
+                paddingHorizontal: 24,
+                paddingVertical: 8,
+                borderRadius: 8,
+              }}>
+              <Text style={{fontWeight: 'bold', color: '#191a15'}}>Đóng</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -570,4 +597,3 @@ const styles = StyleSheet.create({
     color: '#7A7A7A',
   },
 });
-
