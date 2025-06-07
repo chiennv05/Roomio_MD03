@@ -1,0 +1,159 @@
+import {
+  Image,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import React, {use, useState} from 'react';
+import ContainerLinearGradent from '../../components/ContainerLinearGradent';
+import {Icons} from '../../assets/icons';
+import {
+  responsiveFont,
+  responsiveIcon,
+  SCREEN,
+  verticalScale,
+} from '../../utils/responsive';
+import {Colors} from '../../theme/color';
+import {Images} from '../../assets/images';
+import {Fonts} from '../../theme/fonts';
+import Login from './components/Login';
+
+export default function LoginAndRegister() {
+  const [isLogin, setIsLogin] = useState(true);
+
+  const handleSetIsLogin = (value: boolean) => {
+    setIsLogin(value);
+  };
+  return (
+    <SafeAreaView style={styles.container}>
+      <ContainerLinearGradent>
+        <TouchableOpacity style={styles.styleButton}>
+          <Image
+            source={{uri: Icons.IconArrowLeft}}
+            style={styles.styleIconButton}
+          />
+        </TouchableOpacity>
+        <Image
+          source={{uri: Images.ImageRoomio}}
+          style={styles.styleImageRoomio}
+          resizeMode="contain"
+        />
+        <Text style={styles.textStart}>Bắt đầu cùng ROMIO ngay</Text>
+        <Text style={styles.textTitle}>
+          Đăng nhập để Roomio đồng hành cùng bạn để tìm nơi ở lý tưởng một cách
+          dễ dàng
+        </Text>
+      </ContainerLinearGradent>
+      <View style={styles.containerButtonLoginAndRegister}>
+        <TouchableOpacity
+          style={
+            isLogin
+              ? styles.buttonLoginAndRegisterChoose
+              : styles.buttonLoginAndRegister
+          }
+          onPress={() => handleSetIsLogin(true)}>
+          <Text
+            style={
+              isLogin
+                ? styles.textButtonLoginAndRegisterChoose
+                : styles.textButtonLoginAndRegister
+            }>
+            Đăng nhập
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={
+            !isLogin
+              ? styles.buttonLoginAndRegisterChoose
+              : styles.buttonLoginAndRegister
+          }
+          onPress={() => handleSetIsLogin(false)}>
+          <Text
+            style={
+              !isLogin
+                ? styles.textButtonLoginAndRegisterChoose
+                : styles.textButtonLoginAndRegister
+            }>
+            Đăng ký
+          </Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.containerViewLoginAndRegister}>
+        <Login />
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: SCREEN.width,
+    height: SCREEN.height,
+    backgroundColor: Colors.backgroud,
+    alignItems: 'center',
+  },
+  styleButton: {
+    width: responsiveIcon(36),
+    height: responsiveIcon(36),
+    borderRadius: responsiveIcon(36) / 2,
+    backgroundColor: Colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    top: '10%',
+    left: '5%',
+  },
+  styleIconButton: {
+    width: responsiveIcon(24) / 2,
+    height: responsiveIcon(24),
+  },
+  styleImageRoomio: {
+    width: SCREEN.width * 0.45,
+    height: (SCREEN.width * 0.45) / 5,
+  },
+  textStart: {
+    fontSize: responsiveFont(18),
+    fontFamily: Fonts.Roboto_Bold,
+  },
+  textTitle: {
+    fontSize: responsiveFont(17),
+    fontFamily: Fonts.Roboto_Regular,
+    width: SCREEN.width * 0.9,
+    textAlign: 'center',
+    marginTop: 10,
+    color: Colors.darkGray,
+  },
+  containerButtonLoginAndRegister: {
+    flexDirection: 'row',
+    width: SCREEN.width * 0.9,
+    backgroundColor: Colors.black,
+    height: verticalScale(50),
+    borderRadius: 30,
+  },
+  buttonLoginAndRegister: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonLoginAndRegisterChoose: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.limeGreen,
+    borderRadius: 30,
+    margin: 2,
+  },
+  textButtonLoginAndRegister: {
+    fontSize: responsiveFont(20),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.white,
+  },
+  textButtonLoginAndRegisterChoose: {
+    fontSize: responsiveFont(20),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+  },
+  containerViewLoginAndRegister: {},
+});
