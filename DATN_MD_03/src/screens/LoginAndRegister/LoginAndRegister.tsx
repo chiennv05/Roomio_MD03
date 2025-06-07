@@ -1,12 +1,13 @@
 import {
   Image,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {use, useState} from 'react';
+import React, {useState} from 'react';
 import ContainerLinearGradent from '../../components/ContainerLinearGradent';
 import {Icons} from '../../assets/icons';
 import {
@@ -19,6 +20,7 @@ import {Colors} from '../../theme/color';
 import {Images} from '../../assets/images';
 import {Fonts} from '../../theme/fonts';
 import Login from './components/Login';
+import Register from './components/Register';
 
 export default function LoginAndRegister() {
   const [isLogin, setIsLogin] = useState(true);
@@ -26,63 +28,66 @@ export default function LoginAndRegister() {
   const handleSetIsLogin = (value: boolean) => {
     setIsLogin(value);
   };
+
   return (
     <SafeAreaView style={styles.container}>
-      <ContainerLinearGradent>
-        <TouchableOpacity style={styles.styleButton}>
+      <ScrollView contentContainerStyle={styles.containerScrollview}>
+        <ContainerLinearGradent>
+          <TouchableOpacity style={styles.styleButton}>
+            <Image
+              source={{uri: Icons.IconArrowLeft}}
+              style={styles.styleIconButton}
+            />
+          </TouchableOpacity>
           <Image
-            source={{uri: Icons.IconArrowLeft}}
-            style={styles.styleIconButton}
+            source={{uri: Images.ImageRoomio}}
+            style={styles.styleImageRoomio}
+            resizeMode="contain"
           />
-        </TouchableOpacity>
-        <Image
-          source={{uri: Images.ImageRoomio}}
-          style={styles.styleImageRoomio}
-          resizeMode="contain"
-        />
-        <Text style={styles.textStart}>Bắt đầu cùng ROMIO ngay</Text>
-        <Text style={styles.textTitle}>
-          Đăng nhập để Roomio đồng hành cùng bạn để tìm nơi ở lý tưởng một cách
-          dễ dàng
-        </Text>
-      </ContainerLinearGradent>
-      <View style={styles.containerButtonLoginAndRegister}>
-        <TouchableOpacity
-          style={
-            isLogin
-              ? styles.buttonLoginAndRegisterChoose
-              : styles.buttonLoginAndRegister
-          }
-          onPress={() => handleSetIsLogin(true)}>
-          <Text
+          <Text style={styles.textStart}>Bắt đầu cùng ROMIO ngay</Text>
+          <Text style={styles.textTitle}>
+            Đăng nhập để Roomio đồng hành cùng bạn để tìm nơi ở lý tưởng một
+            cách dễ dàng
+          </Text>
+        </ContainerLinearGradent>
+        <View style={styles.containerButtonLoginAndRegister}>
+          <TouchableOpacity
             style={
               isLogin
-                ? styles.textButtonLoginAndRegisterChoose
-                : styles.textButtonLoginAndRegister
-            }>
-            Đăng nhập
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={
-            !isLogin
-              ? styles.buttonLoginAndRegisterChoose
-              : styles.buttonLoginAndRegister
-          }
-          onPress={() => handleSetIsLogin(false)}>
-          <Text
+                ? styles.buttonLoginAndRegisterChoose
+                : styles.buttonLoginAndRegister
+            }
+            onPress={() => handleSetIsLogin(true)}>
+            <Text
+              style={
+                isLogin
+                  ? styles.textButtonLoginAndRegisterChoose
+                  : styles.textButtonLoginAndRegister
+              }>
+              Đăng nhập
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={
               !isLogin
-                ? styles.textButtonLoginAndRegisterChoose
-                : styles.textButtonLoginAndRegister
-            }>
-            Đăng ký
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.containerViewLoginAndRegister}>
-        <Login />
-      </View>
+                ? styles.buttonLoginAndRegisterChoose
+                : styles.buttonLoginAndRegister
+            }
+            onPress={() => handleSetIsLogin(false)}>
+            <Text
+              style={
+                !isLogin
+                  ? styles.textButtonLoginAndRegisterChoose
+                  : styles.textButtonLoginAndRegister
+              }>
+              Đăng ký
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.containerViewLoginAndRegister}>
+          {isLogin ? <Login /> : <Register />}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -92,6 +97,10 @@ const styles = StyleSheet.create({
     width: SCREEN.width,
     height: SCREEN.height,
     backgroundColor: Colors.backgroud,
+    alignItems: 'center',
+  },
+  containerScrollview: {
+    width: SCREEN.width,
     alignItems: 'center',
   },
   styleButton: {
@@ -156,4 +165,19 @@ const styles = StyleSheet.create({
     color: Colors.black,
   },
   containerViewLoginAndRegister: {},
+  containerBirthdayPicker: {
+    width: SCREEN.width,
+    height: SCREEN.height,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'red',
+  },
+  modal: {
+    height: SCREEN.height,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCalendal: {
+    height: 450,
+  },
 });

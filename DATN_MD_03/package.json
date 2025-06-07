@@ -13,6 +13,10 @@
   "dependencies": {
     "react": "19.0.0",
     "react-native": "0.79.2",
+    "react-native-calendars": "^1.1312.1",
+    "react-native-date-picker": "^5.0.13",
+    "react-native-dropdown-picker": "^5.4.6",
+    "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-linear-gradient": "^2.8.3"
   },
   "devDependencies": {
