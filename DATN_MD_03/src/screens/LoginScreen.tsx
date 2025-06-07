@@ -9,12 +9,14 @@ import {
   SafeAreaView,
   ScrollView,
   Modal,
+  Image,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import Icon from '@react-native-vector-icons/Feather';
+// import Icon from '@react-native-vector-icons/Feather';
 import {useDispatch, useSelector} from 'react-redux';
 import {login, register} from '../redux/actions/authAction';
 import {useNavigation} from '@react-navigation/native';
+import {Icons} from '../assets/icons';
 
 export default function LoginScreen() {
   const [activeTab, setActiveTab] = useState('login');
@@ -159,7 +161,10 @@ export default function LoginScreen() {
           end={{x: 0.5, y: 1}}
           style={styles.headerGradient}>
           <TouchableOpacity style={styles.backBtn}>
-            <Text style={{fontSize: 24}}>{'<'}</Text>
+            <Image
+              source={{uri: Icons.IconArrowLeft}}
+              style={{width: 12, height: 24}}
+            />
           </TouchableOpacity>
           <Text style={styles.logo}>ROOMIO</Text>
           <Text style={styles.title}>Bắt đầu cùng ROMIO ngay</Text>
@@ -243,7 +248,7 @@ export default function LoginScreen() {
             <View style={styles.footerBtn}>
               <View style={styles.buttonRow}>
                 <TouchableOpacity style={styles.roundBtn}>
-                  <Icon name="rotate-ccw" size={26} color="#fff" />
+                  {/* <Icon name="rotate-ccw" size={26} color="#fff" /> */}
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.confirmBtn}
@@ -352,7 +357,7 @@ export default function LoginScreen() {
             <View style={styles.footerBtn}>
               <View style={styles.buttonRow}>
                 <TouchableOpacity style={styles.roundBtn}>
-                  <Icon name="rotate-ccw" size={26} color="#fff" />
+                  {/* <Icon name="rotate-ccw" size={26} color="#fff" /> */}
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.confirmBtn}
