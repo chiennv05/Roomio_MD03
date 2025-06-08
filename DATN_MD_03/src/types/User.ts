@@ -30,7 +30,7 @@ export interface RegisterPayload {
   email: string;
   password: string;
   confirmPassword: string;
-  birthDay: string;
+  birthDate: string;
   role: string;
 }
 

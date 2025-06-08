@@ -17,4 +17,12 @@ export const Icons = {
     ios: 'icon_reset',
     android: 'asset:/icons/icon_reset.png',
   }),
+  IconError: Platform.select({
+    ios: 'icon_error',
+    android: 'asset:/icons/icon_error.png',
+  }),
+  IconCheck: Platform.select({
+    ios: 'icon_check',
+    android: 'asset:/icons/icon_check.png',
+  }),
 };

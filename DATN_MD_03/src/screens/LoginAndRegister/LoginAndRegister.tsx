@@ -21,14 +21,29 @@ import {Fonts} from '../../theme/fonts';
 import Login from './components/Login';
 import Register from './components/Register';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import CustomModal from './components/CustomModal';
 
 export default function LoginAndRegister() {
   const [isLogin, setIsLogin] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
+  const [titleModal, setTitleModal] = useState('');
+  const [iconModal, setIconModal] = useState('');
+
+  const hanldeOpenModal = () => {
+    setIsVisible(true);
+  };
+  const hanldeCloseModal = () => {
+    setIsVisible(false);
+  };
 
   const handleSetIsLogin = (value: boolean) => {
     setIsLogin(value);
   };
-
+  const handleSetModal = (icon: any, title: string) => {
+    setTitleModal(title);
+    setIconModal(icon);
+    hanldeOpenModal();
+  };
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAwareScrollView
@@ -90,8 +105,18 @@ export default function LoginAndRegister() {
           </TouchableOpacity>
         </View>
         <View style={styles.containerViewLoginAndRegister}>
-          {isLogin ? <Login /> : <Register />}
+          {isLogin ? (
+            <Login setModal={handleSetModal} />
+          ) : (
+            <Register setModal={handleSetModal} />
+          )}
         </View>
+        <CustomModal
+          visible={isVisible}
+          onPress={hanldeCloseModal}
+          icon={iconModal}
+          title={titleModal}
+        />
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );

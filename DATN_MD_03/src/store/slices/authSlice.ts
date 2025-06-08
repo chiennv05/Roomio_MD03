@@ -15,15 +15,17 @@ const initialState: AuthState = {
   token: null,
 };
 
-// Async thunk
 export const registerUser = createAsyncThunk(
   'auth/register',
   async (data: RegisterPayload, {rejectWithValue}) => {
     try {
       const res = await register(data);
+      console.log('bên thunk', res);
       return res;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || 'Đăng ký thất bại');
+      const backendMessage =
+        err?.data?.message || err?.message || 'Đăng ký thất bại';
+      return rejectWithValue(backendMessage);
     }
   },
 );

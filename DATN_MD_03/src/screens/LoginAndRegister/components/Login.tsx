@@ -9,8 +9,13 @@ import {validateUserLogin} from '../../../utils/validate';
 import {useDispatch} from 'react-redux';
 import {AppDispatch} from '../../../store';
 import {loginUser} from '../../../store/slices/authSlice';
+import {Icons} from '../../../assets/icons';
 
-export default function Login() {
+interface ModalProps {
+  setModal: (icon: any, title: string) => void;
+}
+
+export default function Login({setModal}: ModalProps) {
   const dispatch = useDispatch<AppDispatch>();
   const [usename, setUsename] = useState('');
   const [password, setPassword] = useState('');
@@ -21,7 +26,7 @@ export default function Login() {
       password: password,
     });
     if (error) {
-      Alert.alert(error);
+      setModal(Icons.IconError, error);
       return;
     }
     const user = {
@@ -31,7 +36,7 @@ export default function Login() {
     dispatch(loginUser(user))
       .unwrap()
       .then(() => {
-        Alert.alert('Thành công', 'Đăng nhập thành công');
+        setModal(Icons.IconCheck, 'Đăng nhập thành công');
       })
       .catch(errMessage => {
         Alert.alert('Lỗi đăng nhập', errMessage);

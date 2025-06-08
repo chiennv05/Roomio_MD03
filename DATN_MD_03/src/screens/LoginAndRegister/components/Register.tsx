@@ -11,12 +11,17 @@ import {validateUserInputFirstError} from '../../../utils/validate';
 import {useDispatch} from 'react-redux';
 import {registerUser} from '../../../store/slices/authSlice';
 import {AppDispatch} from '../../../store';
+import {formatDate} from '../../../utils/formatDate';
+import {Icons} from '../../../assets/icons';
 const roleOptions = [
   {label: 'Người thuê', value: 'nguoiThue'},
   {label: 'Chủ trọ', value: 'chuTro'},
 ];
+interface ModalProps {
+  setModal: (icon: any, title: string) => void;
+}
 
-export default function Register() {
+export default function Register({setModal}: ModalProps) {
   const dispatch = useDispatch<AppDispatch>();
   const [selectedRole, setSelectedRole] = useState('nguoiThue');
 
@@ -41,26 +46,27 @@ export default function Register() {
       email,
       password,
       confirmPassword,
-      birthDay,
+      birthDay: birthDay,
     });
-
     if (error) {
-      Alert.alert(error);
+      setModal(Icons.IconError, error);
       return;
     }
+
+    const formatDated = formatDate(birthDay);
 
     const newUser = {
       username: usename,
       email,
       password,
       confirmPassword,
-      birthDay,
+      birthDate: formatDated,
       role: selectedRole,
     };
 
     try {
       await dispatch(registerUser(newUser)).unwrap();
-      Alert.alert('Đăng ký thành công');
+      setModal(Icons.IconCheck, 'Đăng ký thành công');
     } catch (err: any) {
       Alert.alert('Đăng ký thất bại', err?.message || 'Vui lòng thử lại');
     }
