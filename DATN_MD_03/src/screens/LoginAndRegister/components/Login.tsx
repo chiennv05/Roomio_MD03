@@ -1,4 +1,4 @@
-import {Alert, StyleSheet, Text, View} from 'react-native';
+import {StyleSheet, Text, View} from 'react-native';
 import React, {useState} from 'react';
 import ItemInput from './ItemInput';
 import {responsiveFont, scale, SCREEN} from '../../../utils/responsive';
@@ -39,7 +39,7 @@ export default function Login({setModal}: ModalProps) {
         setModal(Icons.IconCheck, 'Đăng nhập thành công');
       })
       .catch(errMessage => {
-        Alert.alert('Lỗi đăng nhập', errMessage);
+        setModal(Icons.IconError, errMessage);
       });
   };
   return (

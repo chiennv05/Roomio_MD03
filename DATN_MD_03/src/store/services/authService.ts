@@ -1,13 +1,10 @@
-import {LoginPayload, LoginResponse, RegisterPayload} from '../../types';
+import {LoginPayload, RegisterPayload} from '../../types';
 import api from '../../api/api';
 
 export const register = async (data: RegisterPayload) => {
   try {
     const response = await api.post('/auth/register', data);
-    console.log('bên api', response);
-    if (!response.data.success && response.status === 409) {
-      throw new Error('');
-    }
+
     return response.data;
   } catch (error: any) {
     throw {
@@ -19,11 +16,15 @@ export const register = async (data: RegisterPayload) => {
   }
 };
 
-export const login = async (data: LoginPayload): Promise<LoginResponse> => {
-  const response = await api.post<{
-    success: boolean;
-    message: string;
-    data: LoginResponse;
-  }>('/auth/login', data);
-  return response.data.data;
+export const login = async (data: LoginPayload) => {
+  try {
+    const response = await api.post('/auth/login', data);
+    if (!response.data.success) {
+      throw new Error(response.data.message);
+    }
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };

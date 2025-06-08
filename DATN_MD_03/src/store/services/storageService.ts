@@ -1,13 +1,22 @@
 import EncryptedStorage from 'react-native-encrypted-storage';
+import {User} from '../../types';
 
-export const storeUserSession = async (token: string, user: any) => {
+export const storeUserSession = async (
+  token: string,
+  user: User,
+  credentials?: {username: string; password: string},
+) => {
   const expireTime = new Date();
   expireTime.setDate(expireTime.getDate() + 30); // 30 ngày
 
-  await EncryptedStorage.setItem(
-    'user_session',
-    JSON.stringify({token, expire: expireTime.toISOString(), user}),
-  );
+  const session = {
+    token,
+    expire: expireTime.toISOString(),
+    user,
+    credentials, // ⬅️ lưu cả email & password để tự động đăng nhập
+  };
+
+  await EncryptedStorage.setItem('user_session', JSON.stringify(session));
 };
 
 export const getUserSession = async () => {

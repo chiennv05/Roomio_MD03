@@ -1,12 +1,8 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
-import {
-  AuthState,
-  LoginPayload,
-  LoginResponse,
-  RegisterPayload,
-} from '../../types';
+import {AuthState, LoginPayload, RegisterPayload} from '../../types';
 import {login, register} from '../services/authService';
 import EncryptedStorage from 'react-native-encrypted-storage';
+import {storeUserSession} from '../services/storageService';
 
 const initialState: AuthState = {
   loading: false,
@@ -20,7 +16,10 @@ export const registerUser = createAsyncThunk(
   async (data: RegisterPayload, {rejectWithValue}) => {
     try {
       const res = await register(data);
-      console.log('bên thunk', res);
+      if (!res?.success) {
+        throw new Error(res?.message);
+      }
+
       return res;
     } catch (err: any) {
       const backendMessage =
@@ -34,30 +33,27 @@ export const loginUser = createAsyncThunk(
   'auth/login',
   async (data: LoginPayload, {rejectWithValue}) => {
     try {
-      const res: LoginResponse = await login(data);
-      const {token, user} = res;
+      const res = await login(data);
+      if (!res?.success) {
+        throw new Error(res?.message);
+      }
 
-      if (!token) throw new Error('Không có token');
+      const {token, user} = res;
 
       // Lưu phiên đăng nhập trong 30 ngày
       const expireDate = new Date();
       expireDate.setDate(expireDate.getDate() + 30);
 
-      await EncryptedStorage.setItem(
-        'user_session',
-        JSON.stringify({
-          token,
-          expire: expireDate.toISOString(),
-          user,
-        }),
-      );
+      await storeUserSession(token, user, {
+        username: data.username,
+        password: data.password,
+      });
 
       return {token, user};
     } catch (err: any) {
-      console.log('login error:', err);
-      return rejectWithValue(
-        err.response?.data?.message || 'Đăng nhập thất bại',
-      );
+      const backendMessage =
+        err?.data?.message || err?.message || 'Đăng ký thất bại';
+      return rejectWithValue(backendMessage);
     }
   },
 );

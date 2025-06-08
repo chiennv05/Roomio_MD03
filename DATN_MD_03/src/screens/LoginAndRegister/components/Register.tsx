@@ -1,4 +1,4 @@
-import {Alert, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React, {useState} from 'react';
 import {responsiveFont, scale, SCREEN} from '../../../utils/responsive';
 import ItemRadioButton from './ItemRadioButton';
@@ -65,10 +65,13 @@ export default function Register({setModal}: ModalProps) {
     };
 
     try {
-      await dispatch(registerUser(newUser)).unwrap();
+      const result = await dispatch(registerUser(newUser)).unwrap();
+      console.log('result', result);
       setModal(Icons.IconCheck, 'Đăng ký thành công');
     } catch (err: any) {
-      Alert.alert('Đăng ký thất bại', err?.message || 'Vui lòng thử lại');
+      console.log('err', err);
+      // lỗi chỗ này
+      setModal(Icons.IconError, err);
     }
   };
 
