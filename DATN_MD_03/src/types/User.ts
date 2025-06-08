@@ -23,6 +23,7 @@ export interface AuthState {
   loading: boolean;
   user: User | null;
   error: string | null;
+  token: string | null;
 }
 export interface RegisterPayload {
   username: string;
@@ -34,6 +35,18 @@ export interface RegisterPayload {
 }
 
 export interface LoginPayload {
-  email: string;
+  username: string;
   password: string;
+}
+export interface LoginResponse {
+  token: string;
+  user: User;
+  expiresAt: string;
+}
+
+export interface AuthState {
+  loading: boolean;
+  user: User | null;
+  token: string | null;
+  error: string | null;
 }

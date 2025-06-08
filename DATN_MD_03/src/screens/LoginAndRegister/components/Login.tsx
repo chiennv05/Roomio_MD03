@@ -5,22 +5,37 @@ import {responsiveFont, scale, SCREEN} from '../../../utils/responsive';
 import {Fonts} from '../../../theme/fonts';
 import {Colors} from '../../../theme/color';
 import ItemButtonConfirm from './ItemButtonConfirm';
-import {validateUserInputFirstError} from '../../../utils/validate';
+import {validateUserLogin} from '../../../utils/validate';
+import {useDispatch} from 'react-redux';
+import {AppDispatch} from '../../../store';
+import {loginUser} from '../../../store/slices/authSlice';
 
 export default function Login() {
+  const dispatch = useDispatch<AppDispatch>();
   const [usename, setUsename] = useState('');
   const [password, setPassword] = useState('');
-  // sự kiện đang nhập
+
   const hanleLogin = () => {
-    const error = validateUserInputFirstError({
+    const error = validateUserLogin({
       username: usename,
       password: password,
     });
     if (error) {
       Alert.alert(error);
-    } else {
-      Alert.alert('Đăng nhập thành công');
+      return;
     }
+    const user = {
+      username: usename,
+      password: password,
+    };
+    dispatch(loginUser(user))
+      .unwrap()
+      .then(() => {
+        Alert.alert('Thành công', 'Đăng nhập thành công');
+      })
+      .catch(errMessage => {
+        Alert.alert('Lỗi đăng nhập', errMessage);
+      });
   };
   return (
     <View style={styles.container}>
