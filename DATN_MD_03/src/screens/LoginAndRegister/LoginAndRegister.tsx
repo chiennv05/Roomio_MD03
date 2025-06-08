@@ -1,7 +1,6 @@
 import {
   Image,
   SafeAreaView,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -21,6 +20,7 @@ import {Images} from '../../assets/images';
 import {Fonts} from '../../theme/fonts';
 import Login from './components/Login';
 import Register from './components/Register';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 
 export default function LoginAndRegister() {
   const [isLogin, setIsLogin] = useState(true);
@@ -31,7 +31,12 @@ export default function LoginAndRegister() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.containerScrollview}>
+      <KeyboardAwareScrollView
+        style={styles.containerFlex}
+        resetScrollToCoords={{x: 0, y: 0}}
+        contentContainerStyle={styles.containerScrollview}
+        enableOnAndroid={true}
+        keyboardOpeningTime={0}>
         <ContainerLinearGradent>
           <TouchableOpacity style={styles.styleButton}>
             <Image
@@ -87,7 +92,7 @@ export default function LoginAndRegister() {
         <View style={styles.containerViewLoginAndRegister}>
           {isLogin ? <Login /> : <Register />}
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }
@@ -101,7 +106,11 @@ const styles = StyleSheet.create({
   },
   containerScrollview: {
     width: SCREEN.width,
+    flexGrow: 1,
     alignItems: 'center',
+  },
+  containerFlex: {
+    flex: 1,
   },
   styleButton: {
     width: responsiveIcon(36),

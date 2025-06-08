@@ -3,14 +3,17 @@ import React from 'react';
 import {Icons} from '../../../assets/icons';
 import {responsiveIcon, SCREEN, verticalScale} from '../../../utils/responsive';
 import {Colors} from '../../../theme/color';
+interface ButtonProps {
+  onPress: () => void;
+}
 
-const ItemButtonConfirm = () => {
+const ItemButtonConfirm = ({onPress}: ButtonProps) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.buttonIcon}>
         <Image source={{uri: Icons.IconReset}} style={styles.styleIcon} />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.buttonConfirm}>
+      <TouchableOpacity style={styles.buttonConfirm} onPress={onPress}>
         <Text>Xác nhận</Text>
       </TouchableOpacity>
     </View>

@@ -1,14 +1,27 @@
-import {StyleSheet, Text, View} from 'react-native';
+import {Alert, StyleSheet, Text, View} from 'react-native';
 import React, {useState} from 'react';
 import ItemInput from './ItemInput';
 import {responsiveFont, scale, SCREEN} from '../../../utils/responsive';
 import {Fonts} from '../../../theme/fonts';
 import {Colors} from '../../../theme/color';
 import ItemButtonConfirm from './ItemButtonConfirm';
+import {validateUserInputFirstError} from '../../../utils/validate';
 
 export default function Login() {
   const [usename, setUsename] = useState('');
   const [password, setPassword] = useState('');
+  // sự kiện đang nhập
+  const hanleLogin = () => {
+    const error = validateUserInputFirstError({
+      username: usename,
+      password: password,
+    });
+    if (error) {
+      Alert.alert(error);
+    } else {
+      Alert.alert('Đăng nhập thành công');
+    }
+  };
   return (
     <View style={styles.container}>
       <Text style={styles.textTitle}>
@@ -19,12 +32,14 @@ export default function Login() {
         onChangeText={setUsename}
         placeholder={'Username'}
         isPass={false}
+        editable={true}
       />
       <ItemInput
         value={password}
         onChangeText={setPassword}
         placeholder={'Mật khẩu'}
         isPass={true}
+        editable={true}
       />
       <Text style={styles.textForgotPassword}>Quên mật khẩu</Text>
       <Text style={styles.textCondition}>
@@ -32,7 +47,7 @@ export default function Login() {
         <Text style={styles.textConditionGreen}> điều khoản và điều kiện </Text>
         của Romio
       </Text>
-      <ItemButtonConfirm />
+      <ItemButtonConfirm onPress={hanleLogin} />
     </View>
   );
 }

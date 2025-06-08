@@ -1,4 +1,4 @@
-import {Button, StyleSheet, Text, View} from 'react-native';
+import {Alert, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React, {useState} from 'react';
 import {responsiveFont, scale, SCREEN} from '../../../utils/responsive';
 import ItemRadioButton from './ItemRadioButton';
@@ -7,26 +7,64 @@ import {Fonts} from '../../../theme/fonts';
 import {Colors} from '../../../theme/color';
 import ItemButtonConfirm from './ItemButtonConfirm';
 import DatePicker from 'react-native-date-picker';
+import {validateUserInputFirstError} from '../../../utils/validate';
+import {useDispatch} from 'react-redux';
+import {registerUser} from '../../../store/slices/authSlice';
+import {AppDispatch} from '../../../store';
 const roleOptions = [
   {label: 'Người thuê', value: 'nguoiThue'},
   {label: 'Chủ trọ', value: 'chuTro'},
 ];
 
 export default function Register() {
+  const dispatch = useDispatch<AppDispatch>();
   const [selectedRole, setSelectedRole] = useState('nguoiThue');
 
   const [usename, setUsename] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [date, setDate] = useState(new Date());
-
+  const [birthDay, setBirtDay] = useState('');
+  const today = new Date();
+  const maxDate = new Date();
+  maxDate.setFullYear(today.getFullYear() - 18);
+  const minDate = new Date();
+  minDate.setFullYear(today.getFullYear() - 100);
+  const [date, setDate] = useState(maxDate);
   const [openDatePicker, setOpenDatePicker] = useState(false);
-
   const handleRoleChange = (value: string) => {
     setSelectedRole(value);
   };
-  console.log(selectedRole);
+  const handleRegister = async () => {
+    const error = validateUserInputFirstError({
+      username: usename,
+      email,
+      password,
+      confirmPassword,
+      birthDay,
+    });
+
+    if (error) {
+      Alert.alert(error);
+      return;
+    }
+
+    const newUser = {
+      username: usename,
+      email,
+      password,
+      confirmPassword,
+      birthDay,
+      role: selectedRole,
+    };
+
+    try {
+      await dispatch(registerUser(newUser)).unwrap();
+      Alert.alert('Đăng ký thành công');
+    } catch (err: any) {
+      Alert.alert('Đăng ký thất bại', err?.message || 'Vui lòng thử lại');
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -47,26 +85,38 @@ export default function Register() {
         onChangeText={setUsename}
         placeholder={'Username'}
         isPass={false}
+        editable={true}
       />
       <ItemInput
         value={email}
         onChangeText={setEmail}
         placeholder={'Email'}
         isPass={false}
+        editable={true}
       />
       <ItemInput
         value={password}
         onChangeText={setPassword}
         placeholder={'Mật khẩu'}
         isPass={true}
+        editable={true}
       />
       <ItemInput
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         placeholder={'Nhập lại mật khẩu'}
         isPass={true}
+        editable={true}
       />
-      <Button title="lll" onPress={() => setOpenDatePicker(true)} />
+      <TouchableOpacity onPress={() => setOpenDatePicker(true)}>
+        <ItemInput
+          value={birthDay}
+          onChangeText={setBirtDay}
+          placeholder={'Nhập ngày sinh'}
+          isPass={false}
+          editable={false}
+        />
+      </TouchableOpacity>
       <Text style={styles.textCondition}>
         Bằng việc nhấn vào xác nhận, bạn đồng ý với
         <Text style={styles.textConditionGreen}> điều khoản và điều kiện </Text>
@@ -77,18 +127,29 @@ export default function Register() {
         modal
         open={openDatePicker}
         date={date}
+        title="Chọn ngày sinh"
         mode="date"
         locale="vi"
-        maximumDate={new Date()}
+        maximumDate={maxDate}
+        minimumDate={minDate}
         onConfirm={selectedDate => {
+          console.log('🟢 onConfirm called');
+          console.log('🟢 selectedDate:', selectedDate);
+
+          if (selectedDate instanceof Date && !isNaN(selectedDate.getTime())) {
+            setDate(selectedDate);
+            setBirtDay(selectedDate.toLocaleDateString('vi-VN'));
+          } else {
+            console.warn(' selectedDate is null or invalid');
+          }
+
           setOpenDatePicker(false);
-          setDate(selectedDate);
         }}
         onCancel={() => {
           setOpenDatePicker(false);
         }}
       />
-      <ItemButtonConfirm />
+      <ItemButtonConfirm onPress={handleRegister} />
     </View>
   );
 }
@@ -97,6 +158,7 @@ const styles = StyleSheet.create({
   container: {
     width: SCREEN.width * 0.9,
     paddingTop: 20,
+    paddingBottom: 100,
   },
   containerRadioButton: {
     flexDirection: 'row',

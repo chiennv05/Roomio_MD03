@@ -19,3 +19,21 @@ export interface User {
     totalContracts?: number;
   };
 }
+export interface AuthState {
+  loading: boolean;
+  user: User | null;
+  error: string | null;
+}
+export interface RegisterPayload {
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  birthDay: string;
+  role: string;
+}
+
+export interface LoginPayload {
+  email: string;
+  password: string;
+}

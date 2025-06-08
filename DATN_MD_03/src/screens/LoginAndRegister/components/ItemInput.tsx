@@ -20,8 +20,15 @@ interface InputProps {
   placeholder: string;
   onChangeText: (text: string) => void;
   isPass?: boolean;
+  editable: boolean;
 }
-const ItemInput = ({value, placeholder, onChangeText, isPass}: InputProps) => {
+const ItemInput = ({
+  value,
+  placeholder,
+  onChangeText,
+  isPass,
+  editable,
+}: InputProps) => {
   const [isShowPass, setIsShowPass] = useState(false);
   console.log('b');
   return (
@@ -32,6 +39,7 @@ const ItemInput = ({value, placeholder, onChangeText, isPass}: InputProps) => {
         value={value}
         onChangeText={onChangeText}
         secureTextEntry={isPass ? !isShowPass : false}
+        editable={editable}
       />
       {isPass && (
         <TouchableOpacity
