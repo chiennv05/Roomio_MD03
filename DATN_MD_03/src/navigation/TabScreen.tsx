@@ -5,7 +5,7 @@ import {RootStackParamList} from '../types/route';
 import SplashScreen from '../screens/Splash/SplashScreen';
 import LoginAndRegister from '../screens/LoginAndRegister/LoginAndRegister';
 import {NavigationContainer} from '@react-navigation/native';
-import HomeScreen from '../screens/HomeScreen/HomeScreen';
+import UITab from './UITab';
 
 const Stack = createStackNavigator<RootStackParamList>();
 export default function TabScreen() {
@@ -13,8 +13,10 @@ export default function TabScreen() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{headerShown: false}}>
         <Stack.Screen name="SplashScreen" component={SplashScreen} />
-        <Stack.Screen name="HomeScreen" component={HomeScreen} />
+
         <Stack.Screen name="Login" component={LoginAndRegister} />
+
+        <Stack.Screen name="UITab" component={UITab} />
       </Stack.Navigator>
     </NavigationContainer>
   );

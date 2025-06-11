@@ -3,4 +3,5 @@ export type RootStackParamList = {
   Login: undefined;
   DetailScreen: {id: number};
   SplashScreen: undefined;
+  UITab: undefined;
 };
