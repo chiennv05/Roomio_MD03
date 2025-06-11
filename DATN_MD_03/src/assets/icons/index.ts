@@ -5,8 +5,7 @@ export const Icons = {
     ios: 'icon_arrow_left',
     android: 'asset:/icons/icon_arrow_left.png',
   }),
-<<<<<<< HEAD
-=======
+
   IconEyesOn: Platform.select({
     ios: 'icon_eyes_on',
     android: 'asset:/icons/icon_eyes_on.png',
@@ -27,5 +26,4 @@ export const Icons = {
     ios: 'icon_check',
     android: 'asset:/icons/icon_check.png',
   }),
->>>>>>> 3009c05cf2399c859d6a5da204aebea969428ba6
 };
