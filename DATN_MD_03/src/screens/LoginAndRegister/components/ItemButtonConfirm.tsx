@@ -1,20 +1,33 @@
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
-import {Icons} from '../../../assets/icons';
-import {responsiveIcon, SCREEN, verticalScale} from '../../../utils/responsive';
+import {
+  responsiveFont,
+  responsiveIcon,
+  SCREEN,
+  verticalScale,
+} from '../../../utils/responsive';
 import {Colors} from '../../../theme/color';
+import {Fonts} from '../../../theme/fonts';
 interface ButtonProps {
   onPress: () => void;
+  title: string;
+  icon: any;
+  onPressIcon: () => void;
 }
 
-const ItemButtonConfirm = ({onPress}: ButtonProps) => {
+const ItemButtonConfirm = ({
+  onPress,
+  title,
+  icon,
+  onPressIcon,
+}: ButtonProps) => {
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.buttonIcon}>
-        <Image source={{uri: Icons.IconReset}} style={styles.styleIcon} />
+      <TouchableOpacity style={styles.buttonIcon} onPress={onPressIcon}>
+        <Image source={{uri: icon}} style={styles.styleIcon} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.buttonConfirm} onPress={onPress}>
-        <Text>Xác nhận</Text>
+        <Text style={styles.textButton}>{title}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -53,5 +66,12 @@ const styles = StyleSheet.create({
     borderRadius: 36,
     margin: 2,
     marginLeft: 10,
+  },
+
+  textButton: {
+    fontSize: responsiveFont(20),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+    fontWeight: '600',
   },
 });

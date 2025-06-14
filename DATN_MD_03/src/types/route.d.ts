@@ -4,4 +4,7 @@ export type RootStackParamList = {
   DetailScreen: {id: number};
   SplashScreen: undefined;
   UITab: undefined;
+  ForgotPassword: undefined;
+  OTPVerification: {email: string};
+  ResetPassWord: {email: string; resetToken: string};
 };

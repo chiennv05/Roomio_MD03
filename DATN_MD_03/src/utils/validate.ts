@@ -80,3 +80,42 @@ export const validateUserLogin = (input: {
 
   return null; // không lỗi
 };
+
+export const validateEmail = (email: string) => {
+  if (email?.trim() === '') {
+    return 'Vui lòng nhập email';
+  }
+  if (email !== undefined) {
+    const re = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
+    if (!re.test(email)) {
+      return 'Email không hợp lệ';
+    }
+  }
+  return null;
+};
+
+export const validateResetPassword = (
+  password: string,
+  confirmPassword: string,
+) => {
+  if (password?.trim() === '') {
+    return 'Vui lòng nhập mật khẩu';
+  }
+  if (confirmPassword?.trim() === '') {
+    return 'Vui lòng nhập mật khẩu xác nhận';
+  }
+  if (password !== undefined) {
+    const rePass =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
+    if (!rePass.test(password)) {
+      return 'Mật khẩu phải ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt';
+    }
+  }
+
+  // Validate username
+
+  if (password !== confirmPassword) {
+    return 'Mật khẩu xác nhận không khớp';
+  }
+  return null;
+};
