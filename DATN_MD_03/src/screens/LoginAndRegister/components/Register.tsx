@@ -69,8 +69,6 @@ export default function Register({setModal}: ModalProps) {
       console.log('result', result);
       setModal(Icons.IconCheck, 'Đăng ký thành công');
     } catch (err: any) {
-      console.log('err', err);
-      // lỗi chỗ này
       setModal(Icons.IconError, err);
     }
   };

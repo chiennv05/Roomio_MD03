@@ -1,8 +1,9 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import {AuthState, LoginPayload, RegisterPayload} from '../../types';
-import {login, register} from '../services/authService';
+import {checkProfileAPI, login, register} from '../services/authService';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import {storeUserSession} from '../services/storageService';
+import {mapApiUserToUser} from '../../utils/mapApiToUser';
 
 const initialState: AuthState = {
   loading: false,
@@ -16,15 +17,10 @@ export const registerUser = createAsyncThunk(
   async (data: RegisterPayload, {rejectWithValue}) => {
     try {
       const res = await register(data);
-      if (!res?.success) {
-        throw new Error(res?.message);
-      }
-
+      if (!res?.success) throw new Error(res?.message);
       return res;
     } catch (err: any) {
-      const backendMessage =
-        err?.data?.message || err?.message || 'Đăng ký thất bại';
-      return rejectWithValue(backendMessage);
+      return rejectWithValue(err.message || 'Đăng ký thất bại');
     }
   },
 );
@@ -34,29 +30,37 @@ export const loginUser = createAsyncThunk(
   async (data: LoginPayload, {rejectWithValue}) => {
     try {
       const res = await login(data);
-      if (!res?.success) {
-        throw new Error(res?.message);
-      }
+      if (!res?.success) throw new Error(res?.message);
 
-      const {token, user} = res;
-
-      // Lưu phiên đăng nhập trong 30 ngày
-      const expireDate = new Date();
-      expireDate.setDate(expireDate.getDate() + 30);
-
-      await storeUserSession(token, user, {
-        username: data.username,
-        password: data.password,
-      });
-
-      return {token, user};
+      const {token, user} = res.data;
+      const mapUser = mapApiUserToUser(user, token);
+      await storeUserSession(token);
+      return {token, mapUser};
     } catch (err: any) {
-      const backendMessage =
-        err?.data?.message || err?.message || 'Đăng ký thất bại';
-      return rejectWithValue(backendMessage);
+      return rejectWithValue(err.message || 'Đăng nhập thất bại');
     }
   },
 );
+
+export const checkProfile = createAsyncThunk(
+  'auth/checkProfile',
+  async (token: string, {rejectWithValue}) => {
+    try {
+      const res = await checkProfileAPI(token);
+      if (res.status === 401) {
+        throw new Error(res.message);
+      }
+      const {user} = res.data;
+      const newToken = user.auth_token.token;
+      const mapUser = mapApiUserToUser(user);
+
+      return {token: newToken, mapUser};
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Lỗi xác thựC');
+    }
+  },
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -69,6 +73,10 @@ const authSlice = createSlice({
     },
     clearAuthError: state => {
       state.error = null;
+    },
+    setUserFromStorage: (state, action) => {
+      state.user = action.payload.user;
+      state.token = action.payload.token;
     },
   },
   extraReducers: builder => {
@@ -93,15 +101,34 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.user = action.payload.user;
+        state.user = action.payload.mapUser;
         state.token = action.payload.token;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+
+      // Kiểm tra profile
+      .addCase(checkProfile.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(checkProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.mapUser;
+        state.token = action.payload.token;
+        storeUserSession(action.payload.token);
+      })
+      .addCase(checkProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.user = null;
+        state.token = null;
+        state.error = action.payload as string;
+        EncryptedStorage.removeItem('user_session');
       });
   },
 });
 
-export const {clearAuthError} = authSlice.actions;
+export const {logout, clearAuthError, setUserFromStorage} = authSlice.actions;
 export default authSlice.reducer;

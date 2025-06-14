@@ -7,9 +7,13 @@ import {
   clearUserSession,
   getUserSession,
 } from '../../store/services/storageService';
+import {useDispatch} from 'react-redux';
+import {AppDispatch} from '../../store';
+import {checkProfile} from '../../store/slices/authSlice';
 
 export default function SplashScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
     const loadUserSession = async () => {
@@ -18,10 +22,18 @@ export default function SplashScreen() {
 
         if (session) {
           const {token, expire} = session;
+
           const now = new Date();
           const expireDate = new Date(expire);
           if (token && now < expireDate) {
-            navigation.replace('UITab');
+            const result = await dispatch(checkProfile(session.token));
+            console.log('result', result);
+            if (!checkProfile.rejected.match(result)) {
+              navigation.replace('UITab');
+            } else {
+              await clearUserSession();
+              navigation.replace('Login');
+            }
           } else {
             await clearUserSession();
             navigation.replace('Login');
@@ -36,12 +48,13 @@ export default function SplashScreen() {
     };
 
     loadUserSession();
-  }, [navigation]);
+  }, [dispatch, navigation]);
 
   return (
     <View style={styles.container}>
       <ActivityIndicator size="large" color="#0000ff" />
       <Text>Đang kiểm tra phiên đăng nhập...</Text>
+      {/* <Button title="Test" onPress={loadUserSession} /> */}
     </View>
   );
 }

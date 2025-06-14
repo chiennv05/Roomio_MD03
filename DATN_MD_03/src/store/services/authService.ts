@@ -4,14 +4,11 @@ import api from '../../api/api';
 export const register = async (data: RegisterPayload) => {
   try {
     const response = await api.post('/auth/register', data);
-
     return response.data;
   } catch (error: any) {
     throw {
-      isError: true,
-      message: error.message, // như: "Request failed with status code 409"
+      message: error.response?.data?.message || error.message,
       status: error.response?.status,
-      data: error.response?.data, // chứa message thật sự từ backend
     };
   }
 };
@@ -19,12 +16,28 @@ export const register = async (data: RegisterPayload) => {
 export const login = async (data: LoginPayload) => {
   try {
     const response = await api.post('/auth/login', data);
-    if (!response.data.success) {
-      throw new Error(response.data.message);
-    }
+    return response.data;
+  } catch (error: any) {
+    throw {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+    };
+  }
+};
+
+export const checkProfileAPI = async (token: string) => {
+  try {
+    const response = await api.get('/user/profile', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     return response.data;
-  } catch (error) {
-    throw error;
+  } catch (error: any) {
+    throw {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+    };
   }
 };
