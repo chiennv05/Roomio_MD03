@@ -26,4 +26,36 @@ export const Icons = {
     ios: 'icon_check',
     android: 'asset:/icons/icon_check.png',
   }),
+  IconHeartDefaut: Platform.select({
+    ios: 'icon_heart_defaut',
+    android: 'asset:/icons/icon_heart_defaut.png',
+  }),
+  IconHeart: Platform.select({
+    ios: 'icon_heart',
+    android: 'asset:/icons/icon_heart.png',
+  }),
+  IconHomeDefaut: Platform.select({
+    ios: 'icon_home_defaut',
+    android: 'asset:/icons/icon_home_defaut.png',
+  }),
+  IconHome: Platform.select({
+    ios: 'icon_home',
+    android: 'asset:/icons/icon_home.png',
+  }),
+  IconPerson: Platform.select({
+    ios: 'icon_person',
+    android: 'asset:/icons/icon_person.png',
+  }),
+  IconPersonDefaut: Platform.select({
+    ios: 'icon_person_defaut',
+    android: 'asset:/icons/icon_person_defaut.png',
+  }),
+  IconSearch: Platform.select({
+    ios: 'icon_search',
+    android: 'asset:/icons/icon_search.png',
+  }),
+  IconSearchDefaut: Platform.select({
+    ios: 'Icon_search_defaut',
+    android: 'asset:/icons/Icon_search_defaut.png',
+  }),
 };

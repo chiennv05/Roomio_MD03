@@ -21,7 +21,7 @@ export default function SplashScreen() {
           const now = new Date();
           const expireDate = new Date(expire);
           if (token && now < expireDate) {
-            navigation.replace('HomeScreen');
+            navigation.replace('UITab');
           } else {
             await clearUserSession();
             navigation.replace('Login');
