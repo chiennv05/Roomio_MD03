@@ -1,19 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   ScrollView,
   StyleSheet,
-//   Dimensions,
+  ActivityIndicator,
+  Text,
+  RefreshControl,
 } from 'react-native';
 import Header from './components/Header';
 import FilterTabs from './components/FilterTabs';
 import RoomCard from './components/RoomCard';
 import { Room } from './types/Room';
 import { District } from '../../types/Address';
+import { useAppDispatch, useAppSelector } from '../../hooks/redux';
+import { fetchRooms, setFilters, resetRooms } from '../../store/slices/roomSlice';
+import { convertApiRoomToRoom } from '../../utils/roomUtils';
+import { RoomFilters } from '../../types/Room';
 
 // const SCREEN = Dimensions.get('window');
 
 const HomeScreen: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const { rooms, loading, error, pagination } = useAppSelector(state => state.rooms);
+  
   const filters: string[] = ['Khu vực', 'Khoảng giá', 'Diện tích', 'Nội thất', 'Tiện nghi'];
   const [selectedFilters, setSelectedFilters] = useState<number[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<District[]>([]);
@@ -21,6 +30,7 @@ const HomeScreen: React.FC = () => {
   const [_areaRange, setAreaRange] = useState<{min: number, max: number} | null>(null);
   const [selectedFurniture, setSelectedFurniture] = useState<string[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   const handleFilterSelect = (index: number) => {
     setSelectedFilters(prev => {
@@ -34,6 +44,44 @@ const HomeScreen: React.FC = () => {
     });
   };
 
+  // Load initial data
+  useEffect(() => {
+    dispatch(fetchRooms({}));
+  }, [dispatch]);
+
+  // Apply filters when they change
+  useEffect(() => {
+    const filters: RoomFilters = {};
+    
+    if (_priceRange) {
+      filters.minPrice = _priceRange.min;
+      filters.maxPrice = _priceRange.max;
+    }
+    
+    if (_areaRange) {
+      filters.minArea = _areaRange.min;
+      filters.maxArea = _areaRange.max;
+    }
+    
+    if (selectedFurniture.length > 0) {
+      filters.furniture = selectedFurniture;
+    }
+    
+    if (selectedAmenities.length > 0) {
+      filters.amenities = selectedAmenities;
+    }
+    
+    if (selectedRegions.length > 0) {
+      filters.districts = selectedRegions.map(region => region.name);
+    }
+
+    // Only fetch if there are actual filters applied
+    if (Object.keys(filters).length > 0) {
+      dispatch(resetRooms());
+      dispatch(fetchRooms(filters));
+    }
+  }, [_priceRange, _areaRange, selectedFurniture, selectedAmenities, selectedRegions, dispatch]);
+
   const handleClearAll = () => {
     setSelectedFilters([]);
     setSelectedRegions([]);
@@ -41,6 +89,16 @@ const HomeScreen: React.FC = () => {
     setAreaRange(null);
     setSelectedFurniture([]);
     setSelectedAmenities([]);
+    
+    // Reset to default data
+    dispatch(resetRooms());
+    dispatch(fetchRooms({}));
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await dispatch(fetchRooms({}));
+    setRefreshing(false);
   };
 
   const handleRegionSelect = (regions: District[]) => {
@@ -68,32 +126,16 @@ const HomeScreen: React.FC = () => {
     console.log('Selected amenities:', items);
   };
 
-  const roomList: Room[] = [
-    {
-      image: 'https://i.pinimg.com/736x/42/15/82/421582d44e6e0d9e2d4cf003de47c14e.jpg',
-      images: [
-        'https://i.pinimg.com/736x/42/15/82/421582d44e6e0d9e2d4cf003de47c14e.jpg',
-        'https://i.pinimg.com/736x/91/ce/ed/91ceeda91de0a647d22083015d241584.jpg',
-        'https://i.pinimg.com/736x/91/ce/ed/91ceeda91de0a647d22083015d241584.jpg',
-      ],
-      price: '4.000.000 đồng',
-      title: 'Phòng trọ kiểu hiện đại Louis city hoàng mai',
-      detail: '9 tháng thuê | 25m2 | Có 4 phòng',
-    },
-    {
-      image: 'https://i.pinimg.com/736x/91/ce/ed/91ceeda91de0a647d22083015d241584.jpg',
-      images: [
-        'https://i.pinimg.com/736x/91/ce/ed/91ceeda91de0a647d22083015d241584.jpg',
-        'https://i.pinimg.com/736x/42/15/82/421582d44e6e0d9e2d4cf003de47c14e.jpg',
-      ],
-      price: '4.000.000 đồng',
-      title: 'Phòng trọ hiện đại view ban công Louis city',
-      detail: '6 tháng thuê | 28m2 | Có 3 phòng',
-    },
-  ];
+  // Convert API rooms to UI format
+  const roomList: Room[] = rooms.map(convertApiRoomToRoom);
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+      }
+    >
       <Header />
       <FilterTabs
         filters={filters}
@@ -111,11 +153,42 @@ const HomeScreen: React.FC = () => {
         selectedFurniture={selectedFurniture}
         selectedAmenities={selectedAmenities}
       />
+      
+      {/* Loading indicator */}
+      {loading && roomList.length === 0 && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#BAFD00" />
+          <Text style={styles.loadingText}>Đang tải danh sách phòng trọ...</Text>
+        </View>
+      )}
+      
+      {/* Error message */}
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Lỗi: {error}</Text>
+        </View>
+      )}
+      
+      {/* Room list */}
       <View style={styles.section}>
         {roomList.map((room, idx) => (
-          <RoomCard key={idx} item={room} />
+          <RoomCard key={`${rooms[idx]?._id || idx}`} item={room} />
         ))}
       </View>
+      
+      {/* No data message */}
+      {!loading && roomList.length === 0 && !error && (
+        <View style={styles.noDataContainer}>
+          <Text style={styles.noDataText}>Không tìm thấy phòng trọ nào</Text>
+        </View>
+      )}
+      
+      {/* Load more indicator */}
+      {loading && roomList.length > 0 && (
+        <View style={styles.loadMoreContainer}>
+          <ActivityIndicator size="small" color="#BAFD00" />
+        </View>
+      )}
     </ScrollView>
   );
 };
@@ -128,5 +201,39 @@ const styles = StyleSheet.create({
   },
   section: {
     marginTop: 12,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
+  errorContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#ff4444',
+    textAlign: 'center',
+  },
+  noDataContainer: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  noDataText: {
+    fontSize: 16,
+    color: '#999',
+    textAlign: 'center',
+  },
+  loadMoreContainer: {
+    padding: 20,
+    alignItems: 'center',
   },
 });
