@@ -14,7 +14,7 @@ const Stack = createStackNavigator<RootStackParamList>();
 export default function TabScreen() {
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{headerShown: false}}>
+      <Stack.Navigator  screenOptions={{headerShown: false, animation: 'none'}}> 
         <Stack.Screen name="SplashScreen" component={SplashScreen} />
         <Stack.Screen name="Login" component={LoginAndRegister} />
         <Stack.Screen name="UITab" component={UITab} />

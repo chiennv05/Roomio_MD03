@@ -5,6 +5,18 @@ export const Icons = {
     ios: 'icon_arrow_left',
     android: 'asset:/icons/icon_arrow_left.png',
   }),
+  IconArrowDown: Platform.select({
+    ios: 'icon_arrowdown',
+    android: 'asset:/icons/icon_arrowdown.png',
+  }),
+  IconRemoveFilter: Platform.select({
+    ios: 'icon_removefilter',
+    android: 'asset:/icons/icon_removefilter.png',
+  }),
+  IconNotification: Platform.select({
+    ios: 'icon_notification',
+    android: 'asset:/icons/icon_notification.png',
+  }),
   IconEyesOn: Platform.select({
     ios: 'icon_eyes_on',
     android: 'asset:/icons/icon_eyes_on.png',
