@@ -8,12 +8,12 @@ import {
   ScrollView,
 } from 'react-native';
 import { Colors } from '../../../theme/color';
-import { Room } from '../types/Room';
+import { RoomCardData } from '../../../utils/roomUtils';
 
 const SCREEN = Dimensions.get('window');
 
 interface RoomCardProps {
-  item: Room;
+  item: RoomCardData;
 }
 
 const RoomCard: React.FC<RoomCardProps> = ({ item }) => {

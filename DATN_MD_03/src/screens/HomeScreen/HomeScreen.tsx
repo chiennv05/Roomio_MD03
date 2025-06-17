@@ -10,18 +10,17 @@ import {
 import Header from './components/Header';
 import FilterTabs from './components/FilterTabs';
 import RoomCard from './components/RoomCard';
-import { Room } from './types/Room';
 import { District } from '../../types/Address';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
-import { fetchRooms, setFilters, resetRooms } from '../../store/slices/roomSlice';
-import { convertApiRoomToRoom } from '../../utils/roomUtils';
+import { fetchRooms, resetRooms } from '../../store/slices/roomSlice';
+import { convertApiRoomToRoom, RoomCardData } from '../../utils/roomUtils';
 import { RoomFilters } from '../../types/Room';
 
 // const SCREEN = Dimensions.get('window');
 
 const HomeScreen: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { rooms, loading, error, pagination } = useAppSelector(state => state.rooms);
+  const { rooms, loading, error } = useAppSelector(state => state.rooms);
   
   const filters: string[] = ['Khu vực', 'Khoảng giá', 'Diện tích', 'Nội thất', 'Tiện nghi'];
   const [selectedFilters, setSelectedFilters] = useState<number[]>([]);
@@ -127,7 +126,7 @@ const HomeScreen: React.FC = () => {
   };
 
   // Convert API rooms to UI format
-  const roomList: Room[] = rooms.map(convertApiRoomToRoom);
+  const roomList: RoomCardData[] = rooms.map(convertApiRoomToRoom);
 
   return (
     <ScrollView 
