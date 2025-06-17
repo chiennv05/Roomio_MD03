@@ -119,3 +119,32 @@ export const validateResetPassword = (
   }
   return null;
 };
+
+export const validateFullName = (fullName: string) => {
+  if (!fullName || fullName.trim() === '') {
+    return 'Tên không được để trống';
+  }
+  return null;
+};
+
+export const validatePhone = (phone: string) => {
+  if (!phone || phone.trim() === '') {
+    return 'Số điện thoại không được để trống';
+  }
+  const re = /^0\d{9}$/;
+  if (!re.test(phone)) {
+    return 'Số điện thoại không hợp lệ (bắt đầu bằng số 0, 10 chữ số)';
+  }
+  return null;
+};
+
+export const validateIdentityNumber = (identityNumber: string) => {
+  if (!identityNumber || identityNumber.trim() === '') {
+    return 'Số CCCD/CMND không được để trống';
+  }
+  const re = /^\d{9,12}$/;
+  if (!re.test(identityNumber)) {
+    return 'Số CCCD/CMND không hợp lệ (chỉ chứa chữ số, độ dài từ 9-12 chữ số)';
+  }
+  return null;
+};

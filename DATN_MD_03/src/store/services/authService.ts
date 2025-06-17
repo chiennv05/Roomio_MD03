@@ -91,3 +91,23 @@ export const resetPassword = async (
     throw error;
   }
 };
+
+export const updateProfile = async (
+  token: string,
+  data: { fullName: string; phone: string; identityNumber: string }
+) => {
+  try {
+    const response = await api.put('/user/profile', data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    // API trả về response.data.data.user
+    return response.data.data.user;
+  } catch (error: any) {
+    throw {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+    };
+  }
+};

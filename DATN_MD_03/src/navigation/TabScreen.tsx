@@ -9,6 +9,7 @@ import UITab from './UITab';
 import OTPVerificationScreen from '../screens/LoginAndRegister/OTPVerificationScreen';
 import ForgotPasswordScreen from '../screens/LoginAndRegister/ForgotPasswordScreen';
 import ResetPassWord from '../screens/LoginAndRegister/ResetPassWord';
+import PersonalInformation from '../screens/Profile/PersonalInformation';
 
 const Stack = createStackNavigator<RootStackParamList>();
 export default function TabScreen() {
@@ -24,6 +25,7 @@ export default function TabScreen() {
           component={OTPVerificationScreen}
         />
         <Stack.Screen name="ResetPassWord" component={ResetPassWord} />
+        <Stack.Screen name="PersonalInformation" component={PersonalInformation} />
       </Stack.Navigator>
     </NavigationContainer>
   );
