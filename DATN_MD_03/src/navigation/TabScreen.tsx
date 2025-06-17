@@ -10,11 +10,15 @@ import OTPVerificationScreen from '../screens/LoginAndRegister/OTPVerificationSc
 import ForgotPasswordScreen from '../screens/LoginAndRegister/ForgotPasswordScreen';
 import ResetPassWord from '../screens/LoginAndRegister/ResetPassWord';
 
+// Import gesture handler để hỗ trợ stack navigation
+import 'react-native-gesture-handler';
+
 const Stack = createStackNavigator<RootStackParamList>();
+
 export default function TabScreen() {
   return (
     <NavigationContainer>
-      <Stack.Navigator  screenOptions={{headerShown: false, animation: 'none'}}> 
+      <Stack.Navigator screenOptions={{headerShown: false}}> 
         <Stack.Screen name="SplashScreen" component={SplashScreen} />
         <Stack.Screen name="Login" component={LoginAndRegister} />
         <Stack.Screen name="UITab" component={UITab} />

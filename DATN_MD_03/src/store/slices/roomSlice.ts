@@ -1,118 +1,99 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { ApiRoom, RoomFilters, Pagination, AppliedFilters } from '../../types/Room';
-import { roomService } from '../services/roomService';
-
-export interface RoomState {
-  rooms: ApiRoom[];
-  loading: boolean;
-  error: string | null;
-  pagination: Pagination | null;
-  appliedFilters: AppliedFilters;
-  currentFilters: RoomFilters;
-}
+import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
+import {RoomState, RoomFilters} from '../../types';
+import {getRooms} from '../services/roomService';
 
 const initialState: RoomState = {
-  rooms: [],
   loading: false,
-  error: null,
+  rooms: [],
   pagination: null,
   appliedFilters: {
     amenities: [],
     furniture: [],
   },
-  currentFilters: {
-    maxDistance: 10000,
-    page: 1,
-    limit: 20,
-  },
+  error: null,
 };
 
-// Async thunk để fetch rooms
 export const fetchRooms = createAsyncThunk(
-  'rooms/fetchRooms',
-  async (filters: RoomFilters = {}) => {
-    const response = await roomService.getRooms(filters);
-    return response;
-  }
+  'room/fetchRooms',
+  async (filters: RoomFilters = {}, {rejectWithValue}) => {
+    try {
+      const res = await getRooms(filters);
+      if (!res?.success) throw new Error(res?.message);
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Lấy danh sách phòng trọ thất bại');
+    }
+  },
 );
 
-// Async thunk để load more rooms (pagination)
 export const loadMoreRooms = createAsyncThunk(
-  'rooms/loadMoreRooms',
-  async (_, { getState }) => {
-    const state = getState() as { rooms: RoomState };
-    const currentPage = state.rooms.pagination?.page || 1;
-    const nextPage = currentPage + 1;
-    
-    const filters = {
-      ...state.rooms.currentFilters,
-      page: nextPage,
-    };
-    
-    const response = await roomService.getRooms(filters);
-    return response;
-  }
+  'room/loadMoreRooms',
+  async (filters: RoomFilters = {}, {rejectWithValue, getState}) => {
+    try {
+      const state = getState() as {room: RoomState};
+      const currentPage = state.room.pagination?.page || 1;
+      const nextPage = currentPage + 1;
+      
+      const res = await getRooms({...filters, page: nextPage});
+      if (!res?.success) throw new Error(res?.message);
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Tải thêm phòng trọ thất bại');
+    }
+  },
 );
 
 const roomSlice = createSlice({
-  name: 'rooms',
+  name: 'room',
   initialState,
   reducers: {
-    setFilters: (state, action: PayloadAction<RoomFilters>) => {
-      state.currentFilters = { ...state.currentFilters, ...action.payload };
-    },
-    clearFilters: (state) => {
-      state.currentFilters = {
-        maxDistance: 10000,
-        page: 1,
-        limit: 20,
-      };
-    },
-    clearError: (state) => {
+    clearRoomError: state => {
       state.error = null;
     },
-    resetRooms: (state) => {
+    resetRooms: state => {
       state.rooms = [];
       state.pagination = null;
-      state.currentFilters.page = 1;
+      state.appliedFilters = {
+        amenities: [],
+        furniture: [],
+      };
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     builder
       // Fetch rooms
-      .addCase(fetchRooms.pending, (state) => {
+      .addCase(fetchRooms.pending, state => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchRooms.fulfilled, (state, action) => {
         state.loading = false;
-        state.rooms = action.payload.data.rooms;
-        state.pagination = action.payload.data.pagination;
-        state.appliedFilters = action.payload.data.appliedFilters;
-        state.error = null;
+        state.rooms = action.payload.rooms;
+        state.pagination = action.payload.pagination;
+        state.appliedFilters = action.payload.appliedFilters;
       })
       .addCase(fetchRooms.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || 'Failed to fetch rooms';
+        state.error = action.payload as string;
       })
+
       // Load more rooms
-      .addCase(loadMoreRooms.pending, (state) => {
+      .addCase(loadMoreRooms.pending, state => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(loadMoreRooms.fulfilled, (state, action) => {
         state.loading = false;
-        // Append new rooms to existing ones
-        state.rooms = [...state.rooms, ...action.payload.data.rooms];
-        state.pagination = action.payload.data.pagination;
-        state.appliedFilters = action.payload.data.appliedFilters;
-        state.error = null;
+        state.rooms = [...state.rooms, ...action.payload.rooms];
+        state.pagination = action.payload.pagination;
+        state.appliedFilters = action.payload.appliedFilters;
       })
       .addCase(loadMoreRooms.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message || 'Failed to load more rooms';
+        state.error = action.payload as string;
       });
   },
 });
 
-export const { setFilters, clearFilters, clearError, resetRooms } = roomSlice.actions;
+export const {clearRoomError, resetRooms} = roomSlice.actions;
 export default roomSlice.reducer; 

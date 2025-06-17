@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   StatusBar,
 } from 'react-native';
+import { Icons } from '../../../assets/icons';
 
 const Header: React.FC = () => {
   return (
@@ -27,7 +28,7 @@ const Header: React.FC = () => {
           </View>
           <TouchableOpacity style={styles.notificationButton}>
             <Image 
-              source={require('../../../assets/icons/icon_notification.png')}
+              source={{ uri: Icons.IconNotification }}
               style={styles.notificationIcon}
             />
           </TouchableOpacity>
@@ -43,7 +44,7 @@ const Header: React.FC = () => {
           </View>
           <TouchableOpacity style={styles.searchButton}>
             <Image 
-              source={require('../../../assets/icons/icon_search.png')}
+              source={{ uri: Icons.IconSearch }}
               style={styles.searchIcon}
             />
           </TouchableOpacity>

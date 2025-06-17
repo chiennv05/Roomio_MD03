@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import PriceRangeModal from './PriceRangeModal';
 import AreaModal from './AreaModal';
 import CheckboxModal from './CheckboxModal';
 import { District } from '../../../types/Address';
-import { FURNITURE_ITEMS, AMENITY_ITEMS } from '../data/filterData';
+import { useFilter } from '../../../hooks';
 
 // const SCREEN = Dimensions.get('window');
 
@@ -49,11 +49,19 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
   selectedFurniture = [],
   selectedAmenities = [],
 }) => {
+  const { furniture, amenities, loading, loadFilterOptions } = useFilter();
+  
   const [showRegionModal, setShowRegionModal] = useState(false);
   const [showPriceModal, setShowPriceModal] = useState(false);
   const [showAreaModal, setShowAreaModal] = useState(false);
   const [showFurnitureModal, setShowFurnitureModal] = useState(false);
   const [showAmenityModal, setShowAmenityModal] = useState(false);
+
+  useEffect(() => {
+    if (furniture.length === 0 && amenities.length === 0 && !loading) {
+      loadFilterOptions();
+    }
+  }, [furniture.length, amenities.length, loading, loadFilterOptions]);
 
   const handleFilterPress = (index: number) => {
     switch (index) {
@@ -122,12 +130,12 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
     }
     if (index === 3 && selectedFurniture.length > 0) { // Nội thất
       return selectedFurniture.length === 1 
-        ? FURNITURE_ITEMS.find(f => f.id === selectedFurniture[0])?.label || item
+        ? furniture.find(f => f.value === selectedFurniture[0])?.label || item
         : `${selectedFurniture.length} mục`;
     }
     if (index === 4 && selectedAmenities.length > 0) { // Tiện nghi
       return selectedAmenities.length === 1 
-        ? AMENITY_ITEMS.find(a => a.id === selectedAmenities[0])?.label || item
+        ? amenities.find(a => a.value === selectedAmenities[0])?.label || item
         : `${selectedAmenities.length} mục`;
     }
     return item;
@@ -206,7 +214,7 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
         onConfirm={handleFurnitureConfirm}
         title="Nội thất"
         subtitle="Lọc tìm kiếm theo nội thất bạn chọn"
-        items={FURNITURE_ITEMS}
+        items={furniture.map(item => ({ id: item.value, label: item.label }))}
         selectedItems={selectedFurniture}
       />
       
@@ -216,7 +224,7 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
         onConfirm={handleAmenityConfirm}
         title="Tiện nghi"
         subtitle="Lọc tìm kiếm theo tiện nghi bạn chọn"
-        items={AMENITY_ITEMS}
+        items={amenities.map(item => ({ id: item.value, label: item.label }))}
         selectedItems={selectedAmenities}
       />
     </View>

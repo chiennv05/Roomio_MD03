@@ -1,65 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
-  ScrollView,
+  FlatList,
   StyleSheet,
   ActivityIndicator,
-  Text,
   RefreshControl,
 } from 'react-native';
 import Header from './components/Header';
 import FilterTabs from './components/FilterTabs';
 import RoomCard from './components/RoomCard';
+import { Room, RoomFilters } from '../../types/Room';
 import { District } from '../../types/Address';
-import { useAppDispatch, useAppSelector } from '../../hooks/redux';
-import { fetchRooms, resetRooms } from '../../store/slices/roomSlice';
-import { convertApiRoomToRoom, RoomCardData } from '../../utils/roomUtils';
-import { RoomFilters } from '../../types/Room';
-
-// const SCREEN = Dimensions.get('window');
+import { useRooms } from '../../hooks';
+import { Colors } from '../../theme/color';
 
 const HomeScreen: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { rooms, loading, error } = useAppSelector(state => state.rooms);
-  
   const filters: string[] = ['Khu vực', 'Khoảng giá', 'Diện tích', 'Nội thất', 'Tiện nghi'];
   const [selectedFilters, setSelectedFilters] = useState<number[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<District[]>([]);
-  const [_priceRange, setPriceRange] = useState<{min: number, max: number} | null>(null);
-  const [_areaRange, setAreaRange] = useState<{min: number, max: number} | null>(null);
+  const [priceRange, setPriceRange] = useState<{min: number, max: number} | null>(null);
+  const [areaRange, setAreaRange] = useState<{min: number, max: number} | null>(null);
   const [selectedFurniture, setSelectedFurniture] = useState<string[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
 
-  const handleFilterSelect = (index: number) => {
-    setSelectedFilters(prev => {
-      if (prev.includes(index)) {
-        // Remove if already selected
-        return prev.filter(i => i !== index);
-      } else {
-        // Add if not selected
-        return [...prev, index];
-      }
-    });
-  };
+  const { rooms, loading, pagination, loadRooms, loadMore } = useRooms();
 
-  // Load initial data
-  useEffect(() => {
-    dispatch(fetchRooms({}));
-  }, [dispatch]);
-
-  // Apply filters when they change
-  useEffect(() => {
+  // Build filters object
+  const buildFilters = useCallback((): RoomFilters => {
     const filters: RoomFilters = {};
     
-    if (_priceRange) {
-      filters.minPrice = _priceRange.min;
-      filters.maxPrice = _priceRange.max;
+    if (priceRange) {
+      filters.minPrice = priceRange.min;
+      filters.maxPrice = priceRange.max;
     }
     
-    if (_areaRange) {
-      filters.minArea = _areaRange.min;
-      filters.maxArea = _areaRange.max;
+    if (areaRange) {
+      filters.minArea = areaRange.min;
+      filters.maxArea = areaRange.max;
     }
     
     if (selectedFurniture.length > 0) {
@@ -71,15 +48,32 @@ const HomeScreen: React.FC = () => {
     }
     
     if (selectedRegions.length > 0) {
+      // Use districts array for filtering
       filters.districts = selectedRegions.map(region => region.name);
     }
+    
+    return filters;
+  }, [priceRange, areaRange, selectedFurniture, selectedAmenities, selectedRegions]);
 
-    // Only fetch if there are actual filters applied
-    if (Object.keys(filters).length > 0) {
-      dispatch(resetRooms());
-      dispatch(fetchRooms(filters));
-    }
-  }, [_priceRange, _areaRange, selectedFurniture, selectedAmenities, selectedRegions, dispatch]);
+  // Load initial data
+  useEffect(() => {
+    loadRooms(buildFilters());
+  }, [loadRooms, buildFilters]);
+
+  // Reload when filters change
+  useEffect(() => {
+    loadRooms(buildFilters());
+  }, [priceRange, areaRange, selectedFurniture, selectedAmenities, selectedRegions, loadRooms, buildFilters]);
+
+  const handleFilterSelect = (index: number) => {
+    setSelectedFilters(prev => {
+      if (prev.includes(index)) {
+        return prev.filter(i => i !== index);
+      } else {
+        return [...prev, index];
+      }
+    });
+  };
 
   const handleClearAll = () => {
     setSelectedFilters([]);
@@ -88,53 +82,53 @@ const HomeScreen: React.FC = () => {
     setAreaRange(null);
     setSelectedFurniture([]);
     setSelectedAmenities([]);
-    
-    // Reset to default data
-    dispatch(resetRooms());
-    dispatch(fetchRooms({}));
-  };
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await dispatch(fetchRooms({}));
-    setRefreshing(false);
   };
 
   const handleRegionSelect = (regions: District[]) => {
     setSelectedRegions(regions);
-    console.log('Selected regions:', regions);
   };
 
   const handlePriceRangeSelect = (minPrice: number, maxPrice: number) => {
     setPriceRange({ min: minPrice, max: maxPrice });
-    console.log('Selected price range:', minPrice, maxPrice);
   };
 
   const handleAreaSelect = (minArea: number, maxArea: number) => {
     setAreaRange({ min: minArea, max: maxArea });
-    console.log('Selected area range:', minArea, maxArea);
   };
 
   const handleFurnitureSelect = (items: string[]) => {
     setSelectedFurniture(items);
-    console.log('Selected furniture:', items);
   };
 
   const handleAmenitySelect = (items: string[]) => {
     setSelectedAmenities(items);
-    console.log('Selected amenities:', items);
   };
 
-  // Convert API rooms to UI format
-  const roomList: RoomCardData[] = rooms.map(convertApiRoomToRoom);
+  const handleRefresh = () => {
+    loadRooms(buildFilters());
+  };
+
+  const handleLoadMore = () => {
+    if (pagination?.hasNextPage && !loading) {
+      loadMore(buildFilters());
+    }
+  };
+
+  const renderRoomCard = ({ item }: { item: Room }) => (
+    <RoomCard item={item} />
+  );
+
+  const renderFooter = () => {
+    if (!loading) return null;
+    return (
+      <View style={styles.footer}>
+        <ActivityIndicator size="large" color={Colors.limeGreen} />
+      </View>
+    );
+  };
 
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-      }
-    >
+    <View style={styles.container}>
       <Header />
       <FilterTabs
         filters={filters}
@@ -145,50 +139,31 @@ const HomeScreen: React.FC = () => {
         selectedRegions={selectedRegions}
         onPriceRangeSelect={handlePriceRangeSelect}
         onAreaSelect={handleAreaSelect}
-        selectedPriceRange={_priceRange || undefined}
-        selectedAreaRange={_areaRange || undefined}
+        selectedPriceRange={priceRange || undefined}
+        selectedAreaRange={areaRange || undefined}
         onFurnitureSelect={handleFurnitureSelect}
         onAmenitySelect={handleAmenitySelect}
         selectedFurniture={selectedFurniture}
         selectedAmenities={selectedAmenities}
       />
-      
-      {/* Loading indicator */}
-      {loading && roomList.length === 0 && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#BAFD00" />
-          <Text style={styles.loadingText}>Đang tải danh sách phòng trọ...</Text>
-        </View>
-      )}
-      
-      {/* Error message */}
-      {error && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Lỗi: {error}</Text>
-        </View>
-      )}
-      
-      {/* Room list */}
-      <View style={styles.section}>
-        {roomList.map((room, idx) => (
-          <RoomCard key={`${rooms[idx]?._id || idx}`} item={room} />
-        ))}
-      </View>
-      
-      {/* No data message */}
-      {!loading && roomList.length === 0 && !error && (
-        <View style={styles.noDataContainer}>
-          <Text style={styles.noDataText}>Không tìm thấy phòng trọ nào</Text>
-        </View>
-      )}
-      
-      {/* Load more indicator */}
-      {loading && roomList.length > 0 && (
-        <View style={styles.loadMoreContainer}>
-          <ActivityIndicator size="small" color="#BAFD00" />
-        </View>
-      )}
-    </ScrollView>
+      <FlatList
+        data={rooms}
+        renderItem={renderRoomCard}
+        keyExtractor={(item, index) => item._id || index.toString()}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading && rooms.length === 0}
+            onRefresh={handleRefresh}
+            colors={[Colors.limeGreen]}
+          />
+        }
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.1}
+        ListFooterComponent={renderFooter}
+        contentContainerStyle={styles.listContainer}
+      />
+    </View>
   );
 };
 
@@ -197,42 +172,14 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f5f5f5',
   },
-  section: {
-    marginTop: 12,
+  listContainer: {
+    paddingTop: 12,
+    paddingBottom: 20,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-  },
-  errorContainer: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  errorText: {
-    fontSize: 14,
-    color: '#ff4444',
-    textAlign: 'center',
-  },
-  noDataContainer: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  noDataText: {
-    fontSize: 16,
-    color: '#999',
-    textAlign: 'center',
-  },
-  loadMoreContainer: {
-    padding: 20,
+  footer: {
+    paddingVertical: 20,
     alignItems: 'center',
   },
 });

@@ -8,19 +8,20 @@ import {
   ScrollView,
 } from 'react-native';
 import { Colors } from '../../../theme/color';
-import { RoomCardData } from '../../../utils/roomUtils';
+import { Room } from '../../../types/Room';
 
 const SCREEN = Dimensions.get('window');
 
 interface RoomCardProps {
-  item: RoomCardData;
+  item: Room;
 }
 
 const RoomCard: React.FC<RoomCardProps> = ({ item }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
-  // Giả sử item có nhiều ảnh, nếu không thì dùng ảnh đơn
-  const images = item.images || [item.image];
+  // Sử dụng photos từ API response và tạo full URL
+  const baseURL = 'http://125.212.229.71:4000';
+  const images = item.photos?.map(photo => `${baseURL}${photo}`) || [];
   
   // Tính toán độ rộng thanh dựa trên số lượng ảnh
   const totalIndicatorWidth = 100; // Tổng độ rộng cho tất cả các thanh
@@ -71,12 +72,14 @@ const RoomCard: React.FC<RoomCardProps> = ({ item }) => {
       
       <View style={styles.info}>
         <View style={styles.titleRow}>
-          <Text style={styles.title}>{item.title}</Text>
+          <Text style={styles.title}>{item.description}</Text>
           <View style={styles.priceTag}>
-            <Text style={styles.price}>{item.price}</Text>
+            <Text style={styles.price}>{item.rentPrice?.toLocaleString('vi-VN')} đ</Text>
           </View>
         </View>
-        <Text style={styles.detail}>{item.detail}</Text>
+        <Text style={styles.detail}>
+          {item.location.addressText} || {item.area}m² || {item.roomNumber}
+        </Text>
       </View>
     </View>
   );
