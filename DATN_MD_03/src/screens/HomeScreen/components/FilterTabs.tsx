@@ -13,6 +13,13 @@ import AreaModal from './AreaModal';
 import CheckboxModal from './CheckboxModal';
 import { District } from '../../../types/Address';
 import { useFilter } from '../../../hooks';
+import { 
+  responsiveFont, 
+  responsiveIcon, 
+  responsiveSpacing
+} from '../../../utils/responsive';
+import { Colors } from '../../../theme/color';
+import { Fonts } from '../../../theme/fonts';
 
 // const SCREEN = Dimensions.get('window');
 
@@ -235,8 +242,8 @@ export default FilterTabs;
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginHorizontal: 16,
-    marginTop: 12,
+    marginHorizontal: responsiveSpacing(16),
+    marginTop: responsiveSpacing(12),
   },
   container: {
     flexDirection: 'row',
@@ -244,50 +251,50 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0,
   },
   clearButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#ffffff',
+    width: responsiveIcon(32),
+    height: responsiveIcon(32),
+    borderRadius: responsiveIcon(16),
+    backgroundColor: Colors.white,
     borderWidth: 1,
     borderColor: '#d0d0d0',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
+    marginRight: responsiveSpacing(8),
   },
   clearText: {
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Bold,
     color: '#666',
   },
   tab: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    marginRight: 8,
+    paddingHorizontal: responsiveSpacing(12),
+    paddingVertical: responsiveSpacing(8),
+    borderRadius: responsiveIcon(16),
+    marginRight: responsiveSpacing(8),
   },
   tabSelected: {
-    backgroundColor: '#BAFD00',
+    backgroundColor: Colors.limeGreen,
   },
   tabUnselected: {
-    backgroundColor: '#ffffff',
+    backgroundColor: Colors.white,
     borderWidth: 1,
     borderColor: '#e0e0e0',
   },
   tabText: {
-    marginRight: 4,
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#000000',
+    marginRight: responsiveSpacing(4),
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.black,
   },
   arrowText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#000000',
+    fontSize: responsiveFont(10),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
   },
   locationText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Bold,
   },
 });

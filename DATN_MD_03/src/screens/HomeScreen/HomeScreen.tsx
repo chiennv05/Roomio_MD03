@@ -13,6 +13,7 @@ import { Room, RoomFilters } from '../../types/Room';
 import { District } from '../../types/Address';
 import { useRooms } from '../../hooks';
 import { Colors } from '../../theme/color';
+import { responsiveSpacing } from '../../utils/responsive';
 
 const HomeScreen: React.FC = () => {
   const filters: string[] = ['Khu vực', 'Khoảng giá', 'Diện tích', 'Nội thất', 'Tiện nghi'];
@@ -172,14 +173,14 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.backgroud,
   },
   listContainer: {
-    paddingTop: 12,
-    paddingBottom: 20,
+    paddingTop: responsiveSpacing(12),
+    paddingBottom: responsiveSpacing(20),
   },
   footer: {
-    paddingVertical: 20,
+    paddingVertical: responsiveSpacing(20),
     alignItems: 'center',
   },
 });

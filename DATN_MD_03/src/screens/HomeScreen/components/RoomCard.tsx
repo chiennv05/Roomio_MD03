@@ -4,13 +4,17 @@ import {
   Text,
   Image,
   StyleSheet,
-  Dimensions,
   ScrollView,
 } from 'react-native';
 import { Colors } from '../../../theme/color';
 import { Room } from '../../../types/Room';
-
-const SCREEN = Dimensions.get('window');
+import { 
+  SCREEN, 
+  responsiveFont, 
+  responsiveSpacing,
+  moderateScale 
+} from '../../../utils/responsive';
+import { Fonts } from '../../../theme/fonts';
 
 interface RoomCardProps {
   item: Room;
@@ -29,7 +33,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ item }) => {
   const dotWidth = Math.max((totalIndicatorWidth - (images.length - 1) * margin * 2) / images.length, 8);
   
   const handleScroll = (event: any) => {
-    const slideSize = SCREEN.width - 32;
+    const slideSize = SCREEN.width - responsiveSpacing(32);
     const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
     setCurrentImageIndex(index);
   };
@@ -90,22 +94,22 @@ export default RoomCard;
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.cardBg,
-    borderRadius: 12,
+    borderRadius: moderateScale(12),
     overflow: 'hidden',
-    marginBottom: 16,
-    marginHorizontal: 16,
+    marginBottom: responsiveSpacing(16),
+    marginHorizontal: responsiveSpacing(16),
   },
   imageContainer: {
     position: 'relative',
   },
   image: {
-    width: SCREEN.width - 32,
-    height: SCREEN.width * 0.5,
+    width: SCREEN.width - responsiveSpacing(32),
+    height: (SCREEN.width - responsiveSpacing(32)) * 0.5,
     resizeMode: 'cover',
   },
   dotsContainer: {
     position: 'absolute',
-    bottom: 10,
+    bottom: responsiveSpacing(10),
     left: 0,
     right: 0,
     flexDirection: 'row',
@@ -113,41 +117,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dot: {
-    height: 4,
-    borderRadius: 2,
+    height: moderateScale(4),
+    borderRadius: moderateScale(2),
     backgroundColor: 'rgba(186, 253, 0, 0.4)',
-    marginHorizontal: 2,
+    marginHorizontal: responsiveSpacing(2),
   },
   activeDot: {
-    backgroundColor: '#BAFD00',
+    backgroundColor: Colors.limeGreen,
   },
   info: {
-    padding: 12,
+    padding: responsiveSpacing(12),
   },
   titleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: responsiveSpacing(4),
   },
   title: {
-    fontWeight: 'bold',
-    fontSize: 15,
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(15),
     flex: 1,
+    color: Colors.black,
   },
   priceTag: {
     backgroundColor: Colors.limeGreen,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: responsiveSpacing(8),
+    paddingVertical: responsiveSpacing(4),
+    borderRadius: moderateScale(6),
   },
   price: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 12,
+    color: Colors.white,
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(12),
   },
   detail: {
     color: Colors.textGray,
-    fontSize: 13,
+    fontSize: responsiveFont(13),
+    fontFamily: Fonts.Roboto_Regular,
   },
 });

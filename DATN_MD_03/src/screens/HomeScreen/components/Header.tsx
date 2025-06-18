@@ -9,6 +9,13 @@ import {
   StatusBar,
 } from 'react-native';
 import { Icons } from '../../../assets/icons';
+import { 
+  responsiveFont, 
+  responsiveIcon, 
+  responsiveSpacing 
+} from '../../../utils/responsive';
+import { Colors } from '../../../theme/color';
+import { Fonts } from '../../../theme/fonts';
 
 const Header: React.FC = () => {
   return (
@@ -58,26 +65,26 @@ export default Header;
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: '#f5f5f5',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 16,
+    backgroundColor: Colors.backgroud,
+    paddingHorizontal: responsiveSpacing(16),
+    paddingTop: responsiveSpacing(12),
+    paddingBottom: responsiveSpacing(16),
   },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: responsiveSpacing(16),
   },
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 25,
+    borderRadius: responsiveIcon(25),
     flex: 0.6,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.white,
     borderWidth: 0.6,
     borderColor: 'rgba(0, 0, 0, 0.1)',
-    marginRight: 12,
+    marginRight: responsiveSpacing(12),
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -88,30 +95,30 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 12,
+    width: responsiveIcon(50),
+    height: responsiveIcon(50),
+    borderRadius: responsiveIcon(25),
+    marginRight: responsiveSpacing(12),
   },
   userText: {
     flex: 1,
   },
   label: {
-    color: '#999',
-    fontWeight: 'bold',
-    fontSize: 12,
-    marginBottom: 2,
+    color: Colors.darkGray,
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(12),
+    marginBottom: responsiveSpacing(2),
   },
   name: {
-    fontWeight: 'bold',
-    fontSize: 17,
-    color: '#000',
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(17),
+    color: Colors.black,
   },
   notificationButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#fff',
+    width: responsiveIcon(50),
+    height: responsiveIcon(50),
+    borderRadius: responsiveIcon(25),
+    backgroundColor: Colors.white,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -124,8 +131,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   notificationIcon: {
-    width: 25,
-    height: 25,
+    width: responsiveIcon(25),
+    height: responsiveIcon(25),
     tintColor: '#333',
   },
   searchRow: {
@@ -134,10 +141,10 @@ const styles = StyleSheet.create({
   },
   searchInputContainer: {
     flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 25,
-    paddingHorizontal: 12,
-    marginRight: 8,
+    backgroundColor: Colors.white,
+    borderRadius: responsiveIcon(25),
+    paddingHorizontal: responsiveSpacing(12),
+    marginRight: responsiveSpacing(8),
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -148,15 +155,16 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   searchInput: {
-    fontSize: 14,
-    color: '#000',
-    paddingVertical: 12,
+    fontSize: responsiveFont(14),
+    color: Colors.black,
+    paddingVertical: responsiveSpacing(12),
+    fontFamily: Fonts.Roboto_Regular,
   },
   searchButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#fff',
+    width: responsiveIcon(48),
+    height: responsiveIcon(48),
+    borderRadius: responsiveIcon(24),
+    backgroundColor: Colors.white,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -169,8 +177,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   searchIcon: {
-    width: 20,
-    height: 20,
+    width: responsiveIcon(20),
+    height: responsiveIcon(20),
     tintColor: '#666',
   },
 });
