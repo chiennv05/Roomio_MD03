@@ -1,5 +1,5 @@
 import {StyleSheet, Text, View} from 'react-native';
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import ItemInput from './ItemInput';
 import {responsiveFont, scale, SCREEN} from '../../../utils/responsive';
 import {Fonts} from '../../../theme/fonts';
@@ -47,6 +47,14 @@ export default function Login({setModal}: ModalProps) {
         setModal(Icons.IconError, errMessage);
       });
   };
+
+  const handleResetPass = useCallback(() => {
+    navigation.navigate('ForgotPassword');
+  }, [navigation]);
+  const handleReset = useCallback(() => {
+    setUsename('');
+    setPassword('');
+  }, []);
   return (
     <View style={styles.container}>
       <Text style={styles.textTitle}>
@@ -66,13 +74,20 @@ export default function Login({setModal}: ModalProps) {
         isPass={true}
         editable={true}
       />
-      <Text style={styles.textForgotPassword}>Quên mật khẩu</Text>
+      <Text style={styles.textForgotPassword} onPress={handleResetPass}>
+        Quên mật khẩu
+      </Text>
       <Text style={styles.textCondition}>
         Bằng việc nhấn vào xác nhận, bạn đồng ý với
         <Text style={styles.textConditionGreen}> điều khoản và điều kiện </Text>
         của Romio
       </Text>
-      <ItemButtonConfirm onPress={hanleLogin} />
+      <ItemButtonConfirm
+        onPress={hanleLogin}
+        title="Đăng nhập"
+        icon={Icons.IconReset}
+        onPressIcon={handleReset}
+      />
     </View>
   );
 }

@@ -8,7 +8,6 @@ import {
 } from 'react-native';
 import React, {useState} from 'react';
 import ContainerLinearGradent from '../../components/ContainerLinearGradent';
-import {Icons} from '../../assets/icons';
 import {
   responsiveFont,
   responsiveIcon,
@@ -53,12 +52,6 @@ export default function LoginAndRegister() {
         enableOnAndroid={true}
         keyboardOpeningTime={0}>
         <ContainerLinearGradent>
-          <TouchableOpacity style={styles.styleButton}>
-            <Image
-              source={{uri: Icons.IconArrowLeft}}
-              style={styles.styleIconButton}
-            />
-          </TouchableOpacity>
           <Image
             source={{uri: Images.ImageRoomio}}
             style={styles.styleImageRoomio}

@@ -1,5 +1,5 @@
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {responsiveFont, scale, SCREEN} from '../../../utils/responsive';
 import ItemRadioButton from './ItemRadioButton';
 import ItemInput from './ItemInput';
@@ -68,12 +68,25 @@ export default function Register({setModal}: ModalProps) {
       const result = await dispatch(registerUser(newUser)).unwrap();
       console.log('result', result);
       setModal(Icons.IconCheck, 'Đăng ký thành công');
+      setUsename('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setBirtDay('');
+      setSelectedRole('nguoiThue');
     } catch (err: any) {
-      console.log('err', err);
-      // lỗi chỗ này
       setModal(Icons.IconError, err);
     }
   };
+
+  const handleReset = useCallback(() => {
+    setUsename('');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+    setBirtDay('');
+    setSelectedRole('nguoiThue');
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -158,7 +171,12 @@ export default function Register({setModal}: ModalProps) {
           setOpenDatePicker(false);
         }}
       />
-      <ItemButtonConfirm onPress={handleRegister} />
+      <ItemButtonConfirm
+        onPress={handleRegister}
+        title="Đăng ký"
+        icon={Icons.IconReset}
+        onPressIcon={handleReset}
+      />
     </View>
   );
 }
