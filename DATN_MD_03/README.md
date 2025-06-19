@@ -86,6 +86,38 @@ You've successfully run and modified your React Native App. :partying_face:
 
 If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
 
+# API Configuration
+
+## Thay đổi địa chỉ IP/URL API
+
+Để thay đổi địa chỉ IP hoặc URL của API server, bạn có 2 cách:
+
+### Cách 1: Sử dụng script tiện ích (Khuyến nghị)
+
+```bash
+# Thay đổi thành localhost
+npm run change-api-url http://localhost:4000
+
+# Thay đổi thành IP khác
+npm run change-api-url http://192.168.1.100:4000
+
+# Thay đổi thành domain
+npm run change-api-url https://api.yourapp.com
+```
+
+### Cách 2: Chỉnh sửa thủ công
+
+1. Mở file `src/configs/index.ts`
+2. Tìm dòng: `BASE_URL: 'http://125.212.229.71:4000',`
+3. Thay đổi thành URL mới của bạn
+4. Lưu file và restart ứng dụng
+
+### Lưu ý quan trọng
+
+- **Chỉ cần thay đổi 1 nơi**: File `src/configs/index.ts`
+- **Tự động áp dụng**: Tất cả API calls và image URLs sẽ tự động sử dụng URL mới
+- **Không cần sửa từng file**: Tất cả đã được tập trung hóa
+
 # Learn More
 
 To learn more about React Native, take a look at the following resources:

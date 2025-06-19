@@ -8,9 +8,11 @@
     "lint": "eslint .",
     "start": "react-native start",
     "test": "jest",
-    "pod": "cd ios && RCT_NEW_ARCH_ENABLED=0 bundle exec pod install && cd .."
+    "pod": "cd ios && RCT_NEW_ARCH_ENABLED=0 bundle exec pod install && cd ..",
+    "change-api-url": "node scripts/change-api-url.js"
   },
   "dependencies": {
+    "@gorhom/bottom-sheet": "^5.1.6",
     "@react-native-masked-view/masked-view": "^0.3.2",
     "@react-navigation/bottom-tabs": "^7.3.14",
     "@react-navigation/native": "^7.1.11",
@@ -29,6 +31,7 @@
     "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-reanimated": "^3.18.0",
+    "react-native-reanimated-carousel": "^4.0.2",
     "react-native-safe-area-context": "^5.4.1",
     "react-native-screens": "^4.11.1",
     "react-redux": "^9.2.0"

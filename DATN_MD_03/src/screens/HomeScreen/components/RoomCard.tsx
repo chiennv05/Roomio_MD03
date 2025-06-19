@@ -5,9 +5,13 @@ import {
   Image,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { Colors } from '../../../theme/color';
 import { Room } from '../../../types/Room';
+import { RootStackParamList } from '../../../types/route';
 import { 
   SCREEN, 
   responsiveFont, 
@@ -15,32 +19,52 @@ import {
   moderateScale 
 } from '../../../utils/responsive';
 import { Fonts } from '../../../theme/fonts';
+import { getImageUrl } from '../../../configs'; // Import hàm tạo URL hình ảnh từ config
 
+// Type cho navigation
+type RoomCardNavigationProp = StackNavigationProp<RootStackParamList, 'DetailRoom'>;
+
+// Interface định nghĩa props cho component RoomCard
 interface RoomCardProps {
-  item: Room;
+  item: Room; // Dữ liệu phòng trọ
 }
 
 const RoomCard: React.FC<RoomCardProps> = ({ item }) => {
+  const navigation = useNavigation<RoomCardNavigationProp>();
+  
+  // State để theo dõi hình ảnh hiện tại đang hiển thị
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
-  // Sử dụng photos từ API response và tạo full URL
-  const baseURL = 'http://125.212.229.71:4000';
-  const images = item.photos?.map(photo => `${baseURL}${photo}`) || [];
+  // Chuyển đổi đường dẫn hình ảnh từ API thành URL đầy đủ
+  const images = item.photos?.map(photo => getImageUrl(photo)) || [];
   
-  // Tính toán độ rộng thanh dựa trên số lượng ảnh
-  const totalIndicatorWidth = 100; // Tổng độ rộng cho tất cả các thanh
-  const margin = 2; // Khoảng cách giữa các thanh
+  // Tính toán độ rộng của các chấm indicator dựa trên số lượng ảnh
+  const totalIndicatorWidth = 100; // Tổng độ rộng cho tất cả các chấm indicator
+  const margin = 2; // Khoảng cách giữa các chấm
   const dotWidth = Math.max((totalIndicatorWidth - (images.length - 1) * margin * 2) / images.length, 8);
   
+  // Hàm xử lý khi người dùng scroll qua các hình ảnh
   const handleScroll = (event: any) => {
     const slideSize = SCREEN.width - responsiveSpacing(32);
     const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
     setCurrentImageIndex(index);
   };
 
+  // Hàm xử lý khi nhấn vào card để điều hướng sang DetailRoom
+  const handleCardPress = () => {
+    if (item._id) {
+      console.log('Navigating to DetailRoom with roomId:', item._id);
+      navigation.navigate('DetailRoom', { roomId: item._id });
+    } else {
+      console.warn('Room ID is undefined, cannot navigate');
+    }
+  };
+
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={handleCardPress} activeOpacity={0.8}>
+      {/* Container chứa hình ảnh và indicator */}
       <View style={styles.imageContainer}>
+        {/* ScrollView ngang để swipe qua các hình ảnh */}
         <ScrollView
           horizontal
           pagingEnabled
@@ -57,7 +81,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ item }) => {
           ))}
         </ScrollView>
         
-                 {/* Dots indicator */}
+        {/* Các chấm indicator hiển thị ảnh hiện tại (chỉ hiện khi có nhiều hơn 1 ảnh) */}
          {images.length > 1 && (
            <View style={styles.dotsContainer}>
              {images.map((_: string, index: number) => (
@@ -66,7 +90,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ item }) => {
                  style={[
                    styles.dot,
                    { width: dotWidth },
-                   currentImageIndex === index && styles.activeDot
+                   currentImageIndex === index && styles.activeDot // Highlight chấm của ảnh hiện tại
                  ]}
                />
              ))}
@@ -74,18 +98,21 @@ const RoomCard: React.FC<RoomCardProps> = ({ item }) => {
          )}
       </View>
       
+      {/* Phần thông tin phòng trọ */}
       <View style={styles.info}>
         <View style={styles.titleRow}>
           <Text style={styles.title}>{item.description}</Text>
+          {/* Tag hiển thị giá phòng */}
           <View style={styles.priceTag}>
             <Text style={styles.price}>{item.rentPrice?.toLocaleString('vi-VN')} đ</Text>
           </View>
         </View>
+        {/* Thông tin chi tiết: địa chỉ, diện tích, số phòng */}
         <Text style={styles.detail}>
           {item.location.addressText} || {item.area}m² || {item.roomNumber}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
