@@ -5,6 +5,14 @@ export const Icons = {
     ios: 'icon_arrow_left',
     android: 'asset:/icons/icon_arrow_left.png',
   }),
+  IconArrowBack: Platform.select({
+    ios: 'icon_arrow_back',
+    android: 'asset:/icons/icon_arrow_back.png',
+  }),
+  IconWifi: Platform.select({
+    ios: 'icon_wifi',
+    android: 'asset:/icons/icon_wifi.png',
+  }),
   IconArrowDown: Platform.select({
     ios: 'icon_arrowdown',
     android: 'asset:/icons/icon_arrowdown.png',
@@ -45,6 +53,10 @@ export const Icons = {
     ios: 'icon_heart',
     android: 'asset:/icons/icon_heart.png',
   }),
+  IconFavourite: Platform.select({
+    ios: 'icon_favourite',
+    android: 'asset:/icons/icon_favourite.png',
+  }),
   IconHomeDefaut: Platform.select({
     ios: 'icon_home_defaut',
     android: 'asset:/icons/icon_home_defaut.png',
@@ -68,5 +80,65 @@ export const Icons = {
   IconSearchDefaut: Platform.select({
     ios: 'Icon_search_defaut',
     android: 'asset:/icons/Icon_search_defaut.png',
+  }),
+  IconShare: Platform.select({
+    ios: 'icon_share',
+    android: 'asset:/icons/icon_share.png',
+  }),
+  IconLocation: Platform.select({
+    ios: 'icon_location',
+    android: 'asset:/icons/icon_location.png',
+  }),
+  IconAreaBlack: Platform.select({
+    ios: 'icon_area_black',
+    android: 'asset:/icons/icon_area_black.png',
+  }),
+  IconArea: Platform.select({
+    ios: 'icon_area',
+    android: 'asset:/icons/icon_area.png',
+  }),
+  IconFloor: Platform.select({
+    ios: 'icon_ floor',
+    android: 'asset:/icons/icon_ floor.png',
+  }),
+  IconElectrical: Platform.select({
+    ios: 'icon_electrical',
+    android: 'asset:/icons/icon_electrical.png',
+  }),
+  IconWater: Platform.select({
+    ios: 'icon_water',
+    android: 'asset:/icons/icon_water.png',
+  }),
+  IconRemove: Platform.select({
+    ios: 'icon_remove',
+    android: 'asset:/icons/icon_remove.png',
+  }),
+  IconRoom: Platform.select({
+    ios: 'icon_room',
+    android: 'asset:/icons/icon_room.png',
+  }),
+  IconDieuHoa: Platform.select({
+    ios: 'icon_dieu_hoa',
+    android: 'asset:/icons/icon_dieu_hoa.png',
+  }),
+  IconKeBep: Platform.select({
+    ios: 'icon_ke_bep',
+    android: 'asset:/icons/icon_ke_bep.png',
+  }),
+  IconGiuongNgu: Platform.select({
+    ios: 'icon_giuong_ngu',
+    android: 'asset:/icons/icon_giuong_ngu.png',
+  }),
+  IconNongLanh: Platform.select({
+    ios: 'icon_nong_lanh',
+    android: 'asset:/icons/icon_nong_lanh.png',
+  }),
+  IconLocationGreen: Platform.select({
+    ios: 'icon_location_green',
+    android: 'asset:/icons/icon_location_green.png',
+  }),
+  IconArrowDown2: Platform.select({
+    ios: 'icon_arrrow_down',
+    android: 'asset:/icons/icon_arrrow_down.png',
   }),
 };

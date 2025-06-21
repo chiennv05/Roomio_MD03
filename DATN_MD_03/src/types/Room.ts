@@ -98,6 +98,12 @@ export interface RoomState {
     furniture: string[];
   };
   error: string | null;
+  roomDetail: Room | null;
+  roomDetailLoading: boolean;
+  roomDetailError: string | null;
+  relatedRooms: Room[];
+  relatedRoomsLoading: boolean;
+  relatedRoomsError: string | null;
 }
 
 export interface Owner {

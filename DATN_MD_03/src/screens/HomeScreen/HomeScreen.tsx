@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   FlatList,
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  Text,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import Header from './components/Header';
 import FilterTabs from './components/FilterTabs';
 import RoomCard from './components/RoomCard';
@@ -13,10 +16,17 @@ import { Room, RoomFilters } from '../../types/Room';
 import { District } from '../../types/Address';
 import { useRooms } from '../../hooks';
 import { Colors } from '../../theme/color';
-import { responsiveSpacing } from '../../utils/responsive';
+import { responsiveSpacing, responsiveFont } from '../../utils/responsive';
+import { RootStackParamList } from '../../types/route';
+import { Fonts } from '../../theme/fonts';
+import { validateRoomByFilters } from '../../utils/roomUtils';
+
+// Type cho navigation
+type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DetailRoom'>;
 
 const HomeScreen: React.FC = () => {
-  const filters: string[] = ['Khu vực', 'Khoảng giá', 'Diện tích', 'Nội thất', 'Tiện nghi'];
+  const navigation = useNavigation<HomeScreenNavigationProp>();
+  const filters = useMemo(() => ['Khu vực', 'Khoảng giá', 'Diện tích', 'Nội thất', 'Tiện nghi'], []);
   const [selectedFilters, setSelectedFilters] = useState<number[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<District[]>([]);
   const [priceRange, setPriceRange] = useState<{min: number, max: number} | null>(null);
@@ -24,7 +34,61 @@ const HomeScreen: React.FC = () => {
   const [selectedFurniture, setSelectedFurniture] = useState<string[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
 
+  // Toggle để kiểm soát client-side filtering (có thể tắt nếu backend đã fix)
+  const useClientSideFiltering = true;
+
   const { rooms, loading, pagination, loadRooms, loadMore } = useRooms();
+
+  // Filter rooms ở phía client để đảm bảo logic AND đúng
+  const filteredRooms = useMemo(() => {
+    // Nếu tắt client-side filtering, trả về rooms từ API
+    if (!useClientSideFiltering) {
+      return rooms;
+    }
+
+    // Nếu không có filter nào, trả về tất cả
+    const hasNoFilters = selectedAmenities.length === 0 && 
+                        selectedFurniture.length === 0 && 
+                        selectedRegions.length === 0 && 
+                        !priceRange && 
+                        !areaRange;
+    
+    if (hasNoFilters) {
+      return rooms;
+    }
+
+    // Chuẩn bị regions array cho việc filter
+    const regionsToFilter = selectedRegions.map(region => region.name);
+
+    const filtered = rooms.filter(room => {
+      const isValid = validateRoomByFilters(
+        room, 
+        selectedAmenities, 
+        selectedFurniture, 
+        regionsToFilter,
+        priceRange || undefined,
+        areaRange || undefined
+      );
+      
+      // Debug mode tắt để tối ưu performance
+      // Có thể bật lại khi cần debug:
+      // debugRoomFilter(room, selectedAmenities, selectedFurniture, regionsToFilter, priceRange, areaRange);
+      
+      return isValid;
+    });
+
+    // Log tổng kết filter để debug
+    console.log(`🔍 Client Filter Summary:`);
+    console.log(`   📊 Total rooms from API: ${rooms.length}`);
+    console.log(`   📊 Filtered rooms: ${filtered.length}`);
+    console.log(`   🔍 Selected regions: [${regionsToFilter.join(', ')}]`);
+    console.log(`   🔍 Selected amenities: [${selectedAmenities.join(', ')}]`);
+    console.log(`   🔍 Selected furniture: [${selectedFurniture.join(', ')}]`);
+    if (priceRange) console.log(`   🔍 Price range: ${priceRange.min.toLocaleString()} - ${priceRange.max.toLocaleString()}đ`);
+    if (areaRange) console.log(`   🔍 Area range: ${areaRange.min} - ${areaRange.max}m²`);
+
+    return filtered;
+  }, [rooms, selectedAmenities, selectedFurniture, selectedRegions, priceRange, areaRange, useClientSideFiltering]);
 
   // Build filters object
   const buildFilters = useCallback((): RoomFilters => {
@@ -56,17 +120,13 @@ const HomeScreen: React.FC = () => {
     return filters;
   }, [priceRange, areaRange, selectedFurniture, selectedAmenities, selectedRegions]);
 
-  // Load initial data
+  // Load data when component mounts or filters change
   useEffect(() => {
-    loadRooms(buildFilters());
-  }, [loadRooms, buildFilters]);
-
-  // Reload when filters change
-  useEffect(() => {
-    loadRooms(buildFilters());
+    const filters = buildFilters();
+    loadRooms(filters);
   }, [priceRange, areaRange, selectedFurniture, selectedAmenities, selectedRegions, loadRooms, buildFilters]);
 
-  const handleFilterSelect = (index: number) => {
+  const handleFilterSelect = useCallback((index: number) => {
     setSelectedFilters(prev => {
       if (prev.includes(index)) {
         return prev.filter(i => i !== index);
@@ -74,49 +134,57 @@ const HomeScreen: React.FC = () => {
         return [...prev, index];
       }
     });
-  };
+  }, []);
 
-  const handleClearAll = () => {
+  const handleClearAll = useCallback(() => {
     setSelectedFilters([]);
     setSelectedRegions([]);
     setPriceRange(null);
     setAreaRange(null);
     setSelectedFurniture([]);
     setSelectedAmenities([]);
-  };
+  }, []);
 
-  const handleRegionSelect = (regions: District[]) => {
+  const handleRegionSelect = useCallback((regions: District[]) => {
     setSelectedRegions(regions);
-  };
+  }, []);
 
-  const handlePriceRangeSelect = (minPrice: number, maxPrice: number) => {
+  const handlePriceRangeSelect = useCallback((minPrice: number, maxPrice: number) => {
     setPriceRange({ min: minPrice, max: maxPrice });
-  };
+  }, []);
 
-  const handleAreaSelect = (minArea: number, maxArea: number) => {
+  const handleAreaSelect = useCallback((minArea: number, maxArea: number) => {
     setAreaRange({ min: minArea, max: maxArea });
-  };
+  }, []);
 
-  const handleFurnitureSelect = (items: string[]) => {
+  const handleFurnitureSelect = useCallback((items: string[]) => {
     setSelectedFurniture(items);
-  };
+  }, []);
 
-  const handleAmenitySelect = (items: string[]) => {
+  const handleAmenitySelect = useCallback((items: string[]) => {
     setSelectedAmenities(items);
-  };
+  }, []);
 
-  const handleRefresh = () => {
-    loadRooms(buildFilters());
-  };
+  const handleRefresh = useCallback(() => {
+    const filters = buildFilters();
+    loadRooms(filters);
+  }, [buildFilters, loadRooms]);
 
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
     if (pagination?.hasNextPage && !loading) {
-      loadMore(buildFilters());
+      const filters = buildFilters();
+      loadMore(filters);
     }
-  };
+  }, [pagination?.hasNextPage, loading, buildFilters, loadMore]);
+
+  // Hàm xử lý khi nhấn vào room card
+  const handleRoomPress = useCallback((roomId: string) => {
+    console.log('Navigating to DetailRoom with roomId:', roomId);
+    navigation.navigate('DetailRoom', { roomId });
+  }, [navigation]);
 
   const renderRoomCard = ({ item }: { item: Room }) => (
-    <RoomCard item={item} />
+    <RoomCard item={item} onPress={handleRoomPress} />
   );
 
   const renderFooter = () => {
@@ -124,6 +192,27 @@ const HomeScreen: React.FC = () => {
     return (
       <View style={styles.footer}>
         <ActivityIndicator size="large" color={Colors.limeGreen} />
+      </View>
+    );
+  };
+
+  const renderEmptyComponent = () => {
+    if (loading) return null;
+    
+    const hasActiveFilters = selectedAmenities.length > 0 || selectedFurniture.length > 0 || 
+                            selectedRegions.length > 0 || priceRange || areaRange;
+    
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyTitle}>
+          {hasActiveFilters ? 'Không tìm thấy phòng phù hợp' : 'Không có phòng nào'}
+        </Text>
+        <Text style={styles.emptySubtitle}>
+          {hasActiveFilters 
+            ? 'Thử thay đổi bộ lọc để tìm kiếm phòng khác' 
+            : 'Hiện tại chưa có phòng nào được đăng'
+          }
+        </Text>
       </View>
     );
   };
@@ -147,14 +236,15 @@ const HomeScreen: React.FC = () => {
         selectedFurniture={selectedFurniture}
         selectedAmenities={selectedAmenities}
       />
+      <Text style={styles.recommendationTitle}>Đề xuất cho bạn</Text>
       <FlatList
-        data={rooms}
+        data={filteredRooms}
         renderItem={renderRoomCard}
         keyExtractor={(item, index) => item._id || index.toString()}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={loading && rooms.length === 0}
+            refreshing={loading && filteredRooms.length === 0}
             onRefresh={handleRefresh}
             colors={[Colors.limeGreen]}
           />
@@ -162,6 +252,7 @@ const HomeScreen: React.FC = () => {
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
         ListFooterComponent={renderFooter}
+        ListEmptyComponent={renderEmptyComponent}
         contentContainerStyle={styles.listContainer}
       />
     </View>
@@ -182,5 +273,34 @@ const styles = StyleSheet.create({
   footer: {
     paddingVertical: responsiveSpacing(20),
     alignItems: 'center',
+  },
+  recommendationTitle: {
+    fontSize: responsiveFont(27),
+    fontWeight: '600',
+    fontFamily: Fonts.Roboto_Bold,
+    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(12),
+    color: '#17190F',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: responsiveSpacing(32),
+    paddingVertical: responsiveSpacing(64),
+  },
+  emptyTitle: {
+    fontSize: responsiveFont(18),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+    textAlign: 'center',
+    marginBottom: responsiveSpacing(8),
+  },
+  emptySubtitle: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
+    textAlign: 'center',
+    lineHeight: responsiveFont(20),
   },
 });

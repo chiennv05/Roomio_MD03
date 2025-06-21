@@ -131,6 +131,10 @@ const RegionModal: React.FC<RegionModalProps> = ({
   };
 
   const handleConfirm = () => {
+    console.log('🔍 Region Filter - Selected districts:', tempSelected.map(d => ({
+      name: d.name,
+      city: d.cityName
+    })));
     onConfirm(tempSelected);
     onClose();
   };

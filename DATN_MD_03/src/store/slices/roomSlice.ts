@@ -1,6 +1,6 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import {RoomState, RoomFilters} from '../../types';
-import {getRooms} from '../services/roomService';
+import {getRooms, getRoomDetail, getRelatedRooms, getRelatedRoomsFallback} from '../services/roomService';
 
 const initialState: RoomState = {
   loading: false,
@@ -11,6 +11,12 @@ const initialState: RoomState = {
     furniture: [],
   },
   error: null,
+  roomDetail: null,
+  roomDetailLoading: false,
+  roomDetailError: null,
+  relatedRooms: [],
+  relatedRoomsLoading: false,
+  relatedRoomsError: null,
 };
 
 export const fetchRooms = createAsyncThunk(
@@ -43,6 +49,60 @@ export const loadMoreRooms = createAsyncThunk(
   },
 );
 
+export const fetchRoomDetail = createAsyncThunk(
+  'room/fetchRoomDetail',
+  async (roomId: string, {rejectWithValue}) => {
+    try {
+      const res = await getRoomDetail(roomId);
+      if (!res?.success) throw new Error(res?.message);
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Lấy chi tiết phòng thất bại');
+    }
+  },
+);
+
+export const fetchRelatedRooms = createAsyncThunk(
+  'room/fetchRelatedRooms',
+  async (
+    {roomId, district, province, limit = 6}: {
+      roomId: string; 
+      district?: string; 
+      province?: string;
+      limit?: number;
+    }, 
+    {rejectWithValue}
+  ) => {
+    try {
+      console.log('🔗 Starting related rooms search...');
+      
+      // Sử dụng fallback API trực tiếp vì API chuyên dụng chưa có
+      // Thay vì thử API chuyên dụng trước, ta đi thẳng vào fallback
+      const fallbackRes = await getRelatedRoomsFallback(roomId, district, province, limit);
+      if (fallbackRes?.success) {
+        console.log('✅ Related rooms loaded successfully:', fallbackRes.data.rooms.length, 'rooms');
+        return fallbackRes.data.rooms;
+      }
+      
+      // Nếu fallback cũng thất bại, thử API chuyên dụng (for future)
+      try {
+        console.log('🔄 Fallback failed, trying primary API...');
+        const res = await getRelatedRooms(roomId, district, province, limit);
+        if (res?.success && res?.data?.rooms) {
+          return res.data.rooms;
+        }
+      } catch (apiError) {
+        console.log('❌ Primary API also failed');
+      }
+      
+      throw new Error('Không thể lấy danh sách phòng liên quan từ API');
+    } catch (err: any) {
+      console.error('❌ fetchRelatedRooms failed:', err.message);
+      return rejectWithValue(err.message || 'Lấy danh sách phòng liên quan thất bại');
+    }
+  },
+);
+
 const roomSlice = createSlice({
   name: 'room',
   initialState,
@@ -58,10 +118,17 @@ const roomSlice = createSlice({
         furniture: [],
       };
     },
+    clearRoomDetail: state => {
+      state.roomDetail = null;
+      state.roomDetailError = null;
+    },
+    clearRelatedRooms: state => {
+      state.relatedRooms = [];
+      state.relatedRoomsError = null;
+    },
   },
   extraReducers: builder => {
     builder
-      // Fetch rooms
       .addCase(fetchRooms.pending, state => {
         state.loading = true;
         state.error = null;
@@ -77,7 +144,6 @@ const roomSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // Load more rooms
       .addCase(loadMoreRooms.pending, state => {
         state.loading = true;
         state.error = null;
@@ -91,9 +157,35 @@ const roomSlice = createSlice({
       .addCase(loadMoreRooms.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+
+      .addCase(fetchRoomDetail.pending, state => {
+        state.roomDetailLoading = true;
+        state.roomDetailError = null;
+      })
+      .addCase(fetchRoomDetail.fulfilled, (state, action) => {
+        state.roomDetailLoading = false;
+        state.roomDetail = action.payload;
+      })
+      .addCase(fetchRoomDetail.rejected, (state, action) => {
+        state.roomDetailLoading = false;
+        state.roomDetailError = action.payload as string;
+      })
+
+      .addCase(fetchRelatedRooms.pending, state => {
+        state.relatedRoomsLoading = true;
+        state.relatedRoomsError = null;
+      })
+      .addCase(fetchRelatedRooms.fulfilled, (state, action) => {
+        state.relatedRoomsLoading = false;
+        state.relatedRooms = action.payload;
+      })
+      .addCase(fetchRelatedRooms.rejected, (state, action) => {
+        state.relatedRoomsLoading = false;
+        state.relatedRoomsError = action.payload as string;
       });
   },
 });
 
-export const {clearRoomError, resetRooms} = roomSlice.actions;
+export const {clearRoomError, resetRooms, clearRoomDetail, clearRelatedRooms} = roomSlice.actions;
 export default roomSlice.reducer; 
