@@ -141,4 +141,125 @@ export const Icons = {
     ios: 'icon_arrrow_down',
     android: 'asset:/icons/icon_arrrow_down.png',
   }),
+  // Amenity icons
+  IconMayNuocNong: Platform.select({
+    ios: 'icon_may_nuoc_nong',
+    android: 'asset:/icons/icon_may_nuoc_nong.png',
+  }),
+  IconTuLanh: Platform.select({
+    ios: 'icon_tu_lanh',
+    android: 'asset:/icons/icon_tu_lanh.png',
+  }),
+  IconQuatTran: Platform.select({
+    ios: 'icon_quat_tran',
+    android: 'asset:/icons/icon_quat_tran.png',
+  }),
+  IconTuQuanAo: Platform.select({
+    ios: 'icon_tu_quan_ao',
+    android: 'asset:/icons/icon_tu_quan_ao.png',
+  }),
+  IconBanGhe: Platform.select({
+    ios: 'icon_ban_ghe',
+    android: 'asset:/icons/icon_ban_ghe.png',
+  }),
+  IconSofa: Platform.select({
+    ios: 'icon_sofa',
+    android: 'asset:/icons/icon_sofa.png',
+  }),
+  IconGuong: Platform.select({
+    ios: 'icon_guong',
+    android: 'asset:/icons/icon_guong.png',
+  }),
+  IconRemCua: Platform.select({
+    ios: 'icon_rem_cua',
+    android: 'asset:/icons/icon_rem_cua.png',
+  }),
+  IconChanGaGoi: Platform.select({
+    ios: 'icon_chan_ga_goi',
+    android: 'asset:/icons/icon_chan_ga_goi.png',
+  }),
+  IconVeSinhKhepKin: Platform.select({
+    ios: 'icon_ve_sinh_khep_kin',
+    android: 'asset:/icons/icon_ve_sinh_khep_kin.png',
+  }),
+  IconVeSinhChung: Platform.select({
+    ios: 'icon_ve_sinh_chung',
+    android: 'asset:/icons/icon_ve_sinh_chung.png',
+  }),
+  IconGacXep: Platform.select({
+    ios: 'icon_gac_xep',
+    android: 'asset:/icons/icon_gac_xep.png',
+  }),
+  IconBanCong: Platform.select({
+    ios: 'icon_ban_cong',
+    android: 'asset:/icons/icon_ban_cong.png',
+  }),
+  IconThangMay: Platform.select({
+    ios: 'icon_thang_may',
+    android: 'asset:/icons/icon_thang_may.png',
+  }),
+  IconBaoVe: Platform.select({
+    ios: 'icon_bao_ve',
+    android: 'asset:/icons/icon_bao_ve.png',
+  }),
+  IconGuiXeDien: Platform.select({
+    ios: 'icon_gui_xe_dien',
+    android: 'asset:/icons/icon_gui_xe_dien.png',
+  }),
+  IconGuiXeMay: Platform.select({
+    ios: 'icon_gui_xe_may',
+    android: 'asset:/icons/icon_gui_xe_may.png',
+  }),
+  IconGuiXeOto: Platform.select({
+    ios: 'icon_gui_xe_oto',
+    android: 'asset:/icons/icon_gui_xe_oto.png',
+  }),
+  IconNuoiPet: Platform.select({
+    ios: 'icon_nuoi_pet',
+    android: 'asset:/icons/icon_nuoi_pet.png',
+  }),
+  IconGioLinhHoat: Platform.select({
+    ios: 'icon_gio_linh_hoat',
+    android: 'asset:/icons/icon_gio_linh_hoat.png',
+  }),
+  IconKhongChungChu: Platform.select({
+    ios: 'icon_khong_chung_Chu',
+    android: 'asset:/icons/icon_khong_chung_Chu.png',
+  }),
+  IconRaVaoVanTay: Platform.select({
+    ios: 'icon_ra_vao_van_tay',
+    android: 'asset:/icons/icon_ra_vao_van_tay.png',
+  }),
+  IconWifiMienPhi: Platform.select({
+    ios: 'icon_wifi_mien_phi',
+    android: 'asset:/icons/icon_wifi_mien_phi.png',
+  }),
+  IconWifiTraPhi: Platform.select({
+    ios: 'icon_wifi_tra_phi',
+    android: 'asset:/icons/icon_wifi_tra_phi.png',
+  }),
+  IconMayGiat: Platform.select({
+    ios: 'icon_may_giat',
+    android: 'asset:/icons/icon_may_giat.png',
+  }),
+  IconTienDien: Platform.select({
+    ios: 'icon_tien_dien',
+    android: 'asset:/icons/icon_tien_dien.png',
+  }),
+  IconTienNuoc: Platform.select({
+    ios: 'icon_tien_nuoc',
+    android: 'asset:/icons/icon_tien_nuoc.png',
+  }),
+  IconVeSinh: Platform.select({
+    ios: 'icon_ve_sinh',
+    android: 'asset:/icons/icon_ve_sinh.png',
+  }),
+  IconGuiXe: Platform.select({
+    ios: 'icon_gui_xe',
+    android: 'asset:/icons/icon_gui_xe.png',
+  }),
+  // IconGiaDung: Platform.select({
+  //   ios: 'icon_gia_dung',
+  //   android: 'asset:/icons/icon_gia_dung.png',
+  // }),
 };
