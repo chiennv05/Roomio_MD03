@@ -7,7 +7,13 @@ import {
   ImageSourcePropType,
   Image,
 } from 'react-native';
-import {SCREEN, responsiveFont, responsiveIcon, responsiveSpacing, scale, verticalScale} from '../../../utils/responsive';
+import {
+  SCREEN,
+  responsiveFont,
+  responsiveIcon,
+  responsiveSpacing,
+  verticalScale,
+} from '../../../utils/responsive';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
 

@@ -2,27 +2,38 @@ import React from 'react';
 import {Text, StyleSheet, View, TouchableOpacity, Image} from 'react-native';
 import ContainerLinearGradent from '../../../components/ContainerLinearGradent';
 import {useSelector} from 'react-redux';
-import {SCREEN, responsiveFont, responsiveIcon, responsiveSpacing, scale, verticalScale} from '../../../utils/responsive';
+import {
+  responsiveFont,
+  responsiveSpacing,
+  scale,
+} from '../../../utils/responsive';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
 import {useNavigation} from '@react-navigation/native';
-import { Icons } from '../../../assets/icons';
+import {Icons} from '../../../assets/icons';
 
 export default function IteminIrmation() {
   const nguoiDung = useSelector((state: any) => state.auth.user);
   const navigation = useNavigation();
 
   return (
-    <ContainerLinearGradent >
-
-      <View style={[styles.header, {position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10}]}>
+    <ContainerLinearGradent>
+      <View
+        style={[
+          styles.header,
+          {position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10},
+        ]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}>
-          <Image source={{uri: Icons.IconOut}} style={{width: responsiveFont(24), height: responsiveFont(24)}} resizeMode="contain" />
+          <Image
+            source={{uri: Icons.IconOut}}
+            style={{width: responsiveFont(24), height: responsiveFont(24)}}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Thông tin cá nhân</Text>
-        <View style={styles.backButton2}/>
+        <View style={styles.backButton2} />
       </View>
 
       <View style={[styles.avatarWrapper, {marginTop: 80}]}>
@@ -48,22 +59,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: scale(16),
     paddingBottom: responsiveSpacing(10),
   },
-  backButton: { 
+  backButton: {
     width: responsiveFont(36),
     height: responsiveFont(36),
     borderRadius: responsiveFont(18),
     backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',
- 
   },
   headerTitle: {
     fontSize: responsiveFont(20),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
     flex: 1,
-    textAlign: 'center'
-   
+    textAlign: 'center',
   },
   backButton2: {
     width: responsiveFont(36),

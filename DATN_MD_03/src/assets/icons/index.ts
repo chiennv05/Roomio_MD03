@@ -86,10 +86,11 @@ export const Icons = {
     ios: 'icon_light_report',
     android: 'asset:/icons/icon_light_report.png',
   }),
-  IconoirPrivacy: Platform.select({
-    ios: 'iconoir_privacy',
-    android: 'asset:/icons/  iconoir_privacy.png',
+  Iconoir_Privacy_Policy: Platform.select({
+    ios: 'iconoir_privacy_policy',
+    android: 'asset:/icons/iconoir_privacy_policy.png',
   }),
+
   IconOut: Platform.select({
     ios: 'iconout',
     android: 'asset:/icons/iconout.png',

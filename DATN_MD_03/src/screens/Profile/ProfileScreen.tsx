@@ -1,9 +1,20 @@
 import React from 'react';
-import {SafeAreaView, StyleSheet, Text, View, TouchableOpacity} from 'react-native';
+import {
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+} from 'react-native';
 import ProfileHeader from './components/ProfileHeader';
 import SettingSwitch from './components/SettingSwitch';
 import SettingItem from './components/SettingItem';
-import {SCREEN, responsiveFont, responsiveIcon, responsiveSpacing, scale, verticalScale} from '../../utils/responsive';
+import {
+  SCREEN,
+  responsiveFont,
+  scale,
+  verticalScale,
+} from '../../utils/responsive';
 import {Colors} from '../../theme/color';
 import {Fonts} from '../../theme/fonts';
 import {Icons} from '../../assets/icons';
@@ -20,7 +31,7 @@ export default function ProfileScreen() {
   const handleDangXuat = () => {
     dispatch(logout());
     if (navigation && typeof navigation.navigate === 'function') {
-      navigation.navigate('Login');
+      navigation.replace('Login');
     }
   };
 
@@ -67,7 +78,7 @@ export default function ProfileScreen() {
           iconEnd={Icons.IconNext}
         />
         <SettingItem
-          iconStat={Icons.IconoirPrivacy}
+          iconStat={Icons.Iconoir_Privacy_Policy}
           label="Điều khoản & chính sách"
           iconEnd={Icons.IconNext}
         />

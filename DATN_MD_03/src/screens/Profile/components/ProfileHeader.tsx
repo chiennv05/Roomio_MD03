@@ -1,8 +1,12 @@
 import React from 'react';
-import {View, Text, Image, StyleSheet} from 'react-native';
+import {View, Text, StyleSheet} from 'react-native';
 import ContainerLinearGradent from '../../../components/ContainerLinearGradent';
 import {useSelector} from 'react-redux';
-import {SCREEN, responsiveFont, responsiveIcon, responsiveSpacing, scale, verticalScale} from '../../../utils/responsive';
+import {
+  responsiveFont,
+  responsiveSpacing,
+  verticalScale,
+} from '../../../utils/responsive';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
 export default function ProfileHeader() {
@@ -10,11 +14,17 @@ export default function ProfileHeader() {
   return (
     <ContainerLinearGradent>
       <View style={styles.header}>
-        <Text style={styles.name}>{nguoiDung?.fullName || nguoiDung?.username || 'Chưa có tên'}</Text>
+        <Text style={styles.name}>
+          {nguoiDung?.fullName || nguoiDung?.username || 'Chưa có tên'}
+        </Text>
         <View style={styles.avatarWrapper}>
           <View style={styles.avatarCircle}>
             <Text style={styles.avatarText}>
-              {(nguoiDung?.fullName?.[0] || nguoiDung?.fullName?.[0] || '?').toUpperCase()}
+              {(
+                nguoiDung?.fullName?.[0] ||
+                nguoiDung?.fullName?.[0] ||
+                '?'
+              ).toUpperCase()}
             </Text>
           </View>
         </View>
@@ -56,7 +66,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: responsiveFont(40),
     color: Colors.white,
-    fontFamily: Fonts.Roboto_Bold
+    fontFamily: Fonts.Roboto_Bold,
   },
   email: {
     color: '#444',
