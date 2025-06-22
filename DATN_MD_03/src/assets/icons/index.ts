@@ -19,7 +19,7 @@ export const Icons = {
   }),
   IconRemoveFilter: Platform.select({
     ios: 'icon_removefilter',
-    android: 'asset:/icons/icon_removefilter.png',
+    android: 'asset:/icons/icon_remove.png',
   }),
   IconNotification: Platform.select({
     ios: 'icon_notification',
@@ -262,4 +262,8 @@ export const Icons = {
   //   ios: 'icon_gia_dung',
   //   android: 'asset:/icons/icon_gia_dung.png',
   // }),
+  IconArrowDown3: Platform.select({
+    ios: 'icon_arrow_down',
+    android: 'asset:/icons/icon_arrow_down.png',
+  }),
 };

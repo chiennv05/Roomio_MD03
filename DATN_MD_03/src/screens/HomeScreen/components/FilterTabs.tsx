@@ -195,7 +195,7 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
                 {getDisplayText(item, index)}
               </Text>
               <Image 
-                source={{ uri: Icons.IconArrowDown }}
+                source={{ uri: Icons.IconArrowDown2 }}
                 style={styles.arrowIcon}
               />
             </TouchableOpacity>
@@ -300,8 +300,8 @@ const styles = StyleSheet.create({
     color: Colors.black,
   },
   arrowIcon: {
-    width: responsiveIcon(12),
-    height: responsiveIcon(12),
+    width: responsiveIcon(10),
+    height: responsiveIcon(5),
     tintColor: Colors.black,
   },
   locationText: {
