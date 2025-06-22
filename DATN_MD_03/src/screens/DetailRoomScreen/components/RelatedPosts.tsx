@@ -5,6 +5,7 @@ import { Fonts } from '../../../theme/fonts';
 import { responsiveSpacing, responsiveFont } from '../../../utils/responsive';
 import { Room } from '../../../types/Room';
 import { getFullImageUrl } from '../../../utils/roomUtils';
+import { Icons } from '../../../assets/icons';
 
 interface RelatedPost {
   id?: string;
@@ -84,7 +85,7 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({
                 </Text>
                 <Text style={styles.postPrice}>{post.price}</Text>
                 <View style={styles.locationContainer}>
-                  <Text style={styles.locationIcon}>📍</Text>
+                  <Image source={{ uri: Icons.IconLocation }} style={styles.locationIcon} />
                   <Text style={styles.postAddress} numberOfLines={1}>
                     {post.address}
                   </Text>
@@ -146,8 +147,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   locationIcon: {
-    fontSize: 12,
+    width: 12,
+    height: 12,
     marginRight: responsiveSpacing(4),
+    tintColor: Colors.darkGreen,
   },
   postAddress: {
     flex: 1,

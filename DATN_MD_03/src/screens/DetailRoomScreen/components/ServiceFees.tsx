@@ -7,10 +7,27 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
-import { responsiveSpacing, responsiveFont } from '../../../utils/responsive';
+import { 
+  responsiveSpacing, 
+  responsiveFont, 
+  responsiveIcon,
+  isSmallDevice,
+  isTablet
+} from '../../../utils/responsive';
 import { Icons } from '../../../assets/icons';
 
-const ITEM_WIDTH = 120; // Fixed width for each service item
+// Responsive item width
+const getItemWidth = () => {
+  if (isTablet) {
+    return 140; // Lớn hơn cho tablet
+  } else if (isSmallDevice) {
+    return 100; // Nhỏ hơn cho màn hình nhỏ
+  } else {
+    return 120; // Kích thước bình thường
+  }
+};
+
+const ITEM_WIDTH = getItemWidth();
 
 interface ServicePricesType {
   electricity?: number;
@@ -177,7 +194,7 @@ const styles = StyleSheet.create({
     marginBottom: responsiveSpacing(16),
   },
   scrollView: {
-    height: 120, // Reduced height
+    height: responsiveSpacing(isTablet ? 140 : isSmallDevice ? 100 : 120),
   },
   scrollContent: {
     paddingHorizontal: responsiveSpacing(8),
@@ -188,39 +205,41 @@ const styles = StyleSheet.create({
     width: ITEM_WIDTH,
     marginHorizontal: responsiveSpacing(4),
     backgroundColor: Colors.white,
-    paddingVertical: responsiveSpacing(12),
+    paddingVertical: responsiveSpacing(isTablet ? 16 : isSmallDevice ? 10 : 12),
     paddingHorizontal: responsiveSpacing(8),
-    borderRadius: 8,
+    borderRadius: responsiveSpacing(8),
   },
   serviceIconContainer: {
-    width: 48,
-    height: 48,
+    width: responsiveIcon(isTablet ? 56 : isSmallDevice ? 40 : 48),
+    height: responsiveIcon(isTablet ? 56 : isSmallDevice ? 40 : 48),
     backgroundColor: Colors.lightGray,
-    borderRadius: 24,
+    borderRadius: responsiveIcon(isTablet ? 28 : isSmallDevice ? 20 : 24),
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: responsiveSpacing(8),
   },
   serviceIcon: {
-    width: 28,
-    height: 28,
+    width: responsiveIcon(isTablet ? 32 : isSmallDevice ? 24 : 28),
+    height: responsiveIcon(isTablet ? 32 : isSmallDevice ? 24 : 28),
   },
   serviceLabel: {
-    fontSize: responsiveFont(11),
+    fontSize: responsiveFont(14),
     color: Colors.textGray,
     fontFamily: Fonts.Roboto_Regular,
-    marginBottom: responsiveSpacing(4),
+    marginVertical: responsiveSpacing(5),
     textAlign: 'center',
+    fontWeight: '600',
   },
   serviceValue: {
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.darkGreen,
-    fontSize: responsiveFont(10),
+    color: Colors.black,
+    fontSize: responsiveFont(14),
+    fontWeight: '600',
     textAlign: 'center',
     lineHeight: responsiveFont(12),
   },
   serviceIconText: {
-    fontSize: responsiveFont(20),
+    fontSize: responsiveFont(isTablet ? 28 : isSmallDevice ? 16 : 20),
     color: Colors.textGray,
     fontFamily: Fonts.Roboto_Regular,
   },

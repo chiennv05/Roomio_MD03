@@ -30,7 +30,7 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
       <View style={styles.roomCodeContainer}>
         <View style={styles.roomCodeIcon}>
           <Image 
-            source={{ uri: Icons.IconRoom }}
+            source={{ uri: Icons.IconHome }}
             style={styles.roomCodeIconImage}
           />
         </View>

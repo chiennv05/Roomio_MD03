@@ -54,8 +54,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   styleIcon: {
-    width: responsiveIcon(24),
-    height: responsiveIcon(24),
+    width: responsiveIcon(17),
+    height: responsiveIcon(17),
   },
   buttonConfirm: {
     flex: 1,

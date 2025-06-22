@@ -33,13 +33,13 @@ export const getRooms = async (filters: RoomFilters = {}) => {
 
     // Debug logging để kiểm tra
     const finalUrl = `/home/rooms?${params.toString()}`;
-    console.log('🔍 Filter Debug - URL:', finalUrl);
-    console.log('🔍 Filter Debug - Applied filters:', JSON.stringify(filters, null, 2));
+    // console.log('🔍 Filter Debug - URL:', finalUrl);
+    // console.log('🔍 Filter Debug - Applied filters:', JSON.stringify(filters, null, 2));
 
     const response = await api.get(finalUrl);
     
     // Debug response
-    console.log('📦 Response Debug - Applied filters from backend:', response.data?.data?.appliedFilters);
+    // console.log('📦 Response Debug - Applied filters from backend:', response.data?.data?.appliedFilters);
     
     return response.data;
   } catch (error: any) {
@@ -90,14 +90,14 @@ export const getRelatedRooms = async (
     params.append('sortBy', 'location_relevance');
 
     const finalUrl = `/home/rooms/related?${params.toString()}`;
-    console.log('🔗 Related Rooms Debug - URL:', finalUrl);
-    console.log('🔗 Related Rooms Debug - Current room:', currentRoomId);
-    console.log('🔗 Related Rooms Debug - District preference:', district);
-    console.log('🔗 Related Rooms Debug - Province preference:', province);
+    // console.log('🔗 Related Rooms Debug - URL:', finalUrl);
+    // console.log('🔗 Related Rooms Debug - Current room:', currentRoomId);
+    // console.log('🔗 Related Rooms Debug - District preference:', district);
+    // console.log('🔗 Related Rooms Debug - Province preference:', province);
 
     const response = await api.get(finalUrl);
     
-    console.log('📦 Related Rooms Response:', response.data?.data?.rooms?.length || 0, 'rooms found');
+    // console.log('📦 Related Rooms Response:', response.data?.data?.rooms?.length || 0, 'rooms found');
     
     return response.data;
   } catch (error: any) {
@@ -117,7 +117,7 @@ export const getRelatedRoomsFallback = async (
   limit: number = 6
 ) => {
   try {
-    console.log('🔄 Using fallback API for related rooms...');
+    // console.log('🔄 Using fallback API for related rooms...');
     
     const params = new URLSearchParams();
     params.append('limit', (limit * 3).toString()); // Lấy nhiều hơn để có options filter
@@ -128,7 +128,7 @@ export const getRelatedRoomsFallback = async (
     
     // Strategy 1: Lọc theo district nếu có
     if (district) {
-      console.log('🎯 Strategy 1: Filtering by district:', district);
+      // console.log('🎯 Strategy 1: Filtering by district:', district);
       const districtParams = new URLSearchParams();
       districtParams.append('limit', (limit * 2).toString());
       districtParams.append('districts', district);
@@ -138,7 +138,7 @@ export const getRelatedRoomsFallback = async (
         if (response.data?.success && response.data?.data?.rooms) {
           relatedRooms = response.data.data.rooms
             .filter((room: any) => room._id !== currentRoomId);
-          console.log('📊 Found by district:', relatedRooms.length, 'rooms');
+          // console.log('📊 Found by district:', relatedRooms.length, 'rooms');
         }
       } catch (error) {
         console.log('⚠️ District filter failed, trying general search...');
@@ -147,7 +147,7 @@ export const getRelatedRoomsFallback = async (
     
     // Strategy 2: Nếu chưa đủ, lấy thêm từ general API
     if (relatedRooms.length < limit) {
-      console.log('🎯 Strategy 2: General room search for more results');
+      // console.log('🎯 Strategy 2: General room search for more results');
       response = await api.get(`/home/rooms?${params.toString()}`);
       
       if (response.data?.success && response.data?.data?.rooms) {
@@ -159,7 +159,7 @@ export const getRelatedRoomsFallback = async (
         const additionalRooms = allRooms.filter((room: any) => !existingIds.has(room._id));
         
         relatedRooms = [...relatedRooms, ...additionalRooms];
-        console.log('📊 Total after merge:', relatedRooms.length, 'rooms');
+        // console.log('📊 Total after merge:', relatedRooms.length, 'rooms');
       }
     }
     
@@ -195,10 +195,10 @@ export const getRelatedRoomsFallback = async (
     // Limit final results
     const finalRooms = relatedRooms.slice(0, limit);
     
-    console.log('✅ Final related rooms:', finalRooms.length, 'rooms');
-    console.log('📍 Location distribution:', finalRooms.map(room => 
-      `${room.location?.district || 'N/A'}, ${room.location?.province || 'N/A'}`
-    ));
+    // console.log('✅ Final related rooms:', finalRooms.length, 'rooms');
+    // console.log('📍 Location distribution:', finalRooms.map(room => 
+    //   `${room.location?.district || 'N/A'}, ${room.location?.province || 'N/A'}`
+    // ));
     
     return {
       success: true,

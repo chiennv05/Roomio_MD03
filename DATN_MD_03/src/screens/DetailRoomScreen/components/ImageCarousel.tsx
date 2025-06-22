@@ -3,7 +3,6 @@ import {
   View,
   Image,
   StyleSheet,
-  Dimensions,
   ScrollView,
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -14,11 +13,11 @@ import Animated, {
   interpolate,
   interpolateColor,
 } from 'react-native-reanimated';
-import { responsiveSpacing } from '../../../utils/responsive';
+import { responsiveSpacing, SCREEN } from '../../../utils/responsive';
 import { Colors } from '../../../theme/color';
 import { getImageUrl } from '../../../configs';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SCREEN_WIDTH = SCREEN.width;
 const CAROUSEL_HEIGHT = SCREEN_WIDTH * 0.75;
 
 interface ImageCarouselProps {

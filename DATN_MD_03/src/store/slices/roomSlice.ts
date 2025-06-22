@@ -74,19 +74,19 @@ export const fetchRelatedRooms = createAsyncThunk(
     {rejectWithValue}
   ) => {
     try {
-      console.log('🔗 Starting related rooms search...');
+     
       
       // Sử dụng fallback API trực tiếp vì API chuyên dụng chưa có
       // Thay vì thử API chuyên dụng trước, ta đi thẳng vào fallback
       const fallbackRes = await getRelatedRoomsFallback(roomId, district, province, limit);
       if (fallbackRes?.success) {
-        console.log('✅ Related rooms loaded successfully:', fallbackRes.data.rooms.length, 'rooms');
+       
         return fallbackRes.data.rooms;
       }
       
       // Nếu fallback cũng thất bại, thử API chuyên dụng (for future)
       try {
-        console.log('🔄 Fallback failed, trying primary API...');
+       
         const res = await getRelatedRooms(roomId, district, province, limit);
         if (res?.success && res?.data?.rooms) {
           return res.data.rooms;

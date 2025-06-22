@@ -8,6 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
+import { Icons } from '../../../assets/icons';
 
 interface CheckboxItem {
   id: string;
@@ -99,7 +100,7 @@ const CheckboxModal: React.FC<CheckboxModalProps> = ({
           <View style={styles.footer}>
             <ItemButtonConfirm
               title="Xác nhận"
-              icon="https://cdn-icons-png.flaticon.com/512/1828/1828665.png"
+              icon={Icons.IconRemoveWhite}
               onPress={handleConfirm}
               onPressIcon={handleCancel}
             />

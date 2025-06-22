@@ -102,7 +102,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ item, onPress }) => {
           </Text>
         </View>
         <View style={styles.detailContainer}>
-          <Image source={{ uri: Icons.IconAreaBlack }} style={styles.icon} />
+          <Image source={{ uri: Icons.IconArea }} style={styles.icon} />
           <Text style={styles.detail}>{item.area}m²</Text>
         </View>
       </View>

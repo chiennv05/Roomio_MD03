@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   ScrollView,
@@ -17,6 +17,8 @@ import { Colors } from '../../theme/color';
 import { responsiveSpacing, responsiveFont } from '../../utils/responsive';
 import { RootStackParamList } from '../../types/route';
 import { Fonts } from '../../theme/fonts';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import BottomSheet from '@gorhom/bottom-sheet';
 
 
 // Import các components
@@ -28,6 +30,10 @@ import Amenities from './components/Amenities';
 import OwnerInfo from './components/OwnerInfo';
 import Description from './components/Description';
 import RelatedPosts from './components/RelatedPosts';
+import ItemButtonConfirm from '../LoginAndRegister/components/ItemButtonConfirm';
+import SupportRequestModal from './components/SupportRequestModal';
+import BookingScheduleModal from './components/BookingScheduleModal';
+import { Icons } from '../../assets/icons';
 
 // Type cho route params
 type DetailRoomRouteProp = RouteProp<RootStackParamList, 'DetailRoom'>;
@@ -37,13 +43,12 @@ const DetailRoomScreen: React.FC = () => {
   const route = useRoute<DetailRoomRouteProp>();
   const navigation = useNavigation<DetailRoomNavigationProp>();
   const dispatch = useDispatch<AppDispatch>();
+  const supportModalRef = useRef<BottomSheet>(null);
+  const bookingModalRef = useRef<BottomSheet>(null);
+  const [hasLoadedRelated, setHasLoadedRelated] = useState(false);
   
   const { roomId } = route.params;
   
-  // Debug log để kiểm tra roomId
-  console.log('🏠 DetailRoomScreen Debug:');
-  console.log('Route params:', route.params);
-  console.log('RoomId received:', roomId);
   
   // Lấy data từ Redux store
   const { 
@@ -55,77 +60,63 @@ const DetailRoomScreen: React.FC = () => {
     relatedRoomsError 
   } = useSelector((state: RootState) => state.room);
 
-  // Load chi tiết phòng khi component mount hoặc roomId thay đổi
+  // Single useEffect với logic thông minh
   useEffect(() => {
-    console.log('🔄 useEffect triggered with roomId:', roomId);
+    console.log("lan 1")
     
+    
+    // 1. Load room detail khi có roomId
     if (roomId) {
-      // Clear data trước khi load mới để tránh hiển thị data cũ
       dispatch(clearRoomDetail());
       dispatch(clearRelatedRooms());
-      
-      console.log('📡 Dispatching fetchRoomDetail for roomId:', roomId);
-      // Load data mới
       dispatch(fetchRoomDetail(roomId));
-    } else {
-      console.log('❌ No roomId provided in route params');
+      setHasLoadedRelated(false); // Reset flag
     }
-  }, [dispatch, roomId]); // Chỉ dependency là roomId
 
-  // Load related rooms sau khi có roomDetail
+    // 2. Setup focus listener
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (roomId) {
+        // console.log('🔄 Focus: Reloading room data');
+        dispatch(fetchRoomDetail(roomId));
+        setHasLoadedRelated(false);
+      }
+    });
+
+    // 3. Cleanup function
+    return () => {
+      unsubscribe();
+      dispatch(clearRoomDetail());
+      dispatch(clearRelatedRooms());
+    };
+  }, [dispatch, navigation, roomId]);
+
+  // Riêng useEffect cho related rooms để tránh loop
   useEffect(() => {
-    if (roomDetail && roomId) {
-      const district = roomDetail.location?.district;
-      const province = roomDetail.location?.province;
-      
-      console.log('🔗 Loading related rooms for:', {
-        roomId,
-        district,
-        province
-      });
-      
+   
+    const currentRoomId = roomDetail?._id;
+    const district = roomDetail?.location?.district;
+    const province = roomDetail?.location?.province;
+    
+    if (currentRoomId && 
+      currentRoomId === roomId && 
+      district && 
+      province && 
+      !hasLoadedRelated) {
+      console.log("lan 2")
+      // console.log("🔗 Loading related rooms");
       dispatch(fetchRelatedRooms({
         roomId,
         district,
         province,
         limit: 6
       }));
+      setHasLoadedRelated(true);
     }
-  }, [dispatch, roomDetail, roomId]);
-
-  // Cleanup chỉ khi component thực sự unmount
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', () => {
-      console.log('🧹 Cleaning up data on beforeRemove');
-      dispatch(clearRoomDetail());
-      dispatch(clearRelatedRooms());
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [dispatch, navigation]);
-
-  // Focus listener để reload data khi quay lại
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      console.log('👀 Screen focused, roomId:', roomId);
-      
-      // Nếu không có data hoặc data không match với roomId hiện tại
-      if (!roomDetail || roomDetail._id !== roomId) {
-        console.log('🔄 Reloading data on focus');
-        if (roomId) {
-          dispatch(fetchRoomDetail(roomId));
-        }
-      }
-    });
-
-    return unsubscribe;
-  }, [navigation, roomId, roomDetail, dispatch]);
+  }, [dispatch, roomId, roomDetail?._id, roomDetail?.location?.district, roomDetail?.location?.province, hasLoadedRelated]);
 
   // Hiển thị loading
   if (roomDetailLoading) {
-    console.log('⏳ Showing loading state');
+    
     return (
       <View style={styles.loadingContainer}>
         <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
@@ -137,7 +128,7 @@ const DetailRoomScreen: React.FC = () => {
 
   // Hiển thị lỗi
   if (roomDetailError) {
-    console.log('❌ Showing error state:', roomDetailError);
+    
     return (
       <View style={styles.errorContainer}>
         <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
@@ -146,7 +137,7 @@ const DetailRoomScreen: React.FC = () => {
           style={styles.retryButton}
           onPress={() => {
             if (roomId) {
-              console.log('🔄 Retrying fetchRoomDetail for roomId:', roomId);
+              
               dispatch(fetchRoomDetail(roomId));
             }
           }}
@@ -159,7 +150,7 @@ const DetailRoomScreen: React.FC = () => {
 
   // Nếu không có data
   if (!roomDetail) {
-    console.log('❌ No room detail data available');
+    
     return (
       <View style={styles.errorContainer}>
         <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
@@ -168,7 +159,7 @@ const DetailRoomScreen: React.FC = () => {
           style={styles.retryButton}
           onPress={() => {
             if (roomId) {
-              console.log('🔄 Retrying fetchRoomDetail for roomId:', roomId);
+              
               dispatch(fetchRoomDetail(roomId));
             }
           }}
@@ -179,71 +170,89 @@ const DetailRoomScreen: React.FC = () => {
     );
   }
 
-  // Debug log để kiểm tra data
-  console.log('✅ Room Detail loaded successfully:');
-  console.log('Room ID:', roomDetail._id);
-  console.log('Room Name:', roomDetail.description);
-  console.log('Amenities:', roomDetail.amenities);
-  console.log('Furniture:', roomDetail.furniture);
-  console.log('Service Prices:', roomDetail.location?.servicePrices);
+  // // Debug log để kiểm tra data
+  // console.log('✅ Room Detail loaded successfully:');
+  // console.log('Room ID:', roomDetail._id);
+  // console.log('Room Name:', roomDetail.description);
+  // console.log('Amenities:', roomDetail.amenities);
+  // console.log('Furniture:', roomDetail.furniture);
+  // console.log('Service Prices:', roomDetail.location?.servicePrices);
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <Header />
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <ImageCarousel images={roomDetail.photos || []} />
-        <View style={styles.content}>
-          <RoomInfo
-            name={roomDetail.description || "Phòng trọ"}
-            price={`${roomDetail.rentPrice?.toLocaleString('vi-VN') || '0'}`}
-            address={roomDetail.location?.addressText || "Địa chỉ chưa cập nhật"}
-            roomCode={roomDetail.roomNumber || "N/A"}
-            area={roomDetail.area || 0}
+    <GestureHandlerRootView style={styles.container}>
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+        <Header />
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <ImageCarousel images={roomDetail.photos || []} />
+          <View style={styles.content}>
+            <RoomInfo
+              name={roomDetail.description || "Phòng trọ"}
+              price={`${roomDetail.rentPrice?.toLocaleString('vi-VN') || '0'}`}
+              address={roomDetail.location?.addressText || "Địa chỉ chưa cập nhật"}
+              roomCode={roomDetail.roomNumber || "N/A"}
+              area={roomDetail.area || 0}
+            />
+            
+            <View style={styles.divider} />
+            <ServiceFees servicePrices={roomDetail.location.servicePrices || {}} />
+            
+            <View style={styles.divider} />
+            <Amenities 
+              amenities={roomDetail.amenities || []}
+              furniture={roomDetail.furniture || []}
+            />
+            
+            <View style={styles.divider} />
+            <OwnerInfo
+              avatar="https://randomuser.me/api/portraits/men/41.jpg"
+              name={roomDetail.owner?.fullName || "Chủ trọ"}
+              phone={roomDetail.owner?.phone || "Chưa có SĐT"}
+            />
+            
+            <View style={styles.divider} />
+            <Description text={roomDetail.description || "Mô tả phòng trọ..."} />
+            
+            <TouchableOpacity style={styles.termsButton}>
+              <View style={styles.termsIcon}>
+                <Text style={styles.termsIconText}>📋</Text>
+              </View>
+              <Text style={styles.termsText}>Xem điều khoản và điều kiện</Text>
+              <Text style={styles.termsArrow}>›</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.divider} />
+            <RelatedPosts 
+              relatedRooms={relatedRooms}
+              loading={relatedRoomsLoading}
+              onRoomPress={(roomId) => navigation.navigate('DetailRoom', { roomId })}
+            />
+            
+            {relatedRoomsError && (
+              <Text style={styles.errorText}>
+                Không thể tải phòng liên quan: {relatedRoomsError}
+              </Text>
+            )}
+          </View>
+        </ScrollView>
+        
+        {/* Button đè lên ScrollView */}
+        <View style={styles.floatingButtonContainer}>
+          <ItemButtonConfirm
+            title="Liên hệ đặt phòng"
+            icon={Icons.IconReport}
+            onPress={() => bookingModalRef.current?.expand()}
+            onPressIcon={() => supportModalRef.current?.expand()}
           />
-          
-          <View style={styles.divider} />
-          <ServiceFees servicePrices={roomDetail.location.servicePrices || {}} />
-          
-          <View style={styles.divider} />
-          <Amenities 
-            amenities={roomDetail.amenities || []}
-            furniture={roomDetail.furniture || []}
-          />
-          
-          <View style={styles.divider} />
-          <OwnerInfo
-            avatar="https://randomuser.me/api/portraits/men/41.jpg"
-            name={roomDetail.owner?.fullName || "Chủ trọ"}
-            phone={roomDetail.owner?.phone || "Chưa có SĐT"}
-          />
-          
-          <View style={styles.divider} />
-          <Description text={roomDetail.description || "Mô tả phòng trọ..."} />
-          
-          <TouchableOpacity style={styles.termsButton}>
-            <View style={styles.termsIcon}>
-              <Text style={styles.termsIconText}>📋</Text>
-            </View>
-            <Text style={styles.termsText}>Xem điều khoản và điều kiện</Text>
-            <Text style={styles.termsArrow}>›</Text>
-          </TouchableOpacity>
-          
-          <View style={styles.divider} />
-          <RelatedPosts 
-            relatedRooms={relatedRooms}
-            loading={relatedRoomsLoading}
-            onRoomPress={(roomId) => navigation.push('DetailRoom', { roomId })}
-          />
-          
-          {relatedRoomsError && (
-            <Text style={styles.errorText}>
-              Không thể tải phòng liên quan: {relatedRoomsError}
-            </Text>
-          )}
         </View>
-      </ScrollView>
-    </View>
+        
+        {/* Support Request Modal */}
+        <SupportRequestModal ref={supportModalRef} />
+        
+        {/* Booking Schedule Modal */}
+        <BookingScheduleModal ref={bookingModalRef} />
+      </View>
+    </GestureHandlerRootView>
   );
 };
 
@@ -259,7 +268,8 @@ const styles = StyleSheet.create({
   },
   content: { 
     padding: responsiveSpacing(16), 
-    paddingTop: responsiveSpacing(6) 
+    paddingTop: responsiveSpacing(6),
+    paddingBottom: responsiveSpacing(100), // Thêm padding để tránh bị che bởi button
   },
   divider: {
     height: 1,
@@ -332,5 +342,13 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Bold,
     textAlign: 'center',
+  },
+  floatingButtonContainer: {
+    position: 'absolute',
+    bottom: responsiveSpacing(20),
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingHorizontal: responsiveSpacing(20),
   },
 });

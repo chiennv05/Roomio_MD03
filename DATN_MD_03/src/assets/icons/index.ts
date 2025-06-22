@@ -266,4 +266,12 @@ export const Icons = {
     ios: 'icon_arrow_down',
     android: 'asset:/icons/icon_arrow_down.png',
   }),
+  IconReport: Platform.select({
+    ios: 'icon_report',
+    android: 'asset:/icons/icon_report.png',
+  }),
+  IconRemoveWhite: Platform.select({
+    ios: 'icon_remove_white',
+    android: 'asset:/icons/icon_remove_white.png',
+  }),
 };

@@ -13,7 +13,7 @@ const Header: React.FC = () => {
       <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
         <Image 
           source={{ uri: Icons.IconArrowLeft }} 
-          style={styles.icon}
+          style={styles.icon2}
         />
       </TouchableOpacity>
       <View style={styles.rightButtons}>
@@ -69,6 +69,11 @@ const styles = StyleSheet.create({
     height: 20,
     tintColor: Colors.black,
   },
+  icon2: {
+    width: 12,
+    height: 24,
+    tintColor: Colors.black,
+  }
 });
 
 export default Header;

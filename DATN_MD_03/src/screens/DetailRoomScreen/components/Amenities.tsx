@@ -2,7 +2,13 @@ import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
-import { responsiveSpacing, responsiveFont } from '../../../utils/responsive';
+import { 
+  responsiveSpacing, 
+  responsiveFont, 
+  responsiveIcon,
+  isSmallDevice,
+  isTablet
+} from '../../../utils/responsive';
 import { furnitureMapping, amenitiesMapping } from '../../../utils/amenityIcons';
 
 interface AmenitiesProps {
@@ -11,6 +17,19 @@ interface AmenitiesProps {
 }
 
 const Amenities: React.FC<AmenitiesProps> = ({ amenities = [], furniture = [] }) => {
+  // Responsive logic cho số cột
+  const getItemWidth = () => {
+    if (isTablet) {
+      return '23%'; // 4 cột cho tablet
+    } else if (isSmallDevice) {
+      return '48%'; // 2 cột cho màn hình nhỏ
+    } else {
+      return '31%'; // 3 cột cho màn hình bình thường
+    }
+  };
+
+  const itemWidth = getItemWidth();
+
   // Map amenities từ API - hiển thị tất cả
   const amenityItems = amenities.map(item => ({
     ...amenitiesMapping[item] || { label: item, icon: '📦' },
@@ -37,6 +56,7 @@ const Amenities: React.FC<AmenitiesProps> = ({ amenities = [], furniture = [] })
                 key={`amenity-${item.key}-${index}`}
                 icon={item.icon}
                 label={item.label}
+                itemWidth={itemWidth}
               />
             ))}
           </View>
@@ -58,6 +78,7 @@ const Amenities: React.FC<AmenitiesProps> = ({ amenities = [], furniture = [] })
                 key={`furniture-${item.key}-${index}`}
                 icon={item.icon}
                 label={item.label}
+                itemWidth={itemWidth}
               />
             ))}
           </View>
@@ -70,14 +91,15 @@ const Amenities: React.FC<AmenitiesProps> = ({ amenities = [], furniture = [] })
 interface AmenityItemProps {
   icon: string;
   label: string;
+  itemWidth: string;
 }
 
-const AmenityItem: React.FC<AmenityItemProps> = ({ icon, label }) => {
-  // Kiểm tra xem icon có phải là đường dẫn assets không (bắt đầu bằng 'asset:' hoặc chứa '.png')
+const AmenityItem: React.FC<AmenityItemProps> = ({ icon, label, itemWidth }) => {
+  // Kiểm tra xem icon có phải là đường dẫn assets không
   const isImageIcon = icon.includes('asset:') || icon.includes('.png') || icon.includes('icon_');
   
   return (
-    <View style={styles.amenityItem}>
+    <View style={[styles.amenityItem, { width: itemWidth as any }]}>
       <View style={styles.amenityIconContainer}>
         {isImageIcon ? (
           <Image 
@@ -108,6 +130,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'flex-start',
+    gap: responsiveSpacing(isSmallDevice ? 8 : 12),
   },
   separator: {
     height: 1,
@@ -116,30 +139,29 @@ const styles = StyleSheet.create({
   },
   amenityItem: {
     alignItems: 'center',
-    width: '33.333%', // Exactly 1/3 for 3 columns
-    marginBottom: responsiveSpacing(20),
-    paddingHorizontal: responsiveSpacing(4), // Add padding for consistent spacing
+    marginBottom: responsiveSpacing(isTablet ? 24 : 20),
+    paddingHorizontal: responsiveSpacing(4),
   },
   amenityIconContainer: {
-    width: 48,
-    height: 48,
+    width: responsiveIcon(isTablet ? 56 : isSmallDevice ? 40 : 48),
+    height: responsiveIcon(isTablet ? 56 : isSmallDevice ? 40 : 48),
     backgroundColor: Colors.lightGray,
-    borderRadius: 24,
+    borderRadius: responsiveIcon(isTablet ? 28 : isSmallDevice ? 20 : 24),
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: responsiveSpacing(8),
   },
   amenityIcon: {
-    fontSize: 24,
+    fontSize: responsiveFont(isTablet ? 28 : isSmallDevice ? 20 : 24),
   },
   amenityImageIcon: {
-    width: 28,
-    height: 28,
-    tintColor: Colors.darkGreen,
+    width: responsiveIcon(24),
+    height: responsiveIcon(24),
   },
   amenityLabel: {
-    fontSize: responsiveFont(12),
-    color: Colors.textGray,
+    fontSize: responsiveFont(14),
+    color: Colors.black,
+    fontWeight: '700',
     fontFamily: Fonts.Roboto_Regular,
     textAlign: 'center',
     lineHeight: responsiveFont(16),
