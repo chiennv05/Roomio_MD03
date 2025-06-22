@@ -1,9 +1,16 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, Text, StyleSheet, Image, ScrollView, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  interpolate,
+} from 'react-native-reanimated';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
 import { responsiveSpacing, responsiveFont } from '../../../utils/responsive';
 import { Icons } from '../../../assets/icons';
+
+const ITEM_WIDTH = 120; // Fixed width for each service item
 
 interface ServicePricesType {
   electricity?: number;
@@ -22,13 +29,66 @@ interface ServiceFeesProps {
 const serviceMapping = {
   electricity: { label: 'Điện', icon: Icons.IconTienDien, unit: '/kWh' },
   water: { label: 'Nước', icon: Icons.IconTienNuoc, unit: '/m³' },
-  cleaning: { label: 'Vệ sinh', icon: Icons.IconVeSinh, unit: '/tháng' },
+  cleaning: { label: 'Dịch vụ', icon: Icons.IconVeSinh, unit: '/tháng' },
   parking: { label: 'Gửi xe', icon: Icons.IconGuiXe, unit: '/tháng' },
   internet: { label: 'Internet', icon: Icons.IconWifiMienPhi, unit: '/tháng' },
   elevator: { label: 'Thang máy', icon: Icons.IconThangMay, unit: '/tháng' },
 };
 
+interface AnimatedServiceItemProps {
+  service: {
+    key: string;
+    value: number;
+    label: string;
+    icon: string | undefined;
+    unit: string;
+  };
+  index: number;
+  scrollX: Animated.SharedValue<number>;
+}
+
+const AnimatedServiceItem: React.FC<AnimatedServiceItemProps> = ({ service, index, scrollX }) => {
+  const inputRange = [
+    (index - 1) * ITEM_WIDTH,
+    index * ITEM_WIDTH,
+    (index + 1) * ITEM_WIDTH,
+  ];
+
+  const itemStyle = useAnimatedStyle(() => {
+    const scale = interpolate(
+      scrollX.value,
+      inputRange,
+      [0.9, 1, 0.9],
+      'clamp'
+    );
+
+    return {
+      transform: [{ scale }],
+    };
+  });
+
+  return (
+    <Animated.View style={[styles.serviceItem, itemStyle]}>
+      <View style={styles.serviceIconContainer}>
+        {service.icon ? (
+          <Image source={{ uri: service.icon }} style={styles.serviceIcon} resizeMode="contain" />
+        ) : (
+          <Text style={styles.serviceIconText}>💰</Text>
+        )}
+      </View>
+      <Text style={styles.serviceLabel} numberOfLines={1}>{service.label}</Text>
+      <Text style={styles.serviceValue} numberOfLines={2}>
+        {`${service.value.toLocaleString('vi-VN')}${service.unit}`}
+      </Text>
+    </Animated.View>
+  );
+};
+
 const ServiceFees: React.FC<ServiceFeesProps> = ({ servicePrices }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const scrollX = useSharedValue(0);
+  const scrollViewRef = useRef<ScrollView>(null);
+
   // Lọc ra những service có giá > 0
   const activeServices = Object.entries(servicePrices)
     .filter(([_key, value]) => value && value > 0)
@@ -43,42 +103,68 @@ const ServiceFees: React.FC<ServiceFeesProps> = ({ servicePrices }) => {
     return null;
   }
 
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const contentWidth = event.nativeEvent.contentSize.width;
+    const scrollViewWidth = event.nativeEvent.layoutMeasurement.width;
+    
+    scrollX.value = offsetX;
+    
+    // Calculate progress through the scroll
+    const maxScrollX = contentWidth - scrollViewWidth;
+    const scrollProgress = maxScrollX > 0 ? offsetX / maxScrollX : 0;
+    
+    // Calculate which indicator should be active based on scroll progress
+    const totalPages = Math.max(1, Math.ceil(activeServices.length / 3));
+    const currentPage = Math.min(Math.floor(scrollProgress * totalPages), totalPages - 1);
+    
+    setCurrentIndex(currentPage);
+  };
+
+  // Calculate total pages for indicators
+  const itemsPerPage = 3;
+  const totalPages = Math.max(1, Math.ceil(activeServices.length / itemsPerPage));
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Phí dịch vụ</Text>
-      <View style={styles.grid}>
-        {activeServices.map((service) => (
-          <FeeItem
+      <ScrollView
+        ref={scrollViewRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        decelerationRate="fast"
+        contentContainerStyle={styles.scrollContent}
+        style={styles.scrollView}
+      >
+        {activeServices.map((service, index) => (
+          <AnimatedServiceItem
             key={service.key}
-            icon={service.icon}
-            label={service.label}
-            value={`${service.value.toLocaleString('vi-VN')}${service.unit}`}
+            service={service}
+            index={index}
+            scrollX={scrollX}
           />
         ))}
-      </View>
+      </ScrollView>
+
+      {/* Indicators */}
+      {activeServices.length > itemsPerPage && (
+        <View style={styles.indicatorContainer}>
+          {Array.from({ length: totalPages }).map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.indicator,
+                currentIndex === index && styles.activeIndicator,
+              ]}
+            />
+          ))}
+        </View>
+      )}
     </View>
   );
 };
-
-interface FeeItemProps {
-  icon: string | undefined;
-  label: string;
-  value: string;
-}
-
-const FeeItem: React.FC<FeeItemProps> = ({ icon, label, value }) => (
-  <View style={styles.feeItem}>
-    <View style={styles.feeIconContainer}>
-      {icon ? (
-        <Image source={{ uri: icon }} style={styles.feeIcon} resizeMode="contain" />
-      ) : (
-        <Text style={styles.feeIconText}>💰</Text>
-      )}
-    </View>
-    <Text style={styles.feeLabel}>{label}</Text>
-    <Text style={styles.feeValue}>{value}</Text>
-  </View>
-);
 
 const styles = StyleSheet.create({
   container: {
@@ -90,48 +176,70 @@ const styles = StyleSheet.create({
     color: Colors.black,
     marginBottom: responsiveSpacing(16),
   },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-start',
-    gap: responsiveSpacing(16),
+  scrollView: {
+    height: 120, // Reduced height
   },
-  feeItem: {
+  scrollContent: {
+    paddingHorizontal: responsiveSpacing(8),
     alignItems: 'center',
-    width: '22%',
-    minWidth: 80,
   },
-  feeIconContainer: {
-    width: 40,
-    height: 40,
+  serviceItem: {
+    alignItems: 'center',
+    width: ITEM_WIDTH,
+    marginHorizontal: responsiveSpacing(4),
+    backgroundColor: Colors.white,
+    paddingVertical: responsiveSpacing(12),
+    paddingHorizontal: responsiveSpacing(8),
+    borderRadius: 8,
+  },
+  serviceIconContainer: {
+    width: 48,
+    height: 48,
     backgroundColor: Colors.lightGray,
-    borderRadius: 20,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: responsiveSpacing(8),
   },
-  feeIcon: {
-    width: 20,
-    height: 20,
+  serviceIcon: {
+    width: 28,
+    height: 28,
   },
-  feeLabel: {
-    fontSize: responsiveFont(12),
+  serviceLabel: {
+    fontSize: responsiveFont(11),
     color: Colors.textGray,
     fontFamily: Fonts.Roboto_Regular,
     marginBottom: responsiveSpacing(4),
     textAlign: 'center',
   },
-  feeValue: {
+  serviceValue: {
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.darkGreen,
     fontSize: responsiveFont(10),
     textAlign: 'center',
     lineHeight: responsiveFont(12),
   },
-  feeIconText: {
+  serviceIconText: {
     fontSize: responsiveFont(20),
     color: Colors.textGray,
     fontFamily: Fonts.Roboto_Regular,
+  },
+  indicatorContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: responsiveSpacing(12),
+  },
+  indicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.lightGray,
+    marginHorizontal: 3,
+  },
+  activeIndicator: {
+    backgroundColor: Colors.darkGreen,
+    width: 20,
   },
 });
 

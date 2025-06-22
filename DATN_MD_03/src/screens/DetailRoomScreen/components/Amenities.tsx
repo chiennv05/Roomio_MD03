@@ -11,16 +11,18 @@ interface AmenitiesProps {
 }
 
 const Amenities: React.FC<AmenitiesProps> = ({ amenities = [], furniture = [] }) => {
-  // Map amenities từ API
+  // Map amenities từ API - hiển thị tất cả
   const amenityItems = amenities.map(item => ({
     ...amenitiesMapping[item] || { label: item, icon: '📦' },
-    type: 'amenity'
+    type: 'amenity',
+    key: item
   }));
 
-  // Map furniture từ API  
+  // Map furniture từ API - hiển thị tất cả
   const furnitureItems = furniture.map(item => ({
     ...furnitureMapping[item] || { label: item, icon: '📦' },
-    type: 'furniture'
+    type: 'furniture',
+    key: item
   }));
 
   return (
@@ -30,9 +32,9 @@ const Amenities: React.FC<AmenitiesProps> = ({ amenities = [], furniture = [] })
         <>
           <Text style={styles.title}>Tiện nghi</Text>
           <View style={styles.grid}>
-            {amenityItems.slice(0, 4).map((item, index) => (
+            {amenityItems.map((item, index) => (
               <AmenityItem
-                key={`amenity-${index}`}
+                key={`amenity-${item.key}-${index}`}
                 icon={item.icon}
                 label={item.label}
               />
@@ -51,9 +53,9 @@ const Amenities: React.FC<AmenitiesProps> = ({ amenities = [], furniture = [] })
         <>
           <Text style={styles.title}>Nội thất</Text>
           <View style={styles.grid}>
-            {furnitureItems.slice(0, 4).map((item, index) => (
+            {furnitureItems.map((item, index) => (
               <AmenityItem
-                key={`furniture-${index}`}
+                key={`furniture-${item.key}-${index}`}
                 icon={item.icon}
                 label={item.label}
               />
@@ -87,7 +89,7 @@ const AmenityItem: React.FC<AmenityItemProps> = ({ icon, label }) => {
           <Text style={styles.amenityIcon}>{icon}</Text>
         )}
       </View>
-      <Text style={styles.amenityLabel}>{label}</Text>
+      <Text style={styles.amenityLabel} numberOfLines={2}>{label}</Text>
     </View>
   );
 };
@@ -104,34 +106,35 @@ const styles = StyleSheet.create({
   },
   grid: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
     flexWrap: 'wrap',
-    gap: responsiveSpacing(16),
+    justifyContent: 'flex-start',
   },
   separator: {
     height: 1,
     backgroundColor: Colors.divider,
-    marginVertical: responsiveSpacing(16),
+    marginVertical: responsiveSpacing(20),
   },
   amenityItem: {
     alignItems: 'center',
-    width: '22%',
+    width: '33.333%', // Exactly 1/3 for 3 columns
+    marginBottom: responsiveSpacing(20),
+    paddingHorizontal: responsiveSpacing(4), // Add padding for consistent spacing
   },
   amenityIconContainer: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     backgroundColor: Colors.lightGray,
-    borderRadius: 20,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: responsiveSpacing(8),
   },
   amenityIcon: {
-    fontSize: 20,
+    fontSize: 24,
   },
   amenityImageIcon: {
-    width: 24,
-    height: 24,
+    width: 28,
+    height: 28,
     tintColor: Colors.darkGreen,
   },
   amenityLabel: {
@@ -139,6 +142,8 @@ const styles = StyleSheet.create({
     color: Colors.textGray,
     fontFamily: Fonts.Roboto_Regular,
     textAlign: 'center',
+    lineHeight: responsiveFont(16),
+    minHeight: responsiveFont(32), // Đảm bảo height consistent
   },
 });
 

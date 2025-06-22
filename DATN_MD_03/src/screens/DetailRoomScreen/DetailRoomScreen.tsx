@@ -18,6 +18,7 @@ import { responsiveSpacing, responsiveFont } from '../../utils/responsive';
 import { RootStackParamList } from '../../types/route';
 import { Fonts } from '../../theme/fonts';
 
+
 // Import các components
 import Header from './components/Header';
 import ImageCarousel from './components/ImageCarousel';
@@ -39,6 +40,11 @@ const DetailRoomScreen: React.FC = () => {
   
   const { roomId } = route.params;
   
+  // Debug log để kiểm tra roomId
+  console.log('🏠 DetailRoomScreen Debug:');
+  console.log('Route params:', route.params);
+  console.log('RoomId received:', roomId);
+  
   // Lấy data từ Redux store
   const { 
     roomDetail, 
@@ -49,18 +55,22 @@ const DetailRoomScreen: React.FC = () => {
     relatedRoomsError 
   } = useSelector((state: RootState) => state.room);
 
-  // Load chi tiết phòng khi component mount
+  // Load chi tiết phòng khi component mount hoặc roomId thay đổi
   useEffect(() => {
+    console.log('🔄 useEffect triggered with roomId:', roomId);
+    
     if (roomId) {
-      dispatch(fetchRoomDetail(roomId));
-    }
-
-    // Cleanup khi component unmount
-    return () => {
+      // Clear data trước khi load mới để tránh hiển thị data cũ
       dispatch(clearRoomDetail());
       dispatch(clearRelatedRooms());
-    };
-  }, [dispatch, roomId]);
+      
+      console.log('📡 Dispatching fetchRoomDetail for roomId:', roomId);
+      // Load data mới
+      dispatch(fetchRoomDetail(roomId));
+    } else {
+      console.log('❌ No roomId provided in route params');
+    }
+  }, [dispatch, roomId]); // Chỉ dependency là roomId
 
   // Load related rooms sau khi có roomDetail
   useEffect(() => {
@@ -83,8 +93,39 @@ const DetailRoomScreen: React.FC = () => {
     }
   }, [dispatch, roomDetail, roomId]);
 
+  // Cleanup chỉ khi component thực sự unmount
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', () => {
+      console.log('🧹 Cleaning up data on beforeRemove');
+      dispatch(clearRoomDetail());
+      dispatch(clearRelatedRooms());
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [dispatch, navigation]);
+
+  // Focus listener để reload data khi quay lại
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      console.log('👀 Screen focused, roomId:', roomId);
+      
+      // Nếu không có data hoặc data không match với roomId hiện tại
+      if (!roomDetail || roomDetail._id !== roomId) {
+        console.log('🔄 Reloading data on focus');
+        if (roomId) {
+          dispatch(fetchRoomDetail(roomId));
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, roomId, roomDetail, dispatch]);
+
   // Hiển thị loading
   if (roomDetailLoading) {
+    console.log('⏳ Showing loading state');
     return (
       <View style={styles.loadingContainer}>
         <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
@@ -96,31 +137,55 @@ const DetailRoomScreen: React.FC = () => {
 
   // Hiển thị lỗi
   if (roomDetailError) {
+    console.log('❌ Showing error state:', roomDetailError);
     return (
       <View style={styles.errorContainer}>
         <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
         <Text style={styles.errorText}>Có lỗi xảy ra: {roomDetailError}</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={() => {
+            if (roomId) {
+              console.log('🔄 Retrying fetchRoomDetail for roomId:', roomId);
+              dispatch(fetchRoomDetail(roomId));
+            }
+          }}
+        >
+          <Text style={styles.retryText}>Thử lại</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
   // Nếu không có data
   if (!roomDetail) {
+    console.log('❌ No room detail data available');
     return (
       <View style={styles.errorContainer}>
         <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
         <Text style={styles.errorText}>Không tìm thấy thông tin phòng</Text>
+        <TouchableOpacity 
+          style={styles.retryButton}
+          onPress={() => {
+            if (roomId) {
+              console.log('🔄 Retrying fetchRoomDetail for roomId:', roomId);
+              dispatch(fetchRoomDetail(roomId));
+            }
+          }}
+        >
+          <Text style={styles.retryText}>Thử lại</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
-
-
   // Debug log để kiểm tra data
-  console.log('🏠 Room Detail Debug:');
-  console.log('Amenities from API:', roomDetail.amenities);
-  console.log('Furniture from API:', roomDetail.furniture);
-  console.log('Service Prices:', roomDetail.location.servicePrices);
+  console.log('✅ Room Detail loaded successfully:');
+  console.log('Room ID:', roomDetail._id);
+  console.log('Room Name:', roomDetail.description);
+  console.log('Amenities:', roomDetail.amenities);
+  console.log('Furniture:', roomDetail.furniture);
+  console.log('Service Prices:', roomDetail.location?.servicePrices);
 
   return (
     <View style={styles.container}>
@@ -255,5 +320,17 @@ const styles = StyleSheet.create({
     color: Colors.darkGreen,
     fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
+  },
+  retryButton: {
+    backgroundColor: Colors.limeGreen,
+    padding: responsiveSpacing(16),
+    borderRadius: 8,
+    marginTop: responsiveSpacing(16),
+  },
+  retryText: {
+    color: Colors.white,
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Bold,
+    textAlign: 'center',
   },
 });
