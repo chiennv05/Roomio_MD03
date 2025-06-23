@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   Image,
-  TextInput,
   TouchableOpacity,
   StatusBar,
 } from 'react-native';
@@ -17,7 +16,15 @@ import {
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  onSearchPress?: () => void;
+  onNotificationPress?: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ 
+  onSearchPress, 
+  onNotificationPress 
+}) => {
   return (
     <>
       <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
@@ -33,7 +40,10 @@ const Header: React.FC = () => {
               <Text style={styles.name}>Việt Tùng</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.notificationButton}>
+          <TouchableOpacity 
+            style={styles.notificationButton}
+            onPress={onNotificationPress}
+          >
             <Image 
               source={{ uri: Icons.IconNotification }}
               style={styles.notificationIcon}
@@ -42,14 +52,19 @@ const Header: React.FC = () => {
         </View>
         
         <View style={styles.searchRow}>
-          <View style={styles.searchInputContainer}>
-            <TextInput
-              placeholder="Tìm kiếm trọ dễ dàng..."
-              placeholderTextColor="#999"
-              style={styles.searchInput}
-            />
-          </View>
-          <TouchableOpacity style={styles.searchButton}>
+          <TouchableOpacity 
+            style={styles.searchInputContainer}
+            onPress={onSearchPress}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.searchPlaceholder}>
+              Tìm kiếm trọ dễ dàng...
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.searchButton}
+            onPress={onSearchPress}
+          >
             <Image 
               source={{ uri: Icons.IconSearch }}
               style={styles.searchIcon}
@@ -144,6 +159,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderRadius: responsiveIcon(25),
     paddingHorizontal: responsiveSpacing(12),
+    paddingVertical: responsiveSpacing(12),
     marginRight: responsiveSpacing(8),
     shadowColor: '#000',
     shadowOffset: {
@@ -153,11 +169,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+    justifyContent: 'center',
   },
-  searchInput: {
+  searchPlaceholder: {
     fontSize: responsiveFont(14),
-    color: Colors.black,
-    paddingVertical: responsiveSpacing(12),
+    color: '#999',
     fontFamily: Fonts.Roboto_Regular,
   },
   searchButton: {

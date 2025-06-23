@@ -35,9 +35,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor="#999"
+          placeholderTextColor={Colors.textGray}
           style={styles.searchInput}
-          autoFocus
         />
       </View>
       <TouchableOpacity style={styles.searchButton} onPress={onSearchPress}>
@@ -62,7 +61,7 @@ const styles = StyleSheet.create({
   },
   searchInputContainer: {
     flex: 1,
-    backgroundColor: Colors.backgroud,
+    backgroundColor: Colors.white,
     borderRadius: responsiveIcon(25),
     paddingHorizontal: responsiveSpacing(12),
     marginRight: responsiveSpacing(8),
@@ -100,6 +99,6 @@ const styles = StyleSheet.create({
   searchIcon: {
     width: responsiveIcon(20),
     height: responsiveIcon(20),
-    tintColor: '#666',
+    tintColor: Colors.black,
   },
 }); 

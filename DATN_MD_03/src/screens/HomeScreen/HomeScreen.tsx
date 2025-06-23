@@ -6,8 +6,10 @@ import {
   ActivityIndicator,
   RefreshControl,
   Text,
+  Animated,
+  Easing,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Header from './components/Header';
 import FilterTabs from './components/FilterTabs';
@@ -27,6 +29,11 @@ type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DetailR
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   
+  // Animation states
+  const fadeAnim = useMemo(() => new Animated.Value(1), []);
+  const scaleAnim = useMemo(() => new Animated.Value(1), []);
+  const overlayAnim = useMemo(() => new Animated.Value(0), []); // Animation cho overlay
+  
   // Memoize static data
   const filters = useMemo(() => ['Khu vực', 'Khoảng giá', 'Diện tích', 'Nội thất', 'Tiện nghi'], []);
   
@@ -36,11 +43,65 @@ const HomeScreen: React.FC = () => {
   const [areaRange, setAreaRange] = useState<{min: number, max: number} | null>(null);
   const [selectedFurniture, setSelectedFurniture] = useState<string[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [showSearchOverlay, setShowSearchOverlay] = useState(false);
 
   // Toggle để kiểm soát client-side filtering (có thể tắt nếu backend đã fix)
   const useClientSideFiltering = true;
 
   const { rooms, loading, pagination, loadRooms, loadMore } = useRooms();
+
+  // Reset animation when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fadeAnim.setValue(1);
+      scaleAnim.setValue(1);
+      overlayAnim.setValue(0);
+      setShowSearchOverlay(false);
+    }, [fadeAnim, scaleAnim, overlayAnim])
+  );
+
+  // Navigation với animation
+  const handleSearchPress = useCallback(() => {
+    setShowSearchOverlay(true);
+    
+    // Tạo animation mượt mà khi chuyển màn - đẩy xuống và mờ dần
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0.3,
+        duration: 250,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 0.9,
+        duration: 250,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(overlayAnim, {
+        toValue: 1,
+        duration: 250,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // Navigate sau khi animation hoàn thành
+      navigation.navigate('Search' as any);
+      
+      // Reset animation về trạng thái ban đầu sau một chút
+      setTimeout(() => {
+        fadeAnim.setValue(1);
+        scaleAnim.setValue(1);
+        overlayAnim.setValue(0);
+        setShowSearchOverlay(false);
+      }, 100);
+    });
+  }, [navigation, fadeAnim, scaleAnim, overlayAnim]);
+
+  const handleNotificationPress = useCallback(() => {
+    // TODO: Implement notification functionality
+    console.log('Notification pressed');
+  }, []);
 
   // Memoize regions array for filtering
   const regionsToFilter = useMemo(() => {
@@ -236,38 +297,64 @@ const HomeScreen: React.FC = () => {
   ), [loading, filteredRooms.length, handleRefresh]);
 
   return (
-    <View style={styles.container}>
-      <Header />
-      <FilterTabs
-        filters={filters}
-        selectedIndices={selectedFilters}
-        onSelect={handleFilterSelect}
-        onClearAll={handleClearAll}
-        onRegionSelect={handleRegionSelect}
-        selectedRegions={selectedRegions}
-        onPriceRangeSelect={handlePriceRangeSelect}
-        onAreaSelect={handleAreaSelect}
-        selectedPriceRange={priceRange || undefined}
-        selectedAreaRange={areaRange || undefined}
-        onFurnitureSelect={handleFurnitureSelect}
-        onAmenitySelect={handleAmenitySelect}
-        selectedFurniture={selectedFurniture}
-        selectedAmenities={selectedAmenities}
-      />
-      <Text style={styles.recommendationTitle}>Đề xuất cho bạn</Text>
-      <FlatList
-        data={filteredRooms}
-        renderItem={renderRoomCard}
-        keyExtractor={(item, index) => item._id || index.toString()}
-        showsVerticalScrollIndicator={false}
-        refreshControl={refreshControl}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.1}
-        ListFooterComponent={renderFooter}
-        ListEmptyComponent={renderEmptyComponent}
-        contentContainerStyle={styles.listContainer}
-      />
-    </View>
+    <>
+      <Animated.View 
+        style={[
+          styles.container,
+          {
+            opacity: fadeAnim,
+            transform: [{ scale: scaleAnim }],
+          }
+        ]}
+      >
+        <Header 
+          onSearchPress={handleSearchPress}
+          onNotificationPress={handleNotificationPress}
+        />
+        <FilterTabs
+          filters={filters}
+          selectedIndices={selectedFilters}
+          onSelect={handleFilterSelect}
+          onClearAll={handleClearAll}
+          onRegionSelect={handleRegionSelect}
+          selectedRegions={selectedRegions}
+          onPriceRangeSelect={handlePriceRangeSelect}
+          onAreaSelect={handleAreaSelect}
+          selectedPriceRange={priceRange || undefined}
+          selectedAreaRange={areaRange || undefined}
+          onFurnitureSelect={handleFurnitureSelect}
+          onAmenitySelect={handleAmenitySelect}
+          selectedFurniture={selectedFurniture}
+          selectedAmenities={selectedAmenities}
+        />
+        <Text style={styles.recommendationTitle}>Đề xuất cho bạn</Text>
+        <FlatList
+          data={filteredRooms}
+          renderItem={renderRoomCard}
+          keyExtractor={(item, index) => item._id || index.toString()}
+          showsVerticalScrollIndicator={false}
+          refreshControl={refreshControl}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.1}
+          ListFooterComponent={renderFooter}
+          ListEmptyComponent={renderEmptyComponent}
+          contentContainerStyle={styles.listContainer}
+        />
+      </Animated.View>
+      
+      {/* Overlay để tạo hiệu ứng transition mượt mà */}
+      {showSearchOverlay && (
+        <Animated.View 
+          style={[
+            styles.searchOverlay,
+            {
+              opacity: overlayAnim,
+            }
+          ]}
+          pointerEvents="none"
+        />
+      )}
+    </>
   );
 };
 
@@ -314,5 +401,14 @@ const styles = StyleSheet.create({
     color: Colors.textGray,
     textAlign: 'center',
     lineHeight: responsiveFont(20),
+  },
+  searchOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    zIndex: 1000,
   },
 });

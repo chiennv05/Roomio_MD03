@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Image,
   FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
@@ -17,6 +18,7 @@ import {
 import { Room } from '../../../types/Room';
 import RoomCard from '../../HomeScreen/components/RoomCard';
 import { Icons } from '../../../assets/icons';
+import { usePaginatedData } from '../../../hooks/usePaginatedData';
 
 interface SearchResultsProps {
   title: string;
@@ -33,15 +35,84 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   onFilterPress,
   isFilterActive = false
 }) => {
+  // Use pagination hook with 8 items per page for better performance
+  const {
+    displayedData,
+    hasMore,
+    isLoading,
+    loadMore,
+    reset,
+    totalItems,
+    currentPage
+  } = usePaginatedData({
+    data: rooms,
+    pageSize: 8, // Show 8 rooms initially, then load 8 more each time
+    initialPageCount: 1
+  });
+
+  // Reset pagination when rooms data changes (new search)
+  useEffect(() => {
+    reset();
+  }, [rooms, reset]);
+
   const renderRoomItem = ({ item }: { item: Room }) => (
     <RoomCard item={item} onPress={onRoomPress} />
   );
+
+  // Footer component with loading indicator
+  const renderFooter = () => {
+    if (!hasMore && displayedData.length > 0) {
+      return (
+        <View style={styles.endMessage}>
+          <Text style={styles.endText}>
+            Đã hiển thị tất cả {totalItems} kết quả
+          </Text>
+        </View>
+      );
+    }
+
+    if (isLoading) {
+      return (
+        <View style={styles.loadingFooter}>
+          <ActivityIndicator size="large" color={Colors.limeGreen} />
+          <Text style={styles.loadingText}>Đang tải thêm...</Text>
+        </View>
+      );
+    }
+
+    return null;
+  };
+
+  // Empty component
+  const renderEmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={styles.emptyTitle}>Không tìm thấy kết quả</Text>
+      <Text style={styles.emptySubtitle}>
+        Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc
+      </Text>
+    </View>
+  );
+
+  // Handle end reached for loading more data
+  const handleEndReached = () => {
+    if (hasMore && !isLoading) {
+      console.log(`🔄 Loading page ${currentPage + 1}...`);
+      loadMore();
+    }
+  };
 
   return (
     <View style={styles.container}>
       {/* Header với title và filter button */}
       <View style={styles.header}>
-        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.title}>
+          {title}
+          {totalItems > 0 && displayedData.length < totalItems && (
+            <Text style={styles.countText}>
+              {` (${displayedData.length}/${totalItems})`}
+            </Text>
+          )}
+        </Text>
         {onFilterPress && (
           <TouchableOpacity 
             style={[
@@ -49,12 +120,12 @@ const SearchResults: React.FC<SearchResultsProps> = ({
               isFilterActive && styles.activeFilterButton
             ]} 
             onPress={() => {
-              console.log('Filter button pressed in SearchResults, isFilterActive:', isFilterActive);
               onFilterPress();
             }}
           >
             <Image 
-              source={{ uri: isFilterActive ? Icons.IconRemove : Icons.IconFilter }} 
+              source={{ uri: isFilterActive ? Icons.IconRemoveFilter
+                 : Icons.IconFilter }} 
               style={[
                 styles.filterIcon,
                 isFilterActive && styles.activeFilterIcon
@@ -64,14 +135,30 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         )}
       </View>
 
-      {/* Danh sách kết quả */}
+      {/* Danh sách kết quả với lazy loading */}
       <FlatList
-        data={rooms}
+        data={displayedData}
         renderItem={renderRoomItem}
-        keyExtractor={(item) => item._id || Math.random().toString()}
+        keyExtractor={(item, index) => item._id || `room-${index}`}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContainer}
+        contentContainerStyle={[
+          styles.listContainer,
+          displayedData.length === 0 && styles.emptyListContainer
+        ]}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ListFooterComponent={renderFooter}
+        ListEmptyComponent={renderEmptyComponent}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.1} // Trigger when 10% from bottom
+        removeClippedSubviews={true} // Optimize for large lists
+        maxToRenderPerBatch={8} // Render 8 items per batch
+        windowSize={10} // Keep 10 screens worth of content
+        initialNumToRender={8} // Render 8 items initially
+        getItemLayout={(data, index) => ({
+          length: 120, // Approximate height of RoomCard
+          offset: 120 * index,
+          index,
+        })}
       />
     </View>
   );
@@ -93,15 +180,21 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   title: {
-    fontSize: responsiveFont(16),
+    fontSize: responsiveFont(20),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
+    flex: 1,
+  },
+  countText: {
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
   },
   filterButton: {
-    width: responsiveIcon(40),
-    height: responsiveIcon(40),
+    width: responsiveIcon(44),
+    height: responsiveIcon(44),
     backgroundColor: Colors.white,
-    borderRadius: responsiveIcon(20),
+    borderRadius: responsiveIcon(22),
     borderWidth: 1,
     borderColor: '#e0e0e0',
     justifyContent: 'center',
@@ -112,9 +205,9 @@ const styles = StyleSheet.create({
     borderColor: Colors.limeGreen,
   },
   filterIcon: {
-    width: responsiveIcon(16),
-    height: responsiveIcon(16),
-    tintColor: '#666',
+    width: responsiveIcon(24),
+    height: responsiveIcon(24),
+    tintColor: Colors.black,
   },
   activeFilterIcon: {
     tintColor: Colors.white,
@@ -123,7 +216,50 @@ const styles = StyleSheet.create({
     paddingTop: responsiveSpacing(8),
     paddingBottom: responsiveSpacing(100), // Để tránh bị che bởi tab bar
   },
+  emptyListContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
   separator: {
     height: responsiveSpacing(8),
+  },
+  loadingFooter: {
+    paddingVertical: responsiveSpacing(20),
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: responsiveSpacing(8),
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
+  },
+  endMessage: {
+    paddingVertical: responsiveSpacing(20),
+    alignItems: 'center',
+  },
+  endText: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: responsiveSpacing(32),
+  },
+  emptyTitle: {
+    fontSize: responsiveFont(18),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+    textAlign: 'center',
+    marginBottom: responsiveSpacing(8),
+  },
+  emptySubtitle: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
+    textAlign: 'center',
+    lineHeight: responsiveFont(20),
   },
 }); 

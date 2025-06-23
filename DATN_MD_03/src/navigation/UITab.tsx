@@ -11,11 +11,38 @@ export default function UITab() {
   return (
     <Tab.Navigator
       tabBar={props => <CustomTabar {...props} />}
-      screenOptions={{headerShown: false}}>
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Search" component={SearchScreen} />
-      <Tab.Screen name="Favorite" component={FavoriteScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      screenOptions={{
+        headerShown: false,
+        tabBarHideOnKeyboard: true,
+      }}>
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen}
+        options={{
+          tabBarLabel: 'Trang chủ',
+        }}
+      />
+      <Tab.Screen 
+        name="Search" 
+        component={SearchScreen}
+        options={{
+          tabBarLabel: 'Tìm kiếm',
+        }}
+      />
+      <Tab.Screen 
+        name="Favorite" 
+        component={FavoriteScreen}
+        options={{
+          tabBarLabel: 'Yêu thích',
+        }}
+      />
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: 'Cá nhân',
+        }}
+      />
     </Tab.Navigator>
   );
 }

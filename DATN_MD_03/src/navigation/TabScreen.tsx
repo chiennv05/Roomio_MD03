@@ -1,5 +1,5 @@
 import React from 'react';
-import {createStackNavigator} from '@react-navigation/stack';
+import {createStackNavigator, TransitionPresets} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/route';
 
 import SplashScreen from '../screens/Splash/SplashScreen';
@@ -16,6 +16,8 @@ import 'react-native-gesture-handler';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
+
+
 export default function TabScreen() {
   return (
     <NavigationContainer>
@@ -23,7 +25,13 @@ export default function TabScreen() {
         <Stack.Screen name="SplashScreen" component={SplashScreen} />
         <Stack.Screen name="Login" component={LoginAndRegister} />
         <Stack.Screen name="UITab" component={UITab} />
-        <Stack.Screen name="DetailRoom" component={DetailRoomScreen} />
+        <Stack.Screen 
+          name="DetailRoom" 
+          component={DetailRoomScreen}
+          options={{
+            ...TransitionPresets.SlideFromRightIOS,
+          }}
+        />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen
           name="OTPVerification"
