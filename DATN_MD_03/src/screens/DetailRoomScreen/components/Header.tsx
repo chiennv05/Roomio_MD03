@@ -1,29 +1,39 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { responsiveSpacing } from '../../../utils/responsive';
 import { Colors } from '../../../theme/color';
 import { Icons } from '../../../assets/icons';
 
-const Header: React.FC = () => {
-  const navigation = useNavigation();
+interface HeaderProps {
+  onGoBack: () => void;
+  onFavoritePress?: () => void;
+  onSharePress?: () => void;
+}
 
+const Header: React.FC<HeaderProps> = ({ 
+  onGoBack, 
+  onFavoritePress, 
+  onSharePress 
+}) => {
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
+      <TouchableOpacity style={styles.button} onPress={onGoBack}>
         <Image 
           source={{ uri: Icons.IconArrowLeft }} 
           style={styles.icon2}
         />
       </TouchableOpacity>
       <View style={styles.rightButtons}>
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity style={styles.button} onPress={onFavoritePress}>
           <Image 
             source={{ uri: Icons.IconFavourite }} 
             style={styles.icon}
           />
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.shareButton]}>
+        <TouchableOpacity 
+          style={[styles.button, styles.shareButton]} 
+          onPress={onSharePress}
+        >
           <Image 
             source={{ uri: Icons.IconShare }} 
             style={styles.icon}

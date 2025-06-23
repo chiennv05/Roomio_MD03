@@ -182,7 +182,17 @@ const DetailRoomScreen: React.FC = () => {
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-        <Header />
+        <Header 
+          onGoBack={() => navigation.goBack()}
+          onFavoritePress={() => {
+            // TODO: Implement favorite functionality
+            console.log('Favorite pressed');
+          }}
+          onSharePress={() => {
+            // TODO: Implement share functionality
+            console.log('Share pressed');
+          }}
+        />
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           <ImageCarousel images={roomDetail.photos || []} />
           <View style={styles.content}>

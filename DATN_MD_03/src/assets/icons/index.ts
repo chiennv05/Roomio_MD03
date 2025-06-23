@@ -274,4 +274,8 @@ export const Icons = {
     ios: 'icon_remove_white',
     android: 'asset:/icons/icon_remove_white.png',
   }),
+  IconFilter: Platform.select({
+    ios: 'icon_filter',
+    android: 'asset:/icons/icon_filter.png',
+  }),
 };
