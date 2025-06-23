@@ -26,7 +26,10 @@ type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DetailR
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
+  
+  // Memoize static data
   const filters = useMemo(() => ['Khu vực', 'Khoảng giá', 'Diện tích', 'Nội thất', 'Tiện nghi'], []);
+  
   const [selectedFilters, setSelectedFilters] = useState<number[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<District[]>([]);
   const [priceRange, setPriceRange] = useState<{min: number, max: number} | null>(null);
@@ -39,6 +42,29 @@ const HomeScreen: React.FC = () => {
 
   const { rooms, loading, pagination, loadRooms, loadMore } = useRooms();
 
+  // Memoize regions array for filtering
+  const regionsToFilter = useMemo(() => {
+    return selectedRegions.map(region => region.name);
+  }, [selectedRegions]);
+
+  // Memoize hasNoFilters check
+  const hasNoFilters = useMemo(() => {
+    return selectedAmenities.length === 0 && 
+           selectedFurniture.length === 0 && 
+           selectedRegions.length === 0 && 
+           !priceRange && 
+           !areaRange;
+  }, [selectedAmenities.length, selectedFurniture.length, selectedRegions.length, priceRange, areaRange]);
+
+  // Memoize hasActiveFilters check
+  const hasActiveFilters = useMemo(() => {
+    return selectedAmenities.length > 0 || 
+           selectedFurniture.length > 0 || 
+           selectedRegions.length > 0 || 
+           !!priceRange || 
+           !!areaRange;
+  }, [selectedAmenities.length, selectedFurniture.length, selectedRegions.length, priceRange, areaRange]);
+
   // Filter rooms ở phía client để đảm bảo logic AND đúng
   const filteredRooms = useMemo(() => {
     // Nếu tắt client-side filtering, trả về rooms từ API
@@ -47,18 +73,9 @@ const HomeScreen: React.FC = () => {
     }
 
     // Nếu không có filter nào, trả về tất cả
-    const hasNoFilters = selectedAmenities.length === 0 && 
-                        selectedFurniture.length === 0 && 
-                        selectedRegions.length === 0 && 
-                        !priceRange && 
-                        !areaRange;
-    
     if (hasNoFilters) {
       return rooms;
     }
-
-    // Chuẩn bị regions array cho việc filter
-    const regionsToFilter = selectedRegions.map(region => region.name);
 
     const filtered = rooms.filter(room => {
       const isValid = validateRoomByFilters(
@@ -69,10 +86,6 @@ const HomeScreen: React.FC = () => {
         priceRange || undefined,
         areaRange || undefined
       );
-      
-      // Debug mode tắt để tối ưu performance
-      // Có thể bật lại khi cần debug:
-      // debugRoomFilter(room, selectedAmenities, selectedFurniture, regionsToFilter, priceRange, areaRange);
       
       return isValid;
     });
@@ -88,10 +101,10 @@ const HomeScreen: React.FC = () => {
     if (areaRange) console.log(`   🔍 Area range: ${areaRange.min} - ${areaRange.max}m²`);
 
     return filtered;
-  }, [rooms, selectedAmenities, selectedFurniture, selectedRegions, priceRange, areaRange, useClientSideFiltering]);
+  }, [rooms, selectedAmenities, selectedFurniture, regionsToFilter, priceRange, areaRange, useClientSideFiltering, hasNoFilters]);
 
-  // Build filters object
-  const buildFilters = useCallback((): RoomFilters => {
+  // Build filters object - Memoized
+  const buildFilters = useMemo((): RoomFilters => {
     const filters: RoomFilters = {};
     
     if (priceRange) {
@@ -122,10 +135,10 @@ const HomeScreen: React.FC = () => {
 
   // Load data when component mounts or filters change
   useEffect(() => {
-    const filters = buildFilters();
-    loadRooms(filters);
-  }, [priceRange, areaRange, selectedFurniture, selectedAmenities, selectedRegions, loadRooms, buildFilters]);
+    loadRooms(buildFilters);
+  }, [buildFilters, loadRooms]);
 
+  // Memoized callbacks
   const handleFilterSelect = useCallback((index: number) => {
     setSelectedFilters(prev => {
       if (prev.includes(index)) {
@@ -166,14 +179,12 @@ const HomeScreen: React.FC = () => {
   }, []);
 
   const handleRefresh = useCallback(() => {
-    const filters = buildFilters();
-    loadRooms(filters);
+    loadRooms(buildFilters);
   }, [buildFilters, loadRooms]);
 
   const handleLoadMore = useCallback(() => {
     if (pagination?.hasNextPage && !loading) {
-      const filters = buildFilters();
-      loadMore(filters);
+      loadMore(buildFilters);
     }
   }, [pagination?.hasNextPage, loading, buildFilters, loadMore]);
 
@@ -183,24 +194,22 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('DetailRoom', { roomId });
   }, [navigation]);
 
-  const renderRoomCard = ({ item }: { item: Room }) => (
+  // Memoized render functions
+  const renderRoomCard = useCallback(({ item }: { item: Room }) => (
     <RoomCard item={item} onPress={handleRoomPress} />
-  );
+  ), [handleRoomPress]);
 
-  const renderFooter = () => {
+  const renderFooter = useCallback(() => {
     if (!loading) return null;
     return (
       <View style={styles.footer}>
         <ActivityIndicator size="large" color={Colors.limeGreen} />
       </View>
     );
-  };
+  }, [loading]);
 
-  const renderEmptyComponent = () => {
+  const renderEmptyComponent = useCallback(() => {
     if (loading) return null;
-    
-    const hasActiveFilters = selectedAmenities.length > 0 || selectedFurniture.length > 0 || 
-                            selectedRegions.length > 0 || priceRange || areaRange;
     
     return (
       <View style={styles.emptyContainer}>
@@ -215,7 +224,16 @@ const HomeScreen: React.FC = () => {
         </Text>
       </View>
     );
-  };
+  }, [loading, hasActiveFilters]);
+
+  // Memoized RefreshControl
+  const refreshControl = useMemo(() => (
+    <RefreshControl
+      refreshing={loading && filteredRooms.length === 0}
+      onRefresh={handleRefresh}
+      colors={[Colors.limeGreen]}
+    />
+  ), [loading, filteredRooms.length, handleRefresh]);
 
   return (
     <View style={styles.container}>
@@ -242,13 +260,7 @@ const HomeScreen: React.FC = () => {
         renderItem={renderRoomCard}
         keyExtractor={(item, index) => item._id || index.toString()}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={loading && filteredRooms.length === 0}
-            onRefresh={handleRefresh}
-            colors={[Colors.limeGreen]}
-          />
-        }
+        refreshControl={refreshControl}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
         ListFooterComponent={renderFooter}

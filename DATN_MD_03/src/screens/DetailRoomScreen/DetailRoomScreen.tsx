@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -60,6 +60,68 @@ const DetailRoomScreen: React.FC = () => {
     relatedRoomsError 
   } = useSelector((state: RootState) => state.room);
 
+  // Memoized computed values
+  const roomDetailData = useMemo(() => {
+    if (!roomDetail) return null;
+    
+    return {
+      name: roomDetail.description || "Phòng trọ",
+      price: `${roomDetail.rentPrice?.toLocaleString('vi-VN') || '0'}`,
+      address: roomDetail.location?.addressText || "Địa chỉ chưa cập nhật",
+      roomCode: roomDetail.roomNumber || "N/A",
+      area: roomDetail.area || 0,
+      photos: roomDetail.photos || [],
+      servicePrices: roomDetail.location?.servicePrices || {},
+      amenities: roomDetail.amenities || [],
+      furniture: roomDetail.furniture || [],
+      ownerName: roomDetail.owner?.fullName || "Chủ trọ",
+      ownerPhone: roomDetail.owner?.phone || "Chưa có SĐT",
+      description: roomDetail.description || "Mô tả phòng trọ...",
+      currentRoomId: roomDetail._id,
+      district: roomDetail.location?.district,
+      province: roomDetail.location?.province,
+    };
+  }, [roomDetail]);
+
+  // Memoized loading state
+  const isLoading = useMemo(() => roomDetailLoading, [roomDetailLoading]);
+
+  // Memoized error state
+  const hasError = useMemo(() => !!roomDetailError, [roomDetailError]);
+
+  // Memoized navigation callbacks
+  const handleGoBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
+
+  const handleFavoritePress = useCallback(() => {
+    // TODO: Implement favorite functionality
+    console.log('Favorite pressed');
+  }, []);
+
+  const handleSharePress = useCallback(() => {
+    // TODO: Implement share functionality
+    console.log('Share pressed');
+  }, []);
+
+  const handleBookingPress = useCallback(() => {
+    bookingModalRef.current?.expand();
+  }, []);
+
+  const handleSupportPress = useCallback(() => {
+    supportModalRef.current?.expand();
+  }, []);
+
+  const handleRoomPress = useCallback((roomId: string) => {
+    navigation.navigate('DetailRoom', { roomId });
+  }, [navigation]);
+
+  const handleRetry = useCallback(() => {
+    if (roomId) {
+      dispatch(fetchRoomDetail(roomId));
+    }
+  }, [dispatch, roomId]);
+
   // Single useEffect với logic thông minh
   useEffect(() => {
     console.log("lan 1")
@@ -93,29 +155,26 @@ const DetailRoomScreen: React.FC = () => {
   // Riêng useEffect cho related rooms để tránh loop
   useEffect(() => {
    
-    const currentRoomId = roomDetail?._id;
-    const district = roomDetail?.location?.district;
-    const province = roomDetail?.location?.province;
-    
-    if (currentRoomId && 
-      currentRoomId === roomId && 
-      district && 
-      province && 
+    if (roomDetailData?.currentRoomId && 
+      roomDetailData.currentRoomId === roomId && 
+      roomDetailData.district && 
+      roomDetailData.province && 
       !hasLoadedRelated) {
       console.log("lan 2")
       // console.log("🔗 Loading related rooms");
       dispatch(fetchRelatedRooms({
         roomId,
-        district,
-        province,
+        district: roomDetailData.district,
+        province: roomDetailData.province,
         limit: 6
       }));
       setHasLoadedRelated(true);
     }
-  }, [dispatch, roomId, roomDetail?._id, roomDetail?.location?.district, roomDetail?.location?.province, hasLoadedRelated]);
+  }, [dispatch, roomId, roomDetailData?.currentRoomId, roomDetailData?.district, roomDetailData?.province, hasLoadedRelated]);
 
-  // Hiển thị loading
-  if (roomDetailLoading) {
+  // Memoized loading component
+  const LoadingComponent = useMemo(() => {
+    if (!isLoading) return null;
     
     return (
       <View style={styles.loadingContainer}>
@@ -124,10 +183,11 @@ const DetailRoomScreen: React.FC = () => {
         <Text style={styles.loadingText}>Đang tải thông tin phòng...</Text>
       </View>
     );
-  }
+  }, [isLoading]);
 
-  // Hiển thị lỗi
-  if (roomDetailError) {
+  // Memoized error component
+  const ErrorComponent = useMemo(() => {
+    if (!hasError) return null;
     
     return (
       <View style={styles.errorContainer}>
@@ -135,21 +195,17 @@ const DetailRoomScreen: React.FC = () => {
         <Text style={styles.errorText}>Có lỗi xảy ra: {roomDetailError}</Text>
         <TouchableOpacity 
           style={styles.retryButton}
-          onPress={() => {
-            if (roomId) {
-              
-              dispatch(fetchRoomDetail(roomId));
-            }
-          }}
+          onPress={handleRetry}
         >
           <Text style={styles.retryText}>Thử lại</Text>
         </TouchableOpacity>
       </View>
     );
-  }
+  }, [hasError, roomDetailError, handleRetry]);
 
-  // Nếu không có data
-  if (!roomDetail) {
+  // Memoized no data component
+  const NoDataComponent = useMemo(() => {
+    if (roomDetailData || isLoading || hasError) return null;
     
     return (
       <View style={styles.errorContainer}>
@@ -157,113 +213,127 @@ const DetailRoomScreen: React.FC = () => {
         <Text style={styles.errorText}>Không tìm thấy thông tin phòng</Text>
         <TouchableOpacity 
           style={styles.retryButton}
-          onPress={() => {
-            if (roomId) {
-              
-              dispatch(fetchRoomDetail(roomId));
-            }
-          }}
+          onPress={handleRetry}
         >
           <Text style={styles.retryText}>Thử lại</Text>
         </TouchableOpacity>
       </View>
     );
+  }, [roomDetailData, isLoading, hasError, handleRetry]);
+
+  // Memoized main content
+  const MainContent = useMemo(() => {
+    if (!roomDetailData) return null;
+
+    return (
+      <GestureHandlerRootView style={styles.container}>
+        <View style={styles.container}>
+          <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+          <Header 
+            onGoBack={handleGoBack}
+            onFavoritePress={handleFavoritePress}
+            onSharePress={handleSharePress}
+          />
+          <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+            <ImageCarousel images={roomDetailData.photos} />
+            <View style={styles.content}>
+              <RoomInfo
+                name={roomDetailData.name}
+                price={roomDetailData.price}
+                address={roomDetailData.address}
+                roomCode={roomDetailData.roomCode}
+                area={roomDetailData.area}
+              />
+              
+              <View style={styles.divider} />
+              <ServiceFees servicePrices={roomDetailData.servicePrices} />
+              
+              <View style={styles.divider} />
+              <Amenities 
+                amenities={roomDetailData.amenities}
+                furniture={roomDetailData.furniture}
+              />
+              
+              <View style={styles.divider} />
+              <OwnerInfo
+                avatar="https://randomuser.me/api/portraits/men/41.jpg"
+                name={roomDetailData.ownerName}
+                phone={roomDetailData.ownerPhone}
+              />
+              
+              <View style={styles.divider} />
+              <Description text={roomDetailData.description} />
+              
+              <TouchableOpacity style={styles.termsButton}>
+                <View style={styles.termsIcon}>
+                  <Text style={styles.termsIconText}>📋</Text>
+                </View>
+                <Text style={styles.termsText}>Xem điều khoản và điều kiện</Text>
+                <Text style={styles.termsArrow}>›</Text>
+              </TouchableOpacity>
+              
+              <View style={styles.divider} />
+              <RelatedPosts 
+                relatedRooms={relatedRooms}
+                loading={relatedRoomsLoading}
+                onRoomPress={handleRoomPress}
+              />
+              
+              {relatedRoomsError && (
+                <Text style={styles.errorText}>
+                  Không thể tải phòng liên quan: {relatedRoomsError}
+                </Text>
+              )}
+            </View>
+          </ScrollView>
+          
+          {/* Button đè lên ScrollView */}
+          <View style={styles.floatingButtonContainer}>
+            <ItemButtonConfirm
+              title="Liên hệ đặt phòng"
+              icon={Icons.IconReport}
+              onPress={handleBookingPress}
+              onPressIcon={handleSupportPress}
+            />
+          </View>
+          
+          {/* Support Request Modal */}
+          <SupportRequestModal ref={supportModalRef} />
+          
+          {/* Booking Schedule Modal */}
+          <BookingScheduleModal ref={bookingModalRef} />
+        </View>
+      </GestureHandlerRootView>
+    );
+  }, [
+    roomDetailData, 
+    handleGoBack, 
+    handleFavoritePress, 
+    handleSharePress, 
+    relatedRooms, 
+    relatedRoomsLoading, 
+    relatedRoomsError, 
+    handleRoomPress, 
+    handleBookingPress, 
+    handleSupportPress
+  ]);
+
+  // Hiển thị loading
+  if (isLoading) {
+    return LoadingComponent;
   }
 
-  // // Debug log để kiểm tra data
-  // console.log('✅ Room Detail loaded successfully:');
-  // console.log('Room ID:', roomDetail._id);
-  // console.log('Room Name:', roomDetail.description);
-  // console.log('Amenities:', roomDetail.amenities);
-  // console.log('Furniture:', roomDetail.furniture);
-  // console.log('Service Prices:', roomDetail.location?.servicePrices);
+  // Hiển thị lỗi
+  if (hasError) {
+    return ErrorComponent;
+  }
 
-  return (
-    <GestureHandlerRootView style={styles.container}>
-      <View style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-        <Header 
-          onGoBack={() => navigation.goBack()}
-          onFavoritePress={() => {
-            // TODO: Implement favorite functionality
-            console.log('Favorite pressed');
-          }}
-          onSharePress={() => {
-            // TODO: Implement share functionality
-            console.log('Share pressed');
-          }}
-        />
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          <ImageCarousel images={roomDetail.photos || []} />
-          <View style={styles.content}>
-            <RoomInfo
-              name={roomDetail.description || "Phòng trọ"}
-              price={`${roomDetail.rentPrice?.toLocaleString('vi-VN') || '0'}`}
-              address={roomDetail.location?.addressText || "Địa chỉ chưa cập nhật"}
-              roomCode={roomDetail.roomNumber || "N/A"}
-              area={roomDetail.area || 0}
-            />
-            
-            <View style={styles.divider} />
-            <ServiceFees servicePrices={roomDetail.location.servicePrices || {}} />
-            
-            <View style={styles.divider} />
-            <Amenities 
-              amenities={roomDetail.amenities || []}
-              furniture={roomDetail.furniture || []}
-            />
-            
-            <View style={styles.divider} />
-            <OwnerInfo
-              avatar="https://randomuser.me/api/portraits/men/41.jpg"
-              name={roomDetail.owner?.fullName || "Chủ trọ"}
-              phone={roomDetail.owner?.phone || "Chưa có SĐT"}
-            />
-            
-            <View style={styles.divider} />
-            <Description text={roomDetail.description || "Mô tả phòng trọ..."} />
-            
-            <TouchableOpacity style={styles.termsButton}>
-              <View style={styles.termsIcon}>
-                <Text style={styles.termsIconText}>📋</Text>
-              </View>
-              <Text style={styles.termsText}>Xem điều khoản và điều kiện</Text>
-              <Text style={styles.termsArrow}>›</Text>
-            </TouchableOpacity>
-            
-            <View style={styles.divider} />
-            <RelatedPosts 
-              relatedRooms={relatedRooms}
-              loading={relatedRoomsLoading}
-              onRoomPress={(roomId) => navigation.navigate('DetailRoom', { roomId })}
-            />
-            
-            {relatedRoomsError && (
-              <Text style={styles.errorText}>
-                Không thể tải phòng liên quan: {relatedRoomsError}
-              </Text>
-            )}
-          </View>
-        </ScrollView>
-        
-        {/* Button đè lên ScrollView */}
-        <View style={styles.floatingButtonContainer}>
-          <ItemButtonConfirm
-            title="Liên hệ đặt phòng"
-            icon={Icons.IconReport}
-            onPress={() => bookingModalRef.current?.expand()}
-            onPressIcon={() => supportModalRef.current?.expand()}
-          />
-        </View>
-        
-        {/* Support Request Modal */}
-        <SupportRequestModal ref={supportModalRef} />
-        
-        {/* Booking Schedule Modal */}
-        <BookingScheduleModal ref={bookingModalRef} />
-      </View>
-    </GestureHandlerRootView>
-  );
+  // Nếu không có data
+  if (!roomDetailData) {
+    return NoDataComponent;
+  }
+
+  return MainContent;
 };
 
 export default DetailRoomScreen;
