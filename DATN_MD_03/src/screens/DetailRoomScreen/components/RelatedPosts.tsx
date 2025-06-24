@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   },
   postPrice: {
     fontSize: responsiveFont(12),
-    color: Colors.limeGreen,
+    color: Colors.darkGreen,
     fontFamily: Fonts.Roboto_Bold,
     marginBottom: responsiveSpacing(6),
   },
@@ -154,12 +154,12 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     marginRight: responsiveSpacing(4),
-    tintColor: Colors.limeGreen,
+    tintColor: Colors.darkGreen,
   },
   postAddress: {
     flex: 1,
-    fontSize: responsiveFont(12),
-    color: Colors.textGray,
+    fontSize: responsiveFont(12), 
+    color: Colors.black,
     fontFamily: Fonts.Roboto_Regular,
   },
   loadingContainer: {

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from './components/Header';
 import FilterTabs from './components/FilterTabs';
 import RoomCard from './components/RoomCard';
@@ -289,7 +290,7 @@ const HomeScreen: React.FC = () => {
   ), [loading, filteredRooms.length, handleRefresh]);
 
   return (
-    <>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
       <Animated.View 
         style={[
           styles.container,
@@ -346,13 +347,17 @@ const HomeScreen: React.FC = () => {
           pointerEvents="none"
         />
       )}
-    </>
+    </SafeAreaView>
   );
 };
 
 export default HomeScreen;
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: Colors.backgroud,
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.backgroud,

@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginVertical: responsiveSpacing(16),
     borderWidth: 1,
-    borderColor: Colors.limeGreen,
+    borderColor: Colors.darkGreen,
   },
   termsIcon: {
     width: 24,
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
   },
   termsText: { 
     flex: 1,
-    color: Colors.limeGreen, 
+    color: Colors.darkGreen, 
     fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(14),
   },

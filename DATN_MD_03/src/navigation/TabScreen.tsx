@@ -1,6 +1,8 @@
 import React from 'react';
+import { StatusBar } from 'react-native';
 import {createStackNavigator, TransitionPresets} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/route';
+import { Colors } from '../theme/color';
 
 import SplashScreen from '../screens/Splash/SplashScreen';
 import LoginAndRegister from '../screens/LoginAndRegister/LoginAndRegister';
@@ -20,25 +22,32 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 export default function TabScreen() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{headerShown: false}}> 
-        <Stack.Screen name="SplashScreen" component={SplashScreen} />
-        <Stack.Screen name="Login" component={LoginAndRegister} />
-        <Stack.Screen name="UITab" component={UITab} />
-        <Stack.Screen 
-          name="DetailRoom" 
-          component={DetailRoomScreen}
-          options={{
-            ...TransitionPresets.SlideFromRightIOS,
-          }}
-        />
-        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-        <Stack.Screen
-          name="OTPVerification"
-          component={OTPVerificationScreen}
-        />
-        <Stack.Screen name="ResetPassWord" component={ResetPassWord} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <>
+      <StatusBar 
+        barStyle="dark-content" 
+        backgroundColor={Colors.backgroud} 
+        translucent={false}
+      />
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{headerShown: false}}> 
+          <Stack.Screen name="SplashScreen" component={SplashScreen} />
+          <Stack.Screen name="Login" component={LoginAndRegister} />
+          <Stack.Screen name="UITab" component={UITab} />
+          <Stack.Screen 
+            name="DetailRoom" 
+            component={DetailRoomScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+          <Stack.Screen
+            name="OTPVerification"
+            component={OTPVerificationScreen}
+          />
+          <Stack.Screen name="ResetPassWord" component={ResetPassWord} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </>
   );
 }

@@ -10,6 +10,7 @@ import {
   Alert,
   Image
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
 import { Icons } from '../../../assets/icons';
 import { Colors } from '../../../theme/color';
@@ -40,6 +41,7 @@ const RegionModal: React.FC<RegionModalProps> = ({
   onConfirm,
   selectedRegions,
 }) => {
+  const insets = useSafeAreaInsets();
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
@@ -207,7 +209,7 @@ const RegionModal: React.FC<RegionModalProps> = ({
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <View style={[styles.container, { paddingBottom: insets.bottom }]}>
           {/* Header */}
           <View style={styles.header}>
                           {currentView === 'districts' && (

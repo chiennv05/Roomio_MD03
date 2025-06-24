@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
 import { Icons } from '../../../assets/icons';
 import { Colors } from '../../../theme/color';
@@ -36,6 +37,7 @@ const CheckboxModal: React.FC<CheckboxModalProps> = ({
   items,
   selectedItems = [],
 }) => {
+  const insets = useSafeAreaInsets();
   const [selected, setSelected] = useState<string[]>(selectedItems);
 
   useEffect(() => {
@@ -68,7 +70,7 @@ const CheckboxModal: React.FC<CheckboxModalProps> = ({
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <View style={[styles.container, { paddingBottom: insets.bottom }]}>
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>{title}</Text>
