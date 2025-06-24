@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
 import { Icons } from '../../../assets/icons';
+import { Colors } from '../../../theme/color';
+import { responsiveFont, responsiveSpacing, moderateScale } from '../../../utils/responsive';
 
 interface CheckboxItem {
   id: string;
@@ -57,8 +59,9 @@ const CheckboxModal: React.FC<CheckboxModalProps> = ({
     onClose();
   };
 
-  const handleCancel = () => {
-    setSelected(selectedItems);
+  const handleReset = () => {
+    // Reset về rỗng (xóa tất cả filter)
+    onConfirm([]);
     onClose();
   };
 
@@ -102,7 +105,7 @@ const CheckboxModal: React.FC<CheckboxModalProps> = ({
               title="Xác nhận"
               icon={Icons.IconRemoveWhite}
               onPress={handleConfirm}
-              onPressIcon={handleCancel}
+              onPressIcon={handleReset}
             />
           </View>
         </View>
@@ -120,67 +123,67 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   container: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: moderateScale(20),
+    borderTopRightRadius: moderateScale(20),
     maxHeight: '80%',
     minHeight: '60%',
   },
   header: {
-    padding: 20,
-    paddingBottom: 10,
+    padding: responsiveSpacing(20),
+    paddingBottom: responsiveSpacing(10),
   },
   title: {
-    fontSize: 24,
+    fontSize: responsiveFont(24),
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+    color: Colors.darkGray,
+    marginBottom: responsiveSpacing(4),
   },
   subtitle: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: responsiveFont(14),
+    color: Colors.textGray,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: responsiveSpacing(20),
   },
   itemContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: responsiveSpacing(16),
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: Colors.divider,
   },
   itemLabel: {
-    fontSize: 16,
-    color: '#333',
+    fontSize: responsiveFont(16),
+    color: Colors.darkGray,
     flex: 1,
   },
   checkboxContainer: {
-    marginLeft: 16,
+    marginLeft: responsiveSpacing(16),
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
+    width: moderateScale(24),
+    height: moderateScale(24),
+    borderRadius: moderateScale(4),
     borderWidth: 2,
-    borderColor: '#ddd',
-    backgroundColor: 'white',
+    borderColor: Colors.mediumGray,
+    backgroundColor: Colors.white,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkboxSelected: {
-    backgroundColor: '#BAFD00',
-    borderColor: '#BAFD00',
+    backgroundColor: Colors.limeGreen,
+    borderColor: Colors.limeGreen,
   },
   checkmark: {
-    color: '#333',
-    fontSize: 14,
+    color: Colors.darkGray,
+    fontSize: responsiveFont(14),
     fontWeight: 'bold',
   },
   footer: {
-    padding: 20,
+    padding: responsiveSpacing(20),
     alignItems: 'center',
     justifyContent: 'center',
   },

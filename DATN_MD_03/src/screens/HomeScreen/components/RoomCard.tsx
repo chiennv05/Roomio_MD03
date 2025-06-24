@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     tintColor: Colors.darkGreen,
   },
   detail: {
-    color: Colors.textGray,
+    color: Colors.black,
     fontSize: responsiveFont(13),
     fontFamily: Fonts.Roboto_Regular,
     flex: 1,

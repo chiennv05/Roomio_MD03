@@ -8,6 +8,8 @@ import {
 import CustomSlider from './CustomSlider';
 import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
 import { Icons } from '../../../assets/icons';
+import { Colors } from '../../../theme/color';
+import { responsiveFont, responsiveSpacing, moderateScale } from '../../../utils/responsive';
 
 interface AreaModalProps {
   visible: boolean;
@@ -39,9 +41,9 @@ const AreaModal: React.FC<AreaModalProps> = ({
     onClose();
   };
 
-  const handleCancel = () => {
-    setMinArea(selectedMinArea);
-    setMaxArea(selectedMaxArea);
+  const handleReset = () => {
+    // Reset về giá trị mặc định (xóa filter)
+    onConfirm(20, 70);
     onClose();
   };
 
@@ -88,7 +90,7 @@ const AreaModal: React.FC<AreaModalProps> = ({
               title="Xác nhận"
               icon={Icons.IconRemoveWhite}
               onPress={handleConfirm}
-              onPressIcon={handleCancel}
+              onPressIcon={handleReset}
             />
           </View>
         </View>
@@ -106,54 +108,54 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   container: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: moderateScale(20),
+    borderTopRightRadius: moderateScale(20),
     maxHeight: '70%',
     minHeight: '45%',
   },
   header: {
-    padding: 20,
-    paddingBottom: 10,
+    padding: responsiveSpacing(20),
+    paddingBottom: responsiveSpacing(10),
   },
   title: {
-    fontSize: 24,
+    fontSize: responsiveFont(24),
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+    color: Colors.darkGray,
+    marginBottom: responsiveSpacing(4),
   },
   subtitle: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: responsiveFont(14),
+    color: Colors.textGray,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingHorizontal: responsiveSpacing(20),
+    paddingTop: responsiveSpacing(10),
   },
   areaDisplay: {
-    marginBottom: 30,
+    marginBottom: responsiveSpacing(30),
   },
   areaLabel: {
-    fontSize: 20,
+    fontSize: responsiveFont(20),
     fontWeight: 'bold',
-    color: '#666',
-    marginBottom: 8,
+    color: Colors.unselectedText,
+    marginBottom: responsiveSpacing(8),
   },
   areaValue: {
-    fontSize: 20,
+    fontSize: responsiveFont(20),
     fontWeight: 'bold',
-    color: '#5EB600',
+    color: Colors.darkGreen,
   },
 
   sliderContainer: {
-    marginBottom: 40,
-    paddingVertical: 10,
+    marginBottom: responsiveSpacing(40),
+    paddingVertical: responsiveSpacing(10),
     alignItems: 'center',
   },
 
   footer: {
-    padding: 20,
+    padding: responsiveSpacing(20),
     alignItems: 'center',
     justifyContent: 'center',
   },
