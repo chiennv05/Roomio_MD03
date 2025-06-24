@@ -3,7 +3,6 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  ActivityIndicator,
   Text,
   TouchableOpacity,
   StatusBar,
@@ -19,6 +18,7 @@ import { RootStackParamList } from '../../types/route';
 import { Fonts } from '../../theme/fonts';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet from '@gorhom/bottom-sheet';
+import { LoadingOverlay } from '../../components';
 
 
 // Import các components
@@ -172,18 +172,7 @@ const DetailRoomScreen: React.FC = () => {
     }
   }, [dispatch, roomId, roomDetailData?.currentRoomId, roomDetailData?.district, roomDetailData?.province, hasLoadedRelated]);
 
-  // Memoized loading component
-  const LoadingComponent = useMemo(() => {
-    if (!isLoading) return null;
-    
-    return (
-      <View style={styles.loadingContainer}>
-        <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-        <ActivityIndicator size="large" color={Colors.darkGreen} />
-        <Text style={styles.loadingText}>Đang tải thông tin phòng...</Text>
-      </View>
-    );
-  }, [isLoading]);
+
 
   // Memoized error component
   const ErrorComponent = useMemo(() => {
@@ -318,22 +307,27 @@ const DetailRoomScreen: React.FC = () => {
     handleSupportPress
   ]);
 
-  // Hiển thị loading
-  if (isLoading) {
-    return LoadingComponent;
-  }
-
   // Hiển thị lỗi
   if (hasError) {
     return ErrorComponent;
   }
 
-  // Nếu không có data
-  if (!roomDetailData) {
+  // Nếu không có data và không loading
+  if (!roomDetailData && !isLoading) {
     return NoDataComponent;
   }
 
-  return MainContent;
+  return (
+    <>
+      {MainContent}
+      <LoadingOverlay 
+        visible={isLoading}
+        message="Đang tìm thông tin phòng..."
+        size="large"
+        transparent={false}
+      />
+    </>
+  );
 };
 
 export default DetailRoomScreen;
@@ -356,17 +350,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.divider,
     marginVertical: responsiveSpacing(8),
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.white,
-  },
-  loadingText: {
-    marginTop: responsiveSpacing(16),
-    fontSize: 16,
-    color: Colors.textGray,
-  },
+
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -388,7 +372,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginVertical: responsiveSpacing(16),
     borderWidth: 1,
-    borderColor: Colors.darkGreen,
+    borderColor: Colors.limeGreen,
   },
   termsIcon: {
     width: 24,
@@ -402,12 +386,12 @@ const styles = StyleSheet.create({
   },
   termsText: { 
     flex: 1,
-    color: Colors.darkGreen, 
+    color: Colors.limeGreen, 
     fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(14),
   },
   termsArrow: {
-    color: Colors.darkGreen,
+    color: Colors.limeGreen,
     fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
   },

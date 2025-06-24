@@ -3,7 +3,6 @@ import {
   View,
   FlatList,
   StyleSheet,
-  ActivityIndicator,
   RefreshControl,
   Text,
   Animated,
@@ -22,6 +21,8 @@ import { responsiveSpacing, responsiveFont } from '../../utils/responsive';
 import { RootStackParamList } from '../../types/route';
 import { Fonts } from '../../theme/fonts';
 import { validateRoomByFilters } from '../../utils/roomUtils';
+import EmptySearchAnimation from '../../components/EmptySearchAnimation';
+import LoadingAnimation from '../../components/LoadingAnimation';
 
 // Type cho navigation
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DetailRoom'>;
@@ -152,14 +153,9 @@ const HomeScreen: React.FC = () => {
     });
 
     // Log tổng kết filter để debug
-    console.log(`🔍 Client Filter Summary:`);
-    console.log(`   📊 Total rooms from API: ${rooms.length}`);
-    console.log(`   📊 Filtered rooms: ${filtered.length}`);
-    console.log(`   🔍 Selected regions: [${regionsToFilter.join(', ')}]`);
-    console.log(`   🔍 Selected amenities: [${selectedAmenities.join(', ')}]`);
-    console.log(`   🔍 Selected furniture: [${selectedFurniture.join(', ')}]`);
-    if (priceRange) console.log(`   🔍 Price range: ${priceRange.min.toLocaleString()} - ${priceRange.max.toLocaleString()}đ`);
-    if (areaRange) console.log(`   🔍 Area range: ${areaRange.min} - ${areaRange.max}m²`);
+    
+    // if (priceRange) console.log(`   🔍 Price range: ${priceRange.min.toLocaleString()} - ${priceRange.max.toLocaleString()}đ`);
+    // if (areaRange) console.log(`   🔍 Area range: ${areaRange.min} - ${areaRange.max}m²`);
 
     return filtered;
   }, [rooms, selectedAmenities, selectedFurniture, regionsToFilter, priceRange, areaRange, useClientSideFiltering, hasNoFilters]);
@@ -264,7 +260,7 @@ const HomeScreen: React.FC = () => {
     if (!loading) return null;
     return (
       <View style={styles.footer}>
-        <ActivityIndicator size="large" color={Colors.limeGreen} />
+        <LoadingAnimation size="medium" color={Colors.limeGreen} />
       </View>
     );
   }, [loading]);
@@ -273,17 +269,13 @@ const HomeScreen: React.FC = () => {
     if (loading) return null;
     
     return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyTitle}>
-          {hasActiveFilters ? 'Không tìm thấy phòng phù hợp' : 'Không có phòng nào'}
-        </Text>
-        <Text style={styles.emptySubtitle}>
-          {hasActiveFilters 
-            ? 'Thử thay đổi bộ lọc để tìm kiếm phòng khác' 
-            : 'Hiện tại chưa có phòng nào được đăng'
-          }
-        </Text>
-      </View>
+      <EmptySearchAnimation
+        title={hasActiveFilters ? 'Không tìm thấy phòng phù hợp' : 'Không có phòng nào'}
+        subtitle={hasActiveFilters 
+          ? 'Thử thay đổi bộ lọc để tìm kiếm phòng khác' 
+          : 'Hiện tại chưa có phòng nào được đăng'
+        }
+      />
     );
   }, [loading, hasActiveFilters]);
 
@@ -381,27 +373,7 @@ const styles = StyleSheet.create({
     paddingVertical: responsiveSpacing(12),
     color: '#17190F',
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: responsiveSpacing(32),
-    paddingVertical: responsiveSpacing(64),
-  },
-  emptyTitle: {
-    fontSize: responsiveFont(18),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.black,
-    textAlign: 'center',
-    marginBottom: responsiveSpacing(8),
-  },
-  emptySubtitle: {
-    fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Regular,
-    color: Colors.textGray,
-    textAlign: 'center',
-    lineHeight: responsiveFont(20),
-  },
+
   searchOverlay: {
     position: 'absolute',
     top: 0,

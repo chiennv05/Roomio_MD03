@@ -1,11 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
 import { responsiveSpacing, responsiveFont } from '../../../utils/responsive';
 import { Room } from '../../../types/Room';
 import { getFullImageUrl } from '../../../utils/roomUtils';
 import { Icons } from '../../../assets/icons';
+import { InlineLoading } from '../../../components';
 
 interface RelatedPost {
   id?: string;
@@ -59,8 +60,11 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({
       
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color={Colors.darkGreen} />
-          <Text style={styles.loadingText}>Đang tìm kiếm phòng liên quan...</Text>
+          <InlineLoading 
+            message="Đang tìm kiếm phòng liên quan..."
+            size="small"
+            color={Colors.limeGreen}
+          />
         </View>
       ) : displayPosts.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -138,7 +142,7 @@ const styles = StyleSheet.create({
   },
   postPrice: {
     fontSize: responsiveFont(12),
-    color: Colors.darkGreen,
+    color: Colors.limeGreen,
     fontFamily: Fonts.Roboto_Bold,
     marginBottom: responsiveSpacing(6),
   },
@@ -150,7 +154,7 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     marginRight: responsiveSpacing(4),
-    tintColor: Colors.darkGreen,
+    tintColor: Colors.limeGreen,
   },
   postAddress: {
     flex: 1,
@@ -159,16 +163,9 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Regular,
   },
   loadingContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: responsiveSpacing(20),
-  },
-  loadingText: {
-    marginLeft: responsiveSpacing(8),
-    fontSize: responsiveFont(14),
-    color: Colors.textGray,
-    fontFamily: Fonts.Roboto_Regular,
   },
   emptyContainer: {
     alignItems: 'center',

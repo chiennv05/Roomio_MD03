@@ -190,15 +190,15 @@ const SearchScreen: React.FC = () => {
   }, [debouncedSearchQuery, filteredRooms.length]);
 
   // Log performance info
-  useEffect(() => {
-    if (filteredRooms.length > 0) {
-      console.log(`📊 Performance Info:`);
-      console.log(`   Total rooms: ${filteredRooms.length}`);
-      console.log(`   Pagination enabled: 8 items per page`);
-      console.log(`   Initial render: 8 items`);
-      console.log(`   Memory optimization: ✅`);
-    }
-  }, [filteredRooms.length]);
+  // useEffect(() => {
+  //   if (filteredRooms.length > 0) {
+  //     console.log(`📊 Performance Info:`);
+  //     console.log(`   Total rooms: ${filteredRooms.length}`);
+  //     console.log(`   Pagination enabled: 8 items per page`);
+  //     console.log(`   Initial render: 8 items`);
+  //     console.log(`   Memory optimization: ✅`);
+  //   }
+  // }, [filteredRooms.length]);
 
   return (
     <SafeAreaView style={styles.container}>

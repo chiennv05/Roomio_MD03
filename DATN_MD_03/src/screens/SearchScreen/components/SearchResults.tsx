@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Image,
   FlatList,
-  ActivityIndicator,
 } from 'react-native';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
@@ -19,6 +18,8 @@ import { Room } from '../../../types/Room';
 import RoomCard from '../../HomeScreen/components/RoomCard';
 import { Icons } from '../../../assets/icons';
 import { usePaginatedData } from '../../../hooks/usePaginatedData';
+import EmptySearchAnimation from '../../../components/EmptySearchAnimation';
+import LoadingAnimation from '../../../components/LoadingAnimation';
 
 interface SearchResultsProps {
   title: string;
@@ -74,7 +75,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     if (isLoading) {
       return (
         <View style={styles.loadingFooter}>
-          <ActivityIndicator size="large" color={Colors.limeGreen} />
+          <LoadingAnimation size="medium" color={Colors.limeGreen} />
           <Text style={styles.loadingText}>Đang tải thêm...</Text>
         </View>
       );
@@ -83,14 +84,12 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     return null;
   };
 
-  // Empty component
+  // Empty component with Lottie animation
   const renderEmptyComponent = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyTitle}>Không tìm thấy kết quả</Text>
-      <Text style={styles.emptySubtitle}>
-        Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc
-      </Text>
-    </View>
+    <EmptySearchAnimation
+      title="Không tìm thấy phòng phù hợp"
+      subtitle="Thử thay đổi từ khóa tìm kiếm khác"
+    />
   );
 
   // Handle end reached for loading more data
@@ -242,24 +241,5 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.textGray,
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: responsiveSpacing(32),
-  },
-  emptyTitle: {
-    fontSize: responsiveFont(18),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.black,
-    textAlign: 'center',
-    marginBottom: responsiveSpacing(8),
-  },
-  emptySubtitle: {
-    fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Regular,
-    color: Colors.textGray,
-    textAlign: 'center',
-    lineHeight: responsiveFont(20),
-  },
+
 }); 
