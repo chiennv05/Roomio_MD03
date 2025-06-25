@@ -67,9 +67,9 @@ export default function SplashScreen() {
           if (token && now < expireDate) {
             const result = await dispatch(checkProfile(session.token));
             console.log('session', result);
-            if (!checkProfile.rejected.match(result)) {
-              console.log('User logged in:', result.payload?.mapUser?.username);
-              navigation.replace('UITab');
+                          if (!checkProfile.rejected.match(result)) {
+                console.log('User logged in:', result.payload?.mapUser?.username, 'Role:', result.payload?.mapUser?.role);
+                navigation.replace('UITab');
             } else {
               await clearUserSession();
               navigation.replace('UITab');

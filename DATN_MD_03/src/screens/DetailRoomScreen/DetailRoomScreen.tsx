@@ -6,6 +6,7 @@ import {
   Text,
   TouchableOpacity,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,7 +19,7 @@ import { RootStackParamList } from '../../types/route';
 import { Fonts } from '../../theme/fonts';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { LoadingOverlay } from '../../components';
+import { LoadingOverlay, LoginPromptModal } from '../../components';
 
 
 // Import các components
@@ -46,6 +47,7 @@ const DetailRoomScreen: React.FC = () => {
   const supportModalRef = useRef<BottomSheet>(null);
   const bookingModalRef = useRef<BottomSheet>(null);
   const [hasLoadedRelated, setHasLoadedRelated] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   
   const { roomId } = route.params;
   
@@ -59,6 +61,9 @@ const DetailRoomScreen: React.FC = () => {
     relatedRoomsLoading,
     relatedRoomsError 
   } = useSelector((state: RootState) => state.room);
+  
+  // Lấy thông tin user để check role
+  const { user } = useSelector((state: RootState) => state.auth);
 
   // Memoized computed values
   const roomDetailData = useMemo(() => {
@@ -89,6 +94,16 @@ const DetailRoomScreen: React.FC = () => {
   // Memoized error state
   const hasError = useMemo(() => !!roomDetailError, [roomDetailError]);
 
+  // Kiểm tra có hiển thị button đặt phòng không
+  const shouldShowBookingButton = useMemo(() => {
+    // Ẩn button nếu user là chủ trọ
+    if (user && user.role === 'chuTro') {
+      return false;
+    }
+    // Hiển thị button cho Guest và người thuê
+    return true;
+  }, [user]);
+
   // Memoized navigation callbacks
   const handleGoBack = useCallback(() => {
     navigation.goBack();
@@ -105,12 +120,30 @@ const DetailRoomScreen: React.FC = () => {
   }, []);
 
   const handleBookingPress = useCallback(() => {
-    bookingModalRef.current?.expand();
-  }, []);
+    // Kiểm tra role của user
+    if (!user) {
+      // Guest - hiển thị custom modal hỏi đăng nhập
+      setShowLoginPrompt(true);
+    } else if (user.role === 'chuTro') {
+      // Chủ trọ - không được đặt phòng (button sẽ bị ẩn, đây là backup)
+      Alert.alert('Thông báo', 'Chủ trọ không thể đặt phòng.');
+    } else {
+      // Người thuê - cho phép đặt phòng
+      bookingModalRef.current?.expand();
+    }
+  }, [user]);
 
   const handleSupportPress = useCallback(() => {
     supportModalRef.current?.expand();
   }, []);
+
+  const handleCloseLoginPrompt = useCallback(() => {
+    setShowLoginPrompt(false);
+  }, []);
+
+  const handleNavigateToLogin = useCallback(() => {
+    navigation.navigate('Login');
+  }, [navigation]);
 
   const handleRoomPress = useCallback((roomId: string) => {
     navigation.navigate('DetailRoom', { roomId });
@@ -277,20 +310,29 @@ const DetailRoomScreen: React.FC = () => {
           </ScrollView>
           
           {/* Button đè lên ScrollView */}
-          <View style={styles.floatingButtonContainer}>
-            <ItemButtonConfirm
-              title="Liên hệ đặt phòng"
-              icon={Icons.IconReport}
-              onPress={handleBookingPress}
-              onPressIcon={handleSupportPress}
-            />
-          </View>
+          {shouldShowBookingButton && (
+            <View style={styles.floatingButtonContainer}>
+              <ItemButtonConfirm
+                title="Liên hệ đặt phòng"
+                icon={Icons.IconReport}
+                onPress={handleBookingPress}
+                onPressIcon={handleSupportPress}
+              />
+            </View>
+          )}
           
           {/* Support Request Modal */}
           <SupportRequestModal ref={supportModalRef} />
           
           {/* Booking Schedule Modal */}
           <BookingScheduleModal ref={bookingModalRef} />
+          
+          {/* Login Prompt Modal */}
+          <LoginPromptModal
+            visible={showLoginPrompt}
+            onClose={handleCloseLoginPrompt}
+            onLogin={handleNavigateToLogin}
+          />
         </View>
       </GestureHandlerRootView>
     );
@@ -304,7 +346,11 @@ const DetailRoomScreen: React.FC = () => {
     relatedRoomsError, 
     handleRoomPress, 
     handleBookingPress, 
-    handleSupportPress
+    handleSupportPress,
+    shouldShowBookingButton,
+    showLoginPrompt,
+    handleCloseLoginPrompt,
+    handleNavigateToLogin
   ]);
 
   // Hiển thị lỗi
