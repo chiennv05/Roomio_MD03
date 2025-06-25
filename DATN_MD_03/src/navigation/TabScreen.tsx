@@ -29,7 +29,7 @@ export default function TabScreen() {
         translucent={false}
       />
       <NavigationContainer>
-        <Stack.Navigator screenOptions={{headerShown: false}}> 
+        <Stack.Navigator initialRouteName="SplashScreen" screenOptions={{headerShown: false}} > 
           <Stack.Screen name="SplashScreen" component={SplashScreen} />
           <Stack.Screen name="Login" component={LoginAndRegister} />
           <Stack.Screen name="UITab" component={UITab} />

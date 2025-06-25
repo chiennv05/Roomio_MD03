@@ -60,32 +60,38 @@ export default function SplashScreen() {
 
         if (session) {
           const {token, expire} = session;
-
+          
           const now = new Date();
           const expireDate = new Date(expire);
+          
           if (token && now < expireDate) {
             const result = await dispatch(checkProfile(session.token));
-            console.log('result', result);
+            console.log('session', result);
             if (!checkProfile.rejected.match(result)) {
+              console.log('User logged in:', result.payload?.mapUser?.username);
               navigation.replace('UITab');
             } else {
               await clearUserSession();
-              navigation.replace('Login');
+              navigation.replace('UITab');
             }
           } else {
             await clearUserSession();
-            navigation.replace('Login');
+            navigation.replace('UITab');
           }
         } else {
-          navigation.replace('Login');
+          navigation.replace('UITab');
         }
       } catch (error) {
         console.error('Error loading session:', error);
-        navigation.replace('Login');
+        navigation.replace('UITab');
       }
     };
 
-    loadUserSession();
+    // Add delay to see splash screen
+    setTimeout(() => {
+      loadUserSession();
+    }, 2000);
+    
   }, [dispatch, navigation]);
 
   return (

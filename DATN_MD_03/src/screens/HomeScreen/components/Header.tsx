@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   StatusBar,
 } from 'react-native';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../store';
 import { Icons } from '../../../assets/icons';
 import { 
   responsiveFont, 
@@ -19,27 +21,49 @@ import { Fonts } from '../../../theme/fonts';
 interface HeaderProps {
   onSearchPress?: () => void;
   onNotificationPress?: () => void;
+  onUserPress?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
   onSearchPress, 
-  onNotificationPress 
+  onNotificationPress,
+  onUserPress 
 }) => {
+  // Get user info from Redux store
+  const { user } = useSelector((state: RootState) => state.auth);
+  
+  // Get display name and avatar
+  const displayName = user?.username || 'Guest';
+  const isGuest = !user;
+  
+  // Create avatar from first letter
+  const getAvatarLetter = (name: string) => {
+    if (name === 'Guest') return 'G';
+    return name.charAt(0).toUpperCase();
+  };
+  
+  const avatarLetter = getAvatarLetter(displayName);
+  
   return (
     <>
       <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
       <View style={styles.header}>
         <View style={styles.topRow}>
-          <View style={styles.userInfo}>
-            <Image
-              source={{ uri: 'https://i.pravatar.cc/40' }}
-              style={styles.avatar}
-            />
-            <View style={styles.userText}>
-              <Text style={styles.label}>Chào mừng bạn</Text>
-              <Text style={styles.name}>Việt Tùng</Text>
+          <TouchableOpacity 
+            style={styles.userInfo}
+            onPress={onUserPress}
+            activeOpacity={0.7}
+          >
+            <View style={styles.avatarContainer}>
+              <Text style={styles.avatarText}>{avatarLetter}</Text>
             </View>
-          </View>
+            <View style={styles.userText}>
+              <Text style={styles.label}>
+                {isGuest ? 'Chào mừng bạn' : 'Xin chào'}
+              </Text>
+              <Text style={styles.name}>{displayName}</Text>
+            </View>
+          </TouchableOpacity>
           <TouchableOpacity 
             style={styles.notificationButton}
             onPress={onNotificationPress}
@@ -94,12 +118,14 @@ const styles = StyleSheet.create({
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: responsiveIcon(25),
+    borderRadius: responsiveIcon(45),
     flex: 0.6,
     backgroundColor: Colors.white,
     borderWidth: 0.6,
     borderColor: 'rgba(0, 0, 0, 0.1)',
     marginRight: responsiveSpacing(12),
+    paddingVertical: responsiveSpacing(8),
+    paddingHorizontal: responsiveSpacing(4),
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -109,11 +135,20 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 1,
   },
-  avatar: {
+  avatarContainer: {
     width: responsiveIcon(50),
     height: responsiveIcon(50),
     borderRadius: responsiveIcon(25),
     marginRight: responsiveSpacing(12),
+    backgroundColor: Colors.limeGreen,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    fontSize: responsiveFont(20),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.white,
+    fontWeight: 'bold',
   },
   userText: {
     flex: 1,
