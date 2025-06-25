@@ -278,4 +278,16 @@ export const Icons = {
     ios: 'icon_filter',
     android: 'asset:/icons/icon_filter.png',
   }),
+  IconDieuKhoan: Platform.select({
+    ios: 'icon_dieu_khoan',
+    android: 'asset:/icons/icon_dieu_khoan.png',
+  }),
+  IconArrowRight: Platform.select({
+    ios: 'icon_arrow_right',
+    android: 'asset:/icons/icon_arrow_right.png',
+  }),
+  IconHeartFavourite: Platform.select({
+    ios: 'icon_heart_favourite',
+    android: 'asset:/icons/icon_heart_favourite.png',
+  }),
 };

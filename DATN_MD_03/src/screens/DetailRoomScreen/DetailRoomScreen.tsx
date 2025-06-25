@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Alert,
+  Image,
 } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -288,10 +289,12 @@ const DetailRoomScreen: React.FC = () => {
               
               <TouchableOpacity style={styles.termsButton}>
                 <View style={styles.termsIcon}>
-                  <Text style={styles.termsIconText}>📋</Text>
+                  <Image source={{ uri: Icons.IconDieuKhoan }} 
+                  style={styles.termsIconImage} />
                 </View>
                 <Text style={styles.termsText}>Xem điều khoản và điều kiện</Text>
-                <Text style={styles.termsArrow}>›</Text>
+                <Image source={{ uri: Icons.IconArrowRight }} 
+                style={styles.termsArrowRight} />
               </TouchableOpacity>
               
               <View style={styles.divider} />
@@ -461,4 +464,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: responsiveSpacing(20),
   },
+  termsIconImage: {
+    width: 24,
+    height: 24,
+  },
+  termsArrowRight:{
+    width: 12,
+    height: 24
+  }
 });
