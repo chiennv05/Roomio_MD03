@@ -9,6 +9,7 @@ import {
   Dimensions,
   Image,
 } from 'react-native';
+
 import { Colors } from '../theme/color';
 import { Fonts } from '../theme/fonts';
 import { responsiveFont, responsiveSpacing, moderateScale } from '../utils/responsive';
@@ -133,7 +134,10 @@ const LoginPromptModal: React.FC<LoginPromptModalProps> = ({
                 }
               ]}
             >
-              <Text style={styles.iconText}>🔐</Text>
+              <Image 
+                source={{ uri: Icons.IconPerson }}
+                style={styles.iconImage}
+              />
             </Animated.View>
             <Text style={styles.title}>Yêu cầu đăng nhập</Text>
             <Text style={styles.subtitle}>
@@ -231,8 +235,10 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: Colors.limeGreen,
   },
-  iconText: {
-    fontSize: responsiveFont(28),
+  iconImage: {
+    width: moderateScale(32),
+    height: moderateScale(32),
+    tintColor: Colors.darkGreen,
   },
   title: {
     fontSize: responsiveFont(22),
