@@ -279,7 +279,6 @@ const DetailRoomScreen: React.FC = () => {
               
               <View style={styles.divider} />
               <OwnerInfo
-                avatar="https://randomuser.me/api/portraits/men/41.jpg"
                 name={roomDetailData.ownerName}
                 phone={roomDetailData.ownerPhone}
               />
