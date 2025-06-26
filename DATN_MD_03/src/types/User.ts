@@ -11,6 +11,7 @@ export interface User {
   birthDate: string;
   identityNumber: string;
   status: UserStatus;
+  avatar?: string;
   auth_token: string | null;
   invalidTokens: string[];
   stats: {

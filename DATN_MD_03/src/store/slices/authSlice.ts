@@ -1,6 +1,6 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import {AuthState, LoginPayload, RegisterPayload} from '../../types';
-import {checkProfileAPI, login, register} from '../services/authService';
+import {checkProfileAPI, login, register, updateProfile as updateProfileApi} from '../services/authService';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import {storeUserSession} from '../services/storageService';
 import {mapApiUserToUser} from '../../utils/mapApiToUser';
@@ -59,6 +59,20 @@ export const checkProfile = createAsyncThunk(
       return rejectWithValue(err.message || 'Lỗi xác thựC');
     }
   },
+);
+export const updateProfile = createAsyncThunk(
+  'auth/updateProfile',
+  async (
+    {token, data}: {token: string; data: {fullName: string; phone: string; identityNumber: string}},
+    {rejectWithValue}
+  ) => {
+    try {
+      const user = await updateProfileApi(token, data);
+      return user;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Update profile failed');
+    }
+  }
 );
 
 const authSlice = createSlice({
@@ -126,6 +140,13 @@ const authSlice = createSlice({
         state.token = null;
         state.error = action.payload as string;
         EncryptedStorage.removeItem('user_session');
+      })
+
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.user = action.payload;
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.error = action.payload as string;
       });
   },
 });
