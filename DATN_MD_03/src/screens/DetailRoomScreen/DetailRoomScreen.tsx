@@ -6,13 +6,12 @@ import {
   Text,
   TouchableOpacity,
   StatusBar,
-  Alert,
   Image,
 } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
-import { fetchRoomDetail, clearRoomDetail, fetchRelatedRooms, clearRelatedRooms } from '../../store/slices/roomSlice';
+import { fetchRoomDetail, clearRoomDetail, fetchRelatedRooms, clearRelatedRooms, toggleFavorite } from '../../store/slices/roomSlice';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Colors } from '../../theme/color';
 import { responsiveSpacing, responsiveFont } from '../../utils/responsive';
@@ -20,7 +19,7 @@ import { RootStackParamList } from '../../types/route';
 import { Fonts } from '../../theme/fonts';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet from '@gorhom/bottom-sheet';
-import { LoadingOverlay, LoginPromptModal } from '../../components';
+import { LoadingOverlay, LoginPromptModal, CustomAlertModal } from '../../components';
 
 
 // Import các components
@@ -49,6 +48,11 @@ const DetailRoomScreen: React.FC = () => {
   const bookingModalRef = useRef<BottomSheet>(null);
   const [hasLoadedRelated, setHasLoadedRelated] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [alertModal, setAlertModal] = useState({
+    visible: false,
+    message: '',
+    type: 'error' as 'error' | 'success' | 'warning' | 'info',
+  });
   
   const { roomId } = route.params;
   
@@ -60,7 +64,8 @@ const DetailRoomScreen: React.FC = () => {
     roomDetailError,
     relatedRooms,
     relatedRoomsLoading,
-    relatedRoomsError 
+    relatedRoomsError,
+    toggleFavoriteLoading
   } = useSelector((state: RootState) => state.room);
   
   // Lấy thông tin user để check role
@@ -86,6 +91,7 @@ const DetailRoomScreen: React.FC = () => {
       currentRoomId: roomDetail._id,
       district: roomDetail.location?.district,
       province: roomDetail.location?.province,
+      isFavorited: roomDetail.isFavorited || false,
     };
   }, [roomDetail]);
 
@@ -110,14 +116,40 @@ const DetailRoomScreen: React.FC = () => {
     navigation.goBack();
   }, [navigation]);
 
-  const handleFavoritePress = useCallback(() => {
-    // TODO: Implement favorite functionality
-    console.log('Favorite pressed');
+  const showAlert = useCallback((message: string, type: 'error' | 'success' | 'warning' | 'info' = 'error') => {
+    setAlertModal({
+      visible: true,
+      message,
+      type,
+    });
   }, []);
+
+  const hideAlert = useCallback(() => {
+    setAlertModal(prev => ({
+      ...prev,
+      visible: false,
+    }));
+  }, []);
+
+  const handleFavoritePress = useCallback(() => {
+    // Kiểm tra role của user
+    if (!user) {
+      // Guest - hiển thị custom modal hỏi đăng nhập
+      setShowLoginPrompt(true);
+    } else if (user.role === 'chuTro') {
+      // Chủ trọ - hiển thị thông báo không được phép
+      showAlert('Chỉ người thuê mới có thể yêu thích phòng', 'warning');
+    } else if (user.role === 'nguoiThue' && user.auth_token && roomId) {
+      // Người thuê - cho phép toggle favorite
+      dispatch(toggleFavorite({
+        roomId: roomId,
+        token: user.auth_token
+      }));
+    }
+  }, [user, roomId, dispatch, setShowLoginPrompt, showAlert]);
 
   const handleSharePress = useCallback(() => {
     // TODO: Implement share functionality
-    console.log('Share pressed');
   }, []);
 
   const handleBookingPress = useCallback(() => {
@@ -127,12 +159,12 @@ const DetailRoomScreen: React.FC = () => {
       setShowLoginPrompt(true);
     } else if (user.role === 'chuTro') {
       // Chủ trọ - không được đặt phòng (button sẽ bị ẩn, đây là backup)
-      Alert.alert('Thông báo', 'Chủ trọ không thể đặt phòng.');
+      showAlert('Chủ trọ không thể đặt phòng.', 'warning');
     } else {
       // Người thuê - cho phép đặt phòng
       bookingModalRef.current?.expand();
     }
-  }, [user]);
+  }, [user, showAlert]);
 
   const handleSupportPress = useCallback(() => {
     supportModalRef.current?.expand();
@@ -152,28 +184,33 @@ const DetailRoomScreen: React.FC = () => {
 
   const handleRetry = useCallback(() => {
     if (roomId) {
-      dispatch(fetchRoomDetail(roomId));
+      dispatch(fetchRoomDetail({
+        roomId,
+        token: user?.auth_token || undefined
+      }));
     }
-  }, [dispatch, roomId]);
+  }, [dispatch, roomId, user?.auth_token]);
 
   // Single useEffect với logic thông minh
   useEffect(() => {
-    console.log("lan 1")
-    
-    
     // 1. Load room detail khi có roomId
     if (roomId) {
       dispatch(clearRoomDetail());
       dispatch(clearRelatedRooms());
-      dispatch(fetchRoomDetail(roomId));
+      dispatch(fetchRoomDetail({
+        roomId,
+        token: user?.auth_token || undefined
+      }));
       setHasLoadedRelated(false); // Reset flag
     }
 
     // 2. Setup focus listener
     const unsubscribe = navigation.addListener('focus', () => {
       if (roomId) {
-        // console.log('🔄 Focus: Reloading room data');
-        dispatch(fetchRoomDetail(roomId));
+        dispatch(fetchRoomDetail({
+          roomId,
+          token: user?.auth_token || undefined
+        }));
         setHasLoadedRelated(false);
       }
     });
@@ -184,18 +221,15 @@ const DetailRoomScreen: React.FC = () => {
       dispatch(clearRoomDetail());
       dispatch(clearRelatedRooms());
     };
-  }, [dispatch, navigation, roomId]);
+  }, [dispatch, navigation, roomId, user?.auth_token]);
 
   // Riêng useEffect cho related rooms để tránh loop
   useEffect(() => {
-   
     if (roomDetailData?.currentRoomId && 
       roomDetailData.currentRoomId === roomId && 
       roomDetailData.district && 
       roomDetailData.province && 
       !hasLoadedRelated) {
-      console.log("lan 2")
-      // console.log("🔗 Loading related rooms");
       dispatch(fetchRelatedRooms({
         roomId,
         district: roomDetailData.district,
@@ -256,6 +290,8 @@ const DetailRoomScreen: React.FC = () => {
             onGoBack={handleGoBack}
             onFavoritePress={handleFavoritePress}
             onSharePress={handleSharePress}
+            isFavorited={roomDetailData.isFavorited}
+            favoriteLoading={toggleFavoriteLoading}
           />
           <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
             <ImageCarousel images={roomDetailData.photos} />
@@ -335,6 +371,14 @@ const DetailRoomScreen: React.FC = () => {
             onClose={handleCloseLoginPrompt}
             onLogin={handleNavigateToLogin}
           />
+
+          {/* Custom Alert Modal */}
+          <CustomAlertModal
+            visible={alertModal.visible}
+            message={alertModal.message}
+            type={alertModal.type}
+            onClose={hideAlert}
+          />
         </View>
       </GestureHandlerRootView>
     );
@@ -352,7 +396,12 @@ const DetailRoomScreen: React.FC = () => {
     shouldShowBookingButton,
     showLoginPrompt,
     handleCloseLoginPrompt,
-    handleNavigateToLogin
+    handleNavigateToLogin,
+    toggleFavoriteLoading,
+    alertModal.visible,
+    alertModal.message,
+    alertModal.type,
+    hideAlert
   ]);
 
   // Hiển thị lỗi

@@ -50,9 +50,10 @@ export const getRooms = async (filters: RoomFilters = {}) => {
   }
 };
 
-export const getRoomDetail = async (roomId: string) => {
+export const getRoomDetail = async (roomId: string, token?: string) => {
   try {
-    const response = await api.get(`/home/room/${roomId}`);
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const response = await api.get(`/home/room/${roomId}`, { headers });
     return response.data;
   } catch (error: any) {
     throw {
@@ -215,4 +216,38 @@ export const getRelatedRoomsFallback = async (
       status: error.response?.status,
     };
   }
-}; 
+};
+
+// API để toggle favorite phòng trọ
+export const toggleRoomFavorite = async (roomId: string, token: string) => {
+  try {
+    const response = await api.post(`/home/room/${roomId}/toggle-favorite`, {}, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+    };
+  }
+};
+
+// API để lấy danh sách phòng yêu thích
+export const getFavoriteRooms = async (token: string) => {
+  try {
+    const response = await api.get('/home/my-favorites', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+    };
+  }
+};

@@ -57,6 +57,8 @@ export interface Room {
     phone: string;
   };
   distance?: number | null;
+  isFavorited?: boolean;
+  canContact?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -104,6 +106,10 @@ export interface RoomState {
   relatedRooms: Room[];
   relatedRoomsLoading: boolean;
   relatedRoomsError: string | null;
+  favoriteRooms: Room[];
+  favoriteLoading: boolean;
+  favoriteError: string | null;
+  toggleFavoriteLoading: boolean;
 }
 
 export interface Owner {

@@ -8,12 +8,16 @@ interface HeaderProps {
   onGoBack: () => void;
   onFavoritePress?: () => void;
   onSharePress?: () => void;
+  isFavorited?: boolean;
+  favoriteLoading?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
   onGoBack, 
   onFavoritePress, 
-  onSharePress 
+  onSharePress,
+  isFavorited = false,
+  favoriteLoading = false
 }) => {
   return (
     <View style={styles.container}>
@@ -24,10 +28,17 @@ const Header: React.FC<HeaderProps> = ({
         />
       </TouchableOpacity>
       <View style={styles.rightButtons}>
-        <TouchableOpacity style={styles.button} onPress={onFavoritePress}>
+        <TouchableOpacity 
+          style={[styles.button, favoriteLoading && styles.loadingButton]} 
+          onPress={onFavoritePress}
+          disabled={favoriteLoading}
+        >
           <Image 
-            source={{ uri: Icons.IconFavourite }} 
-            style={styles.icon}
+            source={{ uri: isFavorited ? Icons.IconHeartFavourite : Icons.IconFavourite }} 
+            style={[
+              isFavorited ? styles.favoriteIcon : styles.icon, 
+              favoriteLoading && styles.loadingIcon
+            ]}
           />
         </TouchableOpacity>
         <TouchableOpacity 
@@ -79,10 +90,21 @@ const styles = StyleSheet.create({
     height: 20,
     tintColor: Colors.black,
   },
+  favoriteIcon: {
+    width: 20,
+    height: 20,
+    // Không có tintColor để giữ màu gốc của icon đỏ
+  },
   icon2: {
     width: 12,
     height: 24,
     tintColor: Colors.black,
+  },
+  loadingButton: {
+    opacity: 0.6,
+  },
+  loadingIcon: {
+    opacity: 0.5,
   }
 });
 

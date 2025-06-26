@@ -1,6 +1,6 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import {RoomState, RoomFilters} from '../../types';
-import {getRooms, getRoomDetail, getRelatedRooms, getRelatedRoomsFallback} from '../services/roomService';
+import {getRooms, getRoomDetail, getRelatedRooms, getRelatedRoomsFallback, toggleRoomFavorite, getFavoriteRooms} from '../services/roomService';
 
 const initialState: RoomState = {
   loading: false,
@@ -17,6 +17,10 @@ const initialState: RoomState = {
   relatedRooms: [],
   relatedRoomsLoading: false,
   relatedRoomsError: null,
+  favoriteRooms: [],
+  favoriteLoading: false,
+  favoriteError: null,
+  toggleFavoriteLoading: false,
 };
 
 export const fetchRooms = createAsyncThunk(
@@ -51,9 +55,12 @@ export const loadMoreRooms = createAsyncThunk(
 
 export const fetchRoomDetail = createAsyncThunk(
   'room/fetchRoomDetail',
-  async (roomId: string, {rejectWithValue}) => {
+  async (
+    {roomId, token}: {roomId: string; token?: string}, 
+    {rejectWithValue}
+  ) => {
     try {
-      const res = await getRoomDetail(roomId);
+      const res = await getRoomDetail(roomId, token);
       if (!res?.success) throw new Error(res?.message);
       return res.data;
     } catch (err: any) {
@@ -103,6 +110,34 @@ export const fetchRelatedRooms = createAsyncThunk(
   },
 );
 
+export const toggleFavorite = createAsyncThunk(
+  'room/toggleFavorite',
+  async (
+    {roomId, token}: {roomId: string; token: string}, 
+    {rejectWithValue}
+  ) => {
+    try {
+      const res = await toggleRoomFavorite(roomId, token);
+      return {roomId, ...res};
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Thao tác yêu thích thất bại');
+    }
+  },
+);
+
+export const fetchFavoriteRooms = createAsyncThunk(
+  'room/fetchFavoriteRooms',
+  async (token: string, {rejectWithValue}) => {
+    try {
+      const res = await getFavoriteRooms(token);
+      if (!res?.success) throw new Error(res?.message);
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Lấy danh sách yêu thích thất bại');
+    }
+  },
+);
+
 const roomSlice = createSlice({
   name: 'room',
   initialState,
@@ -125,6 +160,27 @@ const roomSlice = createSlice({
     clearRelatedRooms: state => {
       state.relatedRooms = [];
       state.relatedRoomsError = null;
+    },
+    clearFavoriteError: state => {
+      state.favoriteError = null;
+    },
+    updateRoomFavoriteStatus: (state, action) => {
+      const {roomId, isFavorited} = action.payload;
+      
+      // Update roomDetail if it matches
+      if (state.roomDetail && state.roomDetail._id === roomId) {
+        state.roomDetail = {...state.roomDetail, isFavorited};
+      }
+      
+      // Update rooms list
+      state.rooms = state.rooms.map(room => 
+        room._id === roomId ? {...room, isFavorited} : room
+      );
+      
+      // Update relatedRooms
+      state.relatedRooms = state.relatedRooms.map(room => 
+        room._id === roomId ? {...room, isFavorited} : room
+      );
     },
   },
   extraReducers: builder => {
@@ -183,9 +239,50 @@ const roomSlice = createSlice({
       .addCase(fetchRelatedRooms.rejected, (state, action) => {
         state.relatedRoomsLoading = false;
         state.relatedRoomsError = action.payload as string;
+      })
+
+      .addCase(toggleFavorite.pending, state => {
+        state.toggleFavoriteLoading = true;
+        state.favoriteError = null;
+      })
+      .addCase(toggleFavorite.fulfilled, (state, action) => {
+        state.toggleFavoriteLoading = false;
+        const {roomId} = action.payload;
+        
+        // Update roomDetail if it matches
+        if (state.roomDetail && state.roomDetail._id === roomId) {
+          state.roomDetail = {...state.roomDetail, isFavorited: !state.roomDetail.isFavorited};
+        }
+        
+        // Update rooms list
+        state.rooms = state.rooms.map(room => 
+          room._id === roomId ? {...room, isFavorited: !room.isFavorited} : room
+        );
+        
+        // Update relatedRooms
+        state.relatedRooms = state.relatedRooms.map(room => 
+          room._id === roomId ? {...room, isFavorited: !room.isFavorited} : room
+        );
+      })
+      .addCase(toggleFavorite.rejected, (state, action) => {
+        state.toggleFavoriteLoading = false;
+        state.favoriteError = action.payload as string;
+      })
+
+      .addCase(fetchFavoriteRooms.pending, state => {
+        state.favoriteLoading = true;
+        state.favoriteError = null;
+      })
+      .addCase(fetchFavoriteRooms.fulfilled, (state, action) => {
+        state.favoriteLoading = false;
+        state.favoriteRooms = action.payload;
+      })
+      .addCase(fetchFavoriteRooms.rejected, (state, action) => {
+        state.favoriteLoading = false;
+        state.favoriteError = action.payload as string;
       });
   },
 });
 
-export const {clearRoomError, resetRooms, clearRoomDetail, clearRelatedRooms} = roomSlice.actions;
+export const {clearRoomError, resetRooms, clearRoomDetail, clearRelatedRooms, clearFavoriteError, updateRoomFavoriteStatus} = roomSlice.actions;
 export default roomSlice.reducer; 
