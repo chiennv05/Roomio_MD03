@@ -30,6 +30,9 @@ export const getRooms = async (filters: RoomFilters = {}) => {
     if (filters.districts && filters.districts.length > 0) {
       filters.districts.forEach(district => params.append('districts', district));
     }
+    if (filters.search && filters.search.trim()) {
+      params.append('search', filters.search.trim());
+    }
 
     // Debug logging để kiểm tra
     const finalUrl = `/home/rooms?${params.toString()}`;
@@ -243,6 +246,49 @@ export const getFavoriteRooms = async (token: string) => {
         Authorization: `Bearer ${token}`,
       },
     });
+    return response.data;
+  } catch (error: any) {
+    throw {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+    };
+  }
+};
+
+// API để tìm kiếm phòng theo từ khóa
+export const searchRooms = async (searchQuery: string, filters: RoomFilters = {}) => {
+  try {
+    const params = new URLSearchParams();
+    
+    // Add search as main parameter
+    if (searchQuery && searchQuery.trim()) {
+      params.append('search', searchQuery.trim());
+    }
+    
+    // Add default params
+    params.append('maxDistance', (filters.maxDistance || 10000).toString());
+    params.append('page', (filters.page || 1).toString());
+    params.append('limit', (filters.limit || 20).toString());
+    
+    // Add optional filters
+    if (filters.amenities && filters.amenities.length > 0) {
+      filters.amenities.forEach(amenity => params.append('amenities', amenity));
+    }
+    if (filters.furniture && filters.furniture.length > 0) {
+      filters.furniture.forEach(furniture => params.append('furniture', furniture));
+    }
+    if (filters.minPrice) params.append('minPrice', filters.minPrice.toString());
+    if (filters.maxPrice) params.append('maxPrice', filters.maxPrice.toString());
+    if (filters.minArea) params.append('minArea', filters.minArea.toString());
+    if (filters.maxArea) params.append('maxArea', filters.maxArea.toString());
+    if (filters.districts && filters.districts.length > 0) {
+      filters.districts.forEach(district => params.append('districts', district));
+    }
+
+    const finalUrl = `/home/rooms?${params.toString()}`;
+    console.log('🔍 Search API URL:', finalUrl);
+
+    const response = await api.get(finalUrl);
     return response.data;
   } catch (error: any) {
     throw {

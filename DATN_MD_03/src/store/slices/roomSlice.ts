@@ -1,6 +1,6 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import {RoomState, RoomFilters} from '../../types';
-import {getRooms, getRoomDetail, getRelatedRooms, getRelatedRoomsFallback, toggleRoomFavorite, getFavoriteRooms} from '../services/roomService';
+import {getRooms, getRoomDetail, getRelatedRooms, getRelatedRoomsFallback, toggleRoomFavorite, getFavoriteRooms, searchRooms} from '../services/roomService';
 
 const initialState: RoomState = {
   loading: false,
@@ -21,6 +21,9 @@ const initialState: RoomState = {
   favoriteLoading: false,
   favoriteError: null,
   toggleFavoriteLoading: false,
+  searchResults: [],
+  searchLoading: false,
+  searchError: null,
 };
 
 export const fetchRooms = createAsyncThunk(
@@ -134,6 +137,22 @@ export const fetchFavoriteRooms = createAsyncThunk(
       return res.data;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Lấy danh sách yêu thích thất bại');
+    }
+  },
+);
+
+export const searchRoomsAction = createAsyncThunk(
+  'room/searchRooms',
+  async (
+    {searchQuery, filters = {}}: {searchQuery: string; filters?: RoomFilters}, 
+    {rejectWithValue}
+  ) => {
+    try {
+      const res = await searchRooms(searchQuery, filters);
+      if (!res?.success) throw new Error(res?.message);
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Tìm kiếm phòng thất bại');
     }
   },
 );
@@ -275,11 +294,26 @@ const roomSlice = createSlice({
       })
       .addCase(fetchFavoriteRooms.fulfilled, (state, action) => {
         state.favoriteLoading = false;
-        state.favoriteRooms = action.payload;
+        // Extract room data from favorites array
+        const favorites = action.payload.favorites || [];
+        state.favoriteRooms = favorites.map((favorite: any) => favorite.roomId);
       })
       .addCase(fetchFavoriteRooms.rejected, (state, action) => {
         state.favoriteLoading = false;
         state.favoriteError = action.payload as string;
+      })
+
+      .addCase(searchRoomsAction.pending, state => {
+        state.searchLoading = true;
+        state.searchError = null;
+      })
+      .addCase(searchRoomsAction.fulfilled, (state, action) => {
+        state.searchLoading = false;
+        state.searchResults = action.payload.rooms;
+      })
+      .addCase(searchRoomsAction.rejected, (state, action) => {
+        state.searchLoading = false;
+        state.searchError = action.payload as string;
       });
   },
 });

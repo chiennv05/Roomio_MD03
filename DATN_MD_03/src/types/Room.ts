@@ -110,6 +110,9 @@ export interface RoomState {
   favoriteLoading: boolean;
   favoriteError: string | null;
   toggleFavoriteLoading: boolean;
+  searchResults: Room[];
+  searchLoading: boolean;
+  searchError: string | null;
 }
 
 export interface Owner {
@@ -207,4 +210,5 @@ export interface RoomFilters {
   amenities?: string[];
   furniture?: string[];
   districts?: string[];
+  search?: string;
 }

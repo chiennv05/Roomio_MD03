@@ -2,9 +2,7 @@ import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   StyleSheet,
-  Image,
   FlatList,
   Animated,
   Easing,
@@ -14,30 +12,24 @@ import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
 import { 
   responsiveFont, 
-  responsiveIcon, 
   responsiveSpacing 
 } from '../../../utils/responsive';
 import { Room } from '../../../types/Room';
-import RoomCard from '../../HomeScreen/components/RoomCard';
-import { Icons } from '../../../assets/icons';
+import FavoriteRoomCard from './FavoriteRoomCard';
 import { usePaginatedData } from '../../../hooks/usePaginatedData';
 import EmptySearchAnimation from '../../../components/EmptySearchAnimation';
 import LoadingAnimation from '../../../components/LoadingAnimation';
 
-interface SearchResultsProps {
+interface FavoriteSearchResultsProps {
   title: string;
   rooms: Room[];
   onRoomPress: (roomId: string) => void;
-  onFilterPress?: () => void;
-  isFilterActive?: boolean;
 }
 
-const SearchResults: React.FC<SearchResultsProps> = ({
+const FavoriteSearchResults: React.FC<FavoriteSearchResultsProps> = ({
   title,
   rooms,
   onRoomPress,
-  onFilterPress,
-  isFilterActive = false
 }) => {
   // Animation for room cards
   const animatedValues = useRef<Map<string, Animated.Value>>(new Map()).current;
@@ -109,7 +101,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   }), []);
 
   // Animated Room Card Component
-  const AnimatedRoomCard = useCallback(({ item }: { item: Room }) => {
+  const AnimatedFavoriteRoomCard = useCallback(({ item }: { item: Room }) => {
     const animValue = getAnimatedValue(item._id || '');
     
     const translateY = animValue.interpolate({
@@ -140,7 +132,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
           },
         ]}
       >
-        <RoomCard 
+        <FavoriteRoomCard 
           item={item} 
           onPress={onRoomPress}
         />
@@ -174,13 +166,13 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
   // Empty component with Lottie animation
   const renderEmptyComponent = () => {
-    // Check if this is a search result or general room list
-    const isSearching = title.includes('Kết quả tìm kiếm');
+    // Check if this is a search result or general favorite list
+    const isSearching = title.includes('Tìm kiếm trong yêu thích');
     
     return (
       <EmptySearchAnimation
-        title={isSearching ? "Không tìm thấy phòng phù hợp" : "Chưa có phòng trọ nào"}
-        subtitle={isSearching ? "Thử thay đổi từ khóa tìm kiếm khác" : "Vui lòng thử lại sau"}
+        title={isSearching ? "Không tìm thấy phòng phù hợp" : "Chưa có phòng yêu thích"}
+        subtitle={isSearching ? "Thử thay đổi từ khóa tìm kiếm khác" : "Hãy thêm phòng vào danh sách yêu thích"}
       />
     );
   };
@@ -195,7 +187,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Header với title và filter button */}
+      {/* Header với title */}
       <View style={styles.header}>
         <Text style={styles.title}>
           {title}
@@ -205,32 +197,12 @@ const SearchResults: React.FC<SearchResultsProps> = ({
             </Text>
           )}
         </Text>
-        {onFilterPress && (
-          <TouchableOpacity 
-            style={[
-              styles.filterButton,
-              isFilterActive && styles.activeFilterButton
-            ]} 
-            onPress={() => {
-              onFilterPress();
-            }}
-          >
-            <Image 
-              source={{ uri: isFilterActive ? Icons.IconRemoveFilter
-                 : Icons.IconFilter }} 
-              style={[
-                styles.filterIcon,
-                isFilterActive && styles.activeFilterIcon
-              ]} 
-            />
-          </TouchableOpacity>
-        )}
       </View>
 
       {/* Danh sách kết quả với lazy loading */}
       <FlatList
         data={displayedData}
-        renderItem={AnimatedRoomCard}
+        renderItem={AnimatedFavoriteRoomCard}
         keyExtractor={(item, index) => item._id || `room-${index}`}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
@@ -249,7 +221,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         windowSize={10} // Keep 10 screens worth of content
         initialNumToRender={8} // Render 8 items initially
         getItemLayout={(data, index) => ({
-          length: 120, // Approximate height of RoomCard
+          length: 120, // Approximate height of FavoriteRoomCard
           offset: 120 * index,
           index,
         })}
@@ -258,7 +230,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   );
 };
 
-export default SearchResults;
+export default FavoriteSearchResults;
 
 const styles = StyleSheet.create({
   container: {
@@ -283,28 +255,6 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.textGray,
-  },
-  filterButton: {
-    width: responsiveIcon(44),
-    height: responsiveIcon(44),
-    backgroundColor: Colors.white,
-    borderRadius: responsiveIcon(22),
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  activeFilterButton: {
-    backgroundColor: Colors.limeGreen,
-    borderColor: Colors.limeGreen,
-  },
-  filterIcon: {
-    width: responsiveIcon(24),
-    height: responsiveIcon(24),
-    tintColor: Colors.black,
-  },
-  activeFilterIcon: {
-    tintColor: Colors.white,
   },
   listContainer: {
     paddingTop: responsiveSpacing(8),
@@ -339,5 +289,4 @@ const styles = StyleSheet.create({
   animatedCard: {
     marginBottom: responsiveSpacing(4),
   },
-
 }); 

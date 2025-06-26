@@ -10,11 +10,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
-import { fetchRooms } from '../../store/slices/roomSlice';
+import { searchRoomsAction, fetchRooms } from '../../store/slices/roomSlice';
 import { Colors } from '../../theme/color';
 import { RootStackParamList } from '../../types/route';
 import { Icons } from '../../assets/icons';
-import { filterRoomsBySearch } from '../../utils/validate';
 
 // Import components
 import SearchBar from './components/SearchBar';
@@ -26,7 +25,7 @@ type SearchScreenNavigationProp = StackNavigationProp<RootStackParamList, 'HomeS
 const SearchScreen: React.FC = () => {
   const navigation = useNavigation<SearchScreenNavigationProp>();
   const dispatch = useDispatch<AppDispatch>();
-  const { rooms } = useSelector((state: RootState) => state.room);
+  const { searchResults, searchLoading, searchError, rooms, loading } = useSelector((state: RootState) => state.room);
 
   // Animation states
   const fadeAnim = useMemo(() => new Animated.Value(0), []);
@@ -42,32 +41,31 @@ const SearchScreen: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
-    }, 300); // 300ms delay
+    }, 800); // 3s delay để tránh request liên tục
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Load all rooms when component mounts
+  // Search rooms when search query changes or load all rooms when no search query
   useEffect(() => {
-    dispatch(fetchRooms({}));
-  }, [dispatch]);
-
-  // Filter rooms by search query - Memoized và real-time với debounce
-  const filteredRooms = useMemo(() => {
-    if (!rooms) return [];
-    
-    // Apply search filter first với debounced query
-    const searchFiltered = filterRoomsBySearch(rooms, debouncedSearchQuery);
-    
-    // Log for debugging
     if (debouncedSearchQuery.trim()) {
-      console.log(`🔍 Search: "${debouncedSearchQuery}"`);
-      console.log(`📊 Total rooms: ${rooms.length}`);
-      console.log(`📊 Filtered by search: ${searchFiltered.length}`);
+      dispatch(searchRoomsAction({
+        searchQuery: debouncedSearchQuery,
+        filters: {}
+      }));
+    } else {
+      // Load all rooms when no search query
+      dispatch(fetchRooms({}));
     }
-    
-    return searchFiltered;
-  }, [rooms, debouncedSearchQuery]);
+  }, [dispatch, debouncedSearchQuery]);
+
+  // Use search results when searching, otherwise use all rooms
+  const filteredRooms = useMemo(() => {
+    if (debouncedSearchQuery.trim()) {
+      return searchResults || [];
+    }
+    return rooms || [];
+  }, [searchResults, rooms, debouncedSearchQuery]);
 
   // Animation khi vào màn hình - slide up từ dưới
   const animateIn = useCallback(() => {
@@ -101,13 +99,18 @@ const SearchScreen: React.FC = () => {
       slideAnim.setValue(100); // Bắt đầu từ vị trí dưới
       scaleAnim.setValue(1.05); // Bắt đầu từ scale lớn hơn
       
+      // Load all rooms when first entering screen if no search query
+      if (!debouncedSearchQuery.trim() && rooms.length === 0) {
+        dispatch(fetchRooms({}));
+      }
+      
       // Start animation ngay lập tức để liền mạch với HomeScreen
       const timer = setTimeout(() => {
         animateIn();
       }, 0); // Không delay để animation liền mạch
 
       return () => clearTimeout(timer);
-    }, [fadeAnim, slideAnim, scaleAnim, animateIn])
+    }, [fadeAnim, slideAnim, scaleAnim, animateIn, debouncedSearchQuery, rooms.length, dispatch])
   );
 
   // Filter options data - Memoized
@@ -184,10 +187,19 @@ const SearchScreen: React.FC = () => {
   // Memoized title with search results count
   const searchTitle = useMemo(() => {
     if (debouncedSearchQuery.trim()) {
-      return `Kết quả tìm kiếm (${filteredRooms.length})`;
+      if (searchLoading) {
+        return 'Đang tìm kiếm...';
+      }
+      if (searchError) {
+        return 'Lỗi tìm kiếm';
+      }
+      return `Kết quả tìm kiếm "${debouncedSearchQuery}" (${filteredRooms.length})`;
     }
-    return 'Danh mục tìm kiếm';
-  }, [debouncedSearchQuery, filteredRooms.length]);
+    if (loading) {
+      return 'Đang tải phòng...';
+    }
+    return `Tất cả phòng trọ (${filteredRooms.length})`;
+  }, [debouncedSearchQuery, filteredRooms.length, searchLoading, searchError, loading]);
 
   // Log performance info
   // useEffect(() => {

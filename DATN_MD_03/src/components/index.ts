@@ -5,4 +5,5 @@ export { default as EmptySearchAnimation } from './EmptySearchAnimation';
 export { default as ContainerLinearGradent } from './ContainerLinearGradent';
 export { default as SafeModal } from './SafeModal';
 export { default as LoginPromptModal } from './LoginPromptModal';
-export { default as CustomAlertModal } from './CustomAlertModal'; 
+export { default as CustomAlertModal } from './CustomAlertModal';
+export { default as SwipeableTabWrapper } from './SwipeableTabWrapper'; 
