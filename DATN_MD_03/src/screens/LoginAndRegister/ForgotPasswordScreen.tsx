@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import React, {useCallback, useState} from 'react';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import ContainerLinearGradient from '../../components/ContainerLinearGradent';
+import { ContainerLinearGradent } from '../../components';
 import {Icons} from '../../assets/icons';
 import {Images} from '../../assets/images';
 import {responsiveFont, responsiveIcon, SCREEN} from '../../utils/responsive';
@@ -72,7 +72,7 @@ export default function ForgotPasswordScreen() {
         contentContainerStyle={styles.containerScrollview}
         enableOnAndroid={true}
         keyboardOpeningTime={0}>
-        <ContainerLinearGradient>
+        <ContainerLinearGradent>
           <TouchableOpacity style={styles.styleButton} onPress={handleGoBack}>
             <Image
               source={{uri: Icons.IconArrowLeft}}
@@ -89,7 +89,7 @@ export default function ForgotPasswordScreen() {
             Vui lòng nhập thông tin dưới đây để lấy lại mật khẩu của bạn để đăng
             nhập vào Roomio
           </Text>
-        </ContainerLinearGradient>
+        </ContainerLinearGradent>
 
         <View style={styles.containerInput}>
           <ItemInput

@@ -22,7 +22,36 @@ import PersonalInformation from '../screens/Profile/PersonalInformation';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-
+// Deep linking configuration (temporarily disabled for debugging)
+// const linking = {
+//   prefixes: ['roomio://', 'https://roomio.app'],
+//   config: {
+//     screens: {
+//       SplashScreen: 'splash',
+//       Login: 'login',
+//       UITab: {
+//         path: '/home',
+//         screens: {
+//           HomeScreen: 'home',
+//           SearchScreen: 'search',
+//           FavoriteScreen: 'favorites',
+//           NotificationScreen: 'notifications', 
+//           ProfileScreen: 'profile',
+//         },
+//       },
+//       DetailRoom: {
+//         path: '/room/:roomId',
+//         parse: {
+//           roomId: (roomId: string) => roomId,
+//         },
+//       },
+//       PersonalInformation: 'profile/personal',
+//       ForgotPassword: 'forgot-password',
+//       OTPVerification: 'otp-verification',
+//       ResetPassWord: 'reset-password',
+//     },
+//   },
+// };
 
 export default function TabScreen() {
   return (

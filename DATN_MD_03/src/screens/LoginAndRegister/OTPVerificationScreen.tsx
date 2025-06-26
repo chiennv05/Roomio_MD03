@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import React, {useCallback, useState} from 'react';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import ContainerLinearGradient from '../../components/ContainerLinearGradent';
+import { ContainerLinearGradent } from '../../components';
 import {Icons} from '../../assets/icons';
 import {Images} from '../../assets/images';
 import {
@@ -120,7 +120,7 @@ export default function OTPVerificationScreen() {
         contentContainerStyle={styles.containerScrollview}
         enableOnAndroid={true}
         keyboardOpeningTime={0}>
-        <ContainerLinearGradient>
+        <ContainerLinearGradent>
           <TouchableOpacity style={styles.styleButton} onPress={handleGoBack}>
             <Image
               source={{uri: Icons.IconArrowLeft}}
@@ -136,7 +136,7 @@ export default function OTPVerificationScreen() {
           <Text style={styles.textTitle}>
             Vui lòng nhập mã xác nhận OTP được gửi đến email {email}
           </Text>
-        </ContainerLinearGradient>
+        </ContainerLinearGradent>
 
         <View style={styles.containerInput}>
           <CodeField

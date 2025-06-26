@@ -20,6 +20,7 @@ import { Fonts } from '../../theme/fonts';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import BottomSheet from '@gorhom/bottom-sheet';
 import { LoadingOverlay, LoginPromptModal, CustomAlertModal } from '../../components';
+import ShareModal from '../../components/ShareModal';
 
 
 // Import các components
@@ -48,6 +49,7 @@ const DetailRoomScreen: React.FC = () => {
   const bookingModalRef = useRef<BottomSheet>(null);
   const [hasLoadedRelated, setHasLoadedRelated] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [alertModal, setAlertModal] = useState({
     visible: false,
     message: '',
@@ -149,7 +151,7 @@ const DetailRoomScreen: React.FC = () => {
   }, [user, roomId, dispatch, setShowLoginPrompt, showAlert]);
 
   const handleSharePress = useCallback(() => {
-    // TODO: Implement share functionality
+    setShowShareModal(true);
   }, []);
 
   const handleBookingPress = useCallback(() => {
@@ -172,6 +174,10 @@ const DetailRoomScreen: React.FC = () => {
 
   const handleCloseLoginPrompt = useCallback(() => {
     setShowLoginPrompt(false);
+  }, []);
+
+  const handleCloseShareModal = useCallback(() => {
+    setShowShareModal(false);
   }, []);
 
   const handleNavigateToLogin = useCallback(() => {
@@ -423,6 +429,17 @@ const DetailRoomScreen: React.FC = () => {
         size="large"
         transparent={false}
       />
+      {/* Share Modal */}
+      {roomDetailData && (
+        <ShareModal
+          visible={showShareModal}
+          onClose={handleCloseShareModal}
+          roomId={roomId}
+          roomName={roomDetailData.name}
+          roomPrice={roomDetailData.price}
+          roomAddress={roomDetailData.address}
+        />
+      )}
     </>
   );
 };

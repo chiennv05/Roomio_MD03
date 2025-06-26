@@ -52,5 +52,16 @@
 		<string>Roboto-Bold.ttf</string>
 		<string>Roboto-Regular.ttf</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>roomio.deeplink</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>roomio</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
