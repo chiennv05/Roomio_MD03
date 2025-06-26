@@ -6,6 +6,9 @@ import {
   ScrollView,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  TouchableOpacity,
+  Modal,
+  Text,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -13,6 +16,7 @@ import Animated, {
   interpolate,
   interpolateColor,
 } from 'react-native-reanimated';
+import ImageViewer from 'react-native-image-zoom-viewer';
 import { responsiveSpacing, SCREEN } from '../../../utils/responsive';
 import { Colors } from '../../../theme/color';
 import { getImageUrl } from '../../../configs';
@@ -28,9 +32,10 @@ interface AnimatedImageProps {
   image: string;
   index: number;
   scrollX: Animated.SharedValue<number>;
+  onPress: (index: number) => void;
 }
 
-const AnimatedImage: React.FC<AnimatedImageProps> = ({ image, index, scrollX }) => {
+const AnimatedImage: React.FC<AnimatedImageProps> = ({ image, index, scrollX, onPress }) => {
   const inputRange = [
     (index - 1) * SCREEN_WIDTH,
     index * SCREEN_WIDTH,
@@ -71,7 +76,11 @@ const AnimatedImage: React.FC<AnimatedImageProps> = ({ image, index, scrollX }) 
   });
 
   return (
-    <View style={styles.imageContainer}>
+    <TouchableOpacity 
+      style={styles.imageContainer}
+      onPress={() => onPress(index)}
+      activeOpacity={0.9}
+    >
       <Animated.View style={[styles.imageWrapper, imageStyle]}>
         <Image
           source={{ uri: getImageUrl(image) }}
@@ -80,12 +89,14 @@ const AnimatedImage: React.FC<AnimatedImageProps> = ({ image, index, scrollX }) 
         />
       </Animated.View>
       <Animated.View style={[styles.overlay, overlayStyle]} pointerEvents="none" />
-    </View>
+    </TouchableOpacity>
   );
 };
 
 const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
+  const [imageViewerIndex, setImageViewerIndex] = useState(0);
   const scrollX = useSharedValue(0);
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -96,6 +107,20 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
     const index = Math.round(offsetX / SCREEN_WIDTH);
     setCurrentIndex(index);
   };
+
+  const handleImagePress = (index: number) => {
+    setImageViewerIndex(index);
+    setIsImageViewerVisible(true);
+  };
+
+  const handleCloseImageViewer = () => {
+    setIsImageViewerVisible(false);
+  };
+
+  // Chuyển đổi mảng images thành format phù hợp với ImageViewer
+  const imageViewerData = images.map(image => ({
+    url: getImageUrl(image),
+  }));
 
   if (!images || images.length === 0) {
     return null;
@@ -121,6 +146,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
             image={image}
             index={index}
             scrollX={scrollX}
+            onPress={handleImagePress}
           />
         ))}
       </ScrollView>
@@ -139,6 +165,48 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
           ))}
         </View>
       )}
+
+      {/* Image Zoom Viewer Modal */}
+      <Modal
+        visible={isImageViewerVisible}
+        transparent={true}
+        onRequestClose={handleCloseImageViewer}
+      >
+        <ImageViewer
+          imageUrls={imageViewerData}
+          index={imageViewerIndex}
+          onSwipeDown={handleCloseImageViewer}
+          enableSwipeDown={true}
+          enableImageZoom={true}
+          doubleClickInterval={250}
+          onClick={handleCloseImageViewer}
+          backgroundColor="rgba(0,0,0,0.9)"
+          onChange={(index?: number) => {
+            if (index !== undefined) {
+              setImageViewerIndex(index);
+            }
+          }}
+          renderIndicator={(_currentIndex?: number, _allSize?: number) => (
+            <View style={styles.zoomIndicatorContainer}>
+              <View style={styles.zoomIndicator}>
+                <Text style={styles.zoomIndicatorText}>
+                  {imageViewerIndex + 1} / {images.length}
+                </Text>
+              </View>
+            </View>
+          )}
+          renderHeader={() => (
+            <View style={styles.headerContainer}>
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={handleCloseImageViewer}
+              >
+                <Text style={styles.closeButtonText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        />
+      </Modal>
     </View>
   );
 };
@@ -191,6 +259,46 @@ const styles = StyleSheet.create({
   activeIndicator: {
     backgroundColor: Colors.limeGreen,
     width: 24,
+  },
+  zoomIndicatorContainer: {
+    position: 'absolute',
+    top: responsiveSpacing(50),
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 999,
+  },
+  zoomIndicator: {
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(8),
+    borderRadius: 20,
+  },
+  zoomIndicatorText: {
+    color: Colors.white,
+    fontSize: responsiveSpacing(14),
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  headerContainer: {
+    position: 'absolute',
+    top: responsiveSpacing(50),
+    right: responsiveSpacing(20),
+    zIndex: 1000,
+  },
+  closeButton: {
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    width: responsiveSpacing(40),
+    height: responsiveSpacing(40),
+    borderRadius: responsiveSpacing(20),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: Colors.white,
+    fontSize: responsiveSpacing(20),
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 
