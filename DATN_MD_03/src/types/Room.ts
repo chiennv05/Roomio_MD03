@@ -113,6 +113,14 @@ export interface RoomState {
   searchResults: Room[];
   searchLoading: boolean;
   searchError: string | null;
+  searchPagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  } | null;
 }
 
 export interface Owner {

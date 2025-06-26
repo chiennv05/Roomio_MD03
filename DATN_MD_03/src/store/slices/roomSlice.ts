@@ -24,6 +24,7 @@ const initialState: RoomState = {
   searchResults: [],
   searchLoading: false,
   searchError: null,
+  searchPagination: null,
 };
 
 export const fetchRooms = createAsyncThunk(
@@ -153,6 +154,26 @@ export const searchRoomsAction = createAsyncThunk(
       return res.data;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Tìm kiếm phòng thất bại');
+    }
+  },
+);
+
+export const loadMoreSearchResults = createAsyncThunk(
+  'room/loadMoreSearchResults',
+  async (
+    {searchQuery, filters = {}}: {searchQuery: string; filters?: RoomFilters}, 
+    {rejectWithValue, getState}
+  ) => {
+    try {
+      const state = getState() as {room: RoomState};
+      const currentPage = state.room.searchPagination?.page || 1;
+      const nextPage = currentPage + 1;
+      
+      const res = await searchRooms(searchQuery, {...filters, page: nextPage});
+      if (!res?.success) throw new Error(res?.message);
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Tải thêm kết quả tìm kiếm thất bại');
     }
   },
 );
@@ -310,8 +331,23 @@ const roomSlice = createSlice({
       .addCase(searchRoomsAction.fulfilled, (state, action) => {
         state.searchLoading = false;
         state.searchResults = action.payload.rooms;
+        state.searchPagination = action.payload.pagination;
       })
       .addCase(searchRoomsAction.rejected, (state, action) => {
+        state.searchLoading = false;
+        state.searchError = action.payload as string;
+      })
+
+      .addCase(loadMoreSearchResults.pending, state => {
+        state.searchLoading = true;
+        state.searchError = null;
+      })
+      .addCase(loadMoreSearchResults.fulfilled, (state, action) => {
+        state.searchLoading = false;
+        state.searchResults = [...state.searchResults, ...action.payload.rooms];
+        state.searchPagination = action.payload.pagination;
+      })
+      .addCase(loadMoreSearchResults.rejected, (state, action) => {
         state.searchLoading = false;
         state.searchError = action.payload as string;
       });

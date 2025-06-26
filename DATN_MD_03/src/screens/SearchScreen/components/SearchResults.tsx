@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -20,7 +20,6 @@ import {
 import { Room } from '../../../types/Room';
 import RoomCard from '../../HomeScreen/components/RoomCard';
 import { Icons } from '../../../assets/icons';
-import { usePaginatedData } from '../../../hooks/usePaginatedData';
 import EmptySearchAnimation from '../../../components/EmptySearchAnimation';
 import LoadingAnimation from '../../../components/LoadingAnimation';
 
@@ -30,6 +29,9 @@ interface SearchResultsProps {
   onRoomPress: (roomId: string) => void;
   onFilterPress?: () => void;
   isFilterActive?: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+  isLoading?: boolean;
 }
 
 const SearchResults: React.FC<SearchResultsProps> = ({
@@ -37,31 +39,20 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   rooms,
   onRoomPress,
   onFilterPress,
-  isFilterActive = false
+  isFilterActive = false,
+  hasMore = false,
+  onLoadMore,
+  isLoading = false
 }) => {
   // Animation for room cards
   const animatedValues = useRef<Map<string, Animated.Value>>(new Map()).current;
   const viewableItems = useRef<Set<string>>(new Set()).current;
 
-  // Use pagination hook with 8 items per page for better performance
-  const {
-    displayedData,
-    hasMore,
-    isLoading,
-    loadMore,
-    reset,
-    totalItems,
-    currentPage
-  } = usePaginatedData({
-    data: rooms,
-    pageSize: 8, // Show 8 rooms initially, then load 8 more each time
-    initialPageCount: 1
-  });
+  // Use the data directly from server pagination
+  const displayedData = rooms;
+  const totalItems = rooms.length;
 
-  // Reset pagination when rooms data changes (new search)
-  useEffect(() => {
-    reset();
-  }, [rooms, reset]);
+  // No need to reset pagination - handled by server
 
   // Initialize animation value for a room
   const getAnimatedValue = useCallback((roomId: string) => {
@@ -160,7 +151,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
       );
     }
 
-    if (isLoading) {
+    if (isLoading && hasMore) {
       return (
         <View style={styles.loadingFooter}>
           <LoadingAnimation size="medium" color={Colors.limeGreen} />
@@ -187,9 +178,9 @@ const SearchResults: React.FC<SearchResultsProps> = ({
 
   // Handle end reached for loading more data
   const handleEndReached = () => {
-    if (hasMore && !isLoading) {
-      console.log(`🔄 Loading page ${currentPage + 1}...`);
-      loadMore();
+    if (hasMore && !isLoading && onLoadMore) {
+      console.log(`🔄 Loading more...`);
+      onLoadMore();
     }
   };
 

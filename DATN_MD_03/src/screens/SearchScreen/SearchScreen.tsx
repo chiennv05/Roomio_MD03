@@ -8,9 +8,7 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../../store';
-import { searchRoomsAction, fetchRooms } from '../../store/slices/roomSlice';
+import { useServerPagination } from '../../hooks';
 import { Colors } from '../../theme/color';
 import { RootStackParamList } from '../../types/route';
 import { Icons } from '../../assets/icons';
@@ -24,8 +22,6 @@ type SearchScreenNavigationProp = StackNavigationProp<RootStackParamList, 'HomeS
 
 const SearchScreen: React.FC = () => {
   const navigation = useNavigation<SearchScreenNavigationProp>();
-  const dispatch = useDispatch<AppDispatch>();
-  const { searchResults, searchLoading, searchError, rooms, loading } = useSelector((state: RootState) => state.room);
 
   // Animation states
   const fadeAnim = useMemo(() => new Animated.Value(0), []);
@@ -46,26 +42,20 @@ const SearchScreen: React.FC = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Search rooms when search query changes or load all rooms when no search query
-  useEffect(() => {
-    if (debouncedSearchQuery.trim()) {
-      dispatch(searchRoomsAction({
-        searchQuery: debouncedSearchQuery,
-        filters: {}
-      }));
-    } else {
-      // Load all rooms when no search query
-      dispatch(fetchRooms({}));
-    }
-  }, [dispatch, debouncedSearchQuery]);
-
-  // Use search results when searching, otherwise use all rooms
-  const filteredRooms = useMemo(() => {
-    if (debouncedSearchQuery.trim()) {
-      return searchResults || [];
-    }
-    return rooms || [];
-  }, [searchResults, rooms, debouncedSearchQuery]);
+  // Use server pagination hook
+  const {
+    rooms: filteredRooms,
+    loading,
+    error,
+    hasMore,
+    loadMore,
+    totalItems
+  } = useServerPagination({
+    pageSize: 20,
+    searchQuery: debouncedSearchQuery,
+    isSearchMode: debouncedSearchQuery.trim().length > 0,
+    filters: {}
+  });
 
   // Animation khi vào màn hình - slide up từ dưới
   const animateIn = useCallback(() => {
@@ -99,10 +89,7 @@ const SearchScreen: React.FC = () => {
       slideAnim.setValue(100); // Bắt đầu từ vị trí dưới
       scaleAnim.setValue(1.05); // Bắt đầu từ scale lớn hơn
       
-      // Load all rooms when first entering screen if no search query
-      if (!debouncedSearchQuery.trim() && rooms.length === 0) {
-        dispatch(fetchRooms({}));
-      }
+      // No need to manually load - useServerPagination handles this
       
       // Start animation ngay lập tức để liền mạch với HomeScreen
       const timer = setTimeout(() => {
@@ -110,7 +97,7 @@ const SearchScreen: React.FC = () => {
       }, 0); // Không delay để animation liền mạch
 
       return () => clearTimeout(timer);
-    }, [fadeAnim, slideAnim, scaleAnim, animateIn, debouncedSearchQuery, rooms.length, dispatch])
+    }, [fadeAnim, slideAnim, scaleAnim, animateIn])
   );
 
   // Filter options data - Memoized
@@ -187,19 +174,19 @@ const SearchScreen: React.FC = () => {
   // Memoized title with search results count
   const searchTitle = useMemo(() => {
     if (debouncedSearchQuery.trim()) {
-      if (searchLoading) {
+      if (loading) {
         return 'Đang tìm kiếm...';
       }
-      if (searchError) {
+      if (error) {
         return 'Lỗi tìm kiếm';
       }
-      return `Kết quả tìm kiếm "${debouncedSearchQuery}" (${filteredRooms.length})`;
+      return `Kết quả tìm kiếm "${debouncedSearchQuery}" (${totalItems})`;
     }
     if (loading) {
       return 'Đang tải phòng...';
     }
-    return `Tất cả phòng trọ (${filteredRooms.length})`;
-  }, [debouncedSearchQuery, filteredRooms.length, searchLoading, searchError, loading]);
+    return `Tất cả phòng trọ (${totalItems})`;
+  }, [debouncedSearchQuery, totalItems, loading, error]);
 
   // Log performance info
   // useEffect(() => {
@@ -243,6 +230,9 @@ const SearchScreen: React.FC = () => {
           onRoomPress={handleRoomPress}
           onFilterPress={handleFilterPress}
           isFilterActive={isFilterOverlayVisible}
+          hasMore={hasMore}
+          onLoadMore={loadMore}
+          isLoading={loading}
         />
       </Animated.View>
 
