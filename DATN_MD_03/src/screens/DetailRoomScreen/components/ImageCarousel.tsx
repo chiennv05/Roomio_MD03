@@ -20,6 +20,7 @@ import ImageViewer from 'react-native-image-zoom-viewer';
 import { responsiveSpacing, SCREEN } from '../../../utils/responsive';
 import { Colors } from '../../../theme/color';
 import { getImageUrl } from '../../../configs';
+import { Icons } from '../../../assets/icons';
 
 const SCREEN_WIDTH = SCREEN.width;
 const CAROUSEL_HEIGHT = SCREEN_WIDTH * 0.75;
@@ -201,7 +202,8 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
                 style={styles.closeButton}
                 onPress={handleCloseImageViewer}
               >
-                <Text style={styles.closeButtonText}>✕</Text>
+                <Image source={{ uri: Icons.IconRemove }} 
+                style={styles.closeButtonIcon} />
               </TouchableOpacity>
             </View>
           )}
@@ -299,6 +301,11 @@ const styles = StyleSheet.create({
     fontSize: responsiveSpacing(20),
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  closeButtonIcon: {
+    width: responsiveSpacing(20),
+    height: responsiveSpacing(20),
+    tintColor: Colors.white,
   },
 });
 
