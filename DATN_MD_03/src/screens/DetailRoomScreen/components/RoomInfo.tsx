@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   address: {
     flex: 1,
     fontSize: responsiveFont(14),
-    color: Colors.textGray,
+    color: Colors.black,
     fontFamily: Fonts.Roboto_Regular,
     lineHeight: responsiveFont(18),
   },
