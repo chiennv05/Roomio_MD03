@@ -25,7 +25,10 @@ export default function TabScreen() {
           component={OTPVerificationScreen}
         />
         <Stack.Screen name="ResetPassWord" component={ResetPassWord} />
-        <Stack.Screen name="PersonalInformation" component={PersonalInformation} />
+        <Stack.Screen
+          name="PersonalInformation"
+          component={PersonalInformation}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

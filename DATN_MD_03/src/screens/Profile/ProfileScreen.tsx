@@ -5,6 +5,7 @@ import {
   Text,
   View,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import ProfileHeader from './components/ProfileHeader';
 import SettingSwitch from './components/SettingSwitch';
@@ -18,21 +19,42 @@ import {
 import {Colors} from '../../theme/color';
 import {Fonts} from '../../theme/fonts';
 import {Icons} from '../../assets/icons';
-import {useDispatch} from 'react-redux';
+import {useDispatch, useSelector} from 'react-redux';
 import {logout} from '../../store/slices/authSlice';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../types/route';
+import {RootState} from '../../store';
+import {checkToken} from '../../utils/tokenCheck';
 
 export default function ProfileScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const token = useSelector((state: RootState) => state.auth.token);
 
   const handleDangXuat = () => {
     dispatch(logout());
     if (navigation && typeof navigation.navigate === 'function') {
       navigation.replace('Login');
     }
+  };
+
+  const hanleUpdateProfile = () => {
+    if (!checkToken(token)) {
+      Alert.alert(
+        'Thông báo',
+        'Bạn cần đăng nhập để sử dụng chức năng này',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.replace('Login'), // Chuyển sang màn Login
+          },
+        ],
+        {cancelable: false},
+      );
+      return;
+    }
+    navigation.navigate('PersonalInformation');
   };
 
   return (
@@ -57,7 +79,7 @@ export default function ProfileScreen() {
           iconStat={Icons.IconFluentPersonRegular}
           label="Thông tin cá nhân"
           iconEnd={Icons.IconNext}
-          onPress={() => navigation.navigate('PersonalInformation')}
+          onPress={hanleUpdateProfile}
         />
         <SettingItem
           iconStat={Icons.IconContract}
