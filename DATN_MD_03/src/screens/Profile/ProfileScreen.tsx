@@ -10,6 +10,7 @@ import {
 import ProfileHeader from './components/ProfileHeader';
 import SettingSwitch from './components/SettingSwitch';
 import SettingItem from './components/SettingItem';
+import { GuestProfileAnimation } from '../../components';
 import {
   SCREEN,
   responsiveFont,
@@ -31,12 +32,20 @@ export default function ProfileScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const token = useSelector((state: RootState) => state.auth.token);
+  const user = useSelector((state: RootState) => state.auth.user);
+
+  // Check if user is guest (not logged in)
+  const isGuest = !checkToken(token) || !user;
 
   const handleDangXuat = () => {
     dispatch(logout());
     if (navigation && typeof navigation.navigate === 'function') {
       navigation.replace('Login');
     }
+  };
+
+  const handleLogin = () => {
+    navigation.replace('Login');
   };
 
   const hanleUpdateProfile = () => {
@@ -57,6 +66,16 @@ export default function ProfileScreen() {
     navigation.navigate('PersonalInformation');
   };
 
+  // Show guest screen if not logged in
+  if (isGuest) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <GuestProfileAnimation onLoginPress={handleLogin} />
+      </SafeAreaView>
+    );
+  }
+
+  // Show normal profile screen for logged in users
   return (
     <SafeAreaView style={styles.container}>
       <ProfileHeader />
