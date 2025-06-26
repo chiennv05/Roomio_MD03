@@ -4,16 +4,15 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
 import { 
   responsiveFont, 
-  responsiveIcon, 
+  responsiveIcon,
   responsiveSpacing 
 } from '../../../utils/responsive';
-import { Icons } from '../../../assets/icons';
+import { HeartAnimation } from '../../../components';
 
 interface EmptyFavoriteProps {
   isLoggedIn: boolean;
@@ -26,9 +25,11 @@ const EmptyFavorite: React.FC<EmptyFavoriteProps> = ({
 }) => {
   if (!isLoggedIn) {
     return (
-      <View style={styles.container}>
-        <Image source={{ uri: Icons.IconHeartDefaut }} style={styles.icon} />
-        <Text style={styles.title}>Đăng nhập để xem yêu thích</Text>
+          <View style={styles.container}>
+      <View style={styles.animationContainer}>
+        <HeartAnimation size={100} color="#FF1493" />
+      </View>
+      <Text style={styles.title}>Đăng nhập để xem yêu thích</Text>
         <Text style={styles.subtitle}>
           Đăng nhập để lưu những phòng trọ bạn quan tâm
         </Text>
@@ -41,7 +42,9 @@ const EmptyFavorite: React.FC<EmptyFavoriteProps> = ({
 
   return (
     <View style={styles.container}>
-      <Image source={{ uri: Icons.IconHeartDefaut }} style={styles.icon} />
+      <View style={styles.animationContainer}>
+        <HeartAnimation size={100} color="#FF69B4" />
+      </View>
       <Text style={styles.title}>Chưa có phòng yêu thích</Text>
       <Text style={styles.subtitle}>
         Hãy khám phá và lưu những phòng trọ bạn quan tâm
@@ -60,11 +63,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: responsiveSpacing(40),
     backgroundColor: Colors.backgroud,
   },
-  icon: {
-    width: responsiveIcon(80),
-    height: responsiveIcon(80),
+  animationContainer: {
     marginBottom: responsiveSpacing(24),
-    tintColor: Colors.textGray,
   },
   title: {
     fontSize: responsiveFont(20),
