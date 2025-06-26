@@ -16,5 +16,5 @@ export const Colors = {
   divider: '#F0F0F0',
   red: '#FF0000',
   gray: '#ccc',
-  colorAvata: '#b3c6ff'
+  colorAvata: '#b3c6ff',
 };
