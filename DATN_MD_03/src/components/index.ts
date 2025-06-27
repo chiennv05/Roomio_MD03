@@ -7,4 +7,5 @@ export { default as EmptySearchAnimation } from './EmptySearchAnimation';
 export { default as HeartAnimation } from './HeartAnimation';
 export { default as GuestProfileAnimation } from './GuestProfileAnimation';
 export { default as ShareModal } from './ShareModal';
-export { default as LoadingAnimation } from './LoadingAnimation'; 
+export { default as LoadingAnimation } from './LoadingAnimation';
+export { default as LogoutModal } from './LogoutModal'; 

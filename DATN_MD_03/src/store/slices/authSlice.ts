@@ -1,6 +1,6 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import {AuthState, LoginPayload, RegisterPayload} from '../../types';
-import {checkProfileAPI, login, register, updateProfile as updateProfileApi} from '../services/authService';
+import {checkProfileAPI, login, register, updateProfile as updateProfileApi, logoutAPI} from '../services/authService';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import {storeUserSession} from '../services/storageService';
 import {mapApiUserToUser} from '../../utils/mapApiToUser';
@@ -42,6 +42,21 @@ export const loginUser = createAsyncThunk(
   },
 );
 
+export const logoutUser = createAsyncThunk(
+  'auth/logout',
+  async (token: string, {rejectWithValue}) => {
+    try {
+      await logoutAPI(token);
+      await EncryptedStorage.removeItem('user_session');
+      return true;
+    } catch (err: any) {
+      // Vẫn logout local dù API fail
+      await EncryptedStorage.removeItem('user_session');
+      return rejectWithValue(err.message || 'Đăng xuất thất bại');
+    }
+  },
+);
+
 export const checkProfile = createAsyncThunk(
   'auth/checkProfile',
   async (token: string, {rejectWithValue}) => {
@@ -60,6 +75,7 @@ export const checkProfile = createAsyncThunk(
     }
   },
 );
+
 export const updateProfile = createAsyncThunk(
   'auth/updateProfile',
   async (
@@ -120,6 +136,24 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // Đăng xuất
+      .addCase(logoutUser.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(logoutUser.fulfilled, state => {
+        state.loading = false;
+        state.user = null;
+        state.token = null;
+        state.error = null;
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
+        state.loading = false;
+        state.user = null;
+        state.token = null;
         state.error = action.payload as string;
       })
 
