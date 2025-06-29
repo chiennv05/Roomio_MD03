@@ -5,8 +5,12 @@ import {
   Modal,
   StyleSheet,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomSlider from './CustomSlider';
 import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
+import { Icons } from '../../../assets/icons';
+import { Colors } from '../../../theme/color';
+import { responsiveFont, responsiveSpacing, moderateScale } from '../../../utils/responsive';
 
 interface AreaModalProps {
   visible: boolean;
@@ -23,6 +27,7 @@ const AreaModal: React.FC<AreaModalProps> = ({
   selectedMinArea = 20,
   selectedMaxArea = 70,
 }) => {
+  const insets = useSafeAreaInsets();
   const [minArea, setMinArea] = useState(selectedMinArea);
   const [maxArea, setMaxArea] = useState(selectedMaxArea);
 
@@ -38,9 +43,9 @@ const AreaModal: React.FC<AreaModalProps> = ({
     onClose();
   };
 
-  const handleCancel = () => {
-    setMinArea(selectedMinArea);
-    setMaxArea(selectedMaxArea);
+  const handleReset = () => {
+    // Reset về giá trị mặc định (xóa filter)
+    onConfirm(20, 70);
     onClose();
   };
 
@@ -54,7 +59,7 @@ const AreaModal: React.FC<AreaModalProps> = ({
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <View style={[styles.container, { paddingBottom: insets.bottom }]}>
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>Diện tích</Text>
@@ -65,7 +70,7 @@ const AreaModal: React.FC<AreaModalProps> = ({
           <View style={styles.content}>
             {/* Area Display */}
             <View style={styles.areaDisplay}>
-              <Text style={styles.areaLabel}>
+              <Text style={styles.areaText}>
                 Diện tích từ <Text style={styles.areaValue}>{minArea}m²</Text> đến <Text style={styles.areaValue}>{maxArea}m²</Text>
               </Text>
             </View>
@@ -85,9 +90,9 @@ const AreaModal: React.FC<AreaModalProps> = ({
           <View style={styles.footer}>
             <ItemButtonConfirm
               title="Xác nhận"
-              icon="https://cdn-icons-png.flaticon.com/512/1828/1828665.png"
+              icon={Icons.IconRemoveWhite}
               onPress={handleConfirm}
-              onPressIcon={handleCancel}
+              onPressIcon={handleReset}
             />
           </View>
         </View>
@@ -105,55 +110,71 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   container: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '70%',
-    minHeight: '45%',
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: moderateScale(20),
+    borderTopRightRadius: moderateScale(20),
+    height: '47%', // Tăng chiều cao để có đủ không gian cho slider
   },
   header: {
-    padding: 20,
-    paddingBottom: 10,
+    padding: responsiveSpacing(20),
+    paddingBottom: responsiveSpacing(10),
   },
   title: {
-    fontSize: 24,
+    fontSize: responsiveFont(24),
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+    color: Colors.darkGray,
+    marginBottom: responsiveSpacing(4),
   },
   subtitle: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: responsiveFont(14),
+    color: Colors.textGray,
   },
   content: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 10,
+    // paddingHorizontal: responsiveSpacing(20),
+    paddingTop: responsiveSpacing(10), // Giảm padding top
+    // paddingBottom: responsiveSpacing(100), // Đảm bảo không bị che bởi footer
+    alignItems: 'stretch', // Cho phép content căn trái
   },
   areaDisplay: {
-    marginBottom: 30,
+    marginBottom: responsiveSpacing(30), // Giảm khoảng cách
+    alignItems: 'flex-start', // Căn trái
+    justifyContent: 'center',
+    height: responsiveSpacing(40), // Giảm chiều cao hơn nữa
+    paddingHorizontal: responsiveSpacing(20),
   },
-  areaLabel: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#666',
-    marginBottom: 8,
+  areaText: {
+    fontFamily: 'Roboto',
+    fontSize: responsiveFont(24), // Tăng font size
+    fontWeight: 'bold', // Làm bold
+    lineHeight: responsiveFont(24),
+    color: Colors.darkGray,
+    textAlign: 'left', // Căn trái
   },
   areaValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#5EB600',
+    fontFamily: 'Roboto',
+    fontSize: responsiveFont(20), // Tăng font size
+    fontWeight: 'bold', // Làm bold
+    lineHeight: responsiveFont(24),
+    color: Colors.darkGreen,
   },
 
   sliderContainer: {
-    marginBottom: 40,
-    paddingVertical: 10,
+    width: '100%',
     alignItems: 'center',
+    minHeight: responsiveSpacing(100), // Giảm chiều cao slider container
+    justifyContent: 'center',
   },
 
   footer: {
-    padding: 20,
+    position: 'absolute', // Đặt footer ở vị trí cố định
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: responsiveSpacing(20),
+    backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',
+    borderTopWidth: 1,
+    borderTopColor: Colors.backgroud,
   },
 }); 

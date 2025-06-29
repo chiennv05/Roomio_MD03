@@ -57,6 +57,8 @@ export interface Room {
     phone: string;
   };
   distance?: number | null;
+  isFavorited?: boolean;
+  canContact?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -98,6 +100,27 @@ export interface RoomState {
     furniture: string[];
   };
   error: string | null;
+  roomDetail: Room | null;
+  roomDetailLoading: boolean;
+  roomDetailError: string | null;
+  relatedRooms: Room[];
+  relatedRoomsLoading: boolean;
+  relatedRoomsError: string | null;
+  favoriteRooms: Room[];
+  favoriteLoading: boolean;
+  favoriteError: string | null;
+  toggleFavoriteLoading: boolean;
+  searchResults: Room[];
+  searchLoading: boolean;
+  searchError: string | null;
+  searchPagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  } | null;
 }
 
 export interface Owner {
@@ -195,4 +218,5 @@ export interface RoomFilters {
   amenities?: string[];
   furniture?: string[];
   districts?: string[];
+  search?: string;
 }

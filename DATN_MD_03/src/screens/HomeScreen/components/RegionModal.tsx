@@ -8,8 +8,13 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Image
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
+import { Icons } from '../../../assets/icons';
+import { Colors } from '../../../theme/color';
+import { responsiveFont, responsiveSpacing, moderateScale } from '../../../utils/responsive';
 
 interface City {
   name: string;
@@ -36,17 +41,27 @@ const RegionModal: React.FC<RegionModalProps> = ({
   onConfirm,
   selectedRegions,
 }) => {
+  const insets = useSafeAreaInsets();
   const [cities, setCities] = useState<City[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [loading, setLoading] = useState(false);
   const [tempSelected, setTempSelected] = useState<District[]>([]);
   const [currentView, setCurrentView] = useState<'cities' | 'districts'>('cities');
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [citiesFetched, setCitiesFetched] = useState(false);
+  const [districtsCache, setDistrictsCache] = useState<{[cityCode: number]: District[]}>({});
 
-  // Fetch cities when modal opens
+  // Fetch cities only once when modal opens
+  useEffect(() => {
+    if (visible && !citiesFetched) {
+      fetchCities();
+      setCitiesFetched(true);
+    }
+  }, [visible, citiesFetched]);
+
+  // Reset modal state when opening
   useEffect(() => {
     if (visible) {
-      fetchCities();
       setTempSelected([...selectedRegions]);
       setCurrentView('cities');
       setSelectedCity(null);
@@ -54,23 +69,21 @@ const RegionModal: React.FC<RegionModalProps> = ({
   }, [visible, selectedRegions]);
 
   const fetchCities = async () => {
+    console.log("call")
     setLoading(true);
     try {
       const response = await fetch('https://provinces.open-api.vn/api/');
       const data = await response.json();
-      
       // Filter to only include the 3 main cities
       const mainCities = data.filter((province: any) => {
         return province.code === 1 ||  // Thành phố Hà Nội
                province.code === 48 || // Thành phố Đà Nẵng
                province.code === 79;   // Thành phố Hồ Chí Minh
       });
-      
       const cityList: City[] = mainCities.map((city: any) => ({
         name: city.name,
         code: city.code,
       }));
-      
       setCities(cityList);
     } catch (error) {
       Alert.alert('Lỗi', 'Không thể tải danh sách thành phố');
@@ -80,11 +93,17 @@ const RegionModal: React.FC<RegionModalProps> = ({
   };
 
   const fetchDistricts = async (cityCode: number, cityName: string) => {
+    // Check if districts for this city are already cached
+    if (districtsCache[cityCode] && districtsCache[cityCode].length > 0) {
+      console.log("call cache")
+      setDistricts(districtsCache[cityCode]);
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch(`https://provinces.open-api.vn/api/p/${cityCode}?depth=2`);
       const data = await response.json();
-      
       // Get districts from the selected city
       const districtList = data.districts || [];
       const mappedDistricts: District[] = districtList.map((district: any) => ({
@@ -93,8 +112,13 @@ const RegionModal: React.FC<RegionModalProps> = ({
         cityCode: cityCode,
         cityName: cityName,
       }));
-      
+
       setDistricts(mappedDistricts);
+      // Cache the districts for this city
+      setDistrictsCache(prev => ({
+        ...prev,
+        [cityCode]: mappedDistricts
+      }));
     } catch (error) {
       Alert.alert('Lỗi', 'Không thể tải danh sách quận/huyện');
     } finally {
@@ -103,8 +127,11 @@ const RegionModal: React.FC<RegionModalProps> = ({
   };
 
   const handleCitySelect = (city: City) => {
-    setSelectedCity(city);
-    fetchDistricts(city.code, city.name);
+    // Only fetch if selecting a different city
+    if (selectedCity?.code !== city.code) {
+      setSelectedCity(city);
+      fetchDistricts(city.code, city.name);
+    }
     setCurrentView('districts');
   };
 
@@ -131,12 +158,17 @@ const RegionModal: React.FC<RegionModalProps> = ({
   };
 
   const handleConfirm = () => {
+    console.log('🔍 Region Filter - Selected districts:', tempSelected.map(d => ({
+      name: d.name,
+      city: d.cityName
+    })));
     onConfirm(tempSelected);
     onClose();
   };
 
-  const handleCancel = () => {
-    setTempSelected([...selectedRegions]);
+  const handleReset = () => {
+    // Reset về rỗng (xóa tất cả vùng đã chọn)
+    onConfirm([]);
     onClose();
   };
 
@@ -177,14 +209,14 @@ const RegionModal: React.FC<RegionModalProps> = ({
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <View style={[styles.container, { paddingBottom: insets.bottom }]}>
           {/* Header */}
           <View style={styles.header}>
-            {currentView === 'districts' && (
-              <TouchableOpacity onPress={goBackToCities} style={styles.backButton}>
-                <Text style={styles.backText}>←</Text>
-              </TouchableOpacity>
-            )}
+                          {currentView === 'districts' && (
+                <TouchableOpacity onPress={goBackToCities} style={styles.backButton}>
+                  <Image source={{uri: Icons.IconArrowBack}} style={styles.backImage} />
+                </TouchableOpacity>
+              )}
             <View style={styles.headerContent}>
               <Text style={styles.title}>{getTitle()}</Text>
               <Text style={styles.subtitle}>{getSubtitle()}</Text>
@@ -195,7 +227,7 @@ const RegionModal: React.FC<RegionModalProps> = ({
           <View style={styles.content}>
             {loading ? (
               <View style={styles.loading}>
-                <ActivityIndicator size="large" color="#BAFD00" />
+                <ActivityIndicator size="large" color={Colors.limeGreen} />
                 <Text style={styles.loadingText}>Đang tải...</Text>
               </View>
             ) : (
@@ -226,9 +258,9 @@ const RegionModal: React.FC<RegionModalProps> = ({
           <View style={styles.footer}>
             <ItemButtonConfirm
               title="Xác nhận"
-              icon="https://cdn-icons-png.flaticon.com/512/1828/1828665.png"
+              icon={Icons.IconRemoveWhite}
               onPress={handleConfirm}
-              onPressIcon={handleCancel}
+              onPressIcon={handleReset}
             />
           </View>
         </View>
@@ -246,54 +278,54 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   container: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: moderateScale(20),
+    borderTopRightRadius: moderateScale(20),
     maxHeight: '80%',
     minHeight: '60%',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-    paddingBottom: 10,
+    padding: responsiveSpacing(20),
+    paddingBottom: responsiveSpacing(10),
   },
   backButton: {
-    padding: 8,
-    marginRight: 12,
+    padding: responsiveSpacing(8),
+    marginRight: responsiveSpacing(12),
   },
   backText: {
-    fontSize: 18,
+    fontSize: responsiveFont(18),
     fontWeight: 'bold',
-    color: '#333',
+    color: Colors.darkGray,
   },
   headerContent: {
     flex: 1,
   },
   title: {
-    fontSize: 24,
+    fontSize: responsiveFont(24),
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+    color: Colors.darkGray,
+    marginBottom: responsiveSpacing(4),
   },
   subtitle: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: responsiveFont(14),
+    color: Colors.textGray,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: responsiveSpacing(20),
   },
   loading: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 40,
+    padding: responsiveSpacing(40),
   },
   loadingText: {
-    marginTop: 10,
-    fontSize: 14,
-    color: '#666',
+    marginTop: responsiveSpacing(10),
+    fontSize: responsiveFont(14),
+    color: Colors.unselectedText,
   },
   list: {
     flex: 1,
@@ -302,42 +334,46 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 16,
+    paddingVertical: responsiveSpacing(16),
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: Colors.divider,
   },
   listItemText: {
-    fontSize: 16,
-    color: '#333',
+    fontSize: responsiveFont(16),
+    color: Colors.darkGray,
     flex: 1,
   },
   checkbox: {
-    width: 24,
-    height: 24,
+    width: moderateScale(24),
+    height: moderateScale(24),
     borderWidth: 2,
-    borderColor: '#ddd',
-    borderRadius: 4,
+    borderColor: Colors.mediumGray,
+    borderRadius: moderateScale(4),
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: Colors.white,
   },
   checkboxSelected: {
-    backgroundColor: '#BAFD00',
-    borderColor: '#BAFD00',
+    backgroundColor: Colors.limeGreen,
+    borderColor: Colors.limeGreen,
   },
   checkmark: {
-    color: '#333',
-    fontSize: 14,
+    color: Colors.darkGray,
+    fontSize: responsiveFont(14),
     fontWeight: 'bold',
   },
   arrow: {
-    fontSize: 16,
-    color: '#BAFD00',
+    fontSize: responsiveFont(16),
+    color: Colors.limeGreen,
     fontWeight: 'bold',
   },
   footer: {
-    padding: 20,
+    padding: responsiveSpacing(20),
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  backImage: {
+    width: moderateScale(12),
+    height: moderateScale(20),
   },
 }); 

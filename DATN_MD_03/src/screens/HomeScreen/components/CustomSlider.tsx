@@ -6,8 +6,10 @@ import {
   TouchableOpacity,
   PanResponder,
 } from 'react-native';
+import { Colors } from '../../../theme/color';
+import { responsiveFont, responsiveSpacing, moderateScale, SCREEN } from '../../../utils/responsive';
 
-const SLIDER_WIDTH = 280;
+const SLIDER_WIDTH = SCREEN.width * 0.72; // 72% of screen width
 
 interface CustomSliderProps {
   minValue: number;
@@ -176,33 +178,33 @@ const CustomSlider: React.FC<CustomSliderProps> = ({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    paddingVertical: 30,
+    paddingVertical: responsiveSpacing(30),
   },
   sliderContainer: {
     width: SLIDER_WIDTH,
-    height: 60,
+    height: moderateScale(60),
     justifyContent: 'center',
     position: 'relative',
   },
   track: {
-    height: 30,
-    backgroundColor: '#F4F4F4',
-    borderRadius: 15,
+    height: moderateScale(30),
+    backgroundColor: Colors.backgroud,
+    borderRadius: moderateScale(15),
   },
   selectedTrack: {
     position: 'absolute',
-    height: 30,
-    backgroundColor: '#BAFD00',
-    borderRadius: 6,
+    height: moderateScale(30),
+    backgroundColor: Colors.limeGreen,
+    borderRadius: moderateScale(6),
   },
   thumb: {
     position: 'absolute',
-    width: 30,
-    height: 30,
-    backgroundColor: '#333',
-    borderRadius: 15,
-    top: -15,
-    shadowColor: '#000',
+    width: moderateScale(30),
+    height: moderateScale(30),
+    backgroundColor: Colors.darkGray,
+    borderRadius: moderateScale(15),
+    top: moderateScale(-15),
+    shadowColor: Colors.black,
     shadowOffset: {
       width: 0,
       height: 3,
@@ -213,15 +215,15 @@ const styles = StyleSheet.create({
   },
   thumbText: {
     position: 'absolute',
-    top: -35,
-    fontSize: 12,
+    top: moderateScale(-35),
+    fontSize: responsiveFont(12),
     fontWeight: 'bold',
-    color: '#333',
-    backgroundColor: 'white',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-    shadowColor: '#000',
+    color: Colors.darkGray,
+    backgroundColor: Colors.white,
+    paddingHorizontal: responsiveSpacing(6),
+    paddingVertical: responsiveSpacing(2),
+    borderRadius: moderateScale(8),
+    shadowColor: Colors.black,
     shadowOffset: {
       width: 0,
       height: 1,

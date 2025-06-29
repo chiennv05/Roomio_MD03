@@ -6,6 +6,7 @@ import {
   responsiveFont,
   responsiveSpacing,
   scale,
+  SCREEN,
 } from '../../../utils/responsive';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
@@ -17,12 +18,8 @@ export default function IteminIrmation() {
   const navigation = useNavigation();
 
   return (
-    <ContainerLinearGradent>
-      <View
-        style={[
-          styles.header,
-          {position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10},
-        ]}>
+    <ContainerLinearGradent style={styles.containerOverride}>
+      <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}>
@@ -36,12 +33,12 @@ export default function IteminIrmation() {
         <View style={styles.backButton2} />
       </View>
 
-      <View style={[styles.avatarWrapper, {marginTop: 80}]}>
+      <View style={styles.avatarWrapper}>
         <View style={styles.avatarCircle}>
           <Text style={styles.avatarText}>
             {(
               nguoiDung?.fullName?.[0] ||
-              nguoiDung?.fullName?.[0] ||
+              nguoiDung?.username?.[0] ||
               '?'
             ).toUpperCase()}
           </Text>
@@ -52,12 +49,15 @@ export default function IteminIrmation() {
 }
 
 const styles = StyleSheet.create({
+  containerOverride: {
+    height: SCREEN.height * 0.24,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: responsiveSpacing(16),
+    paddingTop: responsiveSpacing(8),
     paddingHorizontal: scale(16),
-    paddingBottom: responsiveSpacing(10),
+    paddingBottom: responsiveSpacing(6),
   },
   backButton: {
     width: responsiveFont(36),
@@ -81,6 +81,7 @@ const styles = StyleSheet.create({
   avatarWrapper: {
     alignItems: 'center',
     marginTop: responsiveSpacing(20),
+    paddingBottom: responsiveSpacing(30),
   },
   avatarCircle: {
     width: responsiveFont(100),

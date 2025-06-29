@@ -5,8 +5,12 @@ import {
   Modal,
   StyleSheet,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomSlider from './CustomSlider';
 import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
+import { Icons } from '../../../assets/icons';
+import { Colors } from '../../../theme/color';
+import { responsiveFont, responsiveSpacing, moderateScale } from '../../../utils/responsive';
 
 interface PriceRangeModalProps {
   visible: boolean;
@@ -23,6 +27,7 @@ const PriceRangeModal: React.FC<PriceRangeModalProps> = ({
   selectedMinPrice = 0,
   selectedMaxPrice = 20000000,
 }) => {
+  const insets = useSafeAreaInsets();
   const [minPrice, setMinPrice] = useState(selectedMinPrice);
   const [maxPrice, setMaxPrice] = useState(selectedMaxPrice);
 
@@ -38,9 +43,9 @@ const PriceRangeModal: React.FC<PriceRangeModalProps> = ({
     onClose();
   };
 
-  const handleCancel = () => {
-    setMinPrice(selectedMinPrice);
-    setMaxPrice(selectedMaxPrice);
+  const handleReset = () => {
+    // Reset về giá trị mặc định (xóa filter)
+    onConfirm(0, 20000000);
     onClose();
   };
 
@@ -65,7 +70,7 @@ const PriceRangeModal: React.FC<PriceRangeModalProps> = ({
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View style={styles.overlay}>
-        <View style={styles.container}>
+        <View style={[styles.container, { paddingBottom: insets.bottom }]}>
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>Khoảng giá</Text>
@@ -76,7 +81,7 @@ const PriceRangeModal: React.FC<PriceRangeModalProps> = ({
           <View style={styles.content}>
             {/* Price Display */}
             <View style={styles.priceDisplay}>
-              <Text style={styles.priceLabel}>
+              <Text style={styles.priceText}>
                 Giá từ <Text style={styles.priceValue}>{formatPrice(minPrice)}</Text> đến <Text style={styles.priceValue}>{formatPrice(maxPrice)}</Text>
               </Text>
             </View>
@@ -96,9 +101,9 @@ const PriceRangeModal: React.FC<PriceRangeModalProps> = ({
           <View style={styles.footer}>
             <ItemButtonConfirm
               title="Xác nhận"
-              icon="https://cdn-icons-png.flaticon.com/512/1828/1828665.png"
+              icon={Icons.IconRemoveWhite}
               onPress={handleConfirm}
-              onPressIcon={handleCancel}
+              onPressIcon={handleReset}
             />
           </View>
         </View>
@@ -116,55 +121,71 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   container: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '70%',
-    minHeight: '45%',
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: moderateScale(20),
+    borderTopRightRadius: moderateScale(20),
+    height: '45%', // Tăng chiều cao để có đủ không gian cho slider
   },
   header: {
-    padding: 20,
-    paddingBottom: 10,
+    padding: responsiveSpacing(20),
+    paddingBottom: responsiveSpacing(10),
   },
   title: {
-    fontSize: 24,
+    fontSize: responsiveFont(24),
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+    color: Colors.darkGray,
+    marginBottom: responsiveSpacing(4),
   },
   subtitle: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: responsiveFont(14),
+    color: Colors.textGray,
   },
   content: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 10,
+    // paddingHorizontal: responsiveSpacing(20),
+    paddingTop: responsiveSpacing(10), // Giảm padding top
+    // paddingBottom: responsiveSpacing(100), // Đảm bảo không bị che bởi footer
+    alignItems: 'stretch', // Cho phép content căn trái
   },
   priceDisplay: {
-    marginBottom: 30,
+    marginBottom: responsiveSpacing(10), // Giảm khoảng cách
+    alignItems: 'flex-start', // Căn trái
+    justifyContent: 'center',
+    height: responsiveSpacing(40), // Giảm chiều cao hơn nữa
+    paddingHorizontal: responsiveSpacing(20),
   },
-  priceLabel: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#666',
-    marginBottom: 8,
+  priceText: {
+    fontFamily: 'Roboto',
+    fontSize: responsiveFont(24), // Tăng font size
+    fontWeight: 'bold', // Làm bold
+    lineHeight: responsiveFont(24),
+    color: Colors.darkGray,
+    textAlign: 'left', // Căn trái
   },
   priceValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#5EB600',
+    fontFamily: 'Roboto',
+    fontSize: responsiveFont(20), // Tăng font size
+    fontWeight: 'bold', // Làm bold
+    lineHeight: responsiveFont(24),
+    color: Colors.darkGreen,
   },
 
   sliderContainer: {
-    marginBottom: 40,
-    paddingVertical: 10,
+    width: '100%',
     alignItems: 'center',
+    minHeight: responsiveSpacing(100), // Giảm chiều cao slider container
+    justifyContent: 'center',
   },
 
   footer: {
-    padding: 20,
+    position: 'absolute', // Đặt footer ở vị trí cố định
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: responsiveSpacing(20),
+    backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',
+    borderTopWidth: 1,
+    borderTopColor: Colors.backgroud,
   },
 }); 

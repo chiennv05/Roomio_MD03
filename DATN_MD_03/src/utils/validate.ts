@@ -119,7 +119,114 @@ export const validateResetPassword = (
   }
   return null;
 };
+/**
+ * Remove Vietnamese diacritics for search
+ * Bỏ dấu tiếng Việt để tìm kiếm
+ */
+export const removeVietnameseDiacritics = (str: string): string => {
+  if (!str) return '';
+  
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'd')
+    .trim();
+};
 
+/**
+ * Search text in Vietnamese with diacritics support
+ * Tìm kiếm văn bản tiếng Việt có hỗ trợ dấu
+ */
+export const searchVietnameseText = (searchTerm: string, targetText: string): boolean => {
+  if (!searchTerm || !targetText) return false;
+  
+  const normalizedSearch = removeVietnameseDiacritics(searchTerm);
+  const normalizedTarget = removeVietnameseDiacritics(targetText);
+  
+  return normalizedTarget.includes(normalizedSearch);
+};
+
+/**
+ * Filter rooms by search query (address or description)
+ * Lọc phòng theo từ khóa tìm kiếm (địa chỉ hoặc mô tả)
+ */
+export const filterRoomsBySearch = (rooms: any[], searchQuery: string): any[] => {
+  if (!searchQuery || !searchQuery.trim()) {
+    return rooms;
+  }
+  
+  const trimmedQuery = searchQuery.trim();
+  
+  return rooms.filter(room => {
+    // Search in address
+    const addressText = room?.location?.addressText || '';
+    const district = room?.location?.district || '';
+    const province = room?.location?.province || '';
+    const ward = room?.location?.ward || '';
+    
+    // Combine all address parts
+    const fullAddress = `${addressText} ${district} ${province} ${ward}`.trim();
+    
+    // Search in description
+    const description = room?.description || '';
+    const roomNumber = room?.roomNumber || '';
+    
+    // Search in all fields
+    return (
+      searchVietnameseText(trimmedQuery, fullAddress) ||
+      searchVietnameseText(trimmedQuery, description) ||
+      searchVietnameseText(trimmedQuery, roomNumber) ||
+      searchVietnameseText(trimmedQuery, district) ||
+      searchVietnameseText(trimmedQuery, province) ||
+      searchVietnameseText(trimmedQuery, ward)
+    );
+  });
+};
+
+/**
+ * Demo function to test Vietnamese search (can be removed in production)
+ * Hàm demo để test tìm kiếm tiếng Việt (có thể xóa trong production)
+ */
+export const testVietnameseSearch = (): void => {
+  console.log('🧪 Testing Vietnamese Search:');
+  
+  // Test cases
+  const testCases = [
+    {
+      search: 'ha noi',
+      target: 'Hà Nội',
+      expected: true
+    },
+    {
+      search: 'dong da',
+      target: 'Đống Đa',
+      expected: true
+    },
+    {
+      search: 'phong dep',
+      target: 'Phòng đẹp giá rẻ',
+      expected: true
+    },
+    {
+      search: 'nha tro',
+      target: 'Nhà trọ cao cấp',
+      expected: true
+    },
+    {
+      search: 'cao cap',
+      target: 'cao cấp',
+      expected: true
+    }
+  ];
+  
+  testCases.forEach(({ search, target, expected }, index) => {
+    const result = searchVietnameseText(search, target);
+    const status = result === expected ? '✅' : '❌';
+    console.log(`${status} Test ${index + 1}: "${search}" in "${target}" = ${result}`);
+  });
+}
 export const validateFullName = (fullName: string) => {
   if (!fullName || fullName.trim() === '') {
     return 'Tên không được để trống';

@@ -1,33 +1,233 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
-  FlatList,
   StyleSheet,
-  ActivityIndicator,
   RefreshControl,
+  Text,
+  Animated,
+  Easing,
+  FlatList,
+  ViewToken,
 } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 import Header from './components/Header';
 import FilterTabs from './components/FilterTabs';
 import RoomCard from './components/RoomCard';
-import { Room, RoomFilters } from '../../types/Room';
+import { RoomFilters } from '../../types/Room';
 import { District } from '../../types/Address';
 import { useRooms } from '../../hooks';
 import { Colors } from '../../theme/color';
-import { responsiveSpacing } from '../../utils/responsive';
+import { responsiveSpacing, responsiveFont } from '../../utils/responsive';
+import { RootStackParamList } from '../../types/route';
+import { Fonts } from '../../theme/fonts';
+import { validateRoomByFilters } from '../../utils/roomUtils';
+import EmptySearchAnimation from '../../components/EmptySearchAnimation';
+import LoadingAnimation from '../../components/LoadingAnimation';
+
+// Type cho navigation
+type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DetailRoom'>;
 
 const HomeScreen: React.FC = () => {
-  const filters: string[] = ['Khu vực', 'Khoảng giá', 'Diện tích', 'Nội thất', 'Tiện nghi'];
+  const navigation = useNavigation<HomeScreenNavigationProp>();
+  
+  // Get user info from Redux store
+  const { user } = useSelector((state: RootState) => state.auth);
+  
+  // Animation states
+  const fadeAnim = useMemo(() => new Animated.Value(1), []);
+  const scaleAnim = useMemo(() => new Animated.Value(1), []);
+  const overlayAnim = useMemo(() => new Animated.Value(0), []); // Animation cho overlay
+  
+  // Animation for room cards
+  const animatedValues = useRef<Map<string, Animated.Value>>(new Map()).current;
+  const viewableItems = useRef<Set<string>>(new Set()).current;
+  
+  // Memoize static data
+  const filters = useMemo(() => ['Khu vực', 'Khoảng giá', 'Diện tích', 'Nội thất', 'Tiện nghi'], []);
+  
   const [selectedFilters, setSelectedFilters] = useState<number[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<District[]>([]);
   const [priceRange, setPriceRange] = useState<{min: number, max: number} | null>(null);
   const [areaRange, setAreaRange] = useState<{min: number, max: number} | null>(null);
   const [selectedFurniture, setSelectedFurniture] = useState<string[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [showSearchOverlay, setShowSearchOverlay] = useState(false);
 
-  const { rooms, loading, pagination, loadRooms, loadMore } = useRooms();
+  // Toggle để kiểm soát client-side filtering (có thể tắt nếu backend đã fix)
+  const useClientSideFiltering = true;
 
-  // Build filters object
-  const buildFilters = useCallback((): RoomFilters => {
+  const { rooms, loading, loadRooms } = useRooms();
+
+  // Reset animation when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fadeAnim.setValue(1);
+      scaleAnim.setValue(1);
+      overlayAnim.setValue(0);
+      setShowSearchOverlay(false);
+    }, [fadeAnim, scaleAnim, overlayAnim])
+  );
+
+  // Initialize animation value for a room
+  const getAnimatedValue = useCallback((roomId: string) => {
+    if (!animatedValues.has(roomId)) {
+      animatedValues.set(roomId, new Animated.Value(0));
+    }
+    return animatedValues.get(roomId)!;
+  }, [animatedValues]);
+
+  // Handle viewability change for room cards
+  const onViewableItemsChanged = useCallback(({ viewableItems: visibleItems }: { viewableItems: ViewToken[] }) => {
+    visibleItems.forEach(({ item, isViewable }) => {
+      if (item && item._id) {
+        const animValue = getAnimatedValue(item._id);
+        
+        if (isViewable && !viewableItems.has(item._id)) {
+          viewableItems.add(item._id);
+          
+          // Animate in with stagger effect
+          Animated.timing(animValue, {
+            toValue: 1,
+            duration: 600,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }).start();
+        } else if (!isViewable && viewableItems.has(item._id)) {
+          viewableItems.delete(item._id);
+          
+          // Optional: animate out when not viewable
+          Animated.timing(animValue, {
+            toValue: 0,
+            duration: 300,
+            easing: Easing.in(Easing.cubic),
+            useNativeDriver: true,
+          }).start();
+        }
+      }
+    });
+  }, [getAnimatedValue, viewableItems]);
+
+  // Viewability config
+  const viewabilityConfig = useMemo(() => ({
+    itemVisiblePercentThreshold: 20, // Trigger when 20% of item is visible
+    minimumViewTime: 100, // Minimum time in ms before triggering
+  }), []);
+
+  // Navigation với animation
+  const handleSearchPress = useCallback(() => {
+    setShowSearchOverlay(true);
+    
+    // Tạo animation mượt mà khi chuyển màn - đẩy xuống và mờ dần
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 0.3,
+        duration: 250,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 0.9,
+        duration: 250,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(overlayAnim, {
+        toValue: 1,
+        duration: 250,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      // Navigate sau khi animation hoàn thành
+      navigation.navigate('Search' as any);
+      
+      // Reset animation về trạng thái ban đầu sau một chút
+      setTimeout(() => {
+        fadeAnim.setValue(1);
+        scaleAnim.setValue(1);
+        overlayAnim.setValue(0);
+        setShowSearchOverlay(false);
+      }, 100);
+    });
+  }, [navigation, fadeAnim, scaleAnim, overlayAnim]);
+
+  const handleNotificationPress = useCallback(() => {
+    // TODO: Implement notification functionality
+    console.log('Notification pressed');
+  }, []);
+
+  const handleUserPress = useCallback(() => {
+    // Navigate to login screen if user is guest
+    if (!user) {
+      (navigation as any).navigate('Login');
+    } else {
+      // User is logged in - could navigate to profile or show user menu
+      // TODO: Add user menu or profile navigation
+    }
+  }, [navigation, user]);
+
+  // Memoize regions array for filtering
+  const regionsToFilter = useMemo(() => {
+    return selectedRegions.map(region => region.name);
+  }, [selectedRegions]);
+
+  // Memoize hasNoFilters check
+  const hasNoFilters = useMemo(() => {
+    return selectedAmenities.length === 0 && 
+           selectedFurniture.length === 0 && 
+           selectedRegions.length === 0 && 
+           !priceRange && 
+           !areaRange;
+  }, [selectedAmenities.length, selectedFurniture.length, selectedRegions.length, priceRange, areaRange]);
+
+  // Memoize hasActiveFilters check
+  const hasActiveFilters = useMemo(() => {
+    return selectedAmenities.length > 0 || 
+           selectedFurniture.length > 0 || 
+           selectedRegions.length > 0 || 
+           !!priceRange || 
+           !!areaRange;
+  }, [selectedAmenities.length, selectedFurniture.length, selectedRegions.length, priceRange, areaRange]);
+
+  // Filter rooms ở phía client để đảm bảo logic AND đúng
+  const filteredRooms = useMemo(() => {
+    // Nếu tắt client-side filtering, trả về rooms từ API
+    if (!useClientSideFiltering) {
+      return rooms;
+    }
+
+    // Nếu không có filter nào, trả về tất cả
+    if (hasNoFilters) {
+      return rooms;
+    }
+
+    const filtered = rooms.filter(room => {
+      const isValid = validateRoomByFilters(
+        room, 
+        selectedAmenities, 
+        selectedFurniture, 
+        regionsToFilter,
+        priceRange || undefined,
+        areaRange || undefined
+      );
+      
+      return isValid;
+    });
+
+    // Log tổng kết filter để debug
+    
+    // if (priceRange) console.log(`   🔍 Price range: ${priceRange.min.toLocaleString()} - ${priceRange.max.toLocaleString()}đ`);
+    // if (areaRange) console.log(`   🔍 Area range: ${areaRange.min} - ${areaRange.max}m²`);
+
+    return filtered;
+  }, [rooms, selectedAmenities, selectedFurniture, regionsToFilter, priceRange, areaRange, useClientSideFiltering, hasNoFilters]);
+
+  // Build filters object - Memoized
+  const buildFilters = useMemo((): RoomFilters => {
     const filters: RoomFilters = {};
     
     if (priceRange) {
@@ -56,17 +256,13 @@ const HomeScreen: React.FC = () => {
     return filters;
   }, [priceRange, areaRange, selectedFurniture, selectedAmenities, selectedRegions]);
 
-  // Load initial data
+  // Load data when component mounts or filters change
   useEffect(() => {
-    loadRooms(buildFilters());
-  }, [loadRooms, buildFilters]);
+    loadRooms(buildFilters);
+  }, [buildFilters, loadRooms]);
 
-  // Reload when filters change
-  useEffect(() => {
-    loadRooms(buildFilters());
-  }, [priceRange, areaRange, selectedFurniture, selectedAmenities, selectedRegions, loadRooms, buildFilters]);
-
-  const handleFilterSelect = (index: number) => {
+  // Memoized callbacks
+  const handleFilterSelect = useCallback((index: number) => {
     setSelectedFilters(prev => {
       if (prev.includes(index)) {
         return prev.filter(i => i !== index);
@@ -74,63 +270,104 @@ const HomeScreen: React.FC = () => {
         return [...prev, index];
       }
     });
-  };
+  }, []);
 
-  const handleClearAll = () => {
+  const handleClearAll = useCallback(() => {
     setSelectedFilters([]);
     setSelectedRegions([]);
     setPriceRange(null);
     setAreaRange(null);
     setSelectedFurniture([]);
     setSelectedAmenities([]);
-  };
+  }, []);
 
-  const handleRegionSelect = (regions: District[]) => {
+  const handleRegionSelect = useCallback((regions: District[]) => {
     setSelectedRegions(regions);
-  };
+  }, []);
 
-  const handlePriceRangeSelect = (minPrice: number, maxPrice: number) => {
+  const handlePriceRangeSelect = useCallback((minPrice: number, maxPrice: number) => {
     setPriceRange({ min: minPrice, max: maxPrice });
-  };
+  }, []);
 
-  const handleAreaSelect = (minArea: number, maxArea: number) => {
+  const handleAreaSelect = useCallback((minArea: number, maxArea: number) => {
     setAreaRange({ min: minArea, max: maxArea });
-  };
+  }, []);
 
-  const handleFurnitureSelect = (items: string[]) => {
+  const handleFurnitureSelect = useCallback((items: string[]) => {
     setSelectedFurniture(items);
-  };
+  }, []);
 
-  const handleAmenitySelect = (items: string[]) => {
+  const handleAmenitySelect = useCallback((items: string[]) => {
     setSelectedAmenities(items);
-  };
+  }, []);
 
-  const handleRefresh = () => {
-    loadRooms(buildFilters());
-  };
+  const handleRefresh = useCallback(() => {
+    loadRooms(buildFilters);
+  }, [buildFilters, loadRooms]);
 
-  const handleLoadMore = () => {
-    if (pagination?.hasNextPage && !loading) {
-      loadMore(buildFilters());
-    }
-  };
+  // Hàm xử lý khi nhấn vào room card
+  const handleRoomPress = useCallback((roomId: string) => {
+    console.log('Navigating to DetailRoom with roomId:', roomId);
+    navigation.navigate('DetailRoom', { roomId });
+  }, [navigation]);
 
-  const renderRoomCard = ({ item }: { item: Room }) => (
-    <RoomCard item={item} />
-  );
+  // Animated Room Card Component
+  const AnimatedRoomCard = useCallback(({ item }: { item: any }) => {
+    const animValue = getAnimatedValue(item._id);
+    
+    const translateY = animValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: [50, 0], // Slide up from 50px below
+    });
 
-  const renderFooter = () => {
-    if (!loading) return null;
+    const opacity = animValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 1],
+    });
+
+    const scale = animValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.8, 1], // Scale from 80% to 100%
+    });
+
     return (
-      <View style={styles.footer}>
-        <ActivityIndicator size="large" color={Colors.limeGreen} />
-      </View>
+      <Animated.View
+        style={[
+          styles.animatedCard,
+          {
+            opacity,
+            transform: [
+              { translateY },
+              { scale },
+            ],
+          },
+        ]}
+      >
+        <RoomCard 
+          item={item} 
+          onPress={handleRoomPress}
+        />
+      </Animated.View>
     );
-  };
+  }, [getAnimatedValue, handleRoomPress]);
 
-  return (
-    <View style={styles.container}>
-      <Header />
+  // Memoized RefreshControl
+  const refreshControl = useMemo(() => (
+    <RefreshControl
+      refreshing={loading && filteredRooms.length === 0}
+      onRefresh={handleRefresh}
+      colors={[Colors.limeGreen]}
+    />
+  ), [loading, filteredRooms.length, handleRefresh]);
+
+  // Header component for FlatList
+  const ListHeaderComponent = useMemo(() => (
+    <View>
+      <Header 
+        onSearchPress={handleSearchPress}
+        onNotificationPress={handleNotificationPress}
+        onUserPress={handleUserPress}
+      />
       <FilterTabs
         filters={filters}
         selectedIndices={selectedFilters}
@@ -147,33 +384,114 @@ const HomeScreen: React.FC = () => {
         selectedFurniture={selectedFurniture}
         selectedAmenities={selectedAmenities}
       />
-      <FlatList
-        data={rooms}
-        renderItem={renderRoomCard}
-        keyExtractor={(item, index) => item._id || index.toString()}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={loading && rooms.length === 0}
-            onRefresh={handleRefresh}
-            colors={[Colors.limeGreen]}
-          />
-        }
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.1}
-        ListFooterComponent={renderFooter}
-        contentContainerStyle={styles.listContainer}
-      />
+      <Text style={styles.recommendationTitle}>Đề xuất cho bạn</Text>
     </View>
+  ), [
+    handleSearchPress, 
+    handleNotificationPress,
+    handleUserPress, 
+    filters, 
+    selectedFilters, 
+    handleFilterSelect, 
+    handleClearAll, 
+    handleRegionSelect, 
+    selectedRegions, 
+    handlePriceRangeSelect, 
+    handleAreaSelect, 
+    priceRange, 
+    areaRange, 
+    handleFurnitureSelect, 
+    handleAmenitySelect, 
+    selectedFurniture, 
+    selectedAmenities
+  ]);
+
+  // Empty component
+  const ListEmptyComponent = useMemo(() => (
+    !loading ? (
+      <EmptySearchAnimation
+        title={hasActiveFilters ? 'Không tìm thấy phòng phù hợp' : 'Không có phòng nào'}
+        subtitle={hasActiveFilters 
+          ? 'Thử thay đổi bộ lọc để tìm kiếm phòng khác' 
+          : 'Hiện tại chưa có phòng nào được đăng'
+        }
+      />
+    ) : null
+  ), [loading, hasActiveFilters]);
+
+  // Footer component
+  const ListFooterComponent = useMemo(() => (
+    loading ? (
+      <View style={styles.footer}>
+        <LoadingAnimation size="medium" color={Colors.limeGreen} />
+      </View>
+    ) : null
+  ), [loading]);
+
+  return (
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <Animated.View 
+        style={[
+          styles.container,
+          {
+            opacity: fadeAnim,
+            transform: [{ scale: scaleAnim }],
+          }
+        ]}
+      >
+        <FlatList
+          data={filteredRooms}
+          renderItem={AnimatedRoomCard}
+          keyExtractor={(item, index) => item._id || index.toString()}
+          showsVerticalScrollIndicator={false}
+          refreshControl={refreshControl}
+          contentContainerStyle={styles.scrollContainer}
+          ListHeaderComponent={ListHeaderComponent}
+          ListEmptyComponent={ListEmptyComponent}
+          ListFooterComponent={ListFooterComponent}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={10}
+          updateCellsBatchingPeriod={50}
+          initialNumToRender={5}
+          windowSize={10}
+        />
+      </Animated.View>
+      
+      {/* Overlay để tạo hiệu ứng transition mượt mà */}
+      {showSearchOverlay && (
+        <Animated.View 
+          style={[
+            styles.searchOverlay,
+            {
+              opacity: overlayAnim,
+            }
+          ]}
+          pointerEvents="none"
+        />
+      )}
+    </SafeAreaView>
   );
 };
 
 export default HomeScreen;
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: Colors.backgroud,
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.backgroud,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: responsiveSpacing(20),
+  },
+  roomsContainer: {
+    paddingTop: responsiveSpacing(8),
   },
   listContainer: {
     paddingTop: responsiveSpacing(12),
@@ -182,5 +500,25 @@ const styles = StyleSheet.create({
   footer: {
     paddingVertical: responsiveSpacing(20),
     alignItems: 'center',
+  },
+  recommendationTitle: {
+    fontSize: responsiveFont(27),
+    fontWeight: '600',
+    fontFamily: Fonts.Roboto_Bold,
+    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(12),
+    color: '#17190F',
+  },
+  animatedCard: {
+    marginBottom: responsiveSpacing(4),
+  },
+  searchOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    zIndex: 1000,
   },
 });

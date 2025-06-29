@@ -25,10 +25,19 @@ interface Props {
 
 export default function SettingSwitch({iconStat, label, initialValue}: Props) {
   const [isEnabled, setIsEnabled] = useState(initialValue);
+  
+  const getImageSource = () => {
+    if (!iconStat) return undefined;
+    if (typeof iconStat === 'string') {
+      return { uri: iconStat };
+    }
+    return iconStat;
+  };
+
   return (
     <View style={styles.row}>
       <View style={{flexDirection: 'row', alignItems: 'center'}}>
-        {iconStat && <Image source={{uri: iconStat}} style={styles.icon} />}
+        {iconStat && <Image source={getImageSource()} style={styles.icon} />}
         <Text style={styles.label}>{label}</Text>
       </View>
       <Switch

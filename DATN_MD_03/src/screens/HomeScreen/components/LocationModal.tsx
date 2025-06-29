@@ -10,6 +10,8 @@ import {
   Alert,
 } from 'react-native';
 import { Province, District, Ward, SelectedAddress } from '../../../types/Address';
+import { Colors } from '../../../theme/color';
+import { responsiveFont, responsiveSpacing, moderateScale } from '../../../utils/responsive';
 
 interface LocationModalProps {
   visible: boolean;
@@ -205,7 +207,7 @@ const LocationModal: React.FC<LocationModalProps> = ({
           <View style={styles.content}>
             {loading ? (
               <View style={styles.loading}>
-                <ActivityIndicator size="large" color="#BAFD00" />
+                <ActivityIndicator size="large" color={Colors.limeGreen} />
                 <Text style={styles.loadingText}>Đang tải...</Text>
               </View>
             ) : (
@@ -252,9 +254,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   container: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: moderateScale(20),
+    borderTopRightRadius: moderateScale(20),
     maxHeight: '80%',
     minHeight: '50%',
   },
@@ -262,43 +264,43 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    padding: responsiveSpacing(16),
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: Colors.divider,
   },
   backButton: {
-    padding: 8,
-    width: 40,
+    padding: responsiveSpacing(8),
+    width: moderateScale(40),
   },
   backText: {
-    fontSize: 18,
+    fontSize: responsiveFont(18),
     fontWeight: 'bold',
-    color: '#333',
+    color: Colors.darkGray,
   },
   title: {
-    fontSize: 18,
+    fontSize: responsiveFont(18),
     fontWeight: 'bold',
-    color: '#333',
+    color: Colors.darkGray,
     flex: 1,
     textAlign: 'center',
   },
   closeButton: {
-    padding: 8,
-    width: 40,
+    padding: responsiveSpacing(8),
+    width: moderateScale(40),
     alignItems: 'center',
   },
   closeText: {
-    fontSize: 16,
+    fontSize: responsiveFont(16),
     fontWeight: 'bold',
-    color: '#666',
+    color: Colors.unselectedText,
   },
   breadcrumb: {
-    padding: 12,
-    backgroundColor: '#f5f5f5',
+    padding: responsiveSpacing(12),
+    backgroundColor: Colors.lightGray,
   },
   breadcrumbText: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: responsiveFont(14),
+    color: Colors.unselectedText,
   },
   content: {
     flex: 1,
@@ -307,12 +309,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 40,
+    padding: responsiveSpacing(40),
   },
   loadingText: {
-    marginTop: 10,
-    fontSize: 14,
-    color: '#666',
+    marginTop: responsiveSpacing(10),
+    fontSize: responsiveFont(14),
+    color: Colors.unselectedText,
   },
   list: {
     flex: 1,
@@ -321,35 +323,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
+    padding: responsiveSpacing(16),
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: Colors.divider,
   },
   listItemText: {
-    fontSize: 16,
-    color: '#333',
+    fontSize: responsiveFont(16),
+    color: Colors.darkGray,
     flex: 1,
   },
   arrow: {
-    fontSize: 16,
-    color: '#BAFD00',
+    fontSize: responsiveFont(16),
+    color: Colors.limeGreen,
     fontWeight: 'bold',
   },
   footer: {
-    padding: 16,
+    padding: responsiveSpacing(16),
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: Colors.divider,
   },
   confirmButton: {
-    backgroundColor: '#BAFD00',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
+    backgroundColor: Colors.limeGreen,
+    paddingVertical: responsiveSpacing(12),
+    paddingHorizontal: responsiveSpacing(24),
+    borderRadius: moderateScale(8),
     alignItems: 'center',
   },
   confirmText: {
-    fontSize: 16,
+    fontSize: responsiveFont(16),
     fontWeight: 'bold',
-    color: '#333',
+    color: Colors.darkGray,
   },
 }); 

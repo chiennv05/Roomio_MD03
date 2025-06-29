@@ -11,6 +11,7 @@ import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
 export default function ProfileHeader() {
   const nguoiDung = useSelector((state: any) => state.auth.user);
+  
   return (
     <ContainerLinearGradent>
       <View style={styles.header}>
@@ -22,7 +23,7 @@ export default function ProfileHeader() {
             <Text style={styles.avatarText}>
               {(
                 nguoiDung?.fullName?.[0] ||
-                nguoiDung?.fullName?.[0] ||
+                nguoiDung?.username?.[0] ||
                 '?'
               ).toUpperCase()}
             </Text>

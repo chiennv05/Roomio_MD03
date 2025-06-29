@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
   Text,
   View,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import ProfileHeader from './components/ProfileHeader';
 import SettingSwitch from './components/SettingSwitch';
 import SettingItem from './components/SettingItem';
+import { GuestProfileAnimation, LogoutModal } from '../../components';
 import {
   SCREEN,
   responsiveFont,
@@ -18,23 +20,84 @@ import {
 import {Colors} from '../../theme/color';
 import {Fonts} from '../../theme/fonts';
 import {Icons} from '../../assets/icons';
-import {useDispatch} from 'react-redux';
-import {logout} from '../../store/slices/authSlice';
+import {useDispatch, useSelector} from 'react-redux';
+import {logoutUser} from '../../store/slices/authSlice';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../types/route';
+import {RootState, AppDispatch} from '../../store';
+import {checkToken} from '../../utils/tokenCheck';
 
 export default function ProfileScreen() {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const token = useSelector((state: RootState) => state.auth.token);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const loading = useSelector((state: RootState) => state.auth.loading);
+  
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const handleDangXuat = () => {
-    dispatch(logout());
-    if (navigation && typeof navigation.navigate === 'function') {
+  // Check if user is guest (not logged in)
+  const isGuest = !checkToken(token) || !user;
+
+  const handleShowLogoutModal = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleCancelLogout = () => {
+    setShowLogoutModal(false);
+  };
+
+  const handleConfirmLogout = async () => {
+    if (!token) {
+      setShowLogoutModal(false);
+      navigation.replace('Login');
+      return;
+    }
+
+    try {
+      await dispatch(logoutUser(token)).unwrap();
+      setShowLogoutModal(false);
+      navigation.replace('Login');
+    } catch (error) {
+      // Dù có lỗi API, vẫn logout local và navigate
+      setShowLogoutModal(false);
       navigation.replace('Login');
     }
   };
 
+  const handleLogin = () => {
+    navigation.replace('Login');
+  };
+
+  const hanleUpdateProfile = () => {
+    if (!checkToken(token)) {
+      Alert.alert(
+        'Thông báo',
+        'Bạn cần đăng nhập để sử dụng chức năng này',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.replace('Login'), // Chuyển sang màn Login
+          },
+        ],
+        {cancelable: false},
+      );
+      return;
+    }
+    navigation.navigate('PersonalInformation');
+  };
+
+  // Show guest screen if not logged in
+  if (isGuest) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <GuestProfileAnimation onLoginPress={handleLogin} />
+      </SafeAreaView>
+    );
+  }
+
+  // Show normal profile screen for logged in users
   return (
     <SafeAreaView style={styles.container}>
       <ProfileHeader />
@@ -57,7 +120,7 @@ export default function ProfileScreen() {
           iconStat={Icons.IconFluentPersonRegular}
           label="Thông tin cá nhân"
           iconEnd={Icons.IconNext}
-          onPress={() => navigation.navigate('PersonalInformation')}
+          onPress={hanleUpdateProfile}
         />
         <SettingItem
           iconStat={Icons.IconContract}
@@ -84,9 +147,16 @@ export default function ProfileScreen() {
         />
       </View>
 
-      <TouchableOpacity onPress={handleDangXuat}>
+      <TouchableOpacity onPress={handleShowLogoutModal}>
         <Text style={styles.button}>Đăng xuất</Text>
       </TouchableOpacity>
+
+      <LogoutModal
+        visible={showLogoutModal}
+        onCancel={handleCancelLogout}
+        onConfirm={handleConfirmLogout}
+        loading={loading}
+      />
     </SafeAreaView>
   );
 }

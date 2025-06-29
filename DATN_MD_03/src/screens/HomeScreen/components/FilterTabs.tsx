@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Image,
 //   Dimensions,
 } from 'react-native';
 import RegionModal from './RegionModal';
@@ -20,6 +21,7 @@ import {
 } from '../../../utils/responsive';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
+import { Icons } from '../../../assets/icons';
 
 // const SCREEN = Dimensions.get('window');
 
@@ -64,11 +66,16 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
   const [showFurnitureModal, setShowFurnitureModal] = useState(false);
   const [showAmenityModal, setShowAmenityModal] = useState(false);
 
+  // Memoize the condition to avoid unnecessary re-evaluations
+  const shouldLoadOptions = useMemo(() => {
+    return furniture.length === 0 && amenities.length === 0 && !loading;
+  }, [furniture.length, amenities.length, loading]);
+
   useEffect(() => {
-    if (furniture.length === 0 && amenities.length === 0 && !loading) {
+    if (shouldLoadOptions) {
       loadFilterOptions();
     }
-  }, [furniture.length, amenities.length, loading, loadFilterOptions]);
+  }, [shouldLoadOptions, loadFilterOptions]);
 
   const handleFilterPress = (index: number) => {
     switch (index) {
@@ -129,10 +136,12 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
   };
 
   const getDisplayText = (item: string, index: number) => {
-    if (index === 1 && selectedPriceRange) { // Khoảng giá
+    if (index === 1 && selectedPriceRange && 
+        (selectedPriceRange.min !== 0 || selectedPriceRange.max !== 20000000)) { // Khoảng giá
       return `${formatPrice(selectedPriceRange.min)} - ${formatPrice(selectedPriceRange.max)}`;
     }
-    if (index === 2 && selectedAreaRange) { // Diện tích
+    if (index === 2 && selectedAreaRange && 
+        (selectedAreaRange.min !== 20 || selectedAreaRange.max !== 70)) { // Diện tích
       return `${selectedAreaRange.min}m² - ${selectedAreaRange.max}m²`;
     }
     if (index === 3 && selectedFurniture.length > 0) { // Nội thất
@@ -155,20 +164,36 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
         contentContainerStyle={styles.container}
       >
         {/* Clear All Button */}
-        {(selectedIndices.length > 0 || selectedRegions.length > 0 || selectedPriceRange || selectedAreaRange || selectedFurniture.length > 0 || selectedAmenities.length > 0) && (
+        {(selectedIndices.length > 0 || 
+          selectedRegions.length > 0 || 
+          (selectedPriceRange && (selectedPriceRange.min !== 0 || selectedPriceRange.max !== 20000000)) ||
+          (selectedAreaRange && (selectedAreaRange.min !== 20 || selectedAreaRange.max !== 70)) ||
+          selectedFurniture.length > 0 || 
+          selectedAmenities.length > 0) && (
           <TouchableOpacity
             onPress={onClearAll}
             style={styles.clearButton}
           >
-            <Text style={styles.clearText}>✕</Text>
+            <Image 
+              source={{ uri: Icons.IconRemoveFilter }}
+              style={styles.clearIcon}
+            />
           </TouchableOpacity>
         )}
         
         {filters.map((item, index) => {
+          // Check if price range is different from default
+          const isPriceActive = selectedPriceRange && 
+            (selectedPriceRange.min !== 0 || selectedPriceRange.max !== 20000000);
+          
+          // Check if area range is different from default  
+          const isAreaActive = selectedAreaRange && 
+            (selectedAreaRange.min !== 20 || selectedAreaRange.max !== 70);
+            
           const isSelected = selectedIndices.includes(index) || 
                            (index === 0 && selectedRegions.length > 0) ||
-                           (index === 1 && selectedPriceRange) ||
-                           (index === 2 && selectedAreaRange) ||
+                           (index === 1 && isPriceActive) ||
+                           (index === 2 && isAreaActive) ||
                            (index === 3 && selectedFurniture.length > 0) ||
                            (index === 4 && selectedAmenities.length > 0);
           
@@ -184,9 +209,10 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
               <Text style={styles.tabText}>
                 {getDisplayText(item, index)}
               </Text>
-              <Text style={styles.arrowText}>
-                ▼
-              </Text>
+              <Image 
+                source={{ uri: Icons.IconArrowDown2 }}
+                style={styles.arrowIcon}
+              />
             </TouchableOpacity>
           );
         })}
@@ -261,10 +287,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: responsiveSpacing(8),
   },
-  clearText: {
-    fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Bold,
-    color: '#666',
+  clearIcon: {
+    width: responsiveIcon(16),
+    height: responsiveIcon(16),
+    tintColor: '#666',
   },
   tab: {
     flexDirection: 'row',
@@ -288,10 +314,10 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.black,
   },
-  arrowText: {
-    fontSize: responsiveFont(10),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.black,
+  arrowIcon: {
+    width: responsiveIcon(10),
+    height: responsiveIcon(5),
+    tintColor: Colors.black,
   },
   locationText: {
     fontSize: responsiveFont(12),

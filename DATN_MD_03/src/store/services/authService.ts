@@ -111,3 +111,19 @@ export const updateProfile = async (
     };
   }
 };
+
+export const logoutAPI = async (token: string) => {
+  try {
+    const response = await api.post('/auth/logout', {}, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+    };
+  }
+};
