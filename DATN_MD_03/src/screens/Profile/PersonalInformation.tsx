@@ -13,10 +13,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {useDispatch, useSelector} from 'react-redux';
 import {updateProfile} from '../../store/slices/authSlice';
 import type {AppDispatch} from '../../store';
-import {
-  responsiveFont,
-  responsiveSpacing,
-} from '../../utils/responsive';
+import {responsiveFont, responsiveSpacing} from '../../utils/responsive';
 import {Colors} from '../../theme/color';
 import IteminIrmation from './components/IteminFormation';
 import {
@@ -24,8 +21,16 @@ import {
   validatePhone,
   validateIdentityNumber,
 } from '../../utils/validate';
+import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {RootStackParamList} from '../../types/route';
 
 export default function PersonalInformation() {
+  const route =
+    useRoute<RouteProp<RootStackParamList, 'PersonalInformation'>>();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+
+  const {redirectTo, roomId} = route.params || {};
   const user = useSelector((state: any) => state.auth.user);
   const token = useSelector((state: any) => state.auth.token);
   const dispatch = useDispatch<AppDispatch>();
@@ -56,10 +61,16 @@ export default function PersonalInformation() {
       return;
     }
     try {
-      await dispatch(
+      const success = await dispatch(
         updateProfile({token, data: {fullName, phone, identityNumber}}),
       ).unwrap();
-      Alert.alert('Success', 'Profile updated successfully!');
+      if (success) {
+        if (redirectTo === 'DetailRoom' && roomId) {
+          navigation.replace('DetailRoom', {roomId});
+        } else {
+          Alert.alert('Thành công', 'Cập nhật thông tin thành công!');
+        }
+      }
     } catch (err) {
       console.log('Update profile error:', err);
       Alert.alert('Error', 'Failed to update profile!');
@@ -68,15 +79,18 @@ export default function PersonalInformation() {
 
   return (
     <>
-      <StatusBar barStyle="dark-content" backgroundColor="#BAFD00" translucent={false} />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#BAFD00"
+        translucent={false}
+      />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScrollView 
+        <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
+          showsVerticalScrollIndicator={false}>
           <IteminIrmation />
-          
+
           <View style={styles.formContainer}>
             <View style={styles.inputsContainer}>
               <TextInput
@@ -91,7 +105,7 @@ export default function PersonalInformation() {
               {errorFullName ? (
                 <Text style={styles.errorText}>{errorFullName}</Text>
               ) : null}
-              
+
               <TextInput
                 style={styles.input}
                 placeholder="Phone"
@@ -105,7 +119,7 @@ export default function PersonalInformation() {
               {errorPhone ? (
                 <Text style={styles.errorText}>{errorPhone}</Text>
               ) : null}
-              
+
               <TextInput
                 style={styles.input}
                 placeholder="Identity Number"
@@ -117,16 +131,12 @@ export default function PersonalInformation() {
                 keyboardType="number-pad"
               />
               {errorIdentityNumber ? (
-                <Text style={styles.errorText}>
-                  {errorIdentityNumber}
-                </Text>
+                <Text style={styles.errorText}>{errorIdentityNumber}</Text>
               ) : null}
             </View>
-            
+
             <TouchableOpacity style={styles.updateButton} onPress={handleSave}>
-              <Text style={styles.updateButtonText}>
-                Cập nhật
-              </Text>
+              <Text style={styles.updateButtonText}>Cập nhật</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -176,7 +186,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   errorText: {
-    color: 'red', 
+    color: 'red',
     marginBottom: responsiveSpacing(12),
     alignSelf: 'flex-start',
     fontSize: responsiveFont(12),
@@ -200,7 +210,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   updateButtonText: {
-    fontWeight: 'bold', 
+    fontWeight: 'bold',
     fontSize: responsiveFont(18),
     color: Colors.black,
   },

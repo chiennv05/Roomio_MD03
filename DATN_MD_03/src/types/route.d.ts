@@ -8,5 +8,5 @@ export type RootStackParamList = {
   ForgotPassword: undefined;
   OTPVerification: {email: string};
   ResetPassWord: {email: string; resetToken: string};
-  PersonalInformation: undefined;
+  PersonalInformation: {redirectTo?: string; roomId?: string};
 };

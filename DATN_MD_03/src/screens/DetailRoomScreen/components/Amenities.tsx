@@ -1,22 +1,25 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
-import { Colors } from '../../../theme/color';
-import { Fonts } from '../../../theme/fonts';
-import { 
-  responsiveSpacing, 
-  responsiveFont, 
+import {View, Text, StyleSheet, Image} from 'react-native';
+import {Colors} from '../../../theme/color';
+import {Fonts} from '../../../theme/fonts';
+import {
+  responsiveSpacing,
+  responsiveFont,
   responsiveIcon,
   isSmallDevice,
-  isTablet
+  isTablet,
 } from '../../../utils/responsive';
-import { furnitureMapping, amenitiesMapping } from '../../../utils/amenityIcons';
+import {furnitureMapping, amenitiesMapping} from '../../../utils/amenityIcons';
 
 interface AmenitiesProps {
   amenities?: string[];
   furniture?: string[];
 }
 
-const Amenities: React.FC<AmenitiesProps> = ({ amenities = [], furniture = [] }) => {
+const Amenities: React.FC<AmenitiesProps> = ({
+  amenities = [],
+  furniture = [],
+}) => {
   // Responsive logic cho số cột
   const getItemWidth = () => {
     if (isTablet) {
@@ -32,16 +35,16 @@ const Amenities: React.FC<AmenitiesProps> = ({ amenities = [], furniture = [] })
 
   // Map amenities từ API - hiển thị tất cả
   const amenityItems = amenities.map(item => ({
-    ...amenitiesMapping[item] || { label: item, icon: '📦' },
+    ...(amenitiesMapping[item] || {label: item, icon: '📦'}),
     type: 'amenity',
-    key: item
+    key: item,
   }));
 
   // Map furniture từ API - hiển thị tất cả
   const furnitureItems = furniture.map(item => ({
-    ...furnitureMapping[item] || { label: item, icon: '📦' },
+    ...(furnitureMapping[item] || {label: item, icon: '📦'}),
     type: 'furniture',
-    key: item
+    key: item,
   }));
 
   return (
@@ -94,16 +97,17 @@ interface AmenityItemProps {
   itemWidth: string;
 }
 
-const AmenityItem: React.FC<AmenityItemProps> = ({ icon, label, itemWidth }) => {
+const AmenityItem: React.FC<AmenityItemProps> = ({icon, label, itemWidth}) => {
   // Kiểm tra xem icon có phải là đường dẫn assets không
-  const isImageIcon = icon.includes('asset:') || icon.includes('.png') || icon.includes('icon_');
-  
+  const isImageIcon =
+    icon.includes('asset:') || icon.includes('.png') || icon.includes('icon_');
+
   return (
-    <View style={[styles.amenityItem, { width: itemWidth as any }]}>
+    <View style={[styles.amenityItem, {width: itemWidth as any}]}>
       <View style={styles.amenityIconContainer}>
         {isImageIcon ? (
-          <Image 
-            source={{ uri: icon }} 
+          <Image
+            source={{uri: icon}}
             style={styles.amenityImageIcon}
             resizeMode="contain"
           />
@@ -111,7 +115,9 @@ const AmenityItem: React.FC<AmenityItemProps> = ({ icon, label, itemWidth }) => 
           <Text style={styles.amenityIcon}>{icon}</Text>
         )}
       </View>
-      <Text style={styles.amenityLabel} numberOfLines={2}>{label}</Text>
+      <Text style={styles.amenityLabel} numberOfLines={2}>
+        {label}
+      </Text>
     </View>
   );
 };

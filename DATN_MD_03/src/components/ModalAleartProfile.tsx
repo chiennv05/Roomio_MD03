@@ -19,24 +19,26 @@ import {
 } from '../utils/responsive';
 import {Icons} from '../assets/icons';
 
-interface LoginPromptModalProps {
+interface ModalAleartProfile {
   visible: boolean;
   onClose: () => void;
-  onLogin: () => void;
+  onUpdateProfile: () => void;
+  message: string[];
 }
 
 const {width: SCREEN_WIDTH} = Dimensions.get('window');
 
-const LoginPromptModal: React.FC<LoginPromptModalProps> = ({
+const ModalAleartProfile: React.FC<ModalAleartProfile> = ({
   visible,
   onClose,
-  onLogin,
+  onUpdateProfile,
+  message,
 }) => {
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const modalScale = useRef(new Animated.Value(0.8)).current;
   const modalOpacity = useRef(new Animated.Value(0)).current;
   const iconRotation = useRef(new Animated.Value(0)).current;
-
+  console.log(message);
   useEffect(() => {
     if (visible) {
       // Animation khi mở modal
@@ -94,7 +96,7 @@ const LoginPromptModal: React.FC<LoginPromptModalProps> = ({
   });
 
   const handleLogin = () => {
-    onLogin();
+    onUpdateProfile();
     onClose();
   };
 
@@ -139,32 +141,20 @@ const LoginPromptModal: React.FC<LoginPromptModalProps> = ({
                 style={styles.iconImage}
               />
             </Animated.View>
-            <Text style={styles.title}>Yêu cầu đăng nhập</Text>
+            <Text style={styles.title}>Yêu cầu cập nhật thôn tin</Text>
             <Text style={styles.subtitle}>
-              Bạn cần đăng nhập để có thể đặt phòng và sử dụng đầy đủ tính năng
+              Bạn cần cập nhật các thông tin sau để đặt phòng :
             </Text>
           </View>
 
           {/* Body với thông tin */}
           <View style={styles.body}>
-            <View style={styles.featureItem}>
-              <View style={styles.featureDot} />
-              <Text style={styles.featureText}>
-                Đặt phòng trực tiếp với chủ trọ
-              </Text>
-            </View>
-
-            <View style={styles.featureItem}>
-              <View style={styles.featureDot} />
-              <Text style={styles.featureText}>
-                Lưu danh sách phòng yêu thích
-              </Text>
-            </View>
-
-            <View style={styles.featureItem}>
-              <View style={styles.featureDot} />
-              <Text style={styles.featureText}>Nhận thông báo phòng mới</Text>
-            </View>
+            {message.map((item, index) => (
+              <View key={index} style={styles.featureItem}>
+                <View style={styles.featureDot} />
+                <Text style={styles.featureText}>{item}</Text>
+              </View>
+            ))}
           </View>
 
           {/* Footer với buttons */}
@@ -184,7 +174,7 @@ const LoginPromptModal: React.FC<LoginPromptModalProps> = ({
                 source={{uri: Icons.IconPerson}}
                 style={styles.loginIcon}
               />
-              <Text style={styles.loginButtonText}>Đăng nhập ngay</Text>
+              <Text style={styles.loginButtonText}>Cập nhật ngay</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -329,4 +319,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginPromptModal;
+export default ModalAleartProfile;

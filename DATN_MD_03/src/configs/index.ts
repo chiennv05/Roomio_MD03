@@ -7,8 +7,8 @@ export const API_CONFIG = {
 
 // Cấu hình ứng dụng
 export const APP_CONFIG = {
-  BUILD_VERSION: '1.0.0', // Phiên bản ứng dụng
-  BUILD_NUMBER: 1, // Số build của ứng dụng
+  BUILD_VERSION: '1.0.0',
+  BUILD_NUMBER: 1,
 };
 
 // Hàm tiện ích để tạo URL đầy đủ cho API endpoint

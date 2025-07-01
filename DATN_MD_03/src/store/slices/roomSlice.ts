@@ -1,6 +1,14 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import {RoomState, RoomFilters} from '../../types';
-import {getRooms, getRoomDetail, getRelatedRooms, getRelatedRoomsFallback, toggleRoomFavorite, getFavoriteRooms, searchRooms} from '../services/roomService';
+import {
+  getRooms,
+  getRoomDetail,
+  getRelatedRooms,
+  getRelatedRoomsFallback,
+  toggleRoomFavorite,
+  getFavoriteRooms,
+  searchRooms,
+} from '../services/roomService';
 
 const initialState: RoomState = {
   loading: false,
@@ -47,7 +55,7 @@ export const loadMoreRooms = createAsyncThunk(
       const state = getState() as {room: RoomState};
       const currentPage = state.room.pagination?.page || 1;
       const nextPage = currentPage + 1;
-      
+
       const res = await getRooms({...filters, page: nextPage});
       if (!res?.success) throw new Error(res?.message);
       return res.data;
@@ -60,8 +68,8 @@ export const loadMoreRooms = createAsyncThunk(
 export const fetchRoomDetail = createAsyncThunk(
   'room/fetchRoomDetail',
   async (
-    {roomId, token}: {roomId: string; token?: string}, 
-    {rejectWithValue}
+    {roomId, token}: {roomId: string; token?: string},
+    {rejectWithValue},
   ) => {
     try {
       const res = await getRoomDetail(roomId, token);
@@ -72,32 +80,37 @@ export const fetchRoomDetail = createAsyncThunk(
     }
   },
 );
-
 export const fetchRelatedRooms = createAsyncThunk(
   'room/fetchRelatedRooms',
   async (
-    {roomId, district, province, limit = 6}: {
-      roomId: string; 
-      district?: string; 
+    {
+      roomId,
+      district,
+      province,
+      limit = 6,
+    }: {
+      roomId: string;
+      district?: string;
       province?: string;
       limit?: number;
-    }, 
-    {rejectWithValue}
+    },
+    {rejectWithValue},
   ) => {
     try {
-     
-      
       // Sử dụng fallback API trực tiếp vì API chuyên dụng chưa có
       // Thay vì thử API chuyên dụng trước, ta đi thẳng vào fallback
-      const fallbackRes = await getRelatedRoomsFallback(roomId, district, province, limit);
+      const fallbackRes = await getRelatedRoomsFallback(
+        roomId,
+        district,
+        province,
+        limit,
+      );
       if (fallbackRes?.success) {
-       
         return fallbackRes.data.rooms;
       }
-      
+
       // Nếu fallback cũng thất bại, thử API chuyên dụng (for future)
       try {
-       
         const res = await getRelatedRooms(roomId, district, province, limit);
         if (res?.success && res?.data?.rooms) {
           return res.data.rooms;
@@ -105,11 +118,13 @@ export const fetchRelatedRooms = createAsyncThunk(
       } catch (apiError) {
         console.log('❌ Primary API also failed');
       }
-      
+
       throw new Error('Không thể lấy danh sách phòng liên quan từ API');
     } catch (err: any) {
       console.error('❌ fetchRelatedRooms failed:', err.message);
-      return rejectWithValue(err.message || 'Lấy danh sách phòng liên quan thất bại');
+      return rejectWithValue(
+        err.message || 'Lấy danh sách phòng liên quan thất bại',
+      );
     }
   },
 );
@@ -117,8 +132,8 @@ export const fetchRelatedRooms = createAsyncThunk(
 export const toggleFavorite = createAsyncThunk(
   'room/toggleFavorite',
   async (
-    {roomId, token}: {roomId: string; token: string}, 
-    {rejectWithValue}
+    {roomId, token}: {roomId: string; token: string},
+    {rejectWithValue},
   ) => {
     try {
       const res = await toggleRoomFavorite(roomId, token);
@@ -145,8 +160,8 @@ export const fetchFavoriteRooms = createAsyncThunk(
 export const searchRoomsAction = createAsyncThunk(
   'room/searchRooms',
   async (
-    {searchQuery, filters = {}}: {searchQuery: string; filters?: RoomFilters}, 
-    {rejectWithValue}
+    {searchQuery, filters = {}}: {searchQuery: string; filters?: RoomFilters},
+    {rejectWithValue},
   ) => {
     try {
       const res = await searchRooms(searchQuery, filters);
@@ -161,19 +176,21 @@ export const searchRoomsAction = createAsyncThunk(
 export const loadMoreSearchResults = createAsyncThunk(
   'room/loadMoreSearchResults',
   async (
-    {searchQuery, filters = {}}: {searchQuery: string; filters?: RoomFilters}, 
-    {rejectWithValue, getState}
+    {searchQuery, filters = {}}: {searchQuery: string; filters?: RoomFilters},
+    {rejectWithValue, getState},
   ) => {
     try {
       const state = getState() as {room: RoomState};
       const currentPage = state.room.searchPagination?.page || 1;
       const nextPage = currentPage + 1;
-      
+
       const res = await searchRooms(searchQuery, {...filters, page: nextPage});
       if (!res?.success) throw new Error(res?.message);
       return res.data;
     } catch (err: any) {
-      return rejectWithValue(err.message || 'Tải thêm kết quả tìm kiếm thất bại');
+      return rejectWithValue(
+        err.message || 'Tải thêm kết quả tìm kiếm thất bại',
+      );
     }
   },
 );
@@ -206,20 +223,20 @@ const roomSlice = createSlice({
     },
     updateRoomFavoriteStatus: (state, action) => {
       const {roomId, isFavorited} = action.payload;
-      
+
       // Update roomDetail if it matches
       if (state.roomDetail && state.roomDetail._id === roomId) {
         state.roomDetail = {...state.roomDetail, isFavorited};
       }
-      
+
       // Update rooms list
-      state.rooms = state.rooms.map(room => 
-        room._id === roomId ? {...room, isFavorited} : room
+      state.rooms = state.rooms.map(room =>
+        room._id === roomId ? {...room, isFavorited} : room,
       );
-      
+
       // Update relatedRooms
-      state.relatedRooms = state.relatedRooms.map(room => 
-        room._id === roomId ? {...room, isFavorited} : room
+      state.relatedRooms = state.relatedRooms.map(room =>
+        room._id === roomId ? {...room, isFavorited} : room,
       );
     },
   },
@@ -288,20 +305,27 @@ const roomSlice = createSlice({
       .addCase(toggleFavorite.fulfilled, (state, action) => {
         state.toggleFavoriteLoading = false;
         const {roomId} = action.payload;
-        
+
         // Update roomDetail if it matches
         if (state.roomDetail && state.roomDetail._id === roomId) {
-          state.roomDetail = {...state.roomDetail, isFavorited: !state.roomDetail.isFavorited};
+          state.roomDetail = {
+            ...state.roomDetail,
+            isFavorited: !state.roomDetail.isFavorited,
+          };
         }
-        
+
         // Update rooms list
-        state.rooms = state.rooms.map(room => 
-          room._id === roomId ? {...room, isFavorited: !room.isFavorited} : room
+        state.rooms = state.rooms.map(room =>
+          room._id === roomId
+            ? {...room, isFavorited: !room.isFavorited}
+            : room,
         );
-        
+
         // Update relatedRooms
-        state.relatedRooms = state.relatedRooms.map(room => 
-          room._id === roomId ? {...room, isFavorited: !room.isFavorited} : room
+        state.relatedRooms = state.relatedRooms.map(room =>
+          room._id === roomId
+            ? {...room, isFavorited: !room.isFavorited}
+            : room,
         );
       })
       .addCase(toggleFavorite.rejected, (state, action) => {
@@ -354,5 +378,12 @@ const roomSlice = createSlice({
   },
 });
 
-export const {clearRoomError, resetRooms, clearRoomDetail, clearRelatedRooms, clearFavoriteError, updateRoomFavoriteStatus} = roomSlice.actions;
-export default roomSlice.reducer; 
+export const {
+  clearRoomError,
+  resetRooms,
+  clearRoomDetail,
+  clearRelatedRooms,
+  clearFavoriteError,
+  updateRoomFavoriteStatus,
+} = roomSlice.actions;
+export default roomSlice.reducer;

@@ -94,7 +94,7 @@ export const resetPassword = async (
 
 export const updateProfile = async (
   token: string,
-  data: { fullName: string; phone: string; identityNumber: string }
+  data: {fullName: string; phone: string; identityNumber: string},
 ) => {
   try {
     const response = await api.put('/user/profile', data, {
@@ -114,11 +114,32 @@ export const updateProfile = async (
 
 export const logoutAPI = async (token: string) => {
   try {
-    const response = await api.post('/auth/logout', {}, {
+    const response = await api.post(
+      '/auth/logout',
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    return response.data;
+  } catch (error: any) {
+    throw {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+    };
+  }
+};
+
+export const checkProfileUser = async (token: string) => {
+  try {
+    const response = await api.get('/user/profile/check', {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
+
     return response.data;
   } catch (error: any) {
     throw {
