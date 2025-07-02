@@ -9,7 +9,7 @@ export const Colors = {
   mediumGray: '#A0A0A0',
   lightGray: '#F5F5F5',
   darkGray: '#444444',
-  primaryGreen: '#86B600',
+  primaryGreen: '#5EB600',
   cardBg: '#FFFFFF',
   textGray: '#A0A0A0',
   unselectedText: '#666666',
@@ -17,4 +17,6 @@ export const Colors = {
   red: '#FF0000',
   gray: '#ccc',
   colorAvata: '#b3c6ff',
+  gray200: '#E0E0E0',
+  gray150: '#D9D9D9',
 };

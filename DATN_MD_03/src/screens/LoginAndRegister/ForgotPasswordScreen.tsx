@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import React, {useCallback, useState} from 'react';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
-import { ContainerLinearGradent } from '../../components';
+import {ContainerLinearGradent} from '../../components';
 import {Icons} from '../../assets/icons';
 import {Images} from '../../assets/images';
 import {responsiveFont, responsiveIcon, SCREEN} from '../../utils/responsive';
@@ -149,6 +149,7 @@ const styles = StyleSheet.create({
   textStart: {
     fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
   },
   textTitle: {
     fontSize: responsiveFont(16),

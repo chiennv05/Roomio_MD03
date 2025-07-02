@@ -10,7 +10,7 @@ import {useDispatch} from 'react-redux';
 import {AppDispatch} from '../../../store';
 import {loginUser} from '../../../store/slices/authSlice';
 import {Icons} from '../../../assets/icons';
-import {useNavigation} from '@react-navigation/native';
+import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
 
@@ -19,8 +19,12 @@ interface ModalProps {
 }
 
 export default function Login({setModal}: ModalProps) {
+  const route =
+    useRoute<RouteProp<RootStackParamList, 'PersonalInformation'>>();
+
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const {redirectTo, roomId} = route.params || {};
   const [usename, setUsename] = useState('');
   const [password, setPassword] = useState('');
 
@@ -41,7 +45,11 @@ export default function Login({setModal}: ModalProps) {
       .unwrap()
       .then(() => {
         setModal(Icons.IconCheck, 'Đăng nhập thành công');
-        navigation.replace('UITab');
+        if (redirectTo === 'DetailRoom' && roomId) {
+          navigation.replace('DetailRoom', {roomId});
+        } else {
+          navigation.replace('UITab');
+        }
       })
       .catch(errMessage => {
         setModal(Icons.IconError, errMessage);

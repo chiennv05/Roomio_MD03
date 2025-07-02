@@ -39,11 +39,11 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     width: SCREEN.width * 0.9,
-    height: verticalScale(73),
+    height: verticalScale(72),
     backgroundColor: Colors.dearkOlive,
     borderRadius: 36,
     alignItems: 'center',
-    padding: 10,
+    paddingHorizontal: 10,
   },
   buttonIcon: {
     width: responsiveIcon(48),
@@ -64,7 +64,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.limeGreen,
     borderRadius: 36,
-    margin: 2,
     marginLeft: 10,
   },
 

@@ -11,7 +11,7 @@ import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
 export default function ProfileHeader() {
   const nguoiDung = useSelector((state: any) => state.auth.user);
-  
+
   return (
     <ContainerLinearGradent>
       <View style={styles.header}>
@@ -47,6 +47,7 @@ const styles = StyleSheet.create({
   name: {
     fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(18),
+    color: Colors.black,
   },
   avatarWrapper: {
     marginVertical: verticalScale(10),
@@ -70,6 +71,8 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Bold,
   },
   email: {
-    color: '#444',
+    color: Colors.dearkOlive,
+    fontSize: responsiveFont(20),
+    fontFamily: Fonts.Roboto_Regular,
   },
 });

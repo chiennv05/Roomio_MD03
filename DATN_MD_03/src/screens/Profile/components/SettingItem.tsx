@@ -84,5 +84,6 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Regular,
     marginRight: responsiveSpacing(15),
+    color: Colors.black,
   },
 });

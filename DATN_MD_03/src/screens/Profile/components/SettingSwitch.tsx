@@ -25,11 +25,11 @@ interface Props {
 
 export default function SettingSwitch({iconStat, label, initialValue}: Props) {
   const [isEnabled, setIsEnabled] = useState(initialValue);
-  
+
   const getImageSource = () => {
     if (!iconStat) return undefined;
     if (typeof iconStat === 'string') {
-      return { uri: iconStat };
+      return {uri: iconStat};
     }
     return iconStat;
   };
@@ -69,5 +69,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Regular,
+    color: Colors.black,
+    fontWeight: '400',
   },
 });

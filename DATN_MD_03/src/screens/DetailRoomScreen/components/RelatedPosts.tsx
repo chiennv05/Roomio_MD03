@@ -1,12 +1,19 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { Colors } from '../../../theme/color';
-import { Fonts } from '../../../theme/fonts';
-import { responsiveSpacing, responsiveFont } from '../../../utils/responsive';
-import { Room } from '../../../types/Room';
-import { getFullImageUrl } from '../../../utils/roomUtils';
-import { Icons } from '../../../assets/icons';
-import { InlineLoading } from '../../../components';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+} from 'react-native';
+import {Colors} from '../../../theme/color';
+import {Fonts} from '../../../theme/fonts';
+import {responsiveSpacing, responsiveFont} from '../../../utils/responsive';
+import {Room} from '../../../types/Room';
+import {getFullImageUrl} from '../../../utils/roomUtils';
+import {Icons} from '../../../assets/icons';
+import {InlineLoading} from '../../../components';
 
 interface RelatedPost {
   id?: string;
@@ -23,11 +30,11 @@ interface RelatedPostsProps {
   onRoomPress?: (roomId: string) => void;
 }
 
-const RelatedPosts: React.FC<RelatedPostsProps> = ({ 
-  posts = [], 
-  relatedRooms = [], 
+const RelatedPosts: React.FC<RelatedPostsProps> = ({
+  posts = [],
+  relatedRooms = [],
   loading = false,
-  onRoomPress 
+  onRoomPress,
 }) => {
   // Không sử dụng mock data nữa - chỉ lấy từ API
 
@@ -35,9 +42,10 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({
   const convertRoomsToRelatedPosts = (rooms: Room[]): RelatedPost[] => {
     return rooms.map(room => ({
       id: room._id || '',
-      image: room.photos && room.photos.length > 0 
-        ? getFullImageUrl(room.photos[0]) 
-        : 'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd',
+      image:
+        room.photos && room.photos.length > 0
+          ? getFullImageUrl(room.photos[0])
+          : 'https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd',
       title: room.description || `Phòng ${room.roomNumber}`,
       price: `${room.rentPrice?.toLocaleString('vi-VN') || '0'}đ/tháng`,
       address: `${room.location.district}, ${room.location.province}`,
@@ -46,7 +54,7 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({
 
   // Chỉ sử dụng data từ API - không có mock data
   let displayPosts: RelatedPost[] = [];
-  
+
   if (relatedRooms.length > 0) {
     displayPosts = convertRoomsToRelatedPosts(relatedRooms);
   } else if (posts.length > 0) {
@@ -57,10 +65,10 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Bài đăng liên quan</Text>
-      
+
       {loading ? (
         <View style={styles.loadingContainer}>
-          <InlineLoading 
+          <InlineLoading
             message="Đang tìm kiếm phòng liên quan..."
             size="small"
             color={Colors.limeGreen}
@@ -77,19 +85,21 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({
       ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {displayPosts.map((post, index) => (
-            <TouchableOpacity 
-              key={post.id || index} 
+            <TouchableOpacity
+              key={post.id || index}
               style={styles.postCard}
-              onPress={() => post.id && onRoomPress?.(post.id)}
-            >
-              <Image source={{ uri: post.image }} style={styles.postImage} />
+              onPress={() => post.id && onRoomPress?.(post.id)}>
+              <Image source={{uri: post.image}} style={styles.postImage} />
               <View style={styles.postInfo}>
                 <Text style={styles.postTitle} numberOfLines={2}>
                   {post.title}
                 </Text>
                 <Text style={styles.postPrice}>{post.price}</Text>
                 <View style={styles.locationContainer}>
-                  <Image source={{ uri: Icons.IconLocation }} style={styles.locationIcon} />
+                  <Image
+                    source={{uri: Icons.IconLocation}}
+                    style={styles.locationIcon}
+                  />
                   <Text style={styles.postAddress} numberOfLines={1}>
                     {post.address}
                   </Text>
@@ -121,7 +131,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     elevation: 2,
     shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
@@ -158,7 +168,7 @@ const styles = StyleSheet.create({
   },
   postAddress: {
     flex: 1,
-    fontSize: responsiveFont(12), 
+    fontSize: responsiveFont(12),
     color: Colors.black,
     fontFamily: Fonts.Roboto_Regular,
   },

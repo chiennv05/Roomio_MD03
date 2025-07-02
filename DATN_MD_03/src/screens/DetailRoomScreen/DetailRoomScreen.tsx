@@ -21,7 +21,11 @@ import {
 } from '../../store/slices/roomSlice';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {Colors} from '../../theme/color';
-import {responsiveSpacing, responsiveFont} from '../../utils/responsive';
+import {
+  responsiveSpacing,
+  responsiveFont,
+  responsiveIcon,
+} from '../../utils/responsive';
 import {RootStackParamList} from '../../types/route';
 import {Fonts} from '../../theme/fonts';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
@@ -86,6 +90,7 @@ const DetailRoomScreen: React.FC = () => {
     relatedRoomsError,
     toggleFavoriteLoading,
   } = useSelector((state: RootState) => state.room);
+  console.log('roomid', roomId);
 
   // Lấy thông tin user để check role
   const {user} = useSelector((state: RootState) => state.auth);
@@ -161,11 +166,12 @@ const DetailRoomScreen: React.FC = () => {
     if (!user) {
       // Guest - hiển thị custom modal hỏi đăng nhập
       setShowLoginPrompt(true);
-    } else if (user.role === 'chuTro') {
-      // Chủ trọ - hiển thị thông báo không được phép
-      showAlert('Chỉ người thuê mới có thể yêu thích phòng', 'warning');
-    } else if (user.role === 'nguoiThue' && user.auth_token && roomId) {
+    } else {
       // Người thuê - cho phép toggle favorite
+      if (!user.auth_token) {
+        setShowLoginPrompt(true);
+        return;
+      }
       dispatch(
         toggleFavorite({
           roomId: roomId,
@@ -173,7 +179,7 @@ const DetailRoomScreen: React.FC = () => {
         }),
       );
     }
-  }, [user, roomId, dispatch, setShowLoginPrompt, showAlert]);
+  }, [user, roomId, dispatch, setShowLoginPrompt]);
 
   const handleSharePress = useCallback(() => {
     setShowShareModal(true);
@@ -217,8 +223,11 @@ const DetailRoomScreen: React.FC = () => {
   }, []);
 
   const handleNavigateToLogin = useCallback(() => {
-    navigation.navigate('Login');
-  }, [navigation]);
+    navigation.navigate('Login', {
+      redirectTo: 'DetailRoom',
+      roomId,
+    });
+  }, [navigation, roomId]);
 
   const handleRoomPress = useCallback(
     (roomId: string) => {
@@ -437,12 +446,12 @@ const DetailRoomScreen: React.FC = () => {
               </TouchableOpacity>
 
               <View style={styles.divider} />
+
               <RelatedPosts
                 relatedRooms={relatedRooms}
                 loading={relatedRoomsLoading}
                 onRoomPress={handleRoomPress}
               />
-
               {relatedRoomsError && (
                 <Text style={styles.errorText}>
                   Không thể tải phòng liên quan: {relatedRoomsError}
@@ -588,7 +597,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: responsiveSpacing(20),
   },
   errorText: {
-    fontSize: 16,
+    fontSize: responsiveFont(16),
     color: Colors.textGray,
     textAlign: 'center',
   },
@@ -604,14 +613,14 @@ const styles = StyleSheet.create({
     borderColor: Colors.darkGreen,
   },
   termsIcon: {
-    width: 24,
-    height: 24,
+    width: responsiveIcon(24),
+    height: responsiveIcon(24),
     marginRight: responsiveSpacing(12),
     justifyContent: 'center',
     alignItems: 'center',
   },
   termsIconText: {
-    fontSize: 16,
+    fontSize: responsiveFont(14),
   },
   termsText: {
     flex: 1,
@@ -645,11 +654,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: responsiveSpacing(20),
   },
   termsIconImage: {
-    width: 24,
-    height: 24,
+    width: responsiveIcon(24),
+    height: responsiveIcon(24),
   },
   termsArrowRight: {
-    width: 12,
-    height: 24,
+    width: responsiveIcon(12),
+    height: responsiveIcon(24),
   },
 });

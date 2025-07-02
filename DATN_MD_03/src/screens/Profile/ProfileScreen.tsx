@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -10,7 +10,7 @@ import {
 import ProfileHeader from './components/ProfileHeader';
 import SettingSwitch from './components/SettingSwitch';
 import SettingItem from './components/SettingItem';
-import { GuestProfileAnimation, LogoutModal } from '../../components';
+import {GuestProfileAnimation, LogoutModal} from '../../components';
 import {
   SCREEN,
   responsiveFont,
@@ -34,7 +34,7 @@ export default function ProfileScreen() {
   const token = useSelector((state: RootState) => state.auth.token);
   const user = useSelector((state: RootState) => state.auth.user);
   const loading = useSelector((state: RootState) => state.auth.loading);
-  
+
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Check if user is guest (not logged in)
@@ -85,7 +85,7 @@ export default function ProfileScreen() {
       );
       return;
     }
-    navigation.navigate('PersonalInformation');
+    navigation.navigate('PersonalInformation', {});
   };
 
   // Show guest screen if not logged in
@@ -175,7 +175,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   button: {
-    fontSize: responsiveFont(14),
+    fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Regular,
+    color: Colors.black,
+    marginVertical: scale(5),
   },
 });

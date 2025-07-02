@@ -19,7 +19,7 @@ import LinearGradient from 'react-native-linear-gradient';
 export default function SplashScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const dispatch = useDispatch<AppDispatch>();
-  
+
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
@@ -60,16 +60,21 @@ export default function SplashScreen() {
 
         if (session) {
           const {token, expire} = session;
-          
+
           const now = new Date();
           const expireDate = new Date(expire);
-          
+
           if (token && now < expireDate) {
             const result = await dispatch(checkProfile(session.token));
             console.log('session', result);
-                          if (!checkProfile.rejected.match(result)) {
-                console.log('User logged in:', result.payload?.mapUser?.username, 'Role:', result.payload?.mapUser?.role);
-                navigation.replace('UITab');
+            if (!checkProfile.rejected.match(result)) {
+              console.log(
+                'User logged in:',
+                result.payload?.mapUser?.username,
+                'Role:',
+                result.payload?.mapUser?.role,
+              );
+              navigation.replace('UITab');
             } else {
               await clearUserSession();
               navigation.replace('UITab');
@@ -91,24 +96,21 @@ export default function SplashScreen() {
     setTimeout(() => {
       loadUserSession();
     }, 2000);
-    
   }, [dispatch, navigation]);
 
   return (
     <LinearGradient
       colors={['#ffffff', '#f8fff5', '#ffffff']}
-      style={styles.container}
-    >
+      style={styles.container}>
       {/* App Logo/Brand */}
-      <Animated.View 
+      <Animated.View
         style={[
           styles.logoContainer,
           {
             opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
-          }
-        ]}
-      >
+            transform: [{scale: scaleAnim}],
+          },
+        ]}>
         <View style={styles.logo}>
           <View style={styles.logoIcon}>
             <Text style={styles.logoText}>🏠</Text>
@@ -119,19 +121,9 @@ export default function SplashScreen() {
       </Animated.View>
 
       {/* Loading Animation */}
-      <Animated.View 
-        style={[
-          styles.loadingContainer,
-          { opacity: textAnim }
-        ]}
-      >
-        <LoadingAnimation 
-          size="medium" 
-          color={Colors.limeGreen}
-        />
-        <Text style={styles.loadingText}>
-          Đang kiểm tra phiên đăng nhập...
-        </Text>
+      <Animated.View style={[styles.loadingContainer, {opacity: textAnim}]}>
+        <LoadingAnimation size="medium" color={Colors.limeGreen} />
+        <Text style={styles.loadingText}>Đang kiểm tra phiên đăng nhập...</Text>
       </Animated.View>
     </LinearGradient>
   );

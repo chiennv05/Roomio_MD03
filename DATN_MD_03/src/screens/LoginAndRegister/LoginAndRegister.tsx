@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import React, {useState} from 'react';
-import { ContainerLinearGradent } from '../../components';
+import {ContainerLinearGradent} from '../../components';
 import {
   responsiveFont,
   responsiveIcon,
@@ -152,6 +152,7 @@ const styles = StyleSheet.create({
   textStart: {
     fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
   },
   textTitle: {
     fontSize: responsiveFont(17),

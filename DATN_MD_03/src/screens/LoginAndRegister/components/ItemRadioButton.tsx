@@ -19,7 +19,9 @@ const ItemRadioButton = ({
 }: RadioButtonProps) => {
   return (
     <TouchableOpacity style={styles.container} onPress={() => onPress(value)}>
-      <View style={isSelected ? styles.styleIcon : styles.styleIconDefaut} />
+      <View style={isSelected ? styles.styleIcon : styles.styleIconDefaut}>
+        {isSelected && <View style={styles.styleRadio} />}
+      </View>
       <Text style={isSelected ? styles.textTitle : styles.textTitleDefaut}>
         {label}
       </Text>
@@ -43,6 +45,8 @@ const styles = StyleSheet.create({
     marginRight: 10,
     borderWidth: 2,
     borderColor: Colors.dearkOlive,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   styleIconDefaut: {
     width: responsiveIcon(24),
@@ -50,7 +54,7 @@ const styles = StyleSheet.create({
     borderRadius: responsiveIcon(24) / 2,
     marginRight: 10,
     borderWidth: 2,
-    borderColor: Colors.dearkOlive,
+    borderColor: Colors.gray150,
   },
   textTitle: {
     fontFamily: Fonts.Roboto_Bold,
@@ -60,6 +64,13 @@ const styles = StyleSheet.create({
   textTitleDefaut: {
     fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(18),
-    color: Colors.darkGray,
+    color: Colors.black,
+  },
+  styleRadio: {
+    width: responsiveIcon(16),
+    height: responsiveIcon(16),
+    borderRadius: responsiveIcon(16) / 2,
+    borderWidth: 4,
+    borderColor: Colors.dearkOlive,
   },
 });

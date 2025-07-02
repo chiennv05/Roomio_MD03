@@ -1,6 +1,6 @@
 export type RootStackParamList = {
   HomeScreen: undefined;
-  Login: undefined;
+  Login: {redirectTo?: string; roomId?: string};
   DetailScreen: {id: number};
   DetailRoom: {roomId: string};
   SplashScreen: undefined;
