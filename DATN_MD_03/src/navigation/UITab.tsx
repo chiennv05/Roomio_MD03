@@ -6,6 +6,7 @@ import HomeScreen from '../screens/HomeScreen/HomeScreen';
 import SearchScreen from '../screens/SearchScreen/SearchScreen';
 import FavoriteScreen from '../screens/Favorite/FavoriteScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
+import NotificationScreen from '../screens/Notification/NotificationScreen';
 const Tab = createBottomTabNavigator();
 export default function UITab() {
   return (
@@ -36,6 +37,7 @@ export default function UITab() {
           tabBarLabel: 'Yêu thích',
         }}
       />
+     
       <Tab.Screen 
         name="Profile" 
         component={ProfileScreen}

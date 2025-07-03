@@ -13,6 +13,7 @@ import ForgotPasswordScreen from '../screens/LoginAndRegister/ForgotPasswordScre
 import ResetPassWord from '../screens/LoginAndRegister/ResetPassWord';
 
 import DetailRoomScreen from '../screens/DetailRoomScreen/DetailRoomScreen';
+import NotificationScreen from '../screens/Notification/NotificationScreen';
 
 // Import gesture handler để hỗ trợ stack navigation
 import 'react-native-gesture-handler';
@@ -79,10 +80,14 @@ export default function TabScreen() {
             component={OTPVerificationScreen}
           />
           <Stack.Screen name="ResetPassWord" component={ResetPassWord} />
-            <Stack.Screen
-          name="PersonalInformation"
-          component={PersonalInformation}
-        />
+          <Stack.Screen
+            name="Notification"
+            component={NotificationScreen}
+          />
+          <Stack.Screen
+            name="PersonalInformation"
+            component={PersonalInformation}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </>

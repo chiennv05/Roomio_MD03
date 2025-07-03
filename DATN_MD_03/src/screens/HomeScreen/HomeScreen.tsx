@@ -27,6 +27,7 @@ import { Fonts } from '../../theme/fonts';
 import { validateRoomByFilters } from '../../utils/roomUtils';
 import EmptySearchAnimation from '../../components/EmptySearchAnimation';
 import LoadingAnimation from '../../components/LoadingAnimation';
+import LoginPromptModal from '../../components/LoginPromptModal';
 
 // Type cho navigation
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DetailRoom'>;
@@ -56,6 +57,7 @@ const HomeScreen: React.FC = () => {
   const [selectedFurniture, setSelectedFurniture] = useState<string[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Toggle để kiểm soát client-side filtering (có thể tắt nếu backend đã fix)
   const useClientSideFiltering = true;
@@ -156,9 +158,12 @@ const HomeScreen: React.FC = () => {
   }, [navigation, fadeAnim, scaleAnim, overlayAnim]);
 
   const handleNotificationPress = useCallback(() => {
-    // TODO: Implement notification functionality
-    console.log('Notification pressed');
-  }, []);
+    if (!user) {
+      setShowLoginModal(true);
+    } else {
+      navigation.navigate('Notification');
+    }
+  }, [navigation, user]);
 
   const handleUserPress = useCallback(() => {
     // Navigate to login screen if user is guest
@@ -469,6 +474,17 @@ const HomeScreen: React.FC = () => {
             }
           ]}
           pointerEvents="none"
+        />
+      )}
+
+      {showLoginModal && (
+        <LoginPromptModal
+          visible={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+          onLogin={() => {
+            setShowLoginModal(false);
+            (navigation as any).navigate('Login');
+          }}
         />
       )}
     </SafeAreaView>

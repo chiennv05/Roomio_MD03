@@ -321,10 +321,29 @@ export const Icons = {
     ios: 'iconoir_privacy_policy',
     android: 'asset:/icons/iconoir_privacy_policy.png',
   }),
-
   IconOut: Platform.select({
     ios: 'iconout',
     android: 'asset:/icons/iconout.png',
+
+  }),
+  IconTick: Platform.select({
+    ios: 'icons_tick',
+    android: 'asset:/icons/icons_tick.png',
+
+  }),
+  IconWarning: Platform.select({
+    ios: 'icon_warning',
+    android: 'asset:/icons/icon_warning.png',
+
+  }),
+  IconSelectDate: Platform.select({
+    ios: 'icon_select_date',
+    android: 'asset:/icons/icon_select_date.png',
+
+  }),
+  IconEmptyMessage: Platform.select({
+    ios: 'icon_empty_message',
+    android: 'asset:/icons/icon_empty_message.png',
 
   }),
 };
