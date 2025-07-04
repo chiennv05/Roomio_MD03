@@ -1,128 +1,51 @@
+// ========== Enums ==========
 export type RoomStatus = 'trong' | 'daThue' | 'an';
 export type RoomApprovalStatus = 'choDuyet' | 'duyet' | 'tuChoi';
 
-export interface Room {
+// ========== Basic Types ==========
+export interface Coordinates {
+  type: 'Point';
+  coordinates: [number, number]; // [lng, lat]
+}
+
+export interface ServicePrices {
+  electricity?: number;
+  water?: number;
+  cleaning?: number;
+  parking?: number;
+  internet?: number;
+  elevator?: number;
+}
+
+export interface ServicePriceConfig {
+  electricity?: string;
+  water?: string;
+}
+
+export interface CustomService {
+  name: string;
+  price: number;
+  type: string;
+  description?: string;
+}
+
+// ========== Location ==========
+export interface Location {
   _id?: string;
-  ownerId: string;
-  approverId?: string;
-  roomNumber: string;
-  area: number;
-  rentPrice: number;
-  status?: RoomStatus;
-  approvalStatus?: RoomApprovalStatus;
-  description: string;
-  photos: string[];
-  location: {
-    _id?: string;
-    addressText?: string;
-    province: string;
-    district: string;
-    ward: string;
-    street: string;
-    houseNo?: string;
-    houseNumber?: string;
-    coordinates?: {
-      type?: string;
-      coordinates?: number[];
-      lat?: number; 
-      lng?: number;
-    };
-    servicePrices?: {
-      electricity?: number;
-      water?: number;
-      cleaning?: number;
-      parking?: number;
-      internet?: number;
-      elevator?: number;
-    };
-  };
-  amenities: string[];
-  furniture: string[];
-  stats?: {
-    viewCount?: number;
-    favoriteCount?: number;
-    contractCount?: number;
-    totalRevenue?: number;
-    lastUpdated?: string;
-    views?: number;
-    favorites?: number;
-    contracts?: number;
-  };
-  priceHistory?: {date: string; price: number}[];
-  rejectionReason?: string;
-  owner?: {
-    _id: string;
-    username: string;
-    fullName: string;
-    phone: string;
-  };
-  distance?: number | null;
-  isFavorited?: boolean;
-  canContact?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+  addressText?: string;
+  province: string;
+  district: string;
+  ward: string;
+  street: string;
+  houseNo?: string;
+  houseNumber?: string;
+  coordinates?: Coordinates;
+  servicePrices?: ServicePrices;
+  servicePriceConfig?: ServicePriceConfig;
+  customServices?: CustomService[];
 }
 
-export interface RoomResponse {
-  success: boolean;
-  message: string;
-  data: {
-    rooms: Room[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      totalPages: number;
-      hasNextPage: boolean;
-      hasPrevPage: boolean;
-    };
-    userLocation: any;
-    appliedFilters: {
-      amenities: string[];
-      furniture: string[];
-    };
-  };
-}
-
-export interface RoomState {
-  loading: boolean;
-  rooms: Room[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  } | null;
-  appliedFilters: {
-    amenities: string[];
-    furniture: string[];
-  };
-  error: string | null;
-  roomDetail: Room | null;
-  roomDetailLoading: boolean;
-  roomDetailError: string | null;
-  relatedRooms: Room[];
-  relatedRoomsLoading: boolean;
-  relatedRoomsError: string | null;
-  favoriteRooms: Room[];
-  favoriteLoading: boolean;
-  favoriteError: string | null;
-  toggleFavoriteLoading: boolean;
-  searchResults: Room[];
-  searchLoading: boolean;
-  searchError: string | null;
-  searchPagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  } | null;
-}
-
+// ========== Owner & Stats ==========
 export interface Owner {
   _id: string;
   username: string;
@@ -138,35 +61,43 @@ export interface Stats {
   lastUpdated: string;
 }
 
-export interface Coordinates {
-  type: string;
-  coordinates: [number, number];
+// ========== Price History ==========
+export interface PriceHistory {
+  date: string;
+  price: number;
 }
 
-export interface ServicePrices {
-  electricity: number;
-  water: number;
-  cleaning: number;
-  parking: number;
-  internet: number;
-  elevator: number;
+// ========== Main Room Model ==========
+export interface Room {
+  _id?: string;
+  ownerId: string;
+  approverId?: string;
+  roomNumber: string;
+  area: number;
+  rentPrice: number;
+  maxOccupancy: number;
+  status?: RoomStatus;
+  approvalStatus?: RoomApprovalStatus;
+  description: string;
+  photos: string[];
+  location: Location;
+  amenities: string[];
+  furniture: string[];
+  stats?: Stats;
+  priceHistory?: PriceHistory[];
+  rejectionReason?: string;
+  owner?: Owner;
+  distance?: number | null;
+  isFavorited?: boolean;
+  canContact?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface Location {
-  coordinates: Coordinates;
-  servicePrices: ServicePrices;
-  addressText: string;
-  province: string;
-  district: string;
-  ward: string;
-  street: string;
-  houseNo: string;
-  _id: string;
-}
-
+// ========== API Room (Used for API List Responses) ==========
 export interface ApiRoom {
   _id: string;
-  ownerId: Owner;
+  ownerId: string;
   roomNumber: string;
   area: number;
   rentPrice: number;
@@ -182,6 +113,7 @@ export interface ApiRoom {
   stats: Stats;
 }
 
+// ========== Filters & Pagination ==========
 export interface Pagination {
   page: number;
   limit: number;
@@ -196,17 +128,6 @@ export interface AppliedFilters {
   furniture: string[];
 }
 
-export interface RoomsApiResponse {
-  success: boolean;
-  message: string;
-  data: {
-    rooms: ApiRoom[];
-    pagination: Pagination;
-    userLocation: any;
-    appliedFilters: AppliedFilters;
-  };
-}
-
 export interface RoomFilters {
   maxDistance?: number;
   page?: number;
@@ -219,4 +140,47 @@ export interface RoomFilters {
   furniture?: string[];
   districts?: string[];
   search?: string;
+  approvalStatus?: RoomApprovalStatus;
+  status?: RoomStatus;
+}
+
+// ========== API Response (Generic) ==========
+export interface RoomsApiData<T = Room> {
+  rooms: T[];
+  pagination: Pagination;
+  userLocation: any;
+  appliedFilters: AppliedFilters;
+}
+
+export interface RoomsApiResponse<T = Room> {
+  success: boolean;
+  message: string;
+  data: RoomsApiData<T>;
+}
+
+// ========== Room Redux State ==========
+export interface RoomState {
+  loading: boolean;
+  rooms: Room[];
+  pagination: Pagination | null;
+  appliedFilters: AppliedFilters;
+  error: string | null;
+
+  roomDetail: Room | null;
+  roomDetailLoading: boolean;
+  roomDetailError: string | null;
+
+  relatedRooms: Room[];
+  relatedRoomsLoading: boolean;
+  relatedRoomsError: string | null;
+
+  favoriteRooms: Room[];
+  favoriteLoading: boolean;
+  favoriteError: string | null;
+  toggleFavoriteLoading: boolean;
+
+  searchResults: Room[];
+  searchLoading: boolean;
+  searchError: string | null;
+  searchPagination: Pagination | null;
 }

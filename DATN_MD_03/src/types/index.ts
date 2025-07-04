@@ -7,3 +7,4 @@ export * from './CostRecord';
 export * from './Support';
 export * from './Wishlist';
 export * from './Filter';
+export * from './ServiceType';
