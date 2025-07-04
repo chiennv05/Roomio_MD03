@@ -19,4 +19,5 @@ export const Colors = {
   colorAvata: '#b3c6ff',
   gray200: '#E0E0E0',
   gray150: '#D9D9D9',
+  grayLight: '#CCCCCC',
 };
