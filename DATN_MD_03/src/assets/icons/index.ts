@@ -288,7 +288,8 @@ export const Icons = {
   }),
   IconHeartFavourite: Platform.select({
     ios: 'icon_heart_favourite',
-    android: 'asset:/icons/icon_heart_favourite.png'}),
+    android: 'asset:/icons/icon_heart_favourite.png',
+  }),
   IconsNotification: Platform.select({
     ios: 'hugeicons_notification',
     android: 'asset:/icons/hugeicons_notification.png',
@@ -324,7 +325,10 @@ export const Icons = {
   IconOut: Platform.select({
     ios: 'iconout',
     android: 'asset:/icons/iconout.png',
-
+  }),
+  IconSeachBlack: Platform.select({
+    ios: 'icon_search_black',
+    android: 'asset:/icons/icon_search_black.png',
   }),
   IconTick: Platform.select({
     ios: 'icons_tick',

@@ -3,6 +3,7 @@ export type SupportPriority = 'thap' | 'trungBinh' | 'cao' | 'khanan';
 export type SupportCategory = 'kyThuat' | 'thanhToan' | 'hopDong' | 'khac';
 
 export interface Support {
+  _id?: string;
   userId: string;
   title: string;
   content: string;
@@ -12,4 +13,6 @@ export interface Support {
   priority: SupportPriority;
   category: SupportCategory;
   processedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }

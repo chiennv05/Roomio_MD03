@@ -1,4 +1,9 @@
-export type NotificationType = 'heThong' | 'thanhToan' | 'hopDong' | 'hoTro' | 'lichXemPhong';
+export type NotificationType =
+  | 'heThong'
+  | 'thanhToan'
+  | 'hopDong'
+  | 'hoTro'
+  | 'lichXemPhong';
 export type NotificationStatus = 'unread' | 'read';
 
 export interface RentRequestData {
@@ -21,11 +26,13 @@ export interface BillData {
 }
 
 export interface Notification {
-  _id: string;
+  _id?: string;
+
   userId: string;
   type: NotificationType;
   content: string;
   status: NotificationStatus;
+
   rentRequestData: RentRequestData;
   billData: BillData;
   createdAt: string;
@@ -60,4 +67,19 @@ export interface NotificationState {
   error: string | null;
   refreshing: boolean;
   loadingMore: boolean;
+
+  rentRequestData?: {
+    roomId: string;
+    tenantId: string;
+    message: string;
+    requestDate: string;
+  };
+  billData?: {
+    invoiceId: string;
+    amount: number;
+    dueDate: string;
+    status: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
