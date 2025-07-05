@@ -1,10 +1,15 @@
 import React from 'react';
-
+<<<<<<< HEAD
+import {StatusBar} from 'react-native';
+import {createStackNavigator, TransitionPresets} from '@react-navigation/stack';
+import {RootStackParamList} from '../types/route';
+import {Colors} from '../theme/color';
+=======
 import { StatusBar } from 'react-native';
 import { createStackNavigator, TransitionPresets } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/route';
 import { Colors } from '../theme/color';
-
+>>>>>>> 48427799603a68c91b0b323c89a5c67705a0f773
 
 import SplashScreen from '../screens/Splash/SplashScreen';
 import LoginAndRegister from '../screens/LoginAndRegister/LoginAndRegister';
@@ -64,9 +69,13 @@ export default function TabScreen() {
         translucent={false}
       />
       <NavigationContainer>
-
+<<<<<<< HEAD
+        <Stack.Navigator
+          initialRouteName="SplashScreen"
+          screenOptions={{headerShown: false}}>
+=======
         <Stack.Navigator initialRouteName="SplashScreen" screenOptions={{ headerShown: false }} >
-
+>>>>>>> 48427799603a68c91b0b323c89a5c67705a0f773
           <Stack.Screen name="SplashScreen" component={SplashScreen} />
           <Stack.Screen name="Login" component={LoginAndRegister} />
           <Stack.Screen name="UITab" component={UITab} />
@@ -90,12 +99,17 @@ export default function TabScreen() {
             name="PersonalInformation"
             component={PersonalInformation}
           />
-
+<<<<<<< HEAD
+          <Stack.Screen name="LandlordRoom" component={MyRoomScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </>
+=======
         </Stack.Navigator>
       </NavigationContainer>
     </>
 
 
-
+>>>>>>> 48427799603a68c91b0b323c89a5c67705a0f773
   );
 }

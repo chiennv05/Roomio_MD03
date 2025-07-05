@@ -1,10 +1,11 @@
-import {Platform} from 'react-native';
+import { Platform } from 'react-native';
 
 export const Icons = {
   IconArrowLeft: Platform.select({
     ios: 'icon_arrow_left',
     android: 'asset:/icons/icon_arrow_left.png',
   }),
+
   IconArrowBack: Platform.select({
     ios: 'icon_arrow_back',
     android: 'asset:/icons/icon_arrow_back.png',
@@ -25,6 +26,7 @@ export const Icons = {
     ios: 'icon_notification',
     android: 'asset:/icons/icon_notification.png',
   }),
+
   IconEyesOn: Platform.select({
     ios: 'icon_eyes_on',
     android: 'asset:/icons/icon_eyes_on.png',
@@ -288,7 +290,11 @@ export const Icons = {
   }),
   IconHeartFavourite: Platform.select({
     ios: 'icon_heart_favourite',
+<<<<<<< HEAD
     android: 'asset:/icons/icon_heart_favourite.png',
+=======
+    android: 'asset:/icons/icon_heart_favourite.png'
+>>>>>>> 48427799603a68c91b0b323c89a5c67705a0f773
   }),
   IconsNotification: Platform.select({
     ios: 'hugeicons_notification',
