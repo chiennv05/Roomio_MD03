@@ -1,54 +1,113 @@
+import React, {
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
+  View,
   FlatList,
   Image,
   StyleSheet,
   TouchableOpacity,
-  View,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
 } from 'react-native';
-import React, {useCallback, useEffect, useState} from 'react';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from 'react-native-reanimated';
+
 import {UIHeader, ItemInput} from './components';
 import {Colors} from '../../../theme/color';
-import {responsiveIcon, SCREEN} from '../../../utils/responsive';
+import {
+  responsiveIcon,
+  responsiveSpacing,
+  SCREEN,
+} from '../../../utils/responsive';
 import {Icons} from '../../../assets/icons';
 import ItemFilter from './components/ItemFilter';
+import ItemRoom from './components/ItemRoom';
 import {ALL_ROOM_STATUSES} from './constants/roomStatus';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../../store';
 import {getLandlordRooms} from '../../../store/slices/landlordRoomsSlice';
-import ItemRoom from './components/ItemRoom';
+import {LoadingAnimation} from '../../../components';
 
-const token =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODY4YzE5MGI2OTFkNzJjNDY3ODE2NzgiLCJ1c2VybmFtZSI6ImNodXRybzIiLCJyb2xlIjoiY2h1VHJvIiwiaWF0IjoxNzUxNjk1NzgxLCJleHAiOjE3NTQyODc3ODF9.x8oDOkIXl9VOsHqmVCxK7-2SUqfrWt3HrLwwm7Jg0qc';
 export default function MyRoomScreen() {
   const dispatch = useDispatch<AppDispatch>();
-  const {rooms, loading, error} = useSelector(
+  const {rooms, loading} = useSelector(
     (state: RootState) => state.landlordRooms,
   );
+  const {user} = useSelector((state: RootState) => state.auth);
+
   const [searchText, setSearchText] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
 
+  const scrollOffset = useRef(0);
+  const filterHeight = useSharedValue(50); // Chiều cao ban đầu
+  const filterOpacity = useSharedValue(1); // Để mượt hơn
+
+  const animatedFilterStyle = useAnimatedStyle(() => {
+    return {
+      height: withTiming(filterHeight.value, {duration: 200}),
+      opacity: withTiming(filterOpacity.value, {duration: 200}),
+    };
+  });
+
   useEffect(() => {
-    dispatch(getLandlordRooms(token));
-    console.log('dm');
-  }, [dispatch]);
+    dispatch(getLandlordRooms(user.auth_token));
+  }, [dispatch, user?.auth_token]);
 
-  // sự kiện header
-  const handleGoback = () => {};
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const currentOffset = event.nativeEvent.contentOffset.y;
+      const direction = currentOffset > scrollOffset.current ? 'down' : 'up';
 
-  // sự  hiện fillter
+      if (direction === 'down') {
+        filterHeight.value = 0;
+        filterOpacity.value = 0;
+      } else {
+        filterHeight.value = 50; // hoặc bao nhiêu bạn muốn
+        filterOpacity.value = 1;
+      }
+
+      scrollOffset.current = currentOffset;
+    },
+    [filterHeight, filterOpacity],
+  );
+
   const handleClickFilter = useCallback((value: string) => {
     setSelectedFilter(value);
   }, []);
 
-  // sự kiện click item
+  const filteredRooms = useMemo(() => {
+    return rooms.filter(room => {
+      const matchFilter =
+        selectedFilter === 'all' || room.status === selectedFilter;
+      const matchSearch = room.roomNumber
+        ?.toLowerCase()
+        .includes(searchText.toLowerCase());
+      return matchFilter && matchSearch;
+    });
+  }, [rooms, selectedFilter, searchText]);
+
   const handleClickItemRooms = useCallback((id: string) => {
-    console.log('hiii');
+    console.log('clicked room id:', id);
   }, []);
+
+  const handleGoback = () => {
+    // logic điều hướng
+  };
 
   return (
     <View style={styles.container}>
       <UIHeader title="Phòng trọ của tôi" onPress={handleGoback} />
 
+      {/* Tìm kiếm */}
       <View style={styles.conatinerSearch}>
         <ItemInput
           placeholder="Tìm bài viết đã đăng"
@@ -64,7 +123,9 @@ export default function MyRoomScreen() {
           />
         </TouchableOpacity>
       </View>
-      <View style={styles.conatinerFilter}>
+
+      {/* Filter - Animated */}
+      <Animated.View style={[styles.conatinerFilter, animatedFilterStyle]}>
         <FlatList
           keyExtractor={(_, index) => index.toString()}
           horizontal={true}
@@ -79,14 +140,24 @@ export default function MyRoomScreen() {
             />
           )}
         />
-      </View>
+      </Animated.View>
 
+      {/* Danh sách phòng */}
       <View style={styles.containerListRooms}>
+        {loading && <LoadingAnimation size="medium" color={Colors.limeGreen} />}
         <FlatList
-          data={rooms}
+          data={filteredRooms}
+          horizontal={false}
+          showsVerticalScrollIndicator={false}
           keyExtractor={(_, index) => index.toString()}
-          renderItem={item => (
-            <ItemRoom item={item.item} onPress={handleClickItemRooms} />
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          renderItem={({item, index}) => (
+            <ItemRoom
+              item={item}
+              onPress={handleClickItemRooms}
+              index={index}
+            />
           )}
         />
       </View>
@@ -123,6 +194,7 @@ const styles = StyleSheet.create({
   conatinerFilter: {
     width: SCREEN.width,
     justifyContent: 'center',
+    marginVertical: responsiveSpacing(10),
   },
   containerListRooms: {
     flex: 1,

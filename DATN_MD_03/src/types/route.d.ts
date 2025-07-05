@@ -9,4 +9,5 @@ export type RootStackParamList = {
   OTPVerification: {email: string};
   ResetPassWord: {email: string; resetToken: string};
   PersonalInformation: {redirectTo?: string; roomId?: string};
+  LandlordRoom: undefined;
 };

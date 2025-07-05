@@ -331,4 +331,13 @@ export const Icons = {
     ios: 'icon_search_black',
     android: 'asset:/icons/icon_search_black.png',
   }),
+
+  IconLocationGray: Platform.select({
+    ios: 'icon_location_gray',
+    android: 'asset:/icons/icon_location_gray.png',
+  }),
+  IconUnion: Platform.select({
+    ios: 'icon_union',
+    android: 'asset:/icons/icon_union.png',
+  }),
 };

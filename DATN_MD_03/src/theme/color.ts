@@ -20,4 +20,5 @@ export const Colors = {
   gray200: '#E0E0E0',
   gray150: '#D9D9D9',
   grayLight: '#CCCCCC',
+  gray60: '#626262',
 };

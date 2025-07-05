@@ -6,8 +6,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
+
 import {Colors} from '../../../../theme/color';
+import {Fonts} from '../../../../theme/fonts';
 import {Room} from '../../../../types/Room';
 import {
   SCREEN,
@@ -15,30 +19,28 @@ import {
   responsiveSpacing,
   moderateScale,
 } from '../../../../utils/responsive';
-import {Fonts} from '../../../../theme/fonts';
 import {getImageUrl} from '../../../../configs';
 import {Icons} from '../../../../assets/icons';
+import {getStatusInfo} from '../constants/getStatusInfo';
 
-// Interface định nghĩa props cho component RoomCard
 interface RoomCardProps {
   item: Room;
   onPress: (roomId: string) => void;
+  index: number;
 }
 
-const ItemRoom: React.FC<RoomCardProps> = ({item, onPress}) => {
+const ItemRoom: React.FC<RoomCardProps> = ({item, onPress, index}) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Chuyển đổi đường dẫn hình ảnh từ API thành URL đầy đủ
   const images = item.photos?.map(photo => getImageUrl(photo)) || [];
+  const status = getStatusInfo(item.status || '', item.approvalStatus || '');
 
-  // Hàm xử lý khi người dùng scroll qua các hình ảnh
-  const handleScroll = (event: any) => {
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const slideSize = SCREEN.width - responsiveSpacing(32);
-    const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
-    setCurrentImageIndex(index);
+    const newIndex = Math.round(event.nativeEvent.contentOffset.x / slideSize);
+    setCurrentImageIndex(newIndex);
   };
 
-  // Hàm xử lý khi nhấn vào card
   const handleCardPress = () => {
     if (item._id) {
       onPress(item._id);
@@ -48,15 +50,17 @@ const ItemRoom: React.FC<RoomCardProps> = ({item, onPress}) => {
   };
 
   return (
-    <View>
-      <View style={styles.containerSatus}>
-        <Text style={styles.textStatus}>{item.status}</Text>
+    <View style={{marginTop: index === 0 ? responsiveSpacing(15) : 0}}>
+      <View style={[styles.containerStatus, {backgroundColor: status.color}]}>
+        <Text style={[styles.textStatus, {color: status.textColor}]}>
+          {status.label}
+        </Text>
       </View>
+
       <TouchableOpacity
         style={styles.card}
         onPress={handleCardPress}
         activeOpacity={0.8}>
-        {/* Container chứa carousel với viền tròn */}
         <View style={styles.carouselContainer}>
           <ScrollView
             horizontal
@@ -64,52 +68,50 @@ const ItemRoom: React.FC<RoomCardProps> = ({item, onPress}) => {
             showsHorizontalScrollIndicator={false}
             onScroll={handleScroll}
             scrollEventThrottle={16}>
-            {images.map((imageUri: string, index: number) => (
-              <View key={index} style={styles.carouselItemContainer}>
+            {images.map((imageUri: string, idx: number) => (
+              <View key={idx} style={styles.carouselItemContainer}>
                 <Image source={{uri: imageUri}} style={styles.carouselImage} />
               </View>
             ))}
           </ScrollView>
 
-          {/* Price tag overlay ở góc dưới bên trái */}
           <View style={styles.priceOverlay}>
             <Text style={styles.priceOverlayText}>
               {item.rentPrice?.toLocaleString('vi-VN')}/ tháng
             </Text>
           </View>
 
-          {/* Các chấm indicator */}
           {images.length > 1 && (
             <View style={styles.dotsContainer}>
-              {images.map((_, index) => (
+              {images.map((_, idx) => (
                 <View
-                  key={index}
+                  key={idx}
                   style={[
                     styles.dot,
-                    currentImageIndex === index && styles.activeDot,
+                    currentImageIndex === idx && styles.activeDot,
                   ]}
                 />
               ))}
             </View>
           )}
         </View>
-        {/* Phần thông tin phòng trọ */}
+
         <View style={styles.info}>
           <Text style={styles.title}>{item.description}</Text>
+
           <View style={styles.detailContainer}>
-            <Image source={{uri: Icons.IconHome}} style={styles.icon} />
-            <Text style={styles.detail}>Mã phòng: {item.roomNumber}</Text>
+            <Image source={{uri: Icons.IconLocationGray}} style={styles.icon} />
+            <Text style={styles.detail}>Số phòng: {item.roomNumber}</Text>
           </View>
           <View style={styles.detailContainer}>
-            <Image source={{uri: Icons.IconLocation}} style={styles.icon} />
-            <Text style={styles.detail}>
-              {item.location.ward}, {item.location.district},{' '}
-              {item.location.province}
-            </Text>
+            <Image source={{uri: Icons.IconLocationGray}} style={styles.icon} />
+            <Text style={styles.detail}>{item.location.addressText}</Text>
           </View>
+
           <View style={styles.detailContainer}>
-            <Image source={{uri: Icons.IconArea}} style={styles.icon} />
-            <Text style={styles.detail}>{item.area}m²</Text>
+            <Image source={{uri: Icons.IconUnion}} style={styles.icon} />
+            <Text style={styles.detail}>{item.area} m</Text>
+            <Text>30 view</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -118,7 +120,6 @@ const ItemRoom: React.FC<RoomCardProps> = ({item, onPress}) => {
 };
 
 export default React.memo(ItemRoom);
-
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.white,
@@ -128,10 +129,7 @@ const styles = StyleSheet.create({
     marginHorizontal: responsiveSpacing(16),
     elevation: 4,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.12,
     shadowRadius: 12,
     marginTop: 10,
@@ -166,10 +164,7 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(10),
     elevation: 3,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.25,
     shadowRadius: 4,
   },
@@ -225,26 +220,28 @@ const styles = StyleSheet.create({
     height: moderateScale(18),
     marginRight: responsiveSpacing(12),
     marginTop: responsiveSpacing(2),
-    tintColor: Colors.darkGreen,
   },
   detail: {
-    color: Colors.black,
+    color: Colors.gray60,
     fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Regular,
-    flex: 1,
-    lineHeight: responsiveFont(20),
+    fontFamily: Fonts.Roboto_Bold,
+    fontWeight: '600',
   },
-  containerSatus: {
-    width: moderateScale(100),
+  containerStatus: {
+    width: moderateScale(120),
     height: moderateScale(40),
     borderRadius: moderateScale(20),
     backgroundColor: Colors.limeGreen,
     position: 'absolute',
     zIndex: 1000,
-    top: -10,
+    top: -responsiveSpacing(10),
     right: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   textStatus: {
-    fontSize: responsiveFont(20),
+    fontSize: responsiveFont(18),
+    color: Colors.black,
+    fontFamily: Fonts.Roboto_Regular,
   },
 });

@@ -12,10 +12,7 @@ export const ALL_ROOM_STATUSES: RoomSatus[] = [
   // RoomStatus
   {label: 'Phòng trống', value: 'trong'},
   {label: 'Đã thuê', value: 'daThue'},
-  {label: 'Đã ẩn', value: 'an'},
 
   // RoomApprovalStatus
   {label: 'Chờ duyệt', value: 'choDuyet'},
-  {label: 'Đã duyệt', value: 'duyet'},
-  {label: 'Từ chối', value: 'tuChoi'},
 ];
