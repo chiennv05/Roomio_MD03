@@ -11,7 +11,8 @@ export default function App() {
     <SafeAreaProvider>
       <GestureHandlerRootView style={{flex: 1}}>
         <Provider store={store}>
-          <MapScreen />
+          {/* <MapScreen /> */}
+          <TabScreen />
         </Provider>
       </GestureHandlerRootView>
     </SafeAreaProvider>

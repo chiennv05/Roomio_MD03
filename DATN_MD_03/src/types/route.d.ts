@@ -10,4 +10,6 @@ export type RootStackParamList = {
   ResetPassWord: {email: string; resetToken: string};
   PersonalInformation: {redirectTo?: string; roomId?: string};
   Notification: undefined;
+  TenantList: undefined;
+  TenantDetail: {tenantId: string};
 };

@@ -6,6 +6,7 @@ import {
   View,
   TouchableOpacity,
   Alert,
+  ScrollView,
 } from 'react-native';
 import ProfileHeader from './components/ProfileHeader';
 import SettingSwitch from './components/SettingSwitch';
@@ -39,6 +40,9 @@ export default function ProfileScreen() {
 
   // Check if user is guest (not logged in)
   const isGuest = !checkToken(token) || !user;
+  
+  // Check if user is landlord (chủ trọ)
+  const isLandlord = user?.role === 'chuTro';
 
   const handleShowLogoutModal = () => {
     setShowLogoutModal(true);
@@ -88,6 +92,12 @@ export default function ProfileScreen() {
     navigation.navigate('PersonalInformation', {});
   };
 
+  // Hàm xử lý khi nhấn vào "Danh sách người thuê"
+  const handleTenantListPress = () => {
+    // Chuyển đến màn hình TenantList
+    navigation.navigate('TenantList');
+  };
+
   // Show guest screen if not logged in
   if (isGuest) {
     return (
@@ -101,55 +111,77 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ProfileHeader />
+      
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollViewContent}
+      >
+        <View style={styles.box}>
+          <SettingSwitch
+            iconStat={Icons.IconsNotification}
+            label="Thông báo"
+            initialValue={true}
+          />
+          <SettingSwitch
+            iconStat={Icons.IconsLocation}
+            label="Vị trí"
+            initialValue={false}
+          />
+        </View>
 
-      <View style={styles.box}>
-        <SettingSwitch
-          iconStat={Icons.IconsNotification}
-          label="Thông báo"
-          initialValue={true}
-        />
-        <SettingSwitch
-          iconStat={Icons.IconsLocation}
-          label="Vị trí"
-          initialValue={false}
-        />
-      </View>
+        <View style={styles.box}>
+          <SettingItem
+            iconStat={Icons.IconFluentPersonRegular}
+            label="Thông tin cá nhân"
+            iconEnd={Icons.IconNext}
+            onPress={hanleUpdateProfile}
+          />
+          <SettingItem
+            iconStat={Icons.IconContract}
+            label="Hợp đồng thuê"
+            iconEnd={Icons.IconNext}
+          />
+          <SettingItem
+            iconStat={Icons.IconPaper}
+            label="Hóa đơn thu chi"
+            iconEnd={Icons.IconNext}
+          />
+          
+          {/* Chỉ hiển thị các tùy chọn cho chủ trọ nếu user có role là chuTro */}
+          {isLandlord && (
+            <>
+              <SettingItem
+                iconStat={Icons.IconRomManagement}
+                label="Quản lý phòng trọ"
+                iconEnd={Icons.IconNext}
+              />
+              <SettingItem
+                iconStat={Icons.IconListTenants}
+                label="Danh sách người thuê"
+                iconEnd={Icons.IconNext}
+                onPress={handleTenantListPress}
+              />
+            </>
+          )}
+        </View>
 
-      <View style={styles.box}>
-        <SettingItem
-          iconStat={Icons.IconFluentPersonRegular}
-          label="Thông tin cá nhân"
-          iconEnd={Icons.IconNext}
-          onPress={hanleUpdateProfile}
-        />
-        <SettingItem
-          iconStat={Icons.IconContract}
-          label="Hợp đồng thuê"
-          iconEnd={Icons.IconNext}
-        />
-        <SettingItem
-          iconStat={Icons.IconPaper}
-          label="Hóa đơn thu chi"
-          iconEnd={Icons.IconNext}
-        />
-      </View>
+        <View style={styles.box}>
+          <SettingItem
+            iconStat={Icons.IconLightReport}
+            label="Báo cáo sự cố"
+            iconEnd={Icons.IconNext}
+          />
+          <SettingItem
+            iconStat={Icons.Iconoir_Privacy_Policy}
+            label="Điều khoản & chính sách"
+            iconEnd={Icons.IconNext}
+          />
+        </View>
 
-      <View style={styles.box}>
-        <SettingItem
-          iconStat={Icons.IconLightReport}
-          label="Báo cáo sự cố"
-          iconEnd={Icons.IconNext}
-        />
-        <SettingItem
-          iconStat={Icons.Iconoir_Privacy_Policy}
-          label="Điều khoản & chính sách"
-          iconEnd={Icons.IconNext}
-        />
-      </View>
-
-      <TouchableOpacity onPress={handleShowLogoutModal}>
-        <Text style={styles.button}>Đăng xuất</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={handleShowLogoutModal} style={styles.logoutButtonContainer}>
+          <Text style={styles.button}>Đăng xuất</Text>
+        </TouchableOpacity>
+      </ScrollView>
 
       <LogoutModal
         visible={showLogoutModal}
@@ -163,9 +195,12 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     width: SCREEN.width,
-    height: SCREEN.height,
     backgroundColor: Colors.backgroud,
+  },
+  scrollViewContent: {
+    paddingBottom: verticalScale(20),
     alignItems: 'center',
   },
   box: {
@@ -173,11 +208,17 @@ const styles = StyleSheet.create({
     marginVertical: verticalScale(8),
     paddingHorizontal: scale(12),
     borderRadius: 12,
+    // width: '90%',
+    // alignSelf: 'center',
   },
   button: {
     fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.black,
     marginVertical: scale(5),
+  },
+  logoutButtonContainer: {
+    alignItems: 'center',
+    marginTop: verticalScale(10),
   },
 });

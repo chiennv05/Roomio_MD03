@@ -1,4 +1,4 @@
-import {View, StyleSheet} from 'react-native';
+import {View, StyleSheet, Alert} from 'react-native';
 import React, {useEffect, useCallback, useState} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -8,11 +8,12 @@ import {
   refreshNotifications,
   loadMoreNotifications,
   markAsRead,
+  deleteNotificationById,
 } from '../../store/slices/notificationSlice';
 import EmptyNotification from './components/EmptyNotification';
 import NotificationScreenHeader from './components/NotificationScreenHeader';
 import NotificationHeader from './components/NotificationHeader';
-import NotificationListContainer from './components/NotificationListContainer';
+import NotificationListContainer, { FormattedNotification } from './components/NotificationListContainer';
 import LoadingAnimation from '../../components/LoadingAnimation';
 import {Colors} from '../../theme/color';
 import {responsiveSpacing} from '../../utils/responsive';
@@ -75,6 +76,34 @@ const NotificationScreen = () => {
     [dispatch, user, token],
   );
 
+  // Handle delete notification
+  const handleDeleteNotification = useCallback(
+    (notificationId: string) => {
+      if (user && token) {
+        // Hiển thị dialog xác nhận trước khi xóa
+        Alert.alert(
+          'Xác nhận xóa',
+          'Bạn có chắc chắn muốn xóa thông báo này?',
+          [
+            {
+              text: 'Hủy',
+              style: 'cancel',
+            },
+            {
+              text: 'Xóa',
+              style: 'destructive',
+              onPress: () => {
+                dispatch(deleteNotificationById({notificationId, token}));
+              },
+            },
+          ],
+          {cancelable: true},
+        );
+      }
+    },
+    [dispatch, user, token],
+  );
+
   // Handle tab change
   const handleTabChange = useCallback((tab: 'all' | 'schedule' | 'bill' | 'contract') => {
     setActiveTab(tab);
@@ -101,8 +130,8 @@ const NotificationScreen = () => {
   }, [notifications, activeTab]);
 
   // Convert Redux notification data to component format
-  const formattedNotifications = getFilteredNotifications().map(notification => ({
-    id: notification._id,
+  const formattedNotifications: FormattedNotification[] = getFilteredNotifications().map(notification => ({
+    id: notification._id || '',
     title: getNotificationTitle(notification.type),
     content: notification.content,
     time: formatRelativeTime(notification.createdAt),
@@ -144,6 +173,7 @@ const NotificationScreen = () => {
             onLoadMore={handleLoadMore}
             loadingMore={loadingMore}
             onMarkAsRead={handleMarkAsRead}
+            onDeleteNotification={handleDeleteNotification}
           />
         )}
       </View>

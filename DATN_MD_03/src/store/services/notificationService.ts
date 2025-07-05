@@ -58,4 +58,23 @@ export const markAllNotificationsAsRead = async (token: string): Promise<any> =>
       status: error.response?.status,
     };
   }
+};
+
+export const deleteNotification = async (
+  notificationId: string,
+  token: string
+): Promise<any> => {
+  try {
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
+
+    const response = await api.delete(`/notification/${notificationId}`, { headers });
+    return response.data;
+  } catch (error: any) {
+    throw {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+    };
+  }
 }; 

@@ -14,6 +14,8 @@ import ResetPassWord from '../screens/LoginAndRegister/ResetPassWord';
 
 import DetailRoomScreen from '../screens/DetailRoomScreen/DetailRoomScreen';
 import NotificationScreen from '../screens/Notification/NotificationScreen';
+import TenantList from '../screens/ChuTro/TenantList/TenantList';
+import TenantDetailScreen from '../screens/ChuTro/TenantList/TenantDetailScreen';
 
 // Import gesture handler để hỗ trợ stack navigation
 import 'react-native-gesture-handler';
@@ -87,6 +89,20 @@ export default function TabScreen() {
           <Stack.Screen
             name="PersonalInformation"
             component={PersonalInformation}
+          />
+          <Stack.Screen
+            name="TenantList"
+            component={TenantList}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="TenantDetail"
+            component={TenantDetailScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
           />
         </Stack.Navigator>
       </NavigationContainer>

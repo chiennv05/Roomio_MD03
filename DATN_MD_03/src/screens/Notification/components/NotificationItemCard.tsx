@@ -6,7 +6,10 @@ import {
   TouchableOpacity,
   Image,
   ImageSourcePropType,
+  Animated,
+  I18nManager,
 } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
 import { responsiveFont, responsiveSpacing, moderateScale } from '../../../utils/responsive';
@@ -21,6 +24,8 @@ interface NotificationItemCardProps {
   type: string;
   icon?: ImageSourcePropType | any; // Icon để hiển thị
   onPress?: () => void;
+  onDelete?: () => void; // Callback khi nhấn nút xóa
+  id: string; // ID của thông báo
 }
 
 const NotificationItemCard: React.FC<NotificationItemCardProps> = ({ 
@@ -31,8 +36,13 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
   isRead,
   type,
   icon,
-  onPress 
+  onPress,
+  onDelete,
+  id
 }) => {
+  // Tham chiếu đến Swipeable để có thể đóng sau khi xóa
+  const swipeableRef = React.useRef<Swipeable>(null);
+
   // Icon dựa trên trạng thái đọc/chưa đọc
   const getStatusIcon = () => {
     if (isRead) {
@@ -56,20 +66,66 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
     if (isRead) {
       return {
         cardBg: Colors.gray200,
-    
       };
     } else {
       return {
         cardBg: Colors.limeGreen + '99',
-     
       };
     }
   };
 
   const statusColors = getStatusColor();
 
+  // Render nút xóa bên phải khi kéo
+  const renderRightActions = (
+    progress: Animated.AnimatedInterpolation<number>,
+    dragX: Animated.AnimatedInterpolation<number>
+  ) => {
+    const trans = dragX.interpolate({
+      inputRange: [-80, 0],
+      outputRange: [0, 80],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <View style={styles.rightActionContainer}>
+        <Animated.View
+          style={[
+            styles.deleteButton,
+            {
+              transform: [{ translateX: trans }],
+            },
+          ]}>
+          <TouchableOpacity
+            onPress={() => {
+              if (onDelete) {
+                onDelete();
+                if (swipeableRef.current) {
+                  swipeableRef.current.close();
+                }
+              }
+            }}
+            style={styles.deleteButtonInner}>
+            <Image
+              // source={require('../../../assets/icons/icon_delete.png')}
+              style={styles.deleteIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.deleteText}>Xóa</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+    );
+  };
+
   return (
-          <TouchableOpacity 
+    <Swipeable
+      ref={swipeableRef}
+      renderRightActions={renderRightActions}
+      friction={2}
+      rightThreshold={40}
+      overshootRight={false}>
+      <TouchableOpacity 
         style={[
           styles.container,
           {
@@ -79,28 +135,27 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
         onPress={onPress}
         activeOpacity={0.7}
       > 
-      {/* Icon trạng thái */}
-      <View style={[styles.iconContainer]}>
-        <Image 
-          source={getImageSource()}
-          style={[styles.iconImage]}
-          resizeMode="contain"
-        />
-      </View>
+        {/* Icon trạng thái */}
+        <View style={[styles.iconContainer]}>
+          <Image 
+            source={getImageSource()}
+            style={[styles.iconImage]}
+            resizeMode="contain"
+          />
+        </View>
 
-      {/* Nội dung */}
-      <View style={styles.contentContainer}>
-        <Text style={styles.title} numberOfLines={1}>
-          {title}
-        </Text>
-        
-        <Text style={styles.content} numberOfLines={2}>
-          {content}
-        </Text>
-{/*         
-        <Text style={styles.time}>{time}</Text> */}
-      </View>
-    </TouchableOpacity>
+        {/* Nội dung */}
+        <View style={styles.contentContainer}>
+          <Text style={styles.title} numberOfLines={1}>
+            {title}
+          </Text>
+          
+          <Text style={styles.content} numberOfLines={2}>
+            {content}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </Swipeable>
   );
 };
 
@@ -118,7 +173,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-
   },
   iconContainer: {
     width: moderateScale(40),
@@ -152,6 +206,35 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(11),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.mediumGray,
+  },
+  rightActionContainer: {
+    width: 80,
+    marginBottom: responsiveSpacing(12),
+  },
+  deleteButton: {
+    flex: 1,
+    backgroundColor: Colors.red,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderTopRightRadius: moderateScale(12),
+    borderBottomRightRadius: moderateScale(12),
+  },
+  deleteButtonInner: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+  },
+  deleteIcon: {
+    width: moderateScale(24),
+    height: moderateScale(24),
+    tintColor: Colors.white,
+    marginBottom: responsiveSpacing(4),
+  },
+  deleteText: {
+    color: Colors.white,
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Bold,
   },
 });
 

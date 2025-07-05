@@ -3,7 +3,8 @@ import { NotificationState, Notification } from '../../types/Notification';
 import { 
   getNotifications, 
   markNotificationAsRead, 
-  markAllNotificationsAsRead 
+  markAllNotificationsAsRead,
+  deleteNotification
 } from '../services/notificationService';
 
 const initialState: NotificationState = {
@@ -93,6 +94,22 @@ export const markAllAsRead = createAsyncThunk(
   }
 );
 
+// Async thunk để xóa thông báo
+export const deleteNotificationById = createAsyncThunk(
+  'notification/deleteNotification',
+  async (
+    { notificationId, token }: { notificationId: string; token: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      await deleteNotification(notificationId, token);
+      return notificationId;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Lỗi khi xóa thông báo');
+    }
+  }
+);
+
 const notificationSlice = createSlice({
   name: 'notification',
   initialState,
@@ -176,6 +193,23 @@ const notificationSlice = createSlice({
         state.unreadCount = 0;
       })
       .addCase(markAllAsRead.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+      
+      // Delete notification
+      .addCase(deleteNotificationById.fulfilled, (state, action) => {
+        const notificationId = action.payload;
+        const index = state.notifications.findIndex(n => n._id === notificationId);
+        if (index !== -1) {
+          // Kiểm tra nếu thông báo chưa đọc thì giảm unreadCount
+          if (state.notifications[index].status === 'unread') {
+            state.unreadCount = Math.max(0, state.unreadCount - 1);
+          }
+          // Xóa thông báo khỏi mảng
+          state.notifications.splice(index, 1);
+        }
+      })
+      .addCase(deleteNotificationById.rejected, (state, action) => {
         state.error = action.payload as string;
       });
   },

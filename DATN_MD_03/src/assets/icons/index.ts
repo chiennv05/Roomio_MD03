@@ -350,4 +350,12 @@ export const Icons = {
     android: 'asset:/icons/icon_empty_message.png',
 
   }),
+  IconListTenants: Platform.select({
+    ios: 'iconListTenants',
+    android: 'asset:/icons/iconListTenants.png',
+  }),
+  IconRomManagement: Platform.select({
+    ios: 'iconRomManagement',
+    android: 'asset:/icons/iconRomManagement.png',
+  }),
 };

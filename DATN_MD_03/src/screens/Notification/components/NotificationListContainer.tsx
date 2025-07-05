@@ -6,7 +6,8 @@ import { Fonts } from '../../../theme/fonts';
 import { responsiveSpacing, responsiveFont, moderateScale } from '../../../utils/responsive';
 import { Icons } from '../../../assets/icons';
 
-interface Notification {
+// Định nghĩa kiểu dữ liệu cho thông báo đã được format
+export interface FormattedNotification {
   id: string;
   title: string;
   content: string;
@@ -17,12 +18,13 @@ interface Notification {
 }
 
 interface NotificationListContainerProps {
-  notifications: Notification[];
+  notifications: FormattedNotification[];
   onRefresh?: () => void;
   refreshing?: boolean;
   onLoadMore?: () => void;
   loadingMore?: boolean;
   onMarkAsRead?: (notificationId: string) => void;
+  onDeleteNotification?: (notificationId: string) => void; // Thêm callback xóa thông báo
 }
 
 const NotificationListContainer: React.FC<NotificationListContainerProps> = ({ 
@@ -32,12 +34,19 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
   onLoadMore,
   loadingMore = false,
   onMarkAsRead,
+  onDeleteNotification,
 }) => {
   if (!notifications || notifications.length === 0) return null;
 
-  const handleNotificationPress = (notification: Notification) => {
+  const handleNotificationPress = (notification: FormattedNotification) => {
     if (!notification.isRead && onMarkAsRead) {
       onMarkAsRead(notification.id);
+    }
+  };
+
+  const handleDeleteNotification = (notificationId: string) => {
+    if (onDeleteNotification) {
+      onDeleteNotification(notificationId);
     }
   };
 
@@ -61,7 +70,7 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
     }
   };
 
-  const renderItem = ({ item }: { item: Notification }) => (
+  const renderItem = ({ item }: { item: FormattedNotification }) => (
     <View style={styles.notificationWrapper}>
       {/* Ngày ở góc trên ngoài */}
       <View style={styles.dateContainer}>
@@ -70,6 +79,7 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
       
       {/* Notification Card */}
       <NotificationItemCard
+        id={item.id}
         title={item.title}
         content={item.content}
         time={item.time}
@@ -78,6 +88,7 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
         type={item.type}
         icon={getNotificationIcon(item.isRead)}
         onPress={() => handleNotificationPress(item)}
+        onDelete={() => handleDeleteNotification(item.id)}
       />
     </View>
   );
