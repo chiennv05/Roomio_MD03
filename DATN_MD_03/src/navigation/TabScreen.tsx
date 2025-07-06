@@ -19,6 +19,7 @@ import 'react-native-gesture-handler';
 
 import PersonalInformation from '../screens/Profile/PersonalInformation';
 import MyRoomScreen from '../screens/ChuTro/MyRoom/MyRoomScreen';
+import AddRoomScreen from '../screens/ChuTro/AddRoom/AddRoomScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -89,6 +90,7 @@ export default function TabScreen() {
             component={PersonalInformation}
           />
           <Stack.Screen name="LandlordRoom" component={MyRoomScreen} />
+          <Stack.Screen name="AddRooom" component={AddRoomScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

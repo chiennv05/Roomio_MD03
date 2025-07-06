@@ -51,23 +51,23 @@ export default function ProfileScreen() {
   const handleConfirmLogout = async () => {
     if (!token) {
       setShowLogoutModal(false);
-      navigation.replace('Login');
+      navigation.replace('Login', {});
       return;
     }
 
     try {
       await dispatch(logoutUser(token)).unwrap();
       setShowLogoutModal(false);
-      navigation.replace('Login');
+      navigation.replace('Login', {});
     } catch (error) {
       // Dù có lỗi API, vẫn logout local và navigate
       setShowLogoutModal(false);
-      navigation.replace('Login');
+      navigation.replace('Login', {});
     }
   };
 
   const handleLogin = () => {
-    navigation.replace('Login');
+    navigation.replace('Login', {});
   };
 
   const hanleUpdateProfile = () => {
@@ -78,7 +78,7 @@ export default function ProfileScreen() {
         [
           {
             text: 'OK',
-            onPress: () => navigation.replace('Login'), // Chuyển sang màn Login
+            onPress: () => navigation.replace('Login', {}), // Chuyển sang màn Login
           },
         ],
         {cancelable: false},
@@ -96,6 +96,10 @@ export default function ProfileScreen() {
       </SafeAreaView>
     );
   }
+
+  const handleGoLandlord = () => {
+    navigation.navigate('LandlordRoom');
+  };
 
   // Show normal profile screen for logged in users
   return (
@@ -132,6 +136,14 @@ export default function ProfileScreen() {
           label="Hóa đơn thu chi"
           iconEnd={Icons.IconNext}
         />
+        {user.role === 'chuTro' && (
+          <SettingItem
+            iconStat={Icons.IconPaper}
+            label="Quản lý phòng trọ "
+            iconEnd={Icons.IconNext}
+            onPress={handleGoLandlord}
+          />
+        )}
       </View>
 
       <View style={styles.box}>

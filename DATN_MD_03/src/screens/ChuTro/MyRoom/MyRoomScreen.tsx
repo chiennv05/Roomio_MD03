@@ -1,11 +1,4 @@
-import React, {
-  use,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   View,
   FlatList,
@@ -36,8 +29,12 @@ import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../../store';
 import {getLandlordRooms} from '../../../store/slices/landlordRoomsSlice';
 import {LoadingAnimation} from '../../../components';
+import {useNavigation} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {RootStackParamList} from '../../../types/route';
 
 export default function MyRoomScreen() {
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const dispatch = useDispatch<AppDispatch>();
   const {rooms, loading} = useSelector(
     (state: RootState) => state.landlordRooms,
@@ -59,6 +56,9 @@ export default function MyRoomScreen() {
   });
 
   useEffect(() => {
+    if (!user?.auth_token) {
+      return;
+    }
     dispatch(getLandlordRooms(user.auth_token));
   }, [dispatch, user?.auth_token]);
 
@@ -100,12 +100,21 @@ export default function MyRoomScreen() {
   }, []);
 
   const handleGoback = () => {
-    // logic điều hướng
+    navigation.goBack();
+  };
+  const handleAddRoom = () => {
+    navigation.navigate('AddRooom');
   };
 
   return (
     <View style={styles.container}>
-      <UIHeader title="Phòng trọ của tôi" onPress={handleGoback} />
+      <UIHeader
+        title="Phòng trọ của tôi"
+        onPressLeft={handleGoback}
+        iconLeft={Icons.IconArrowLeft}
+        iconRight={Icons.IconAdd}
+        onPressRight={handleAddRoom}
+      />
 
       {/* Tìm kiếm */}
       <View style={styles.conatinerSearch}>
@@ -198,5 +207,7 @@ const styles = StyleSheet.create({
   },
   containerListRooms: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

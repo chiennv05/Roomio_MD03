@@ -12,24 +12,41 @@ import {Fonts} from '../../../../theme/fonts';
 
 interface HeaderProps {
   title: string;
-  onPress: () => void;
+  iconLeft?: string;
+  iconRight?: string;
+  onPressLeft?: () => void;
+  onPressRight?: () => void;
 }
 
-const UIHeader = ({title, onPress}: HeaderProps) => {
+const UIHeader = ({
+  title,
+  iconLeft,
+  iconRight,
+  onPressLeft,
+  onPressRight,
+}: HeaderProps) => {
   return (
     <View style={styles.container}>
       <View style={styles.containerLeftAndRight}>
-        <TouchableOpacity style={styles.styleButton} onPress={onPress}>
-          <Image
-            source={{uri: Icons.IconArrowLeft}}
-            style={styles.styleIconButton}
-          />
-        </TouchableOpacity>
+        {iconLeft && (
+          <TouchableOpacity style={styles.styleButton} onPress={onPressLeft}>
+            <Image
+              source={{uri: Icons.IconArrowLeft}}
+              style={styles.styleIconButton}
+            />
+          </TouchableOpacity>
+        )}
       </View>
       <View style={styles.containerCenter}>
         <Text style={styles.textTitle}>{title}</Text>
       </View>
-      <View style={styles.containerLeftAndRight} />
+      <View style={styles.containerLeftAndRight}>
+        {iconRight && (
+          <TouchableOpacity style={styles.styleButton} onPress={onPressRight}>
+            <Image source={{uri: iconRight}} style={styles.styleIconRight} />
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 };
@@ -44,9 +61,11 @@ const styles = StyleSheet.create({
   },
   containerLeftAndRight: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   containerCenter: {
-    flex: 3,
+    flex: 5,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -67,5 +86,9 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
     fontWeight: '700',
+  },
+  styleIconRight: {
+    width: responsiveIcon(24),
+    height: responsiveIcon(24),
   },
 });
