@@ -10,7 +10,9 @@ interface RoomInfoProps {
   price: string;
   address: string;
   roomCode: string;
-  area: number; // Chỉ dùng area thực từ API
+  area: number;
+  maxOccupancy: number;
+  deposit?: number; // Số tháng đặt cọc, default = 1
 }
 
 const RoomInfo: React.FC<RoomInfoProps> = ({
@@ -19,7 +21,31 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
   address,
   roomCode,
   area,
+  maxOccupancy,
+  deposit = 1, // Default 1 tháng
 }) => {
+  // Chuẩn bị data cho 3 cột
+  const infoItems = [
+    {
+      key: 'area',
+      icon: Icons.IconArea,
+      label: 'Diện tích',
+      value: area ? `${area}m²` : '',
+    },
+    {
+      key: 'maxOccupancy',
+      icon: Icons.IconSoNguoi,
+      label: 'Số người',
+      value: maxOccupancy || '',
+    },
+    {
+      key: 'deposit',
+      icon: Icons.IconTienCoc,
+      label: 'Đặt cọc',
+      value: deposit ? `${deposit} tháng` : '',
+    },
+  ];
+
   return (
     <View style={styles.container}>
       {/* Title và Price */}
@@ -48,21 +74,16 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
         <Text style={styles.address}>{address}</Text>
       </View>
 
-      {/* Thông tin - Chỉ hiển thị diện tích thực */}
+      {/* Thông tin 3 cột ngang, không bọc ngoài */}
       <Text style={styles.sectionTitle}>Thông tin</Text>
-      <View style={styles.infoContainer}>
-        <View style={styles.infoItem}>
-          <View style={styles.infoIcon}>
-            <Image 
-              source={{ uri: Icons.IconArea }}
-              style={styles.infoIconImage}
-            />
+      <View style={styles.infoRowNoBg}>
+        {infoItems.map(item => (
+          <View style={styles.infoCol} key={item.key}>
+            <Image source={{ uri: item.icon }} style={styles.infoIconImageNoBg} />
+            <Text style={styles.infoLabel}>{item.label}</Text>
+            <Text style={styles.infoValue}>{item.value}</Text>
           </View>
-          <View style={styles.infoContent}>
-            <Text style={styles.infoLabel}>Diện tích</Text>
-            <Text style={styles.infoValue}>{area}m²</Text>
-          </View>
-        </View>
+        ))}
       </View>
     </View>
   );
@@ -97,9 +118,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  roomCodeIconText: {
-    fontSize: 16,
-  },
   roomCodeIconImage: {
     width: 16,
     height: 16,
@@ -123,9 +141,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 2,
   },
-  addressIconText: {
-    fontSize: 16,
-  },
   addressIconImage: {
     width: 16,
     height: 16,
@@ -144,45 +159,36 @@ const styles = StyleSheet.create({
     color: Colors.black,
     marginBottom: responsiveSpacing(16),
   },
-  infoContainer: {
-    backgroundColor: Colors.lightGray,
-    borderRadius: 12,
-    padding: responsiveSpacing(16),
-  },
-  infoItem: {
+  infoRowNoBg: {
     flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: responsiveSpacing(8),
+    marginTop: responsiveSpacing(4),
   },
-  infoIcon: {
-    width: 40,
-    height: 40,
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: responsiveSpacing(12),
-  },
-  infoIconText: {
-    fontSize: 20,
-  },
-  infoIconImage: {
-    width: 20,
-    height: 20,
-    tintColor: Colors.darkGreen,
-  },
-  infoContent: {
+  infoCol: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoIconImageNoBg: {
+    width: 32,
+    height: 32,
+    tintColor: Colors.darkGreen,
+    marginBottom: responsiveSpacing(4),
   },
   infoLabel: {
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(13),
     color: Colors.textGray,
     fontFamily: Fonts.Roboto_Regular,
     marginBottom: responsiveSpacing(2),
+    textAlign: 'center',
   },
   infoValue: {
-    fontSize: responsiveFont(16),
+    fontSize: responsiveFont(17),
     color: Colors.black,
     fontFamily: Fonts.Roboto_Bold,
+    textAlign: 'center',
   },
 });
 

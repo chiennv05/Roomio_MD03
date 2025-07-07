@@ -358,4 +358,12 @@ export const Icons = {
     ios: 'iconRomManagement',
     android: 'asset:/icons/iconRomManagement.png',
   }),
+  IconTienCoc: Platform.select({
+    ios: 'icon_tien_coc',
+    android: 'asset:/icons/icon_tien_coc.png',
+  }),
+  IconSoNguoi: Platform.select({
+    ios: 'icon_so_nguoi',
+    android: 'asset:/icons/icon_so_nguoi.png',
+  }),
 };

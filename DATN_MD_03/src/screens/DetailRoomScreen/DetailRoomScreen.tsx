@@ -104,6 +104,7 @@ const DetailRoomScreen: React.FC = () => {
       address: roomDetail.location?.addressText || 'Địa chỉ chưa cập nhật',
       roomCode: roomDetail.roomNumber || 'N/A',
       area: roomDetail.area || 0,
+      maxOccupancy: roomDetail.maxOccupancy || 1,
       photos: roomDetail.photos || [],
       servicePrices: roomDetail.location?.servicePrices || {},
       servicePriceConfig: roomDetail.location?.servicePriceConfig || {},
@@ -411,6 +412,8 @@ const DetailRoomScreen: React.FC = () => {
                 address={roomDetailData.address}
                 roomCode={roomDetailData.roomCode}
                 area={roomDetailData.area}
+                maxOccupancy={roomDetailData.maxOccupancy}
+                deposit={1}
               />
 
               <View style={styles.divider} />

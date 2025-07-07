@@ -113,18 +113,10 @@ const AnimatedServiceItem: React.FC<AnimatedServiceItemProps> = ({ service, inde
   });
 
   return (
-    <Animated.View style={[styles.serviceItem, itemStyle]}>
-      <View style={styles.serviceIconContainer}>
-        {service.icon ? (
-          <Image source={{ uri: service.icon }} style={styles.serviceIcon} resizeMode="contain" />
-        ) : (
-          <Text style={styles.serviceIconText}>💰</Text>
-        )}
-      </View>
-      <Text style={styles.serviceLabel} numberOfLines={1}>{service.label}</Text>
-      <Text style={styles.serviceValue} numberOfLines={2}>
-        {`${service.value.toLocaleString('vi-VN')}${service.unit}`}
-      </Text>
+    <Animated.View style={[styles.serviceItemNoBg, itemStyle]}>
+      <Image source={{ uri: service.icon }} style={styles.serviceIconNoBg} resizeMode="contain" />
+      <Text style={styles.serviceLabel}>{service.label}</Text>
+      <Text style={styles.serviceValue}>{`${service.value.toLocaleString('vi-VN')}${service.unit}`}</Text>
     </Animated.View>
   );
 };
@@ -224,7 +216,7 @@ const ServiceFees: React.FC<ServiceFeesProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Phí dịch vụ</Text>
+      <Text style={styles.title}>Dịch vụ</Text>
       <ScrollView
         ref={scrollViewRef}
         horizontal
@@ -232,8 +224,8 @@ const ServiceFees: React.FC<ServiceFeesProps> = ({
         onScroll={handleScroll}
         scrollEventThrottle={16}
         decelerationRate="fast"
-        contentContainerStyle={styles.scrollContent}
-        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContentNoBg}
+        style={styles.scrollViewNoBg}
       >
         {allServices.map((service, index) => (
           <AnimatedServiceItem
@@ -273,34 +265,29 @@ const styles = StyleSheet.create({
     color: Colors.black,
     marginBottom: responsiveSpacing(16),
   },
-  scrollView: {
+  scrollViewNoBg: {
     height: responsiveSpacing(isTablet ? 140 : isSmallDevice ? 100 : 120),
+    backgroundColor: 'transparent',
   },
-  scrollContent: {
+  scrollContentNoBg: {
     paddingHorizontal: responsiveSpacing(8),
     alignItems: 'center',
+    backgroundColor: 'transparent',
   },
-  serviceItem: {
+  serviceItemNoBg: {
     alignItems: 'center',
     width: ITEM_WIDTH,
     marginHorizontal: responsiveSpacing(4),
-    backgroundColor: Colors.white,
+    backgroundColor: 'transparent',
     paddingVertical: responsiveSpacing(isTablet ? 16 : isSmallDevice ? 10 : 12),
     paddingHorizontal: responsiveSpacing(8),
-    borderRadius: responsiveSpacing(8),
+    borderRadius: 0,
   },
-  serviceIconContainer: {
-    width: responsiveIcon(isTablet ? 56 : isSmallDevice ? 40 : 48),
-    height: responsiveIcon(isTablet ? 56 : isSmallDevice ? 40 : 48),
-    backgroundColor: Colors.lightGray,
-    borderRadius: responsiveIcon(isTablet ? 28 : isSmallDevice ? 20 : 24),
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: responsiveSpacing(8),
-  },
-  serviceIcon: {
+  serviceIconNoBg: {
     width: responsiveIcon(isTablet ? 32 : isSmallDevice ? 24 : 28),
     height: responsiveIcon(isTablet ? 32 : isSmallDevice ? 24 : 28),
+    tintColor: Colors.darkGreen,
+    marginBottom: responsiveSpacing(8),
   },
   serviceLabel: {
     fontSize: responsiveFont(14),
@@ -317,11 +304,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     lineHeight: responsiveFont(12),
-  },
-  serviceIconText: {
-    fontSize: responsiveFont(isTablet ? 28 : isSmallDevice ? 16 : 20),
-    color: Colors.textGray,
-    fontFamily: Fonts.Roboto_Regular,
   },
   indicatorContainer: {
     flexDirection: 'row',
