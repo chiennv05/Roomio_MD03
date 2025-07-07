@@ -368,10 +368,32 @@ export const Icons = {
     ios: 'icon_edit_black',
     android: 'asset:/icons/icon_edit_black.png',
   }),
-  IconElectricalBlack: Platform.select({
+  // phí dịch vụ
+  IconElectricalSelected: Platform.select({
     ios: 'icon_electrical_black',
     android: 'asset:/icons/icon_electrical_black.png',
   }),
+  IconElectricalDefault: Platform.select({
+    ios: 'icon_electrical_gray',
+    android: 'asset:/icons/icon_electrical_gray.png',
+  }),
+  IconWarterDropDefault: Platform.select({
+    ios: 'icon_water_drop_gray',
+    android: 'asset:/icons/icon_water_drop_gray.png',
+  }),
+  IconWarterDropSelected: Platform.select({
+    ios: 'icon_water_drop_black',
+    android: 'asset:/icons/icon_water_drop_black.png',
+  }),
+  IconServiceSelected: Platform.select({
+    ios: 'icon_servive_black',
+    android: 'asset:/icons/icon_servive_black.png',
+  }),
+  IconServiceDefault: Platform.select({
+    ios: 'icon_servive_gray',
+    android: 'asset:/icons/icon_servive_gray.png',
+  }),
+
   // tiện nghi
   IconWifiSelectd: Platform.select({
     ios: 'icon_wifi_selected',

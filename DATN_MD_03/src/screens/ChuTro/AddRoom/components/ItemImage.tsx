@@ -1,29 +1,40 @@
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
+import {StyleSheet, TouchableOpacity} from 'react-native';
 import React from 'react';
 import {Image} from 'react-native';
 import {
   moderateScale,
   responsiveIcon,
   SCREEN,
+  verticalScale,
 } from '../../../../utils/responsive';
 import {Icons} from '../../../../assets/icons';
 import {Colors} from '../../../../theme/color';
+import {ImageUploadResult} from '../../../../types/ImageUploadResult';
 
 const WIGHT_IMAGE = SCREEN.width * 0.28;
+interface ItemImageProps {
+  item: ImageUploadResult;
+  onDeleteImage: (fileName: string) => void;
+  onClickItem: (fileName: string) => void;
+}
 
-const ItemImage = () => {
+const ItemImage = ({item, onDeleteImage, onClickItem}: ItemImageProps) => {
   return (
-    <View style={styles.container}>
+    <TouchableOpacity
+      style={styles.container}
+      onPress={() => onClickItem(item.url)}>
       <Image
         source={{
-          uri: 'https://imperia-smartcity.com.vn/wp-content/uploads/2024/11/a1.jpg',
+          uri: item.url,
         }}
         style={styles.styleImage}
       />
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => onDeleteImage(item.fileName)}>
         <Image source={{uri: Icons.IconDelete}} style={styles.styleIcon} />
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -33,6 +44,8 @@ const styles = StyleSheet.create({
   container: {
     width: WIGHT_IMAGE,
     height: WIGHT_IMAGE,
+    marginHorizontal: verticalScale(3.9),
+    marginBottom: verticalScale(10),
   },
   styleImage: {
     width: WIGHT_IMAGE,

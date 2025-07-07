@@ -5,7 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
 } from 'react-native';
-import React from 'react';
+import React, {useState} from 'react';
 import {
   responsiveFont,
   responsiveIcon,
@@ -20,10 +20,12 @@ interface InputProps {
   placeholder: string;
   onChangeText: (text: string) => void;
   editable: boolean;
-  width?: number; // <-- thêm tham số width (tùy chọn)
+  width?: number;
   iconRight?: string;
   onPressIcon?: () => void;
   keyboardType?: KeyboardTypeOptions;
+  height?: number;
+  borderRadius?: number;
 }
 
 const ItemInput = ({
@@ -31,23 +33,49 @@ const ItemInput = ({
   placeholder,
   onChangeText,
   editable,
-  width = SCREEN.width * 0.9, // <-- giá trị mặc định nếu không truyền
+  width = SCREEN.width * 0.9,
   iconRight,
   onPressIcon,
   keyboardType,
+  height = verticalScale(50),
+  borderRadius = 24,
 }: InputProps) => {
+  const isMultiline = placeholder === 'Mô tả';
+  const [inputHeight, setInputHeight] = useState(height);
+
   return (
     <TouchableOpacity
-      disabled={editable}
-      style={[styles.container, {width}]}
-      onPress={onPressIcon}>
+      style={[
+        styles.container,
+        // eslint-disable-next-line react-native/no-inline-styles
+        {
+          width,
+          borderRadius,
+          minHeight: isMultiline ? inputHeight : height,
+          alignItems: isMultiline ? 'flex-start' : 'center',
+        },
+      ]}>
       <TextInput
-        style={styles.containerInput}
+        style={[
+          styles.containerInput,
+          isMultiline && styles.multilineInput,
+          {
+            minHeight: height,
+            height: isMultiline ? inputHeight : height,
+          },
+        ]}
+        multiline={isMultiline}
         placeholder={placeholder}
         value={value}
         onChangeText={onChangeText}
         editable={editable}
         keyboardType={keyboardType || 'default'}
+        textAlignVertical={isMultiline ? 'top' : 'center'}
+        onContentSizeChange={e => {
+          if (isMultiline) {
+            setInputHeight(e.nativeEvent.contentSize.height + 10);
+          }
+        }}
       />
       {iconRight && (
         <TouchableOpacity style={styles.buttonIcon} onPress={onPressIcon}>
@@ -62,16 +90,13 @@ export default React.memo(ItemInput);
 
 const styles = StyleSheet.create({
   container: {
-    height: verticalScale(50),
     borderWidth: 1,
-    borderRadius: 50,
     borderColor: Colors.gray200,
     backgroundColor: Colors.white,
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingStart: 10,
+    paddingHorizontal: 10,
     marginVertical: verticalScale(5),
-    alignSelf: 'center', // căn giữa nếu dùng width nhỏ hơn toàn màn hình
+    alignSelf: 'center',
   },
   containerInput: {
     flex: 1,
@@ -80,6 +105,10 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     color: Colors.black,
   },
+  multilineInput: {
+    paddingTop: 10,
+    paddingBottom: 10,
+  },
   styleIcon: {
     width: responsiveIcon(24),
     height: responsiveIcon(24),
@@ -87,5 +116,6 @@ const styles = StyleSheet.create({
   buttonIcon: {
     position: 'absolute',
     right: 10,
+    top: 12,
   },
 });

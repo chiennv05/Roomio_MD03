@@ -8,7 +8,9 @@ export type OptionCategory =
   | 'building' // Tiện ích tòa nhà
   | 'parking' // Gửi xe
   | 'rules' // Quy định
-  | 'internet'; // Internet
+  | 'internet' // Internet
+  | 'required' // Bắt buộc
+  | 'optional'; // Không bắt buộc
 
 export interface OptionItem {
   value: string; // ví dụ: "dieuHoa"

@@ -1,4 +1,4 @@
-import {Image, StyleSheet, Text, View} from 'react-native';
+import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
 import {
   responsiveFont,
@@ -12,13 +12,18 @@ import {Colors} from '../../../../theme/color';
 interface TitleProps {
   title: string;
   icon?: string;
+  onPress?: () => void;
 }
 
-const ItemTitle = ({title, icon}: TitleProps) => {
+const ItemTitle = ({title, icon, onPress}: TitleProps) => {
   return (
     <View style={styles.container}>
       <Text style={styles.textTitle}>{title} </Text>
-      {icon && <Image source={{uri: icon}} style={styles.styleIcon} />}
+      {icon && (
+        <TouchableOpacity onPress={onPress}>
+          <Image source={{uri: icon}} style={styles.styleIcon} />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

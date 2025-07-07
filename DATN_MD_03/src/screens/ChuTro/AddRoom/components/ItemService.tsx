@@ -5,35 +5,41 @@ import {
   responsiveFont,
   responsiveIcon,
   SCREEN,
+  verticalScale,
 } from '../../../../utils/responsive';
 import {Colors} from '../../../../theme/color';
 import {Icons} from '../../../../assets/icons';
 import {Fonts} from '../../../../theme/fonts';
+import {ItemSeviceOptions} from '../utils/seviceOptions';
 
 interface ServiceProps {
   status: boolean;
+  item: ItemSeviceOptions;
+  onPress: (item: ItemSeviceOptions) => void;
 }
 
 const WIGHT_IMAGE = SCREEN.width * 0.28;
 
-const ItemService = ({status}: ServiceProps) => {
+const ItemService = ({status = false, item, onPress}: ServiceProps) => {
+  const iconKey = `${item.iconBase}${status ? 'Selected' : 'Default'}`;
+  console.log(iconKey);
+  const icon = Icons[iconKey as keyof typeof Icons];
+  console.log(icon);
   return (
     <View
       style={[
         styles.container,
         {backgroundColor: status ? Colors.limeGreen : Colors.backgroud},
       ]}>
-      <Image
-        source={{uri: Icons.IconElectricalBlack}}
-        style={styles.styleIconCenter}
-      />
-      <Text style={styles.textTitle}>Điện</Text>
-      <Text style={styles.textPrice}>4000</Text>
+      <Image source={{uri: icon}} style={styles.styleIconCenter} />
+      <Text style={styles.textTitle}>{item.label}</Text>
+      <Text style={styles.textPrice}>{item.price}</Text>
       <TouchableOpacity
         style={[
           styles.button,
           {backgroundColor: status ? Colors.darkGray : Colors.limeGreen},
-        ]}>
+        ]}
+        onPress={() => onPress(item)}>
         <Image
           source={{uri: status ? Icons.IconEditWhite : Icons.IconEditBlack}}
           style={styles.styleIcon}
@@ -53,6 +59,8 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(8),
     justifyContent: 'center',
     alignItems: 'center',
+    marginHorizontal: verticalScale(3.9),
+    marginBottom: verticalScale(10),
   },
   button: {
     width: responsiveIcon(32),

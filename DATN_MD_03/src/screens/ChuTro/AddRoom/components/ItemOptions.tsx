@@ -14,7 +14,6 @@ const ItemOptions = ({item, selected, onPress}: ItemOptionsProps) => {
   const iconKey = `${item.iconBase}${selected ? 'Selectd' : 'Default'}`;
   const icon = Icons[iconKey as keyof typeof Icons];
 
-  console.log('hiii');
   return (
     <TouchableOpacity
       style={[styles.container, selected && styles.selected]}
