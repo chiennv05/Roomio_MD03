@@ -134,3 +134,12 @@ export interface Contract {
   createdAt?: string; // Ngày tạo
   updatedAt?: string; // Ngày cập nhật cuối
 }
+
+export type CreateContractPayload = {
+  notificationId: string;
+  contractTerm: number; // số tháng
+  startDate: string; // định dạng yyyy-MM-dd
+  rules: string;
+  additionalTerms: string;
+  coTenants?: string[]; // <-- optional
+};
