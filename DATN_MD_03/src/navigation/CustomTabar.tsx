@@ -29,7 +29,6 @@ export default function CustomTabar({state, navigation}: BottomTabBarProps) {
             target: route.key,
             canPreventDefault: true,
           });
-
           if (!isFocused && !event.defaultPrevented) {
             navigation.navigate(route.name);
           }

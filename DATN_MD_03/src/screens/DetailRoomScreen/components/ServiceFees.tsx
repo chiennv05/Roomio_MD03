@@ -15,6 +15,7 @@ import {
   isTablet
 } from '../../../utils/responsive';
 import { Icons } from '../../../assets/icons';
+import { ServicePrices, ServicePriceConfig, CustomService } from '../../../types/Room';
 
 // Responsive item width
 const getItemWidth = () => {
@@ -29,37 +30,64 @@ const getItemWidth = () => {
 
 const ITEM_WIDTH = getItemWidth();
 
-interface ServicePricesType {
-  electricity?: number;
-  water?: number;
-  cleaning?: number;
-  parking?: number;
-  internet?: number;
-  elevator?: number;
-}
-
 interface ServiceFeesProps {
-  servicePrices: ServicePricesType;
+  servicePrices: ServicePrices;
+  servicePriceConfig?: ServicePriceConfig;
+  customServices?: CustomService[];
 }
 
 // Mapping cho service labels và icons
 const serviceMapping = {
-  electricity: { label: 'Điện', icon: Icons.IconTienDien, unit: '/kWh' },
-  water: { label: 'Nước', icon: Icons.IconTienNuoc, unit: '/m³' },
-  cleaning: { label: 'Dịch vụ', icon: Icons.IconVeSinh, unit: '/tháng' },
-  parking: { label: 'Gửi xe', icon: Icons.IconGuiXe, unit: '/tháng' },
-  internet: { label: 'Internet', icon: Icons.IconWifiMienPhi, unit: '/tháng' },
-  elevator: { label: 'Thang máy', icon: Icons.IconThangMay, unit: '/tháng' },
+  electricity: { label: 'Điện', icon: Icons.IconTienDien },
+  water: { label: 'Nước', icon: Icons.IconTienNuoc },
+  cleaning: { label: 'Dịch vụ', icon: Icons.IconVeSinh },
+  parking: { label: 'Gửi xe', icon: Icons.IconGuiXe },
+  internet: { label: 'Internet', icon: Icons.IconWifiMienPhi },
+  elevator: { label: 'Thang máy', icon: Icons.IconThangMay },
 };
 
-interface AnimatedServiceItemProps {
-  service: {
-    key: string;
-    value: number;
-    label: string;
-    icon: string | undefined;
-    unit: string;
+// Hàm lấy unit theo loại pricing
+const getPriceUnit = (serviceKey: string, priceType?: string): string => {
+  const baseUnits: Record<string, string> = {
+    electricity: 'kWh',
+    water: 'm³',
   };
+
+  // Xử lý theo từng priceType
+  switch (priceType) {
+    case 'perUsage':
+      // Nếu là điện hoặc nước, sử dụng unit cơ bản
+      if (baseUnits[serviceKey]) {
+        return `/${baseUnits[serviceKey]}`;
+      }
+      return '/lần sử dụng';
+      
+    case 'perPerson':
+      return '/người/tháng';
+      
+    case 'perRoom':
+      return '/phòng/tháng';
+      
+    default:
+      // Fallback: nếu không có priceType hoặc không xác định
+      if (baseUnits[serviceKey]) {
+        return `/${baseUnits[serviceKey]}`;
+      }
+      return '/tháng';
+  }
+};
+
+interface ProcessedService {
+  key: string;
+  value: number;
+  label: string;
+  icon: string | undefined;
+  unit: string;
+  type: 'basic' | 'custom';
+}
+
+interface AnimatedServiceItemProps {
+  service: ProcessedService;
   index: number;
   scrollX: Animated.SharedValue<number>;
 }
@@ -101,22 +129,74 @@ const AnimatedServiceItem: React.FC<AnimatedServiceItemProps> = ({ service, inde
   );
 };
 
-const ServiceFees: React.FC<ServiceFeesProps> = ({ servicePrices }) => {
+// Hàm lấy icon phù hợp cho custom service dựa trên tên
+const getCustomServiceIcon = (serviceName: string): string => {
+  const name = serviceName.toLowerCase();
+  
+  if (name.includes('internet') || name.includes('wifi')) {
+    return Icons.IconWifiMienPhi || Icons.IconVeSinh || '';
+  }
+  if (name.includes('máy giặt') || name.includes('giặt')) {
+    return Icons.IconMayGiat || Icons.IconVeSinh || '';
+  }
+  if (name.includes('gửi xe') || name.includes('parking') || name.includes('xe')) {
+    return Icons.IconGuiXe || Icons.IconVeSinh || '';
+  }
+  if (name.includes('vệ sinh') || name.includes('dọn dẹp') || name.includes('cleaning')) {
+    return Icons.IconVeSinh || '';
+  }
+  if (name.includes('thang máy') || name.includes('elevator')) {
+    return Icons.IconThangMay || Icons.IconVeSinh || '';
+  }
+  if (name.includes('bảo vệ') || name.includes('security')) {
+    return Icons.IconBaoVe || Icons.IconVeSinh || '';
+  }
+  
+  // Icon mặc định cho dịch vụ
+  return Icons.IconVeSinh || '';
+};
+
+const ServiceFees: React.FC<ServiceFeesProps> = ({ 
+  servicePrices, 
+  servicePriceConfig = {},
+  customServices = [] 
+}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useSharedValue(0);
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Lọc ra những service có giá > 0
-  const activeServices = Object.entries(servicePrices)
+  // Xử lý basic services (điện, nước, v.v.)
+  const basicServices: ProcessedService[] = Object.entries(servicePrices)
     .filter(([_key, value]) => value && value > 0)
-    .map(([key, value]) => ({
-      key,
-      value: value as number,
-      ...serviceMapping[key as keyof typeof serviceMapping]
-    }));
+    .map(([key, value]) => {
+      const serviceInfo = serviceMapping[key as keyof typeof serviceMapping];
+      const priceType = servicePriceConfig[key as keyof ServicePriceConfig];
+      
+      return {
+        key,
+        value: value as number,
+        label: serviceInfo?.label || key,
+        icon: serviceInfo?.icon,
+        unit: getPriceUnit(key, priceType),
+        type: 'basic' as const,
+      };
+    });
+
+  // Xử lý custom services
+  const processedCustomServices: ProcessedService[] = customServices.map((service, index) => ({
+    key: `custom_${index}`,
+    value: service.price,
+    label: service.name,
+    icon: getCustomServiceIcon(service.name),
+    unit: getPriceUnit('custom', service.priceType),
+    type: 'custom' as const,
+  }));
+
+  // Kết hợp tất cả services
+  const allServices = [...basicServices, ...processedCustomServices];
 
   // Nếu không có service nào thì không hiển thị section
-  if (activeServices.length === 0) {
+  if (allServices.length === 0) {
     return null;
   }
 
@@ -132,7 +212,7 @@ const ServiceFees: React.FC<ServiceFeesProps> = ({ servicePrices }) => {
     const scrollProgress = maxScrollX > 0 ? offsetX / maxScrollX : 0;
     
     // Calculate which indicator should be active based on scroll progress
-    const totalPages = Math.max(1, Math.ceil(activeServices.length / 3));
+    const totalPages = Math.max(1, Math.ceil(allServices.length / 3));
     const currentPage = Math.min(Math.floor(scrollProgress * totalPages), totalPages - 1);
     
     setCurrentIndex(currentPage);
@@ -140,7 +220,7 @@ const ServiceFees: React.FC<ServiceFeesProps> = ({ servicePrices }) => {
 
   // Calculate total pages for indicators
   const itemsPerPage = 3;
-  const totalPages = Math.max(1, Math.ceil(activeServices.length / itemsPerPage));
+  const totalPages = Math.max(1, Math.ceil(allServices.length / itemsPerPage));
 
   return (
     <View style={styles.container}>
@@ -155,7 +235,7 @@ const ServiceFees: React.FC<ServiceFeesProps> = ({ servicePrices }) => {
         contentContainerStyle={styles.scrollContent}
         style={styles.scrollView}
       >
-        {activeServices.map((service, index) => (
+        {allServices.map((service, index) => (
           <AnimatedServiceItem
             key={service.key}
             service={service}
@@ -166,7 +246,7 @@ const ServiceFees: React.FC<ServiceFeesProps> = ({ servicePrices }) => {
       </ScrollView>
 
       {/* Indicators */}
-      {activeServices.length > itemsPerPage && (
+      {allServices.length > itemsPerPage && (
         <View style={styles.indicatorContainer}>
           {Array.from({ length: totalPages }).map((_, index) => (
             <View

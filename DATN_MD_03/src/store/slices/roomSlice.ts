@@ -74,7 +74,15 @@ export const fetchRoomDetail = createAsyncThunk(
     try {
       const res = await getRoomDetail(roomId, token);
       if (!res?.success) throw new Error(res?.message);
-      return res.data;
+      
+      // Merge isInWishlist vào room object và trả về room với thông tin complete
+      const roomWithWishlist = {
+        ...res.data.room,
+        isFavorited: res.data.isInWishlist,
+        owner: res.data.owner,
+      };
+      
+      return roomWithWishlist;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Lấy chi tiết phòng thất bại');
     }
@@ -304,27 +312,39 @@ const roomSlice = createSlice({
       })
       .addCase(toggleFavorite.fulfilled, (state, action) => {
         state.toggleFavoriteLoading = false;
-        const {roomId} = action.payload;
+        const {roomId, data} = action.payload;
+        
+        // Lấy trạng thái favorite mới từ API response
+        // Handle nhiều trường hợp có thể: isInWishlist, isFavorited, isInWishList
+        let newFavoriteStatus: boolean;
+        
+        if (data && (data.hasOwnProperty('isInWishlist') || data.hasOwnProperty('isFavorited') || data.hasOwnProperty('isInWishList'))) {
+          // Nếu API trả về status, sử dụng giá trị đó
+          newFavoriteStatus = data.isInWishlist || data.isFavorited || data.isInWishList || false;
+        } else {
+          // Fallback: toggle trạng thái hiện tại
+          newFavoriteStatus = state.roomDetail ? !state.roomDetail.isFavorited : true;
+        }
 
         // Update roomDetail if it matches
         if (state.roomDetail && state.roomDetail._id === roomId) {
           state.roomDetail = {
             ...state.roomDetail,
-            isFavorited: !state.roomDetail.isFavorited,
+            isFavorited: newFavoriteStatus,
           };
         }
 
         // Update rooms list
         state.rooms = state.rooms.map(room =>
           room._id === roomId
-            ? {...room, isFavorited: !room.isFavorited}
+            ? {...room, isFavorited: newFavoriteStatus}
             : room,
         );
 
         // Update relatedRooms
         state.relatedRooms = state.relatedRooms.map(room =>
           room._id === roomId
-            ? {...room, isFavorited: !room.isFavorited}
+            ? {...room, isFavorited: newFavoriteStatus}
             : room,
         );
       })

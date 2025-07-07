@@ -11,21 +11,19 @@ export interface Coordinates {
 export interface ServicePrices {
   electricity?: number;
   water?: number;
-  cleaning?: number;
-  parking?: number;
-  internet?: number;
-  elevator?: number;
+
 }
 
 export interface ServicePriceConfig {
-  electricity?: string;
-  water?: string;
+  electricity?: 'perUsage' | 'perPerson' | 'perRoom';
+  water?: 'perUsage' | 'perPerson' | 'perRoom';
 }
 
 export interface CustomService {
+  _id?: string;
   name: string;
   price: number;
-  type: string;
+  priceType: 'perUsage' | 'perPerson' | 'perRoom';
   description?: string;
 }
 
@@ -46,11 +44,20 @@ export interface Location {
 }
 
 // ========== Owner & Stats ==========
+export interface OwnerStats {
+  totalRooms: number;
+  rentedRooms: number;
+  totalRevenue: number;
+  totalContracts: number;
+  lastActive: string;
+}
+
 export interface Owner {
-  _id: string;
-  username: string;
+  _id?: string;
+  username?: string;
   fullName: string;
   phone: string;
+  stats?: OwnerStats;
 }
 
 export interface Stats {
@@ -63,14 +70,16 @@ export interface Stats {
 
 // ========== Price History ==========
 export interface PriceHistory {
-  date: string;
+  _id?: string;
   price: number;
+  dateChanged: string;
+  reason: string;
 }
 
 // ========== Main Room Model ==========
 export interface Room {
   _id?: string;
-  ownerId: string;
+  ownerId?: string;
   approverId?: string;
   roomNumber: string;
   area: number;
@@ -92,6 +101,21 @@ export interface Room {
   canContact?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  __v?: number;
+}
+
+// ========== Detail Room Response Types ==========
+export interface DetailRoomData {
+  room: Room;
+  isInWishlist: boolean;
+  similarRooms: Room[];
+  owner: Owner;
+}
+
+export interface DetailRoomResponse {
+  success: boolean;
+  message: string;
+  data: DetailRoomData;
 }
 
 // ========== API Room (Used for API List Responses) ==========

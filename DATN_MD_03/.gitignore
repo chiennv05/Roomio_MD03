@@ -73,3 +73,7 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+
+#Ignore cursor AI rules
+.cursor/rules/codacy.mdc

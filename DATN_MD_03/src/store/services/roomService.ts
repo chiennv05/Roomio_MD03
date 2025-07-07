@@ -1,5 +1,5 @@
 import api from '../../api/api';
-import {RoomFilters} from '../../types/Room';
+import {RoomFilters, DetailRoomResponse} from '../../types/Room';
 
 export const getRooms = async (filters: RoomFilters = {}) => {
   try {
@@ -59,10 +59,16 @@ export const getRooms = async (filters: RoomFilters = {}) => {
   }
 };
 
-export const getRoomDetail = async (roomId: string, token?: string) => {
+export const getRoomDetail = async (roomId: string, token?: string): Promise<DetailRoomResponse> => {
   try {
     const headers = token ? {Authorization: `Bearer ${token}`} : {};
-    const response = await api.get(`/home/room/${roomId}`, {headers});
+    const response = await api.get(`/home/rooms/${roomId}`, {headers});
+    
+    // Kiểm tra xem response có phải là error không
+    if ('isError' in response && response.isError) {
+      throw new Error(response.message);
+    }
+    
     return response.data;
   } catch (error: any) {
     throw {
@@ -241,11 +247,19 @@ export const getRelatedRoomsFallback = async (
 // API để toggle favorite phòng trọ
 export const toggleRoomFavorite = async (roomId: string, token: string) => {
   try {
-    const response = await api.post(`/home/room/${roomId}/toggle-favorite`, {
+    const endpoint = `/home/room/${roomId}/toggle-favorite`;
+    
+    const response = await api.post(endpoint, {}, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
+    
+    // Kiểm tra xem response có phải là error không
+    if ('isError' in response && response.isError) {
+      throw new Error(response.message);
+    }
+    
     return response.data;
   } catch (error: any) {
     throw {

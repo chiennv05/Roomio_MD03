@@ -90,7 +90,6 @@ const DetailRoomScreen: React.FC = () => {
     relatedRoomsError,
     toggleFavoriteLoading,
   } = useSelector((state: RootState) => state.room);
-  console.log('roomid', roomId);
 
   // Lấy thông tin user để check role
   const {user} = useSelector((state: RootState) => state.auth);
@@ -107,6 +106,8 @@ const DetailRoomScreen: React.FC = () => {
       area: roomDetail.area || 0,
       photos: roomDetail.photos || [],
       servicePrices: roomDetail.location?.servicePrices || {},
+      servicePriceConfig: roomDetail.location?.servicePriceConfig || {},
+      customServices: roomDetail.location?.customServices || [],
       amenities: roomDetail.amenities || [],
       furniture: roomDetail.furniture || [],
       ownerName: roomDetail.owner?.fullName || 'Chủ trọ',
@@ -172,6 +173,7 @@ const DetailRoomScreen: React.FC = () => {
         setShowLoginPrompt(true);
         return;
       }
+      
       dispatch(
         toggleFavorite({
           roomId: roomId,
@@ -179,7 +181,7 @@ const DetailRoomScreen: React.FC = () => {
         }),
       );
     }
-  }, [user, roomId, dispatch, setShowLoginPrompt]);
+  }, [user, roomId, dispatch]);
 
   const handleSharePress = useCallback(() => {
     setShowShareModal(true);
@@ -412,7 +414,11 @@ const DetailRoomScreen: React.FC = () => {
               />
 
               <View style={styles.divider} />
-              <ServiceFees servicePrices={roomDetailData.servicePrices} />
+              <ServiceFees 
+                servicePrices={roomDetailData.servicePrices}
+                servicePriceConfig={roomDetailData.servicePriceConfig}
+                customServices={roomDetailData.customServices}
+              />
 
               <View style={styles.divider} />
               <Amenities
