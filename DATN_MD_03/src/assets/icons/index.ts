@@ -366,4 +366,12 @@ export const Icons = {
     ios: 'icon_so_nguoi',
     android: 'asset:/icons/icon_so_nguoi.png',
   }),
+  IconMaker: Platform.select({
+    ios: 'icon_maker',
+    android: 'asset:/icons/icon_maker.png',
+  }),
+  IconMyLocation: Platform.select({
+    ios: 'icon_my_location',
+    android: 'asset:/icons/icon_my_location.png',
+  }),
 };

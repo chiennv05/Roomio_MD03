@@ -232,6 +232,17 @@ const DetailRoomScreen: React.FC = () => {
     });
   }, [navigation, roomId]);
 
+  const handleMapPress = useCallback(() => {
+    if (roomDetail?.location?.coordinates?.coordinates) {
+      const [longitude, latitude] = roomDetail.location.coordinates.coordinates;
+      navigation.navigate('MapScreen', {
+        latitude,
+        longitude,
+        address: roomDetail.location.addressText
+      });
+    }
+  }, [navigation, roomDetail]);
+
   const handleRoomPress = useCallback(
     (roomId: string) => {
       navigation.navigate('DetailRoom', {roomId});
@@ -414,6 +425,7 @@ const DetailRoomScreen: React.FC = () => {
                 area={roomDetailData.area}
                 maxOccupancy={roomDetailData.maxOccupancy}
                 deposit={1}
+                onMapPress={handleMapPress}
               />
 
               <View style={styles.divider} />
@@ -541,6 +553,7 @@ const DetailRoomScreen: React.FC = () => {
     handleCloseAleartProfile,
     showModalProfile,
     messageProfile,
+    handleMapPress,
   ]);
 
   // Hiển thị lỗi

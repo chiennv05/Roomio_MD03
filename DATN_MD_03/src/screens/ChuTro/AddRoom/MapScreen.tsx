@@ -12,12 +12,13 @@ import {
   Alert,
 } from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
-import MapView, {Marker, Callout, PROVIDER_GOOGLE} from 'react-native-maps';
+import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
+import {useNavigation} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {RootStackParamList} from '../../../types/route';
 import {
   responsiveFont,
   responsiveIcon,
-  SCREEN,
-  verticalScale,
   responsiveSpacing,
 } from '../../../utils/responsive';
 import {Colors} from '../../../theme/color';
@@ -31,17 +32,21 @@ import {Suggestion} from '../../../types/Suggestion';
 import ItemAddress from './components/ItemAddress';
 import Geolocation from '@react-native-community/geolocation';
 
-// Custom Marker component - hình tròn màu xanh lá cây
+type MapScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MapScreen'>;
+
+// Custom Marker component - sử dụng IconMaker
 const CustomMarker = () => {
   return (
-    <View style={styles.customMarkerContainer}>
-      <View style={styles.customMarker} />
-      <View style={styles.customMarkerCore} />
-    </View>
+    <Image source={{uri: Icons.IconMaker}} style={styles.markerIcon} />
   );
 };
 
-export default function MapScreen() {
+export default function MapScreen({route}: {route: any}) {
+  // Lấy tọa độ từ params nếu có
+  const initialLatitude = route.params?.latitude || 21.0285;
+  const initialLongitude = route.params?.longitude || 105.8542;
+  const initialAddress = route.params?.address;
+  const navigation = useNavigation<MapScreenNavigationProp>();
   const mapRef = useRef<MapView>(null);
   const [searchText, setSearchText] = useState('');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -51,16 +56,9 @@ export default function MapScreen() {
     address?: string;
   } | null>(null);
   
-
-  
-  // State để lưu vị trí marker tạm thời khi user tap trên map
-  const [tempMarker, setTempMarker] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-  
   // State để theo dõi trạng thái loading khi lấy địa chỉ
   const [isLoadingAddress, setIsLoadingAddress] = useState(false);
+  const [isLoadingCurrentLocation, setIsLoadingCurrentLocation] = useState(false);
   
   // State để lưu danh sách các marker đã chọn
   const [markers, setMarkers] = useState<Array<{
@@ -71,8 +69,8 @@ export default function MapScreen() {
   }>>([]);
 
   const [mapRegion, setMapRegion] = useState({
-    latitude: 21.0285,
-    longitude: 105.8542,
+    latitude: initialLatitude,
+    longitude: initialLongitude,
     latitudeDelta: 0.01,
     longitudeDelta: 0.01,
   });
@@ -90,7 +88,6 @@ export default function MapScreen() {
             buttonPositive: 'Đồng ý',
           },
         );
-        console.log('Quyền được cấp:', granted);
         return granted === PermissionsAndroid.RESULTS.GRANTED;
       } catch (err) {
         console.warn(err);
@@ -102,13 +99,23 @@ export default function MapScreen() {
 
   useEffect(() => {
     requestLocationPermission();
-  }, []);
 
-  useEffect(() => {
-    if (mapRef.current) {
-      mapRef.current.animateToRegion(mapRegion, 1000);
+    // Nếu có tọa độ được truyền vào, hiển thị marker và địa chỉ
+    if (route.params?.latitude && route.params?.longitude) {
+      const newMarker = {
+        id: Date.now().toString(),
+        latitude: initialLatitude,
+        longitude: initialLongitude,
+        address: initialAddress,
+      };
+      setMarkers([newMarker]);
+      setSelectedLocation({
+        latitude: initialLatitude,
+        longitude: initialLongitude,
+        address: initialAddress,
+      });
     }
-  }, [mapRegion]);
+  }, [initialLatitude, initialLongitude, initialAddress, route.params?.latitude, route.params?.longitude]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -136,14 +143,13 @@ export default function MapScreen() {
     setSuggestions([]);
     setSearchText(item.display_name);
     
-    // Cập nhật cả tempMarker và selectedLocation
+    // Cập nhật selectedLocation
     const newLocation = {
       latitude: lat, 
       longitude: lon,
       address: item.display_name
     };
     setSelectedLocation(newLocation);
-    setTempMarker({latitude: lat, longitude: lon});
     
     // Thêm marker mới vào danh sách
     const newMarker = {
@@ -152,15 +158,18 @@ export default function MapScreen() {
       longitude: lon,
       address: item.display_name,
     };
-    setMarkers(prev => [newMarker]); // Chỉ hiển thị marker mới nhất
+    setMarkers([newMarker]); // Chỉ hiển thị marker mới nhất
+
+    // Di chuyển map đến vị trí mới
+    if (mapRef.current) {
+      mapRef.current.animateToRegion(region, 1000);
+    }
   };
 
   const handleMapPress = async (event: any) => {
-    console.log('Đã nhấn bản đồ');
     const {latitude, longitude} = event.nativeEvent.coordinate;
 
     // Hiển thị marker ngay lập tức trước khi có địa chỉ
-    setTempMarker({latitude, longitude});
     setSelectedLocation({latitude, longitude});
     setMapRegion({
       latitude,
@@ -205,17 +214,153 @@ export default function MapScreen() {
       };
       setMarkers([newMarker]);
       
+      setSelectedLocation(prev => 
+        prev ? {...prev, address: addressText} : {latitude, longitude, address: addressText}
+      );
       setSearchText(addressText);
     } finally {
       // Tắt trạng thái loading
       setIsLoadingAddress(false);
     }
   };
-  
 
+  const handleGoBack = () => {
+    navigation.goBack();
+  };
+
+  const handleGetCurrentLocation = async () => {
+    const hasPermission = await requestLocationPermission();
+    if (!hasPermission) {
+      Alert.alert('Lỗi', 'Cần cấp quyền truy cập vị trí để sử dụng tính năng này');
+      return;
+    }
+
+    setIsLoadingCurrentLocation(true);
+    
+    Geolocation.getCurrentPosition(
+      async (position) => {
+        const {latitude, longitude} = position.coords;
+        
+        const region = {
+          latitude,
+          longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        };
+        
+        setMapRegion(region);
+        setSelectedLocation({latitude, longitude});
+        
+        if (mapRef.current) {
+          mapRef.current.animateToRegion(region, 1000);
+        }
+
+        try {
+          setIsLoadingAddress(true);
+          const address = await reverseGeocoding(latitude, longitude);
+          
+          setSelectedLocation({latitude, longitude, address});
+          
+          const newMarker = {
+            id: Date.now().toString(),
+            latitude,
+            longitude,
+            address,
+          };
+          setMarkers([newMarker]);
+          setSearchText(address);
+        } catch (error) {
+          console.error('Lỗi khi lấy địa chỉ:', error);
+          const addressText = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+          setSelectedLocation({latitude, longitude, address: addressText});
+          
+          const newMarker = {
+            id: Date.now().toString(),
+            latitude,
+            longitude,
+            address: addressText,
+          };
+          setMarkers([newMarker]);
+          setSearchText(addressText);
+        } finally {
+          setIsLoadingAddress(false);
+        }
+      },
+      (error) => {
+        console.error('Lỗi lấy vị trí:', error);
+        Alert.alert('Lỗi', 'Không thể lấy vị trí hiện tại');
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 10000,
+      }
+    );
+    
+    setIsLoadingCurrentLocation(false);
+  };
+
+  const handleConfirm = () => {
+    if (selectedLocation) {
+      // TODO: Trả về dữ liệu location cho màn hình trước
+      console.log('Vị trí đã chọn:', selectedLocation);
+      Alert.alert(
+        'Xác nhận thành công',
+        `Địa chỉ: ${selectedLocation.address}\nTọa độ: ${selectedLocation.latitude.toFixed(6)}, ${selectedLocation.longitude.toFixed(6)}`,
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack()
+          }
+        ]
+      );
+    } else {
+      Alert.alert('Thông báo', 'Vui lòng chọn một vị trí trên bản đồ');
+    }
+  };
 
   return (
     <View style={styles.container}>
+      {/* Back Button */}
+      <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+        <Image source={{uri: Icons.IconArrowLeft}} style={styles.backIcon} />
+      </TouchableOpacity>
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer} pointerEvents="box-none">
+        <View style={styles.searchInputContainer} pointerEvents="box-none">
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Tìm kiếm địa điểm..."
+            value={searchText}
+            onChangeText={setSearchText}
+            placeholderTextColor={Colors.grayLight}
+            autoCorrect={false}
+            autoCapitalize="none"
+          />
+          <TouchableOpacity style={styles.searchButton}>
+            <Image
+              source={{uri: Icons.IconSeachBlack}}
+              style={styles.searchIcon}
+            />
+          </TouchableOpacity>
+        </View>
+        
+        {/* Search Suggestions Dropdown */}
+        {suggestions.length > 0 && (
+          <FlatList
+            data={suggestions}
+            keyExtractor={item => item.place_id.toString()}
+            style={styles.dropdown}
+            renderItem={({item}) => (
+              <ItemAddress item={item} onPress={handleSelectSuggestion} />
+            )}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+      </View>
+
+      {/* Map */}
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -238,88 +383,53 @@ export default function MapScreen() {
             tracksViewChanges={false}
           >
             <CustomMarker />
-            <Callout tooltip>
-              <View style={styles.calloutContainer}>
-                <Text style={styles.calloutTitle}>Tọa độ</Text>
-                <Text style={styles.calloutText}>
-                  Vĩ độ: {marker.latitude.toFixed(6)}
-                </Text>
-                <Text style={styles.calloutText}>
-                  Kinh độ: {marker.longitude.toFixed(6)}
-                </Text>
-                {marker.address && (
-                  <Text style={styles.calloutAddress} numberOfLines={2}>
-                    {marker.address}
-                  </Text>
-                )}
-              </View>
-            </Callout>
           </Marker>
         ))}
       </MapView>
 
-      <View style={styles.containerHeader} pointerEvents="box-none">
-        <View style={styles.conatinerSearch} pointerEvents="box-none">
-          <TextInput
-            style={styles.styleInput}
-            placeholder="Tìm kiếm ở đây"
-            value={searchText}
-            onChangeText={setSearchText}
-            placeholderTextColor={Colors.grayLight}
-            autoCorrect={false}
-            autoCapitalize="none"
-          />
-          <TouchableOpacity style={styles.styleButton}>
-            <Image
-              source={{uri: Icons.IconSeachBlack}}
-              style={styles.styleIcon}
-            />
-          </TouchableOpacity>
-        </View>
-        {suggestions.length > 0 && (
-          <FlatList
-            data={suggestions}
-            keyExtractor={item => item.place_id.toString()}
-            style={styles.dropdown}
-            renderItem={({item}) => (
-              <ItemAddress item={item} onPress={handleSelectSuggestion} />
-            )}
-          />
-        )}
-      </View>
-      {/* Nút xóa tất cả marker
-      {markers.length > 0 && (
-        <TouchableOpacity 
-          style={styles.clearMarkersButton}
-          onPress={() => setMarkers([])}
-        >
-          <Text style={styles.clearMarkersText}>Xóa tất cả điểm đánh dấu</Text>
-        </TouchableOpacity>
-      )} */}
-
-      {/* Hiển thị loading khi đang lấy địa chỉ */}
-      {isLoadingAddress && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color={Colors.limeGreen} />
-          <Text style={styles.loadingText}>Đang lấy địa chỉ...</Text>
-        </View>
-      )}
-
-      {/* Hiển thị tọa độ */}
-      {selectedLocation && !isLoadingAddress && (
-        <View style={styles.coordinatesContainer}>
-          <Text style={styles.coordinatesTitle}>Địa điểm đã chọn:</Text>
-          {selectedLocation.address && (
-            <Text style={styles.addressText}>
-              {selectedLocation.address}
-            </Text>
+      {/* My Location Button */}
+      <TouchableOpacity 
+        style={styles.myLocationButton}
+        onPress={handleGetCurrentLocation}
+        disabled={isLoadingCurrentLocation}
+      >
+        <View style={styles.myLocationIconContainer}>
+          {isLoadingCurrentLocation ? (
+            <ActivityIndicator size="small" color={Colors.darkGreen} />
+          ) : (
+            <Image source={{uri: Icons.IconMyLocation}} style={styles.myLocationIcon} />
           )}
-          <Text style={styles.coordinatesText}>
-            Vĩ độ (Lat): {selectedLocation.latitude.toFixed(6)}
-          </Text>
-          <Text style={styles.coordinatesText}>
-            Kinh độ (Lng): {selectedLocation.longitude.toFixed(6)}
-          </Text>
+        </View>
+      </TouchableOpacity>
+
+      {/* Address Card & Confirm Button */}
+      {selectedLocation && (
+        <View style={styles.bottomContainer}>
+          <View style={styles.addressCard}>
+            <View style={styles.addressHeader}>
+              <Image source={{uri: Icons.IconLocation}} style={styles.locationIcon} />
+              <Text style={styles.addressTitle}>Địa điểm đã chọn</Text>
+            </View>
+            
+            {isLoadingAddress ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={Colors.darkGreen} />
+                <Text style={styles.loadingText}>Đang lấy địa chỉ...</Text>
+              </View>
+            ) : (
+              <Text style={styles.addressText}>
+                {selectedLocation.address || 'Đang xác định địa chỉ...'}
+              </Text>
+            )}
+          </View>
+          
+          <TouchableOpacity 
+            style={styles.confirmButton}
+            onPress={handleConfirm}
+            disabled={isLoadingAddress}
+          >
+            <Text style={styles.confirmButtonText}>Xác nhận</Text>
+          </TouchableOpacity>
         </View>
       )}
     </View>
@@ -329,192 +439,174 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  map: {
-    width: SCREEN.width,
-    height: SCREEN.height,
-  },
-  containerHeader: {
-    position: 'absolute',
-    top: 20,
-    left: 0,
-    right: 0,
-    width: SCREEN.width,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  styleInput: {
-    width: SCREEN.width * 0.8,
-    height: verticalScale(50),
-    paddingHorizontal: 10,
-    fontSize: responsiveFont(15),
-    fontFamily: Fonts.Roboto_Regular,
-    fontWeight: '400',
-    color: Colors.black,
-    borderWidth: 1,
-    borderRadius: 50,
-    borderColor: Colors.grayLight,
     backgroundColor: Colors.white,
   },
-  styleIcon: {
-    width: responsiveIcon(24),
-    height: responsiveIcon(24),
-  },
-  conatinerSearch: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: SCREEN.width * 0.9,
-  },
-  dropdown: {
-    marginTop: 10,
-    width: SCREEN.width * 0.9,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    maxHeight: 250,
-  },
-  item: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderColor: '#eee',
-  },
-  styleButton: {
-    width: responsiveIcon(44),
-    height: responsiveIcon(44),
-    borderRadius: responsiveIcon(44) / 2,
+  backButton: {
+    position: 'absolute',
+    top: responsiveSpacing(50),
+    left: responsiveSpacing(16),
+    width: responsiveIcon(40),
+    height: responsiveIcon(40),
     backgroundColor: Colors.white,
+    borderRadius: responsiveIcon(20),
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 5,
-  },
-  // Custom marker styles
-  customMarkerContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  customMarker: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(0, 255, 0, 0.3)',
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  customMarkerCore: {
-    position: 'absolute',
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#00FF00',
-  },
-  calloutContainer: {
-    width: 200,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  calloutTitle: {
-    fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(14),
-    color: Colors.black,
-    marginBottom: 5,
-  },
-  calloutText: {
-    fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(12),
-    color: Colors.black,
-    marginBottom: 2,
-  },
-  calloutAddress: {
-    fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(12),
-    color: Colors.mediumGray,
-    marginTop: 5,
-    fontStyle: 'italic',
-  },
-  coordinatesContainer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 10,
-    right: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 10,
-    padding: responsiveSpacing(10),
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  coordinatesTitle: {
-    fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(16),
-    color: Colors.black,
-    marginBottom: 5,
-  },
-  addressText: {
-    fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(14),
-    color: Colors.black,
-    marginBottom: 5,
-    fontWeight: '500',
-  },
-  coordinatesText: {
-    fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(14),
-    color: Colors.black,
-    marginBottom: 2,
-  },
-  clearMarkersButton: {
-    position: 'absolute',
-    right: 16,
-    bottom: 180,
-    backgroundColor: Colors.white,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 20,
+    zIndex: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  clearMarkersText: {
-    fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(12),
-    color: Colors.black,
-  },
-
-  loadingOverlay: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    width: 150,
-    height: 100,
-    marginLeft: -75,
-    marginTop: -50,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 10,
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowRadius: 4,
     elevation: 5,
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 14,
+  backIcon: {
+    width: responsiveIcon(12),
+    height: responsiveIcon(24),
+    tintColor: Colors.black,
+  },
+  searchContainer: {
+    position: 'absolute',
+    top: responsiveSpacing(50),
+    left: responsiveSpacing(70),
+    right: responsiveSpacing(16),
+    zIndex: 5,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    borderRadius: responsiveIcon(20),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  searchInput: {
+    flex: 1,
+    height: responsiveIcon(40),
+    paddingHorizontal: responsiveSpacing(16),
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
     color: Colors.black,
+  },
+  searchButton: {
+    width: responsiveIcon(40),
+    height: responsiveIcon(40),
+    borderRadius: responsiveIcon(20),
+    backgroundColor: Colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  searchIcon: {
+    width: responsiveIcon(20),
+    height: responsiveIcon(20),
+    tintColor: Colors.black,
+  },
+  dropdown: {
+    marginTop: responsiveSpacing(4),
+    backgroundColor: Colors.white,
+    borderRadius: responsiveSpacing(8),
+    maxHeight: 250,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  map: {
+    flex: 1,
+  },
+  myLocationButton: {
+    position: 'absolute',
+    right: responsiveSpacing(16),
+    bottom: responsiveSpacing(200), // Di chuyển xuống dưới
+    width: responsiveIcon(48),
+    height: responsiveIcon(48),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  myLocationIconContainer: {
+    width: responsiveIcon(48),
+    height: responsiveIcon(48),
+    backgroundColor: Colors.limeGreen,
+    borderRadius: responsiveIcon(24),
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  myLocationIcon: {
+    width: responsiveIcon(24),
+    height: responsiveIcon(24),
+    tintColor: Colors.black,
+  },
+  bottomContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: responsiveSpacing(16),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  addressCard: {
+    backgroundColor: Colors.white,
+    marginBottom: responsiveSpacing(16),
+  },
+  addressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: responsiveSpacing(8),
+  },
+  locationIcon: {
+    width: responsiveIcon(20),
+    height: responsiveIcon(20),
+    tintColor: Colors.darkGreen,
+    marginRight: responsiveSpacing(8),
+  },
+  addressTitle: {
+    fontSize: responsiveFont(16),
+    fontWeight: 'bold',
+    color: Colors.black,
+  },
+  addressText: {
+    fontSize: responsiveFont(14),
+    color: Colors.textGray,
+    lineHeight: responsiveFont(20),
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginLeft: responsiveSpacing(8),
+    fontSize: responsiveFont(14),
+    color: Colors.textGray,
+  },
+  confirmButton: {
+    backgroundColor: Colors.darkGreen,
+    paddingVertical: responsiveSpacing(16),
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    color: Colors.white,
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Bold,
+  },
+  // Marker icon styles
+  markerIcon: {
+    width: 32,
+    height: 32,
+    resizeMode: 'contain',
   },
 });

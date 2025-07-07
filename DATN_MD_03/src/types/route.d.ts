@@ -12,4 +12,9 @@ export type RootStackParamList = {
   Notification: undefined;
   TenantList: undefined;
   TenantDetail: {tenantId: string};
+  MapScreen: {
+    latitude?: number;
+    longitude?: number;
+    address?: string;
+  };
 };

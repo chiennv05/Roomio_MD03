@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
-import { responsiveSpacing, responsiveFont } from '../../../utils/responsive';
+import { responsiveSpacing, responsiveFont, responsiveIcon } from '../../../utils/responsive';
 import { Icons } from '../../../assets/icons';
 
 interface RoomInfoProps {
@@ -13,6 +13,7 @@ interface RoomInfoProps {
   area: number;
   maxOccupancy: number;
   deposit?: number; // Số tháng đặt cọc, default = 1
+  onMapPress?: () => void; // Callback khi bấm vào icon map
 }
 
 const RoomInfo: React.FC<RoomInfoProps> = ({
@@ -23,6 +24,7 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
   area,
   maxOccupancy,
   deposit = 1, // Default 1 tháng
+  onMapPress,
 }) => {
   // Chuẩn bị data cho 3 cột
   const infoItems = [
@@ -63,7 +65,7 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
         <Text style={styles.roomCode}>Mã phòng: {roomCode}</Text>
       </View>
 
-      {/* Address */}
+      {/* Address với icon map */}
       <View style={styles.addressContainer}>
         <View style={styles.addressIcon}>
           <Image 
@@ -72,6 +74,18 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
           />
         </View>
         <Text style={styles.address}>{address}</Text>
+        {onMapPress && (
+          <TouchableOpacity 
+            style={styles.mapButton}
+            onPress={onMapPress}
+            activeOpacity={0.7}
+          >
+            <Image 
+              source={{ uri: Icons.IconLocationGreen }}
+              style={styles.mapIcon}
+            />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Thông tin 3 cột ngang, không bọc ngoài */}
@@ -152,6 +166,19 @@ const styles = StyleSheet.create({
     color: Colors.black,
     fontFamily: Fonts.Roboto_Regular,
     lineHeight: responsiveFont(18),
+  },
+  mapButton: {
+    marginLeft: responsiveSpacing(8),
+    padding: responsiveSpacing(4),
+    borderRadius: responsiveIcon(16),
+    backgroundColor: Colors.limeGreenLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mapIcon: {
+    width: responsiveIcon(20),
+    height: responsiveIcon(20),
+    tintColor: Colors.darkGreen,
   },
   sectionTitle: {
     fontSize: responsiveFont(16),
