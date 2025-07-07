@@ -144,6 +144,14 @@ export default function ProfileScreen() {
             onPress={handleGoLandlord}
           />
         )}
+        {user.role === 'chuTro' && (
+          <SettingItem
+            iconStat={Icons.IconPaper}
+            label="Thống kê "
+            iconEnd={Icons.IconNext}
+            onPress={handleGoLandlord}
+          />
+        )}
       </View>
 
       <View style={styles.box}>
