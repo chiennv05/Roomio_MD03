@@ -238,7 +238,8 @@ const DetailRoomScreen: React.FC = () => {
       navigation.navigate('MapScreen', {
         latitude,
         longitude,
-        address: roomDetail.location.addressText
+        address: roomDetail.location.addressText,
+        roomDetail: roomDetail
       });
     }
   }, [navigation, roomDetail]);

@@ -16,5 +16,6 @@ export type RootStackParamList = {
     latitude?: number;
     longitude?: number;
     address?: string;
+    roomDetail?: Room;
   };
 };
