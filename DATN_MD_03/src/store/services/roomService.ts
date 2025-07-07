@@ -1,6 +1,6 @@
 import api from '../../api/api';
 import {RoomFilters, DetailRoomResponse} from '../../types/Room';
-import {sortRoomsByScore} from '../../utils/roomUtils';
+// import {sortRoomsByScore} from '../../utils/roomUtils';
 
 export const getRooms = async (filters: RoomFilters = {}) => {
   try {
