@@ -75,14 +75,14 @@ export const fetchRoomDetail = createAsyncThunk(
       const res = await getRoomDetail(roomId, token);
       if (!res?.success) throw new Error(res?.message);
       
-      // Merge isInWishlist vào room object và trả về room với thông tin complete
-      const roomWithWishlist = {
+      // Map API response to use isFavorited consistently
+      const roomWithFavorite = {
         ...res.data.room,
-        isFavorited: res.data.isInWishlist,
+        isFavorited: res.data.isFavorited,
         owner: res.data.owner,
       };
       
-      return roomWithWishlist;
+      return roomWithFavorite;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Lấy chi tiết phòng thất bại');
     }
@@ -314,17 +314,8 @@ const roomSlice = createSlice({
         state.toggleFavoriteLoading = false;
         const {roomId, data} = action.payload;
         
-        // Lấy trạng thái favorite mới từ API response
-        // Handle nhiều trường hợp có thể: isInWishlist, isFavorited, isInWishList
-        let newFavoriteStatus: boolean;
-        
-        if (data && (data.hasOwnProperty('isInWishlist') || data.hasOwnProperty('isFavorited') || data.hasOwnProperty('isInWishList'))) {
-          // Nếu API trả về status, sử dụng giá trị đó
-          newFavoriteStatus = data.isInWishlist || data.isFavorited || data.isInWishList || false;
-        } else {
-          // Fallback: toggle trạng thái hiện tại
-          newFavoriteStatus = state.roomDetail ? !state.roomDetail.isFavorited : true;
-        }
+        // Get new favorite status from API response
+        const newFavoriteStatus = data?.isFavorited ?? !state.roomDetail?.isFavorited;
 
         // Update roomDetail if it matches
         if (state.roomDetail && state.roomDetail._id === roomId) {

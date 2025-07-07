@@ -107,7 +107,7 @@ export interface Room {
 // ========== Detail Room Response Types ==========
 export interface DetailRoomData {
   room: Room;
-  isInWishlist: boolean;
+  isFavorited: boolean;
   similarRooms: Room[];
   owner: Owner;
 }
