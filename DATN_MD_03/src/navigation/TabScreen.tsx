@@ -1,8 +1,8 @@
 import React from 'react';
-import { StatusBar } from 'react-native';
+import {StatusBar} from 'react-native';
 import {createStackNavigator, TransitionPresets} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/route';
-import { Colors } from '../theme/color';
+import {Colors} from '../theme/color';
 
 import SplashScreen from '../screens/Splash/SplashScreen';
 import LoginAndRegister from '../screens/LoginAndRegister/LoginAndRegister';
@@ -21,7 +21,8 @@ import TenantDetailScreen from '../screens/ChuTro/TenantList/TenantDetailScreen'
 import 'react-native-gesture-handler';
 
 import PersonalInformation from '../screens/Profile/PersonalInformation';
-
+import MyRoomScreen from '../screens/ChuTro/MyRoom/MyRoomScreen';
+import AddRoomScreen from '../screens/ChuTro/AddRoom/AddRoomScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -38,7 +39,7 @@ const Stack = createStackNavigator<RootStackParamList>();
 //           HomeScreen: 'home',
 //           SearchScreen: 'search',
 //           FavoriteScreen: 'favorites',
-//           NotificationScreen: 'notifications', 
+//           NotificationScreen: 'notifications',
 //           ProfileScreen: 'profile',
 //         },
 //       },
@@ -59,33 +60,35 @@ const Stack = createStackNavigator<RootStackParamList>();
 export default function TabScreen() {
   return (
     <>
-      <StatusBar 
-        barStyle="dark-content" 
-        backgroundColor={Colors.backgroud} 
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={Colors.backgroud}
         translucent={false}
       />
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="SplashScreen" screenOptions={{headerShown: false}} > 
+        <Stack.Navigator
+          initialRouteName="SplashScreen"
+          screenOptions={{headerShown: false}}>
           <Stack.Screen name="SplashScreen" component={SplashScreen} />
           <Stack.Screen name="Login" component={LoginAndRegister} />
           <Stack.Screen name="UITab" component={UITab} />
-          <Stack.Screen 
-            name="DetailRoom" 
+          <Stack.Screen
+            name="DetailRoom"
             component={DetailRoomScreen}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
-          <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+          <Stack.Screen
+            name="ForgotPassword"
+            component={ForgotPasswordScreen}
+          />
           <Stack.Screen
             name="OTPVerification"
             component={OTPVerificationScreen}
           />
           <Stack.Screen name="ResetPassWord" component={ResetPassWord} />
-          <Stack.Screen
-            name="Notification"
-            component={NotificationScreen}
-          />
+          <Stack.Screen name="Notification" component={NotificationScreen} />
           <Stack.Screen
             name="PersonalInformation"
             component={PersonalInformation}
@@ -104,10 +107,14 @@ export default function TabScreen() {
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
+          <Stack.Screen
+            name="PersonalInformation"
+            component={PersonalInformation}
+          />
+          <Stack.Screen name="LandlordRoom" component={MyRoomScreen} />
+          <Stack.Screen name="AddRooom" component={AddRoomScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>
-
-   
   );
 }

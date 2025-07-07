@@ -330,6 +330,7 @@ export const Icons = {
     ios: 'icon_search_black',
     android: 'asset:/icons/icon_search_black.png',
   }),
+<<<<<<< HEAD
   IconTick: Platform.select({
     ios: 'icons_tick',
     android: 'asset:/icons/icons_tick.png',
@@ -357,5 +358,264 @@ export const Icons = {
   IconRomManagement: Platform.select({
     ios: 'iconRomManagement',
     android: 'asset:/icons/iconRomManagement.png',
+=======
+
+  IconLocationGray: Platform.select({
+    ios: 'icon_location_gray',
+    android: 'asset:/icons/icon_location_gray.png',
+  }),
+  IconUnion: Platform.select({
+    ios: 'icon_union',
+    android: 'asset:/icons/icon_union.png',
+  }),
+  IconRoomOutline: Platform.select({
+    ios: 'icon_room_outline',
+    android: 'asset:/icons/icon_room_outline.png',
+  }),
+  IconViewLight: Platform.select({
+    ios: 'icon_view_light',
+    android: 'asset:/icons/icon_view_light.png',
+  }),
+  IconAdd: Platform.select({
+    ios: 'icon_add',
+    android: 'asset:/icons/icon_add.png',
+  }),
+  IconMap: Platform.select({
+    ios: 'icon_map',
+    android: 'asset:/icons/icon_map.png',
+  }),
+  IconDelete: Platform.select({
+    ios: 'icon_delete',
+    android: 'asset:/icons/icon_delete.png',
+  }),
+  IconEditWhite: Platform.select({
+    ios: 'icon_edit_white',
+    android: 'asset:/icons/icon_edit_white.png',
+  }),
+  IconEditBlack: Platform.select({
+    ios: 'icon_edit_black',
+    android: 'asset:/icons/icon_edit_black.png',
+  }),
+  // phí dịch vụ
+  IconElectricalSelected: Platform.select({
+    ios: 'icon_electrical_black',
+    android: 'asset:/icons/icon_electrical_black.png',
+  }),
+  IconElectricalDefault: Platform.select({
+    ios: 'icon_electrical_gray',
+    android: 'asset:/icons/icon_electrical_gray.png',
+  }),
+  IconWarterDropDefault: Platform.select({
+    ios: 'icon_water_drop_gray',
+    android: 'asset:/icons/icon_water_drop_gray.png',
+  }),
+  IconWarterDropSelected: Platform.select({
+    ios: 'icon_water_drop_black',
+    android: 'asset:/icons/icon_water_drop_black.png',
+  }),
+  IconServiceSelected: Platform.select({
+    ios: 'icon_servive_black',
+    android: 'asset:/icons/icon_servive_black.png',
+  }),
+  IconServiceDefault: Platform.select({
+    ios: 'icon_servive_gray',
+    android: 'asset:/icons/icon_servive_gray.png',
+  }),
+
+  // tiện nghi
+  IconWifiSelectd: Platform.select({
+    ios: 'icon_wifi_selected',
+    android: 'asset:/icons/icon_wifi_selected.png',
+  }),
+  IconWifiDefault: Platform.select({
+    ios: 'icon_wifi_default',
+    android: 'asset:/icons/icon_wifi_default.png',
+  }),
+  IconThangMaySelectd: Platform.select({
+    ios: 'icon_thang_may_selected',
+    android: 'asset:/icons/icon_thang_may_selected.png',
+  }),
+  IconThangMayDefault: Platform.select({
+    ios: 'icon_thang_may_default',
+    android: 'asset:/icons/icon_thang_may_default.png',
+  }),
+  IconRoomsBalconySelectd: Platform.select({
+    ios: 'icon_roomsbalcony_selected',
+    android: 'asset:/icons/icon_roomsbalcony_selected.png',
+  }),
+  IconRoomsBalconyDefault: Platform.select({
+    ios: 'icon_roomsbalcony_default',
+    android: 'asset:/icons/icon_roomsbalcony_default.png',
+  }),
+  IconPetSelectd: Platform.select({
+    ios: 'icon_pet_selected',
+    android: 'asset:/icons/icon_pet_selected.png',
+  }),
+  IconPetDefault: Platform.select({
+    ios: 'icon_pet_default',
+    android: 'asset:/icons/icon_pet_default.png',
+  }),
+  IconSacXeSelectd: Platform.select({
+    ios: 'icon_sac_xe_selected',
+    android: 'asset:/icons/icon_sac_xe_selected.png',
+  }),
+  IconSacXeDefault: Platform.select({
+    ios: 'icon_sac_xe_default',
+    android: 'asset:/icons/icon_sac_xe_default.png',
+  }),
+  IconToiletSelectd: Platform.select({
+    ios: 'icon_toilet_selected',
+    android: 'asset:/icons/icon_toilet_selected.png',
+  }),
+  IconToiletDefault: Platform.select({
+    ios: 'icon_toilet_default',
+    android: 'asset:/icons/icon_toilet_default.png',
+  }),
+  IconPersonSelectd: Platform.select({
+    ios: 'icon_person_selected',
+    android: 'asset:/icons/icon_person_selected.png',
+  }),
+  IconPersonDefault: Platform.select({
+    ios: 'icon_person_default',
+    android: 'asset:/icons/icon_person_default.png',
+  }),
+  IconSecuritySelectd: Platform.select({
+    ios: 'icon_security_selected',
+    android: 'asset:/icons/icon_security_selected.png',
+  }),
+  IconSecurityDefault: Platform.select({
+    ios: 'icon_security_default',
+    android: 'asset:/icons/icon_security_default.png',
+  }),
+  IconAccessTimeSelectd: Platform.select({
+    ios: 'icon_access_time_selected',
+    android: 'asset:/icons/icon_access_time_selected.png',
+  }),
+  IconAccessTimeDefault: Platform.select({
+    ios: 'icon_access_time_default',
+    android: 'asset:/icons/icon_access_time_default.png',
+  }),
+  IconGacXepSelectd: Platform.select({
+    ios: 'icon_gac_xep_selected',
+    android: 'asset:/icons/icon_gac_xep_selected.png',
+  }),
+  IconGacXepDefault: Platform.select({
+    ios: 'icon_gac_xep_default',
+    android: 'asset:/icons/icon_gac_xep_default.png',
+  }),
+
+  // Nội thất
+  IconDieuHoaSelectd: Platform.select({
+    ios: 'icon_dieu_hoa_seleted',
+    android: 'asset:/icons/icon_dieu_hoa_seleted.png',
+  }),
+  IconDieuHoaDefault: Platform.select({
+    ios: 'icon_dieu_hoa_default',
+    android: 'asset:/icons/icon_dieu_hoa_default.png',
+  }),
+  IconCurtainsSelectd: Platform.select({
+    ios: 'icon_curtains_selected',
+    android: 'asset:/icons/icon_curtains_selected.png',
+  }),
+  IconCurtainsDefault: Platform.select({
+    ios: 'icon_curtains_default',
+    android: 'asset:/icons/icon_curtains_default.png',
+  }),
+  IconBinhNongLanhSelectd: Platform.select({
+    ios: 'icon_binh_nong_lanh_selected',
+    android: 'asset:/icons/icon_binh_nong_lanh_selected.png',
+  }),
+  IconBinhNongLanhDefault: Platform.select({
+    ios: 'icon_binh_nong_lanh_default',
+    android: 'asset:/icons/icon_binh_nong_lanh_default.png',
+  }),
+  IconKeBepSelectd: Platform.select({
+    ios: 'icon_ke_bep_selected',
+    android: 'asset:/icons/icon_ke_bep_selected.png',
+  }),
+  IconKeBepDefault: Platform.select({
+    ios: 'icon_ke_bep_default',
+    android: 'asset:/icons/icon_ke_bep_default.png',
+  }),
+  IconFridgeSelectd: Platform.select({
+    ios: 'icon_fridge_selected',
+    android: 'asset:/icons/icon_fridge_selected.png',
+  }),
+  IconFridgeDefault: Platform.select({
+    ios: 'icon_fridge_default',
+    android: 'asset:/icons/icon_fridge_default.png',
+  }),
+  IconGiuongNguSelectd: Platform.select({
+    ios: 'icon_famicons_ slected',
+    android: 'asset:/icons/icon_famicons_ slected.png',
+  }),
+  IconGiuongNguDefault: Platform.select({
+    ios: 'icon_famicons_ default',
+    android: 'asset:/icons/icon_famicons_ default.png',
+  }),
+  IconMayGiatSelectd: Platform.select({
+    ios: 'icon_may_giat_selected',
+    android: 'asset:/icons/icon_may_giat_selected.png',
+  }),
+  IconMayGiatDefault: Platform.select({
+    ios: 'icon_may_giat_default',
+    android: 'asset:/icons/icon_may_giat_default.png',
+  }),
+  IconTableChairSelectd: Platform.select({
+    ios: 'icon_table_chair_selected',
+    android: 'asset:/icons/icon_table_chair_selected.png',
+  }),
+  IconTableChairDefault: Platform.select({
+    ios: 'icon_table_chair_default',
+    android: 'asset:/icons/icon_table_chair_default.png',
+  }),
+  IconTuQuanAoSelectd: Platform.select({
+    ios: 'icon_tu_quan_ao_selected',
+    android: 'asset:/icons/icon_tu_quan_ao_selected.png',
+  }),
+  IconTuQuanAoDefault: Platform.select({
+    ios: 'icon_tu_quan_ao_default',
+    android: 'asset:/icons/icon_tu_quan_ao_default.png',
+  }),
+  IconCeilingFanSelectd: Platform.select({
+    ios: 'icon_ceiling_fan_selected',
+    android: 'asset:/icons/icon_ceiling_fan_selected.png',
+  }),
+  IconCeilingFanDefault: Platform.select({
+    ios: 'icon_ceiling_fan_default',
+    android: 'asset:/icons/icon_ceiling_fan_default.png',
+  }),
+  IconBlanketSelectd: Platform.select({
+    ios: 'icon_blanket_selected',
+    android: 'asset:/icons/icon_blanket_selected.png',
+  }),
+  IconBlanketDefault: Platform.select({
+    ios: 'icon_blanket_default',
+    android: 'asset:/icons/icon_blanket_default.png',
+  }),
+  IconDoGiaDungSelectd: Platform.select({
+    ios: 'icon_do_gia_dung_selected',
+    android: 'asset:/icons/icon_do_gia_dung_selected.png',
+  }),
+  IconDoGiaDungDefault: Platform.select({
+    ios: 'icon_do_gia_dung_default',
+    android: 'asset:/icons/icon_do_gia_dung_default.png',
+  }),
+  IconGuongSelectd: Platform.select({
+    ios: 'icon_guong_selected',
+    android: 'asset:/icons/icon_guong_selected.png',
+  }),
+  IconGuongDefault: Platform.select({
+    ios: 'icon_guong_defaut',
+    android: 'asset:/icons/icon_guong_defaut.png',
+  }),
+  IconChairSelectd: Platform.select({
+    ios: 'icon_chair_selected',
+    android: 'asset:/icons/icon_chair_selected.png',
+  }),
+  IconChairDefault: Platform.select({
+    ios: 'icon_chair_default',
+    android: 'asset:/icons/icon_chair_default.png',
+>>>>>>> 97db243ff50b329c3e3ec76f4be929f5894fe320
   }),
 };

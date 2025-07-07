@@ -5,22 +5,20 @@ import {
   StyleSheet,
   ScrollView,
   Image,
-  TouchableOpacity,
   SafeAreaView,
 } from 'react-native';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {useSelector, useDispatch} from 'react-redux';
 import {RootState, AppDispatch} from '../../../store';
-import {fetchTenantDetails, resetTenantDetail} from '../../../store/slices/tenantSlice';
+import {
+  fetchTenantDetails,
+  resetTenantDetail,
+} from '../../../store/slices/tenantSlice';
 import {RootStackParamList} from '../../../types/route';
 import {Icons} from '../../../assets/icons';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
-import {
-  responsiveFont,
-  scale,
-  verticalScale,
-} from '../../../utils/responsive';
+import {responsiveFont, scale, verticalScale} from '../../../utils/responsive';
 import {getImageUrl} from '../../../configs';
 
 // Import các component tái sử dụng
@@ -30,13 +28,16 @@ import InfoRow from './components/InfoRow';
 import {LoadingView, ErrorView} from './components/LoadingAndError';
 import {formatDate, formatMoney} from '../../../utils/formatUtils';
 
-type TenantDetailScreenRouteProp = RouteProp<RootStackParamList, 'TenantDetail'>;
+type TenantDetailScreenRouteProp = RouteProp<
+  RootStackParamList,
+  'TenantDetail'
+>;
 
 const TenantDetailScreen = () => {
   const navigation = useNavigation();
   const route = useRoute<TenantDetailScreenRouteProp>();
   const {tenantId} = route.params;
-  
+
   const dispatch = useDispatch<AppDispatch>();
   const token = useSelector((state: RootState) => state.auth.token);
   const {
@@ -52,7 +53,7 @@ const TenantDetailScreen = () => {
     if (token && tenantId) {
       dispatch(fetchTenantDetails({token, tenantId}));
     }
-    
+
     // Cleanup khi unmount
     return () => {
       dispatch(resetTenantDetail());
@@ -81,9 +82,11 @@ const TenantDetailScreen = () => {
     return (
       <SafeAreaView style={styles.container}>
         <HeaderWithBack title="Chi tiết người thuê" />
-        <ErrorView 
-          error={detailError} 
-          onRetry={() => dispatch(fetchTenantDetails({token: token || '', tenantId}))} 
+        <ErrorView
+          error={detailError}
+          onRetry={() =>
+            dispatch(fetchTenantDetails({token: token || '', tenantId}))
+          }
         />
       </SafeAreaView>
     );
@@ -94,9 +97,9 @@ const TenantDetailScreen = () => {
     return (
       <SafeAreaView style={styles.container}>
         <HeaderWithBack title="Chi tiết người thuê" />
-        <ErrorView 
-          error="Không tìm thấy thông tin người thuê" 
-          onRetry={() => navigation.goBack()} 
+        <ErrorView
+          error="Không tìm thấy thông tin người thuê"
+          onRetry={() => navigation.goBack()}
           retryText="Quay lại"
         />
       </SafeAreaView>
@@ -106,7 +109,7 @@ const TenantDetailScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <HeaderWithBack title="Chi tiết người thuê" />
-      
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}>
@@ -115,80 +118,123 @@ const TenantDetailScreen = () => {
           <Text style={styles.sectionTitle}>Thông tin cá nhân</Text>
           <InfoRow label="Họ và tên:" value={selectedTenant.fullName} />
           <InfoRow label="Tài khoản:" value={selectedTenant.username} />
-          <InfoRow label="CCCD/CMND:" value={selectedTenant.identityNumber || 'Chưa cập nhật'} />
-          <InfoRow label="Ngày sinh:" value={formatDate(selectedTenant.birthDate)} />
-          <InfoRow label="Số điện thoại:" value={selectedTenant.phone || 'Chưa cập nhật'} />
+          <InfoRow
+            label="CCCD/CMND:"
+            value={selectedTenant.identityNumber || 'Chưa cập nhật'}
+          />
+          <InfoRow
+            label="Ngày sinh:"
+            value={formatDate(selectedTenant.birthDate)}
+          />
+          <InfoRow
+            label="Số điện thoại:"
+            value={selectedTenant.phone || 'Chưa cập nhật'}
+          />
           <InfoRow label="Email:" value={selectedTenant.email} />
-          <InfoRow label="Địa chỉ:" value={selectedTenant.address || 'Chưa cập nhật'} />
-          <InfoRow label="Ngày tạo tài khoản:" value={formatDate(selectedTenant.createdAt)} />
+          <InfoRow
+            label="Địa chỉ:"
+            value={selectedTenant.address || 'Chưa cập nhật'}
+          />
+          <InfoRow
+            label="Ngày tạo tài khoản:"
+            value={formatDate(selectedTenant.createdAt)}
+          />
         </View>
-        
+
         {/* Hợp đồng hiện tại */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Hợp đồng hiện tại</Text>
           {activeContract ? (
             <>
               <StatusBadge status={activeContract.status} size="medium" />
-              
+
               <View style={styles.contractDetail}>
                 <View style={styles.roomImageContainer}>
-                  <Image 
-                    source={{uri: getRoomPhotoUrl(activeContract.room.photo)}} 
+                  <Image
+                    source={{uri: getRoomPhotoUrl(activeContract.room.photo)}}
                     style={styles.roomImage}
-                    defaultSource={Icons.IconRomManagement as any} 
+                    defaultSource={Icons.IconRomManagement as any}
                   />
                 </View>
-                
+
                 <View style={styles.contractInfo}>
-                  <InfoRow label="Phòng:" value={activeContract.room.roomNumber} />
-                  <InfoRow label="Thuê từ:" value={formatDate(activeContract.startDate)} />
-                  <InfoRow label="Đến:" value={formatDate(activeContract.endDate)} />
-                  <InfoRow label="Giá thuê:" value={formatMoney(activeContract.monthlyRent)} />
-                  <InfoRow label="Số người ở:" value={activeContract.tenantCount.toString()} />
+                  <InfoRow
+                    label="Phòng:"
+                    value={activeContract.room.roomNumber}
+                  />
+                  <InfoRow
+                    label="Thuê từ:"
+                    value={formatDate(activeContract.startDate)}
+                  />
+                  <InfoRow
+                    label="Đến:"
+                    value={formatDate(activeContract.endDate)}
+                  />
+                  <InfoRow
+                    label="Giá thuê:"
+                    value={formatMoney(activeContract.monthlyRent)}
+                  />
+                  <InfoRow
+                    label="Số người ở:"
+                    value={activeContract.tenantCount.toString()}
+                  />
                 </View>
               </View>
-              
-              {activeContract.coTenants && activeContract.coTenants.length > 0 && (
-                <View style={styles.coTenantsContainer}>
-                  <Text style={styles.coTenantsTitle}>Người ở cùng:</Text>
-                  {activeContract.coTenants.map((coTenant, index) => (
-                    <View key={index} style={styles.coTenantItem}>
-                      <Text style={styles.coTenantName}>
-                        {index + 1}. {coTenant.username || coTenant.email}
-                      </Text>
-                      <Text style={styles.coTenantDetail}>
-                        Email: {coTenant.email}
-                      </Text>
-                      {coTenant.phone ? (
-                        <Text style={styles.coTenantDetail}>
-                          SĐT: {coTenant.phone}
+
+              {activeContract.coTenants &&
+                activeContract.coTenants.length > 0 && (
+                  <View style={styles.coTenantsContainer}>
+                    <Text style={styles.coTenantsTitle}>Người ở cùng:</Text>
+                    {activeContract.coTenants.map((coTenant, index) => (
+                      <View key={index} style={styles.coTenantItem}>
+                        <Text style={styles.coTenantName}>
+                          {index + 1}. {coTenant.username || coTenant.email}
                         </Text>
-                      ) : null}
-                    </View>
-                  ))}
-                </View>
-              )}
+                        <Text style={styles.coTenantDetail}>
+                          Email: {coTenant.email}
+                        </Text>
+                        {coTenant.phone ? (
+                          <Text style={styles.coTenantDetail}>
+                            SĐT: {coTenant.phone}
+                          </Text>
+                        ) : null}
+                      </View>
+                    ))}
+                  </View>
+                )}
             </>
           ) : (
-            <Text style={styles.emptyText}>Người thuê hiện không có hợp đồng hoạt động nào</Text>
+            <Text style={styles.emptyText}>
+              Người thuê hiện không có hợp đồng hoạt động nào
+            </Text>
           )}
         </View>
-        
+
         {/* Lịch sử hợp đồng */}
         {contractHistory && contractHistory.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Lịch sử hợp đồng ({totalContracts})</Text>
+            <Text style={styles.sectionTitle}>
+              Lịch sử hợp đồng ({totalContracts})
+            </Text>
             {contractHistory.map((contract, index) => (
               <View key={index} style={styles.historyItem}>
                 <StatusBadge status={contract.status} size="small" />
-                
+
                 <InfoRow label="Phòng:" value={contract.room.roomNumber} />
-                <InfoRow 
-                  label="Thời gian:" 
-                  value={`${formatDate(contract.startDate)} - ${formatDate(contract.endDate)}`} 
+                <InfoRow
+                  label="Thời gian:"
+                  value={`${formatDate(contract.startDate)} - ${formatDate(
+                    contract.endDate,
+                  )}`}
                 />
-                <InfoRow label="Giá thuê:" value={formatMoney(contract.monthlyRent)} />
-                <InfoRow label="Ngày tạo:" value={formatDate(contract.createdAt)} />
+                <InfoRow
+                  label="Giá thuê:"
+                  value={formatMoney(contract.monthlyRent)}
+                />
+                <InfoRow
+                  label="Ngày tạo:"
+                  value={formatDate(contract.createdAt)}
+                />
               </View>
             ))}
           </View>
@@ -280,4 +326,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TenantDetailScreen; 
+export default TenantDetailScreen;

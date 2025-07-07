@@ -55,23 +55,23 @@ export default function ProfileScreen() {
   const handleConfirmLogout = async () => {
     if (!token) {
       setShowLogoutModal(false);
-      navigation.replace('Login');
+      navigation.replace('Login', {});
       return;
     }
 
     try {
       await dispatch(logoutUser(token)).unwrap();
       setShowLogoutModal(false);
-      navigation.replace('Login');
+      navigation.replace('Login', {});
     } catch (error) {
       // Dù có lỗi API, vẫn logout local và navigate
       setShowLogoutModal(false);
-      navigation.replace('Login');
+      navigation.replace('Login', {});
     }
   };
 
   const handleLogin = () => {
-    navigation.replace('Login');
+    navigation.replace('Login', {});
   };
 
   const hanleUpdateProfile = () => {
@@ -82,7 +82,7 @@ export default function ProfileScreen() {
         [
           {
             text: 'OK',
-            onPress: () => navigation.replace('Login'), // Chuyển sang màn Login
+            onPress: () => navigation.replace('Login', {}), // Chuyển sang màn Login
           },
         ],
         {cancelable: false},
@@ -106,6 +106,10 @@ export default function ProfileScreen() {
       </SafeAreaView>
     );
   }
+
+  const handleGoLandlord = () => {
+    navigation.navigate('LandlordRoom');
+  };
 
   // Show normal profile screen for logged in users
   return (
@@ -165,6 +169,7 @@ export default function ProfileScreen() {
           )}
         </View>
 
+<<<<<<< HEAD
         <View style={styles.box}>
           <SettingItem
             iconStat={Icons.IconLightReport}
@@ -177,6 +182,42 @@ export default function ProfileScreen() {
             iconEnd={Icons.IconNext}
           />
         </View>
+=======
+      <View style={styles.box}>
+        <SettingItem
+          iconStat={Icons.IconFluentPersonRegular}
+          label="Thông tin cá nhân"
+          iconEnd={Icons.IconNext}
+          onPress={hanleUpdateProfile}
+        />
+        <SettingItem
+          iconStat={Icons.IconContract}
+          label="Hợp đồng thuê"
+          iconEnd={Icons.IconNext}
+        />
+        <SettingItem
+          iconStat={Icons.IconPaper}
+          label="Hóa đơn thu chi"
+          iconEnd={Icons.IconNext}
+        />
+        {user.role === 'chuTro' && (
+          <SettingItem
+            iconStat={Icons.IconPaper}
+            label="Quản lý phòng trọ "
+            iconEnd={Icons.IconNext}
+            onPress={handleGoLandlord}
+          />
+        )}
+        {user.role === 'chuTro' && (
+          <SettingItem
+            iconStat={Icons.IconPaper}
+            label="Thống kê "
+            iconEnd={Icons.IconNext}
+            onPress={handleGoLandlord}
+          />
+        )}
+      </View>
+>>>>>>> 97db243ff50b329c3e3ec76f4be929f5894fe320
 
         <TouchableOpacity onPress={handleShowLogoutModal} style={styles.logoutButtonContainer}>
           <Text style={styles.button}>Đăng xuất</Text>

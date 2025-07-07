@@ -12,4 +12,6 @@ export type RootStackParamList = {
   Notification: undefined;
   TenantList: undefined;
   TenantDetail: {tenantId: string};
+  LandlordRoom: undefined;
+  AddRooom: undefined;
 };

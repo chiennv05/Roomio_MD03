@@ -1,0 +1,423 @@
+import {Alert, ScrollView, StyleSheet, Text, View} from 'react-native';
+import React, {useCallback, useState} from 'react';
+import {Colors} from '../../../theme/color';
+import {ItemInput, UIHeader} from '../MyRoom/components';
+import {Icons} from '../../../assets/icons';
+import {moderateScale, SCREEN} from '../../../utils/responsive';
+import ItemTitle from './components/ItemTitle ';
+import ItemImage from './components/ItemImage';
+import ItemService from './components/ItemService';
+import {FlatList} from 'react-native';
+import {furnitureOptions} from './utils/furnitureOptions';
+import ItemOptions from './components/ItemOptions';
+import {amenitiesOptions} from './utils/amenitiesOptions';
+import {OptionItem} from '../../../types/Options';
+import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
+import ImagePicker from 'react-native-image-crop-picker';
+import {
+  deleteRoomPhoto,
+  ImageFile,
+  uploadRoomPhotos,
+} from '../../../store/services/uploadService';
+import {ImageUploadResult} from '../../../types/ImageUploadResult';
+import ModalLoading from './components/ModalLoading';
+import {formatPhotoUrls} from './utils/fomatImageUrl';
+import {ItemSeviceOptions, SeviceOptions} from './utils/seviceOptions';
+import {CustomService, ServicePriceConfig, ServicePrices} from '../../../types';
+import ModalService from './components/ModalService';
+
+const token =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODY4YzE5MGI2OTFkNzJjNDY3ODE2NzgiLCJ1c2VybmFtZSI6ImNodXRybzIiLCJyb2xlIjoiY2h1VHJvIiwiaWF0IjoxNzUxODUwNjQyLCJleHAiOjE3NTQ0NDI2NDJ9.F-FanHyCdiOHRgY9GjnmJ9645oN89aFIa5sjhPFx2pQ';
+
+export default function AddRoomScreen() {
+  const [roomNumber, setRoomNumber] = useState('');
+  const [area, setArea] = useState<number | ''>();
+  const [addressText, setAddressText] = useState('');
+  const [description, setDescription] = useState('');
+  const [maxOccupancy, setMaxOccupancy] = useState<number | ''>();
+  const [amenities, setAmenities] = useState<string[]>([]);
+  const [furniture, setFurniture] = useState<string[]>([]);
+  const [image, setImage] = useState<ImageUploadResult[]>([]);
+  const [imageArr, setImageArr] = useState<string[]>([]);
+
+  // modal
+  const [isUploading, setIsUploading] = useState(false);
+  const [visibleImage, setVisibleImage] = useState(false);
+  const [selectImage, setSelectImage] = useState<string>('');
+  // service
+  const [serviceOptionList, setServiceOptionList] =
+    useState<ItemSeviceOptions[]>(SeviceOptions);
+
+  const [modalVisibleService, setModalVisibleService] = useState(false);
+  const [servicePrices, setServicePrices] = useState<ServicePrices>({
+    electricity: 0,
+    water: 0,
+  });
+
+  const [servicePriceConfig, setServicePriceConfig] =
+    useState<ServicePriceConfig>({
+      electricity: 'perUsage',
+      water: 'perUsage',
+    });
+
+  const [customServices, setCustomServices] = useState<CustomService[]>([]);
+
+  const onPressOnpenMap = () => {
+    console.log('Mở map ');
+  };
+  const [itemServiceEdit, setItemServiceEdit] = useState<
+    ItemSeviceOptions | undefined
+  >();
+  // thêm ảnh
+  const onUpload = async (images: ImageFile[]) => {
+    try {
+      setIsUploading(true);
+      setVisibleImage(true);
+      const result = await uploadRoomPhotos(images, token);
+      const uploaded = result.data.photos as ImageUploadResult[];
+
+      setImage(prev => [...prev, ...uploaded]);
+      const formattedPhotos = formatPhotoUrls([...image, ...uploaded]);
+      setImageArr(formattedPhotos);
+    } catch (e) {
+      console.error('Lỗi upload:', e);
+    } finally {
+      setVisibleImage(false);
+      setIsUploading(false);
+    }
+  };
+
+  const onDeleteImage = (fileName: string) => {
+    Alert.alert(
+      'Xác nhận xoá',
+      'Bạn có chắc chắn muốn xoá ảnh này không?',
+      [
+        {
+          text: 'Huỷ',
+          style: 'cancel',
+        },
+        {
+          text: 'Xoá',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteRoomPhoto(fileName, token);
+              setImage(prev => prev.filter(img => img.fileName !== fileName));
+            } catch (error) {
+              console.log('Xoá ảnh thất bại');
+            }
+          },
+        },
+      ],
+      {cancelable: true},
+    );
+  };
+
+  const pickImages = async () => {
+    try {
+      const images = await ImagePicker.openPicker({
+        multiple: true,
+        mediaType: 'photo',
+      });
+
+      await onUpload(images);
+    } catch (error) {
+      console.log('Lỗi chọn ảnh:', error);
+    }
+  };
+
+  const onclickItemImage = (filename: string) => {
+    setSelectImage(filename);
+    setVisibleImage(true);
+  };
+  // dịch vụ
+  const handleClickItem = (item: ItemSeviceOptions) => {
+    setItemServiceEdit(item);
+    setModalVisibleService(true);
+    console.log('bắt buộc');
+  };
+
+  //
+  const handleClickItemOptionAmenities = useCallback((item: OptionItem) => {
+    setAmenities(prev =>
+      prev.includes(item.value)
+        ? prev.filter(i => i !== item.value)
+        : [...prev, item.value],
+    );
+  }, []);
+
+  const handleClickItemOptionFurniture = useCallback((item: OptionItem) => {
+    setFurniture(prev =>
+      prev.includes(item.value)
+        ? prev.filter(i => i !== item.value)
+        : [...prev, item.value],
+    );
+  }, []);
+
+  const renderAmenityItem = useCallback(
+    ({item}: {item: OptionItem}) => (
+      <ItemOptions
+        item={item}
+        onPress={handleClickItemOptionAmenities}
+        selected={amenities.includes(item.value)}
+      />
+    ),
+    [amenities, handleClickItemOptionAmenities],
+  );
+
+  const renderFurnitureItem = useCallback(
+    ({item}: {item: OptionItem}) => (
+      <ItemOptions
+        item={item}
+        onPress={handleClickItemOptionFurniture}
+        selected={furniture.includes(item.value)}
+      />
+    ),
+    [furniture, handleClickItemOptionFurniture],
+  );
+
+  // visible
+  const onCloseVisibe = () => {
+    setVisibleImage(false);
+    setSelectImage('');
+  };
+
+  //modal add
+  const handleSaveModal = (item: ItemSeviceOptions) => {
+    if (!item) return;
+
+    const isTemplateKhac = item.value === 'khac';
+    const isNew = isTemplateKhac || item.id === undefined;
+
+    const itemWithId: ItemSeviceOptions = {
+      ...item,
+      id: isNew
+        ? serviceOptionList.length > 0
+          ? Math.max(...serviceOptionList.map(i => i.id ?? 0)) + 1
+          : 1
+        : item.id!,
+    };
+
+    if (itemWithId.category === 'required') {
+      if (itemWithId.value === 'electricity') {
+        setServicePrices(prev => ({
+          ...prev,
+          electricity: itemWithId.price ?? 0,
+        }));
+        setServicePriceConfig(prev => ({
+          ...prev,
+          electricity: itemWithId.priceType ?? 'perRoom',
+        }));
+      } else if (itemWithId.value === 'water') {
+        setServicePrices(prev => ({...prev, water: itemWithId.price ?? 0}));
+        setServicePriceConfig(prev => ({
+          ...prev,
+          water: itemWithId.priceType ?? 'perRoom',
+        }));
+      }
+
+      setServiceOptionList(prev =>
+        prev.map(i => (i.id === itemWithId.id ? {...i, ...itemWithId} : i)),
+      );
+    } else {
+      if (isNew) {
+        // ✅ Thêm mới nếu tạo từ template 'khac'
+        setServiceOptionList(prev => [...prev, itemWithId]);
+      } else {
+        // ✅ Cập nhật nếu đã tồn tại
+        setServiceOptionList(prev =>
+          prev.map(i => (i.id === itemWithId.id ? {...i, ...itemWithId} : i)),
+        );
+      }
+
+      // Cập nhật custom service
+      const customService: CustomService = {
+        name: itemWithId.label,
+        price: itemWithId.price ?? 0,
+        priceType: itemWithId.priceType ?? 'perRoom',
+        description: itemWithId.description ?? '',
+      };
+
+      setCustomServices(prev => {
+        const exists = prev.some(i => i.name === customService.name);
+        return exists
+          ? prev.map(i => (i.name === customService.name ? customService : i))
+          : [...prev, customService];
+      });
+    }
+
+    setModalVisibleService(false);
+    setItemServiceEdit(undefined);
+  };
+
+  const handleCancelModal = () => {
+    setModalVisibleService(false);
+  };
+
+  return (
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.contentContainer}>
+      <UIHeader
+        title="Tạo bài đăng"
+        onPressLeft={() => {}}
+        iconLeft={Icons.IconArrowLeft}
+      />
+      <View style={styles.content}>
+        <ItemTitle title="Thông tin bài đăng" />
+
+        <View style={styles.containerInputRow}>
+          <ItemInput
+            placeholder="Số phòng"
+            value={roomNumber}
+            onChangeText={setRoomNumber}
+            editable={true}
+            width={SCREEN.width * 0.43}
+          />
+          <ItemInput
+            placeholder="Diện tích"
+            value={area?.toString() || ''}
+            onChangeText={text => {
+              const value = text.replace(/[^0-9]/g, '');
+              setArea(value === '' ? '' : parseInt(value, 10));
+            }}
+            editable={true}
+            keyboardType="numeric"
+            width={SCREEN.width * 0.43}
+          />
+        </View>
+        <ItemInput
+          placeholder="Địa chỉ tiết"
+          value={addressText}
+          onChangeText={setAddressText}
+          iconRight={Icons.IconMap}
+          onPressIcon={onPressOnpenMap}
+          editable={false}
+        />
+        <View style={styles.containerInputRow}>
+          <ItemInput
+            placeholder="Số người"
+            value={maxOccupancy?.toString() || ''}
+            onChangeText={text => {
+              const value = text.replace(/[^0-9]/g, '');
+              setMaxOccupancy(value === '' ? '' : parseInt(value, 10));
+            }}
+            editable={true}
+            keyboardType="numeric"
+            width={SCREEN.width * 0.43}
+          />
+        </View>
+        <ItemInput
+          placeholder="Mô tả"
+          value={description}
+          onChangeText={setDescription}
+          editable={true}
+          height={moderateScale(100)}
+          borderRadius={10}
+        />
+        <ItemTitle title="Hình ảnh" icon={Icons.IconAdd} onPress={pickImages} />
+        <View style={styles.containerImage}>
+          {image.length === 0 ? (
+            <Text>Chưa có ảnh nào được chọn</Text>
+          ) : (
+            <FlatList
+              data={image}
+              numColumns={3}
+              scrollEnabled={false}
+              showsVerticalScrollIndicator={false}
+              keyExtractor={item => item.id}
+              renderItem={({item, index}) => (
+                <ItemImage
+                  key={index}
+                  item={item}
+                  onDeleteImage={onDeleteImage}
+                  onClickItem={onclickItemImage}
+                />
+              )}
+            />
+          )}
+        </View>
+        <ItemTitle title="Phí dịch vụ" />
+        <View style={styles.containerImage}>
+          <FlatList
+            data={serviceOptionList}
+            keyExtractor={(_, index) => index.toString()}
+            numColumns={3}
+            scrollEnabled={false}
+            showsVerticalScrollIndicator={false}
+            renderItem={({item}) => (
+              <ItemService
+                status={item.status}
+                item={item}
+                onPress={handleClickItem}
+              />
+            )}
+          />
+        </View>
+
+        <ItemTitle title="Tiện nghi" />
+        <FlatList
+          numColumns={2}
+          scrollEnabled={false}
+          data={amenitiesOptions}
+          showsVerticalScrollIndicator={false}
+          keyExtractor={item => item.value}
+          renderItem={renderAmenityItem}
+        />
+        <ItemTitle title="Nội thất" />
+        <FlatList
+          numColumns={2}
+          scrollEnabled={false}
+          showsVerticalScrollIndicator={false}
+          data={furnitureOptions}
+          keyExtractor={item => item.value}
+          renderItem={renderFurnitureItem}
+        />
+
+        <ItemButtonConfirm
+          onPress={() => {}}
+          title="Tạo bài đăng"
+          icon={Icons.IconAdd}
+          onPressIcon={() => {}}
+        />
+      </View>
+      <ModalLoading
+        visible={visibleImage}
+        loading={isUploading}
+        image={selectImage}
+        onPressVisible={onCloseVisibe}
+      />
+      <ModalService
+        visible={modalVisibleService}
+        handleSave={handleSaveModal}
+        item={itemServiceEdit}
+        handleCancel={handleCancelModal}
+      />
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
+  contentContainer: {
+    flexGrow: 1, // cần thiết để justifyContent hoạt động
+    alignItems: 'center',
+  },
+  content: {
+    width: SCREEN.width * 0.9,
+    paddingTop: 10,
+  },
+  containerInputRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  containerImage: {
+    width: SCREEN.width * 0.9,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+});
