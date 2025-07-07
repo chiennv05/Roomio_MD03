@@ -159,7 +159,7 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
   return (
     <View style={styles.wrapper}>
       <ScrollView 
-        horizontal={true}
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.container}
       >
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 0,
+    paddingRight: responsiveSpacing(16), // Add padding for last item
   },
   clearButton: {
     width: responsiveIcon(32),
@@ -296,11 +296,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 106,
-    height: 44,
-    borderRadius: 50,
-    marginRight: responsiveSpacing(8),
     paddingHorizontal: responsiveSpacing(12),
+    paddingVertical: responsiveSpacing(8),
+    borderRadius: responsiveIcon(50),
+    marginRight: responsiveSpacing(8),
+    minWidth: 106, // Fixed width for consistency
+    height: 46,    // Fixed height from Figma
   },
   tabSelected: {
     backgroundColor: Colors.limeGreen,
@@ -315,10 +316,9 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.black,
-    textAlign: 'center',
   },
   arrowIcon: {
-    width: responsiveIcon(10),
+    width: responsiveIcon(9),
     height: responsiveIcon(5),
     tintColor: Colors.black,
   },

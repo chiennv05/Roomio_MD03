@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   amenityImageIconNoBg: {
     width: responsiveIcon(28),
     height: responsiveIcon(28),
-    tintColor: Colors.darkGreen,
+    // tintColor: Colors.darkGreen,
     marginBottom: responsiveSpacing(8),
   },
   amenityLabelNoBg: {
