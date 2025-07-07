@@ -295,10 +295,12 @@ const styles = StyleSheet.create({
   tab: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: responsiveSpacing(12),
-    paddingVertical: responsiveSpacing(8),
-    borderRadius: responsiveIcon(16),
+    justifyContent: 'center',
+    width: 106,
+    height: 44,
+    borderRadius: 50,
     marginRight: responsiveSpacing(8),
+    paddingHorizontal: responsiveSpacing(12),
   },
   tabSelected: {
     backgroundColor: Colors.limeGreen,
@@ -313,6 +315,7 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.black,
+    textAlign: 'center',
   },
   arrowIcon: {
     width: responsiveIcon(10),

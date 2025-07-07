@@ -181,4 +181,29 @@ export const formatRoomData = (room: Room) => {
     furniture: room.furniture,
     location: room.location.addressText,
   };
+};
+
+/**
+ * Tính điểm cho phòng dựa trên lượt xem và yêu thích
+ * @param room Thông tin phòng
+ * @returns Điểm số (cao hơn = được ưu tiên hơn)
+ */
+export const calculateRoomScore = (room: any): number => {
+  if (!room?.stats) return 0;
+  
+  // Trọng số: yêu thích quan trọng hơn lượt xem
+  const VIEW_WEIGHT = 1;
+  const FAVORITE_WEIGHT = 2;
+  
+  const viewScore = (room.stats.viewCount || 0) * VIEW_WEIGHT;
+  const favoriteScore = (room.stats.favoriteCount || 0) * FAVORITE_WEIGHT;
+  
+  return viewScore + favoriteScore;
+};
+
+/**
+ * Sắp xếp danh sách phòng theo điểm số (cao → thấp)
+ */
+export const sortRoomsByScore = (rooms: any[]): any[] => {
+  return [...rooms].sort((a, b) => calculateRoomScore(b) - calculateRoomScore(a));
 }; 

@@ -12,6 +12,7 @@ import { useServerPagination } from '../../hooks';
 import { Colors } from '../../theme/color';
 import { RootStackParamList } from '../../types/route';
 import { Icons } from '../../assets/icons';
+import { sortRoomsByScore } from '../../utils/roomUtils';
 
 // Import components
 import SearchBar from './components/SearchBar';
@@ -44,7 +45,7 @@ const SearchScreen: React.FC = () => {
 
   // Use server pagination hook
   const {
-    rooms: filteredRooms,
+    rooms,
     loading,
     error,
     hasMore,
@@ -56,6 +57,11 @@ const SearchScreen: React.FC = () => {
     isSearchMode: debouncedSearchQuery.trim().length > 0,
     filters: {}
   });
+
+  // Sắp xếp rooms theo điểm số
+  const filteredRooms = useMemo(() => {
+    return sortRoomsByScore(rooms);
+  }, [rooms]);
 
   // Animation khi vào màn hình - slide up từ dưới
   const animateIn = useCallback(() => {
