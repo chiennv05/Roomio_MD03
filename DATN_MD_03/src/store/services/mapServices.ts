@@ -14,6 +14,7 @@ export const searchLocation = async (query: string) => {
         'User-Agent': 'RoomioApp (roomioapp8@gmail.com)',
       },
     });
+    console.log(res);
 
     return res.data;
   } catch (err) {
