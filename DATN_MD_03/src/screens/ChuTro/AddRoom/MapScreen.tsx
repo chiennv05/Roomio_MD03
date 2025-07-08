@@ -10,7 +10,6 @@ import {
   Text,
   ActivityIndicator,
   Alert,
-  ImageStyle,
 } from 'react-native';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
@@ -668,9 +667,20 @@ export default function MapScreen({route}: MapScreenProps) {
             coordinate={{
               latitude: marker.latitude,
               longitude: marker.longitude,
-            }}
-            pinColor={marker.type === 'room' ? 'red' : 'green'}
-          />
+            }}>
+            <Image
+              source={{
+                uri: marker.type === 'room' 
+                  ? Icons.IconMaker 
+                  : Icons.IconMyMarker
+              }}
+              style={[
+                styles.markerIcon,
+                marker.type === 'current' && styles.currentLocationMarker
+              ]}
+              resizeMode="contain"
+            />
+          </Marker>
         ))}
       </MapView>
 
@@ -871,10 +881,10 @@ const styles = StyleSheet.create({
   markerIcon: {
     width: responsiveIcon(32),
     height: responsiveIcon(32),
-    // tintColor: Colors.darkGreen,
-  } as ImageStyle,
+  },
   currentLocationMarker: {
-    tintColor: Colors.red,
+    width: responsiveIcon(28),
+    height: responsiveIcon(28),
   },
   selectedLocationMarker: {
     tintColor: Colors.darkGreen,

@@ -628,4 +628,8 @@ export const Icons = {
     ios: 'icon_my_location',
     android: 'asset:/icons/icon_my_location.png',
   }),
+  IconMyMarker: Platform.select({
+    ios: 'icon_my_marker',
+    android: 'asset:/icons/icon_my_marker.png',
+  }),
 };
