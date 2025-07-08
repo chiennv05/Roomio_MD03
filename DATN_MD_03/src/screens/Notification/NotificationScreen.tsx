@@ -33,7 +33,9 @@ const NotificationScreen = () => {
     loadingMore,
   } = useSelector((state: RootState) => state.notification);
 
-  const [activeTab, setActiveTab] = useState<'all' | 'schedule' | 'bill' | 'contract'>('all');
+  const [activeTab, setActiveTab] = useState<
+    'all' | 'schedule' | 'bill' | 'contract'
+  >('all');
 
   // Load notifications khi component mount
   useEffect(() => {
@@ -51,13 +53,7 @@ const NotificationScreen = () => {
 
   // Handle load more
   const handleLoadMore = useCallback(() => {
-    if (
-      user &&
-      token &&
-      pagination?.hasNextPage &&
-      !loadingMore &&
-      !loading
-    ) {
+    if (user && token && pagination?.hasNextPage && !loadingMore && !loading) {
       dispatch(
         loadMoreNotifications({
           token,
@@ -107,9 +103,12 @@ const NotificationScreen = () => {
   );
 
   // Handle tab change
-  const handleTabChange = useCallback((tab: 'all' | 'schedule' | 'bill' | 'contract') => {
-    setActiveTab(tab);
-  }, []);
+  const handleTabChange = useCallback(
+    (tab: 'all' | 'schedule' | 'bill' | 'contract') => {
+      setActiveTab(tab);
+    },
+    [],
+  );
 
   // Handle menu press
   const handleMenuPress = useCallback(() => {
@@ -132,15 +131,16 @@ const NotificationScreen = () => {
   }, [notifications, activeTab]);
 
   // Convert Redux notification data to component format
-  const formattedNotifications: FormattedNotification[] = getFilteredNotifications().map(notification => ({
-    id: notification._id || '',
-    title: getNotificationTitle(notification.type),
-    content: notification.content,
-    time: formatRelativeTime(notification.createdAt),
-    date: formatFullDate(notification.createdAt),
-    isRead: notification.status === 'read',
-    type: notification.type,
-  }));
+  const formattedNotifications: FormattedNotification[] =
+    getFilteredNotifications().map(notification => ({
+      id: notification._id || '',
+      title: getNotificationTitle(notification.type),
+      content: notification.content,
+      time: formatRelativeTime(notification.createdAt),
+      date: formatFullDate(notification.createdAt),
+      isRead: notification.status === 'read',
+      type: notification.type,
+    }));
 
   // Loading state
   if (loading && notifications.length === 0) {
@@ -157,14 +157,14 @@ const NotificationScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <NotificationScreenHeader onMenuPress={handleMenuPress} />
-      
+
       <View style={styles.container}>
         <NotificationHeader
           activeTab={activeTab}
           onTabChange={handleTabChange}
           unreadCount={unreadCount}
         />
-        
+
         {formattedNotifications.length === 0 ? (
           <EmptyNotification />
         ) : (
@@ -188,23 +188,23 @@ const formatFullDate = (dateString: string): string => {
   try {
     const date = new Date(dateString);
     const today = new Date();
-    
+
     // Kiểm tra nếu là hôm nay
     const isToday = date.toDateString() === today.toDateString();
-    
+
     if (isToday) {
       return 'Hôm nay';
     }
-    
+
     // Kiểm tra nếu là hôm qua
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
     const isYesterday = date.toDateString() === yesterday.toDateString();
-    
+
     if (isYesterday) {
       return 'Hôm qua';
     }
-    
+
     // Format DD/MM/YYYY
     return date.toLocaleDateString('vi-VN', {
       day: '2-digit',
