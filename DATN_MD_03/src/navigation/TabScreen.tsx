@@ -107,10 +107,6 @@ export default function TabScreen() {
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
-          <Stack.Screen
-            name="PersonalInformation"
-            component={PersonalInformation}
-          />
           <Stack.Screen name="LandlordRoom" component={MyRoomScreen} />
           <Stack.Screen name="AddRooom" component={AddRoomScreen} />
         </Stack.Navigator>

@@ -142,7 +142,7 @@ export default function ProfileScreen() {
           />
           <SettingItem
             iconStat={Icons.IconContract}
-            label="Hợp đồng thuê"
+            label={isLandlord ? "Quản lý hợp đồng thuê" : "Hợp đồng thuê"}
             iconEnd={Icons.IconNext}
           />
           <SettingItem
@@ -165,11 +165,22 @@ export default function ProfileScreen() {
                 iconEnd={Icons.IconNext}
                 onPress={handleTenantListPress}
               />
+               <SettingItem
+            iconStat={Icons.IconPaper}
+            label="Thống kê "
+            iconEnd={Icons.IconNext}
+            onPress={handleGoLandlord}
+          />
+            <SettingItem
+            iconStat={Icons.IconPaper}
+            label="Quản lý phòng trọ "
+            iconEnd={Icons.IconNext}
+            onPress={handleGoLandlord}
+          />
             </>
           )}
         </View>
 
-<<<<<<< HEAD
         <View style={styles.box}>
           <SettingItem
             iconStat={Icons.IconLightReport}
@@ -182,42 +193,9 @@ export default function ProfileScreen() {
             iconEnd={Icons.IconNext}
           />
         </View>
-=======
-      <View style={styles.box}>
-        <SettingItem
-          iconStat={Icons.IconFluentPersonRegular}
-          label="Thông tin cá nhân"
-          iconEnd={Icons.IconNext}
-          onPress={hanleUpdateProfile}
-        />
-        <SettingItem
-          iconStat={Icons.IconContract}
-          label="Hợp đồng thuê"
-          iconEnd={Icons.IconNext}
-        />
-        <SettingItem
-          iconStat={Icons.IconPaper}
-          label="Hóa đơn thu chi"
-          iconEnd={Icons.IconNext}
-        />
-        {user.role === 'chuTro' && (
-          <SettingItem
-            iconStat={Icons.IconPaper}
-            label="Quản lý phòng trọ "
-            iconEnd={Icons.IconNext}
-            onPress={handleGoLandlord}
-          />
-        )}
-        {user.role === 'chuTro' && (
-          <SettingItem
-            iconStat={Icons.IconPaper}
-            label="Thống kê "
-            iconEnd={Icons.IconNext}
-            onPress={handleGoLandlord}
-          />
-        )}
-      </View>
->>>>>>> 97db243ff50b329c3e3ec76f4be929f5894fe320
+
+   
+
 
         <TouchableOpacity onPress={handleShowLogoutModal} style={styles.logoutButtonContainer}>
           <Text style={styles.button}>Đăng xuất</Text>

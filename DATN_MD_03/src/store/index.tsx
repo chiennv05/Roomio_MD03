@@ -5,6 +5,7 @@ import roomReducer from './slices/roomSlice';
 import notificationReducer from './slices/notificationSlice';
 import tenantReducer from './slices/tenantSlice';
 import landlordRoomsReducer from './slices/landlordRoomsSlice';
+import contractReducer from './slices/contractSlice';
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     notification: notificationReducer,
     tenant: tenantReducer,
     landlordRooms: landlordRoomsReducer,
+    contract: contractReducer,
   },
 });
 

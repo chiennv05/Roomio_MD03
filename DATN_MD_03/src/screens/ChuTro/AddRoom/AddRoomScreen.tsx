@@ -13,7 +13,7 @@ import ItemOptions from './components/ItemOptions';
 import {amenitiesOptions} from './utils/amenitiesOptions';
 import {OptionItem} from '../../../types/Options';
 import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
-import ImagePicker from 'react-native-image-crop-picker';
+// import ImagePicker from 'react-native-image-crop-picker';
 import {
   deleteRoomPhoto,
   ImageFile,
@@ -113,17 +113,29 @@ export default function AddRoomScreen() {
     );
   };
 
+  // Comment toàn bộ hàm pickImages vì nó sử dụng ImagePicker
+  /* 
   const pickImages = async () => {
     try {
-      const images = await ImagePicker.openPicker({
-        multiple: true,
-        mediaType: 'photo',
-      });
+      // const images = await ImagePicker.openPicker({
+      //   multiple: true,
+      //   mediaType: 'photo',
+      // });
 
       await onUpload(images);
     } catch (error) {
       console.log('Lỗi chọn ảnh:', error);
     }
+  };
+  */
+  
+  // Thêm hàm tạm thời để tránh lỗi
+  const pickImages = () => {
+    Alert.alert(
+      'Thông báo',
+      'Chức năng chọn ảnh tạm thời không khả dụng.',
+      [{ text: 'OK' }]
+    );
   };
 
   const onclickItemImage = (filename: string) => {

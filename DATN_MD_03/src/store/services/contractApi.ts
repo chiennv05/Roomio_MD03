@@ -18,9 +18,21 @@ export const createContractFromNotification = async (
 };
 
 // Lấy danh sách hợp đồng của người dùng
-export const getMyContracts = async () => {
+export const getMyContracts = async (params?: {
+  page?: number;
+  limit?: number;
+  status?: string;
+}) => {
   try {
-    const response = await api.get('/contract/my-contracts');
+    const queryParams = new URLSearchParams();
+    
+    // Thêm tham số phân trang nếu có
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.status) queryParams.append('status', params.status);
+    
+    const url = `/contract/my-contracts${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const response = await api.get(url);
     return response.data;
   } catch (error: any) {
     console.error('Error fetching user contracts:', error);

@@ -94,7 +94,13 @@ export const resetPassword = async (
 
 export const updateProfile = async (
   token: string,
-  data: {fullName: string; phone: string; identityNumber: string},
+  data: {
+    fullName: string;
+    phone: string;
+    identityNumber: string;
+    address?: string;
+    birthDate?: string;
+  },
 ) => {
   try {
     const response = await api.put('/user/profile', data, {

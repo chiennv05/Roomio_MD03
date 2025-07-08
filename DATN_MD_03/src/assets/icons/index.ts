@@ -330,7 +330,7 @@ export const Icons = {
     ios: 'icon_search_black',
     android: 'asset:/icons/icon_search_black.png',
   }),
-<<<<<<< HEAD
+
   IconTick: Platform.select({
     ios: 'icons_tick',
     android: 'asset:/icons/icons_tick.png',
@@ -358,8 +358,7 @@ export const Icons = {
   IconRomManagement: Platform.select({
     ios: 'iconRomManagement',
     android: 'asset:/icons/iconRomManagement.png',
-=======
-
+  }),
   IconLocationGray: Platform.select({
     ios: 'icon_location_gray',
     android: 'asset:/icons/icon_location_gray.png',
@@ -616,6 +615,6 @@ export const Icons = {
   IconChairDefault: Platform.select({
     ios: 'icon_chair_default',
     android: 'asset:/icons/icon_chair_default.png',
->>>>>>> 97db243ff50b329c3e3ec76f4be929f5894fe320
+
   }),
 };
