@@ -98,6 +98,12 @@ export default function ProfileScreen() {
     navigation.navigate('TenantList');
   };
 
+  // Hàm xử lý khi nhấn vào "Quản lý hợp đồng"
+  const handleContractPress = () => {
+    // Chuyển đến màn hình ContractManagement
+    navigation.navigate('ContractManagement');
+  };
+
   // Show guest screen if not logged in
   if (isGuest) {
     return (
@@ -142,8 +148,9 @@ export default function ProfileScreen() {
           />
           <SettingItem
             iconStat={Icons.IconContract}
-            label={isLandlord ? "Quản lý hợp đồng thuê" : "Hợp đồng thuê"}
+            label={isLandlord ? "Quản lý hợp đồng" : "Hợp đồng thuê"}
             iconEnd={Icons.IconNext}
+            onPress={handleContractPress}
           />
           <SettingItem
             iconStat={Icons.IconPaper}

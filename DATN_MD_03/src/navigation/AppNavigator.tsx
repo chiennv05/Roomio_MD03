@@ -3,9 +3,11 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginAndRegister from '../screens/LoginAndRegister/LoginAndRegister';
 import HomeScreen from '../screens/HomeScreen/HomeScreen';
+import ContractDetailScreen from '../screens/ChuTro/Contract/ContractDetailScreen';
+import PdfViewerScreen from '../screens/ChuTro/Contract/PdfViewerScreen';
+import { RootStackParamList } from '../types/route';
 
-
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {
   return (
@@ -13,6 +15,8 @@ export default function AppNavigator() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Login" component={LoginAndRegister} />
         <Stack.Screen name="HomeScreen" component={HomeScreen} />
+        <Stack.Screen name="ContractDetail" component={ContractDetailScreen} />
+        <Stack.Screen name="PdfViewer" component={PdfViewerScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

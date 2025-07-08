@@ -14,4 +14,7 @@ export type RootStackParamList = {
   TenantDetail: {tenantId: string};
   LandlordRoom: undefined;
   AddRooom: undefined;
+  ContractManagement: undefined;
+  ContractDetail: {contractId: string};
+  PdfViewer: {pdfUrl: string};
 };

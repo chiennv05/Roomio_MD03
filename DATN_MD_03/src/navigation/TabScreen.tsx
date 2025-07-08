@@ -23,6 +23,9 @@ import 'react-native-gesture-handler';
 import PersonalInformation from '../screens/Profile/PersonalInformation';
 import MyRoomScreen from '../screens/ChuTro/MyRoom/MyRoomScreen';
 import AddRoomScreen from '../screens/ChuTro/AddRoom/AddRoomScreen';
+import ContractManagement from '../screens/ChuTro/Contract/ContractManagement';
+import ContractDetailScreen from '../screens/ChuTro/Contract/ContractDetailScreen';
+import PdfViewerScreen from '../screens/ChuTro/Contract/PdfViewerScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -109,6 +112,27 @@ export default function TabScreen() {
           />
           <Stack.Screen name="LandlordRoom" component={MyRoomScreen} />
           <Stack.Screen name="AddRooom" component={AddRoomScreen} />
+          <Stack.Screen 
+            name="ContractManagement" 
+            component={ContractManagement} 
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen 
+            name="ContractDetail" 
+            component={ContractDetailScreen} 
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen 
+            name="PdfViewer" 
+            component={PdfViewerScreen} 
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </>

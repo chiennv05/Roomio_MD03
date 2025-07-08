@@ -1,5 +1,5 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
-import {getMyContracts, getContractDetail} from '../services/contractApi';
+import {getMyContracts, getContractDetail, generateContractPDF as genContractPDF} from '../services/contractApi';
 
 interface Contract {
   _id: string;
@@ -176,9 +176,26 @@ export const fetchContractDetail = createAsyncThunk(
   async (contractId: string, {rejectWithValue}) => {
     try {
       const response = await getContractDetail(contractId);
-      return response.data;
+      // Kiểm tra cấu trúc response đúng
+      if (response.success && response.data) {
+        return response;
+      }
+      return rejectWithValue('Cấu trúc dữ liệu trả về không hợp lệ');
     } catch (err: any) {
       return rejectWithValue(err.message || 'Không thể tải chi tiết hợp đồng');
+    }
+  },
+);
+
+// Async thunk để tạo file PDF hợp đồng
+export const generateContractPDF = createAsyncThunk(
+  'contract/generateContractPDF',
+  async (contractId: string, {rejectWithValue}) => {
+    try {
+      const response = await genContractPDF(contractId);
+      return response;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Không thể tạo file PDF hợp đồng');
     }
   },
 );
@@ -219,7 +236,8 @@ const contractSlice = createSlice({
       })
       .addCase(fetchContractDetail.fulfilled, (state, action) => {
         state.selectedContractLoading = false;
-        state.selectedContract = action.payload.contract;
+        // Sửa lại phần này để phù hợp với cấu trúc response API
+        state.selectedContract = action.payload.data;
       })
       .addCase(fetchContractDetail.rejected, (state, action) => {
         state.selectedContractLoading = false;

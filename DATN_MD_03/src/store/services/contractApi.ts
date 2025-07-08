@@ -46,7 +46,13 @@ export const getMyContracts = async (params?: {
 // Lấy chi tiết hợp đồng
 export const getContractDetail = async (contractId: string) => {
   try {
+    // Gọi đúng endpoint API
     const response = await api.get(`/contract/${contractId}`);
+    
+    // Kiểm tra và log response để debug
+    console.log('Contract detail response:', JSON.stringify(response.data));
+    
+    // Trả về response đúng như API
     return response.data;
   } catch (error: any) {
     console.error(`Error fetching contract ${contractId}:`, error);
@@ -60,12 +66,29 @@ export const getContractDetail = async (contractId: string) => {
 // Tạo file PDF hợp đồng
 export const generateContractPDF = async (contractId: string) => {
   try {
+    console.log(`Gọi API tạo PDF cho hợp đồng: ${contractId}`);
     const response = await api.post(`/contract/${contractId}/generate-pdf`);
+    
+    // Log kết quả từ API để debug
+    console.log(`API response for contract PDF: ${JSON.stringify(response.data)}`);
+    
+    // Kiểm tra cấu trúc dữ liệu trả về
+    if (!response.data || !response.data.success) {
+      throw new Error('API không trả về dữ liệu hợp lệ');
+    }
+    
     return response.data;
   } catch (error: any) {
     console.error(`Error generating PDF for contract ${contractId}:`, error);
+    
+    // Log thêm chi tiết lỗi để debug
+    if (error.response) {
+      console.error('Error response:', error.response.data);
+      console.error('Error status:', error.response.status);
+    }
+    
     throw {
-      message: error.response?.data?.message || error.message,
+      message: error.response?.data?.message || error.message || 'Không thể tạo file PDF',
       status: error.response?.status,
     };
   }
