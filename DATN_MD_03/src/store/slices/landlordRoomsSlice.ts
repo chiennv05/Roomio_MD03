@@ -3,10 +3,14 @@ import {Room} from '../../types';
 import {
   createLandlordRoomsService,
   getLandlordRoomsService,
+  getLandlordRoomDetailService,
+  updateLandlordRoomService,
+  deleteLandlordRoomService,
 } from '../services/landlordRoomsService';
 
 interface LandlordRoomState {
   rooms: Room[];
+  selectedRoom?: Room;
   loading: boolean;
   error: string | null;
   success: boolean;
@@ -14,6 +18,7 @@ interface LandlordRoomState {
 
 const initialState: LandlordRoomState = {
   rooms: [],
+  selectedRoom: undefined,
   loading: false,
   error: null,
   success: false,
@@ -48,6 +53,45 @@ export const createLandlordRoom = createAsyncThunk(
   },
 );
 
+// ✅ GET chi tiết phòng
+export const getLandlordRoomDetail = createAsyncThunk(
+  'landlordRooms/getRoomDetail',
+  async (roomId: string, {rejectWithValue}) => {
+    try {
+      const res = await getLandlordRoomDetailService(roomId);
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Lỗi lấy chi tiết phòng');
+    }
+  },
+);
+
+// ✅ PUT cập nhật phòng
+export const updateLandlordRoom = createAsyncThunk(
+  'landlordRooms/updateRoom',
+  async ({roomId, room}: {roomId: string; room: Room}, {rejectWithValue}) => {
+    try {
+      const res = await updateLandlordRoomService(roomId, room);
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Lỗi cập nhật phòng');
+    }
+  },
+);
+
+// ✅ DELETE phòng
+export const deleteLandlordRoom = createAsyncThunk(
+  'landlordRooms/deleteRoom',
+  async (roomId: string, {rejectWithValue}) => {
+    try {
+      const res = await deleteLandlordRoomService(roomId);
+      return {roomId, data: res.data};
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Xóa phòng thất bại');
+    }
+  },
+);
+
 const landlordRoomsSlice = createSlice({
   name: 'landlordRooms',
   initialState,
@@ -59,7 +103,7 @@ const landlordRoomsSlice = createSlice({
   },
   extraReducers: builder => {
     builder
-      // GET rooms
+      // GET danh sách
       .addCase(getLandlordRooms.pending, state => {
         state.loading = true;
         state.error = null;
@@ -76,7 +120,7 @@ const landlordRoomsSlice = createSlice({
         },
       )
 
-      // CREATE room
+      // CREATE
       .addCase(createLandlordRoom.pending, state => {
         state.loading = true;
         state.success = false;
@@ -87,7 +131,7 @@ const landlordRoomsSlice = createSlice({
         (state, action: PayloadAction<Room>) => {
           state.loading = false;
           state.success = true;
-          state.rooms.push(action.payload); // hoặc gọi lại API nếu muốn
+          state.rooms.push(action.payload);
         },
       )
       .addCase(
@@ -96,6 +140,73 @@ const landlordRoomsSlice = createSlice({
           state.loading = false;
           state.error = action.payload;
           state.success = false;
+        },
+      )
+
+      // GET DETAIL
+      .addCase(getLandlordRoomDetail.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        getLandlordRoomDetail.fulfilled,
+        (state, action: PayloadAction<Room>) => {
+          state.loading = false;
+          state.selectedRoom = action.payload;
+        },
+      )
+      .addCase(
+        getLandlordRoomDetail.rejected,
+        (state, action: PayloadAction<any>) => {
+          state.loading = false;
+          state.error = action.payload;
+        },
+      )
+
+      // UPDATE
+      .addCase(updateLandlordRoom.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        updateLandlordRoom.fulfilled,
+        (state, action: PayloadAction<Room>) => {
+          state.loading = false;
+          const index = state.rooms.findIndex(
+            r => r._id === action.payload._id,
+          );
+          if (index !== -1) {
+            state.rooms[index] = action.payload;
+          }
+        },
+      )
+      .addCase(
+        updateLandlordRoom.rejected,
+        (state, action: PayloadAction<any>) => {
+          state.loading = false;
+          state.error = action.payload;
+        },
+      )
+
+      // DELETE
+      .addCase(deleteLandlordRoom.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        deleteLandlordRoom.fulfilled,
+        (state, action: PayloadAction<{roomId: string}>) => {
+          state.loading = false;
+          state.rooms = state.rooms.filter(
+            r => r._id !== action.payload.roomId,
+          );
+        },
+      )
+      .addCase(
+        deleteLandlordRoom.rejected,
+        (state, action: PayloadAction<any>) => {
+          state.loading = false;
+          state.error = action.payload;
         },
       );
   },

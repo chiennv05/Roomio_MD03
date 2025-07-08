@@ -18,4 +18,6 @@ export type RootStackParamList = {
     };
   };
   MapScreen: undefined;
+  DetailRoomLandlord: {id: string};
+  UpdateRoomScreen: {item: Room};
 };
