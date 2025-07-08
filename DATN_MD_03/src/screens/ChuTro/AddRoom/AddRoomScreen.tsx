@@ -1,4 +1,4 @@
-import {Alert, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Alert, ScrollView, StyleSheet, Text, View, SafeAreaView, StatusBar} from 'react-native';
 import React, {useCallback, useEffect, useState} from 'react';
 import {Colors} from '../../../theme/color';
 import {ItemInput, UIHeader} from '../MyRoom/components';
@@ -502,145 +502,152 @@ export default function AddRoomScreen() {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.contentContainer}>
-      <UIHeader
-        title="Tạo bài đăng"
-        onPressLeft={() => navigation.goBack()}
-        iconLeft={Icons.IconArrowLeft}
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={Colors.white}
+        translucent={true}
       />
-      <View style={styles.content}>
-        <ItemTitle title="Thông tin bài đăng" />
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentContainer}>
+        <UIHeader
+          title="Tạo bài đăng"
+          onPressLeft={() => navigation.goBack()}
+          iconLeft={Icons.IconArrowLeft}
+        />
+        <View style={styles.content}>
+          <ItemTitle title="Thông tin bài đăng" />
 
-        <View style={styles.containerInputRow}>
+          <View style={styles.containerInputRow}>
+            <ItemInput
+              placeholder="Số phòng"
+              value={roomNumber}
+              onChangeText={setRoomNumber}
+              editable={true}
+              width={SCREEN.width * 0.43}
+            />
+            <ItemInput
+              placeholder="Diện tích"
+              value={area?.toString() || ''}
+              onChangeText={text => {
+                const value = text.replace(/[^0-9]/g, '');
+                setArea(value === '' ? '' : parseInt(value, 10));
+              }}
+              editable={true}
+              keyboardType="numeric"
+              width={SCREEN.width * 0.43}
+            />
+          </View>
           <ItemInput
-            placeholder="Số phòng"
-            value={roomNumber}
-            onChangeText={setRoomNumber}
-            editable={true}
-            width={SCREEN.width * 0.43}
+            placeholder="Địa chỉ tiết"
+            value={addressText}
+            onChangeText={setAddressText}
+            iconRight={Icons.IconMap}
+            onPressIcon={onPressOnpenMap}
+            editable={false}
           />
+          <View style={styles.containerInputRow}>
+            <ItemInput
+              placeholder="Số người"
+              value={maxOccupancy?.toString() || ''}
+              onChangeText={text => {
+                const value = text.replace(/[^0-9]/g, '');
+                setMaxOccupancy(value === '' ? '' : parseInt(value, 10));
+              }}
+              editable={true}
+              keyboardType="numeric"
+              width={SCREEN.width * 0.43}
+            />
+            <ItemInput
+              placeholder="Giá tiền"
+              value={rentPrice?.toString() || ''}
+              onChangeText={text => {
+                const value = text.replace(/[^0-9]/g, '');
+                setRentPrice(value === '' ? '' : parseInt(value, 10));
+              }}
+              editable={true}
+              keyboardType="numeric"
+              width={SCREEN.width * 0.43}
+            />
+          </View>
           <ItemInput
-            placeholder="Diện tích"
-            value={area?.toString() || ''}
-            onChangeText={text => {
-              const value = text.replace(/[^0-9]/g, '');
-              setArea(value === '' ? '' : parseInt(value, 10));
-            }}
+            placeholder="Mô tả"
+            value={description}
+            onChangeText={setDescription}
             editable={true}
-            keyboardType="numeric"
-            width={SCREEN.width * 0.43}
+            height={moderateScale(100)}
+            borderRadius={10}
           />
-        </View>
-        <ItemInput
-          placeholder="Địa chỉ tiết"
-          value={addressText}
-          onChangeText={setAddressText}
-          iconRight={Icons.IconMap}
-          onPressIcon={onPressOnpenMap}
-          editable={false}
-        />
-        <View style={styles.containerInputRow}>
-          <ItemInput
-            placeholder="Số người"
-            value={maxOccupancy?.toString() || ''}
-            onChangeText={text => {
-              const value = text.replace(/[^0-9]/g, '');
-              setMaxOccupancy(value === '' ? '' : parseInt(value, 10));
-            }}
-            editable={true}
-            keyboardType="numeric"
-            width={SCREEN.width * 0.43}
-          />
-          <ItemInput
-            placeholder="Giá tiền"
-            value={rentPrice?.toString() || ''}
-            onChangeText={text => {
-              const value = text.replace(/[^0-9]/g, '');
-              setRentPrice(value === '' ? '' : parseInt(value, 10));
-            }}
-            editable={true}
-            keyboardType="numeric"
-            width={SCREEN.width * 0.43}
-          />
-        </View>
-        <ItemInput
-          placeholder="Mô tả"
-          value={description}
-          onChangeText={setDescription}
-          editable={true}
-          height={moderateScale(100)}
-          borderRadius={10}
-        />
-        <ItemTitle title="Hình ảnh" icon={Icons.IconAdd} onPress={pickImages} />
-        <View style={styles.containerImage}>
-          {image.length === 0 ? (
-            <Text>Chưa có ảnh nào được chọn</Text>
-          ) : (
+          <ItemTitle title="Hình ảnh" icon={Icons.IconAdd} onPress={pickImages} />
+          <View style={styles.containerImage}>
+            {image.length === 0 ? (
+              <Text>Chưa có ảnh nào được chọn</Text>
+            ) : (
+              <FlatList
+                data={image}
+                numColumns={3}
+                scrollEnabled={false}
+                showsVerticalScrollIndicator={false}
+                keyExtractor={item => item.id}
+                renderItem={({item, index}) => (
+                  <ItemImage
+                    key={index}
+                    item={item}
+                    onDeleteImage={onDeleteImage}
+                    onClickItem={onclickItemImage}
+                  />
+                )}
+              />
+            )}
+          </View>
+          <ItemTitle title="Phí dịch vụ" />
+          <View style={styles.containerImage}>
             <FlatList
-              data={image}
+              data={serviceOptionList}
+              keyExtractor={(_, index) => index.toString()}
               numColumns={3}
               scrollEnabled={false}
               showsVerticalScrollIndicator={false}
-              keyExtractor={item => item.id}
-              renderItem={({item, index}) => (
-                <ItemImage
-                  key={index}
+              renderItem={({item}) => (
+                <ItemService
+                  status={item.status}
                   item={item}
-                  onDeleteImage={onDeleteImage}
-                  onClickItem={onclickItemImage}
+                  onPress={handleClickItem}
                 />
               )}
             />
-          )}
-        </View>
-        <ItemTitle title="Phí dịch vụ" />
-        <View style={styles.containerImage}>
+          </View>
+
+          <ItemTitle title="Tiện nghi" />
           <FlatList
-            data={serviceOptionList}
-            keyExtractor={(_, index) => index.toString()}
-            numColumns={3}
+            numColumns={2}
+            scrollEnabled={false}
+            data={amenitiesOptions}
+            showsVerticalScrollIndicator={false}
+            keyExtractor={item => item.value}
+            renderItem={renderAmenityItem}
+          />
+          <ItemTitle title="Nội thất" />
+          <FlatList
+            numColumns={2}
             scrollEnabled={false}
             showsVerticalScrollIndicator={false}
-            renderItem={({item}) => (
-              <ItemService
-                status={item.status}
-                item={item}
-                onPress={handleClickItem}
-              />
-            )}
+            data={furnitureOptions}
+            keyExtractor={item => item.value}
+            renderItem={renderFurnitureItem}
           />
+          <View style={styles.containerButton}>
+            <ItemButtonConfirm
+              onPress={handleCreatePost}
+              title="Tạo bài đăng"
+              icon={Icons.IconAdd}
+              onPressIcon={() => {}}
+            />
+          </View>
         </View>
-
-        <ItemTitle title="Tiện nghi" />
-        <FlatList
-          numColumns={2}
-          scrollEnabled={false}
-          data={amenitiesOptions}
-          showsVerticalScrollIndicator={false}
-          keyExtractor={item => item.value}
-          renderItem={renderAmenityItem}
-        />
-        <ItemTitle title="Nội thất" />
-        <FlatList
-          numColumns={2}
-          scrollEnabled={false}
-          showsVerticalScrollIndicator={false}
-          data={furnitureOptions}
-          keyExtractor={item => item.value}
-          renderItem={renderFurnitureItem}
-        />
-        <View style={styles.containerButton}>
-          <ItemButtonConfirm
-            onPress={handleCreatePost}
-            title="Tạo bài đăng"
-            icon={Icons.IconAdd}
-            onPressIcon={() => {}}
-          />
-        </View>
-      </View>
+      </ScrollView>
       <ModalLoading
         visible={visibleImage}
         loading={isUploading}
@@ -653,15 +660,19 @@ export default function AddRoomScreen() {
         item={itemServiceEdit}
         handleCancel={handleCancelModal}
       />
-    </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.white,
-    paddingBottom: responsiveSpacing(20),
+    paddingTop: StatusBar.currentHeight || 0,
   },
   contentContainer: {
     flexGrow: 1, // cần thiết để justifyContent hoạt động
