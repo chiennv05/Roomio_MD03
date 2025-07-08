@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
@@ -21,55 +20,49 @@ const NotificationScreenHeader: React.FC<NotificationScreenHeaderProps> = ({
   };
 
   return (
-    <>
+    <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={styles.container}>
-          {/* Nút back */}
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={handleBackPress}
-            activeOpacity={0.7}
-          >
-            <Image 
-              source={{uri: Icons.IconOut}}
-              style={styles.backIcon}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
+      
+      {/* Nút back */}
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={handleBackPress}
+        activeOpacity={0.7}
+      >
+        <Image 
+          source={{uri: Icons.IconOut}}
+          style={styles.backIcon}
+          resizeMode="contain"
+        />
+      </TouchableOpacity>
 
-          {/* Tiêu đề */}
-          <Text style={styles.title}>Thông báo</Text>
+      {/* Tiêu đề */}
+      <Text style={styles.title}>Thông báo</Text>
 
-          {/* Nút menu */}
-          <TouchableOpacity 
-            style={styles.menuButton}
-            onPress={onMenuPress}
-            activeOpacity={0.7}
-          >
-            <Image 
-              source={{uri: Icons.IconSelectDate}}
-              style={styles.menuIcon}
-              resizeMode="contain"
-            />
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    </>
+      {/* Nút menu */}
+      <TouchableOpacity 
+        style={styles.menuButton}
+        onPress={onMenuPress}
+        activeOpacity={0.7}
+      >
+        <Image 
+          source={{uri: Icons.IconSelectDate}}
+          style={styles.menuIcon}
+          resizeMode="contain"
+        />
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: Colors.white,
-  },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: responsiveSpacing(16),
     paddingVertical: responsiveSpacing(12),
-    backgroundColor: Colors.backgroud,
+    backgroundColor: Colors.white,
     borderBottomWidth: 1,
     borderBottomColor: Colors.divider,
   },
@@ -103,7 +96,6 @@ const styles = StyleSheet.create({
     width: moderateScale(36),
     height: moderateScale(36),
   },
-
 });
 
 export default NotificationScreenHeader; 

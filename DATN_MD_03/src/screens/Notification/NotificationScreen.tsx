@@ -143,7 +143,7 @@ const NotificationScreen = () => {
   // Loading state
   if (loading && notifications.length === 0) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <SafeAreaView style={styles.safeArea}>
         <NotificationScreenHeader onMenuPress={handleMenuPress} />
         <View style={styles.loadingContainer}>
           <LoadingAnimation size="large" color={Colors.limeGreen} />
@@ -153,7 +153,7 @@ const NotificationScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safeArea}>
       <NotificationScreenHeader onMenuPress={handleMenuPress} />
       
       <View style={styles.container}>
