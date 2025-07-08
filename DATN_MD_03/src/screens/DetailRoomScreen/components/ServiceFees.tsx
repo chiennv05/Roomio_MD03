@@ -38,12 +38,12 @@ interface ServiceFeesProps {
 
 // Mapping cho service labels và icons
 const serviceMapping = {
-  electricity: { label: 'Điện', icon: Icons.IconTienDien },
-  water: { label: 'Nước', icon: Icons.IconTienNuoc },
-  cleaning: { label: 'Dịch vụ', icon: Icons.IconVeSinh },
-  parking: { label: 'Gửi xe', icon: Icons.IconGuiXe },
-  internet: { label: 'Internet', icon: Icons.IconWifiMienPhi },
-  elevator: { label: 'Thang máy', icon: Icons.IconThangMay },
+  electricity: { label: 'Điện', icon: Icons.IconElectricalSelected },
+  water: { label: 'Nước', icon: Icons.IconWarterDropSelected },
+  cleaning: { label: 'Dịch vụ', icon: Icons.IconServiceSelected },
+  parking: { label: 'Gửi xe', icon: Icons.IconSacXeSelectd },
+  internet: { label: 'Internet', icon: Icons.IconWifiSelectd },
+  elevator: { label: 'Thang máy', icon: Icons.IconThangMaySelectd },
 };
 
 // Hàm lấy unit theo loại pricing

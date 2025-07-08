@@ -1,19 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   Image,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
+  FlatList,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { Colors } from '../../../theme/color';
 import { Room } from '../../../types/Room';
 import { 
-  SCREEN, 
   responsiveFont, 
   responsiveSpacing,
-  moderateScale 
+  scale,
+  verticalScale,
+  moderateScale,
+  responsiveIcon,
 } from '../../../utils/responsive';
 import { Fonts } from '../../../theme/fonts';
 import { getImageUrl } from '../../../configs';
@@ -28,17 +31,26 @@ interface RoomCardProps {
 const RoomCard: React.FC<RoomCardProps> = ({ item, onPress }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
-  // Chuyển đổi đường dẫn hình ảnh từ API thành URL đầy đủ
   const images = item.photos?.map(photo => getImageUrl(photo)) || [];
   
-  // Hàm xử lý khi người dùng scroll qua các hình ảnh
-  const handleScroll = (event: any) => {
-    const slideSize = SCREEN.width - responsiveSpacing(32);
+  const onScroll = useCallback((event: any) => {
+    const slideSize = event.nativeEvent.layoutMeasurement.width;
     const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
     setCurrentImageIndex(index);
-  };
+  }, []);
 
-  // Hàm xử lý khi nhấn vào card
+  const renderCarouselItem = ({item: imageItem}: {item: string}) => (
+    <View style={styles.carouselItemContainer}>
+      <Image source={{uri: imageItem}} style={styles.carouselImage} />
+      <LinearGradient
+        colors={['#00000080', '#FFFFFF00']}
+        style={styles.imageOverlay}
+        start={{ x: 0, y: 1 }}
+        end={{ x: 0, y: 0 }}
+      />
+    </View>
+  );
+
   const handleCardPress = () => {
     if (item._id) {
       onPress(item._id);
@@ -47,183 +59,219 @@ const RoomCard: React.FC<RoomCardProps> = ({ item, onPress }) => {
     }
   };
 
+  const formatPrice = (price: number) => {
+    return `${(price / 1000000).toFixed(1)}.000.000/ tháng`;
+  };
+
   return (
-    <TouchableOpacity style={styles.card} onPress={handleCardPress} activeOpacity={0.8}>
-      {/* Container chứa carousel với viền tròn */}
-      <View style={styles.carouselContainer}>
-        <ScrollView
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-        >
-          {images.map((imageUri: string, index: number) => (
-            <View key={index} style={styles.carouselItemContainer}>
-              <Image source={{ uri: imageUri }} style={styles.carouselImage} />
-            </View>
-          ))}
-        </ScrollView>
-        
-        {/* Price tag overlay ở góc dưới bên trái */}
-        <View style={styles.priceOverlay}>
-          <Text style={styles.priceOverlayText}>
-            {item.rentPrice?.toLocaleString('vi-VN')}/ tháng
-          </Text>
-        </View>
-        
-        {/* Các chấm indicator */}
-        {images.length > 1 && (
-          <View style={styles.dotsContainer}>
-            {images.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.dot,
-                  currentImageIndex === index && styles.activeDot
-                ]}
-              />
-            ))}
+    <View style={styles.outerWrapper}>
+      <TouchableOpacity style={styles.card} onPress={handleCardPress} activeOpacity={0.8}>
+        {/* Container chứa carousel với viền tròn */}
+        <View style={styles.carouselContainer}>
+          <FlatList
+            data={images}
+            renderItem={renderCarouselItem}
+            keyExtractor={(imageItem, index) => `${item._id}-${index}`}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            pagingEnabled
+            onScroll={onScroll}
+            scrollEventThrottle={16}
+            style={styles.carousel}
+          />
+          
+          {/* Price tag overlay */}
+          <View style={styles.priceTag}>
+            <Text style={styles.priceText}>
+              {formatPrice(item.rentPrice || 0)}
+            </Text>
           </View>
-        )}
-      </View>
-      
-      {/* Phần thông tin phòng trọ */}
-      <View style={styles.info}>
-        <Text style={styles.title}>{item.description}</Text>
-        <View style={styles.detailContainer}>
-          <Image source={{ uri: Icons.IconHome }} style={styles.icon} />
-          <Text style={styles.detail}>Mã phòng: {item.roomNumber}</Text>
+          
+          {/* Progress bars */}
+          {images.length > 1 && (
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBars}>
+                {images.map((_, index) => (
+                  <View 
+                    key={index} 
+                    style={[
+                      styles.progressBar,
+                      {
+                        backgroundColor: index === currentImageIndex 
+                          ? '#BAFD00'
+                          : 'rgba(255, 255, 255, 0.4)'
+                      }
+                    ]} 
+                  />
+                ))}
+              </View>
+            </View>
+          )}
         </View>
-        <View style={styles.detailContainer}>
-          <Image source={{ uri: Icons.IconLocation }} style={styles.icon} />
-          <Text style={styles.detail}>
-            {item.location.ward}, {item.location.district}, {item.location.province}
+        
+        {/* Thông tin phòng */}
+        <View style={styles.info}>
+          <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
+            {item.description}
           </Text>
+          <View style={styles.infoRow}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Image source={{ uri: Icons.IconHome }} style={styles.icon} />
+              <Text style={styles.infoText} numberOfLines={1}>
+                   Mã:  {item.roomNumber}
+              </Text>
+            </View>
+            <Text style={styles.separator}>|</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+              <Image source={{ uri: Icons.IconLocation }} style={styles.icon} />
+              <Text style={styles.addressText} numberOfLines={1} ellipsizeMode="tail">
+                {item.location.district}, {item.location.province}
+              </Text>
+            </View>
+            <Text style={styles.separator}>|</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Image source={{ uri: Icons.IconArea }} style={styles.icon} />
+              <Text style={styles.infoText} numberOfLines={1}>
+                {item.area}m²
+              </Text>
+            </View>
+          </View>
         </View>
-        <View style={styles.detailContainer}>
-          <Image source={{ uri: Icons.IconArea }} style={styles.icon} />
-          <Text style={styles.detail}>{item.area}m²</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </View>
   );
 };
 
 export default RoomCard;
 
 const styles = StyleSheet.create({
+  outerWrapper: {
+    width: scale(372),
+    alignSelf: 'center',
+    marginVertical: verticalScale(8),
+  },
   card: {
     backgroundColor: Colors.white,
-    borderRadius: moderateScale(20),
+    borderRadius: moderateScale(10),
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
     overflow: 'hidden',
-    marginBottom: responsiveSpacing(20),
-    marginHorizontal: responsiveSpacing(16),
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
+    padding: responsiveSpacing(16),
   },
   carouselContainer: {
     position: 'relative',
-    paddingTop: responsiveSpacing(12),
-    paddingBottom: responsiveSpacing(1),
+    height: verticalScale(200),
+    borderRadius: moderateScale(6),
+    overflow: 'hidden',
   },
   carouselItemContainer: {
-    width: SCREEN.width - responsiveSpacing(32),
-    height: (SCREEN.width - responsiveSpacing(32)) * 0.65,
-    paddingHorizontal: responsiveSpacing(10),
-    paddingVertical: responsiveSpacing(6),
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: scale(340),
+    height: verticalScale(200),
+    borderRadius: moderateScale(10),
+    overflow: 'hidden',
   },
   carouselImage: {
     width: '100%',
     height: '100%',
+    borderRadius: moderateScale(8),
     resizeMode: 'cover',
-    borderRadius: moderateScale(16),
-    backgroundColor: Colors.lightGray,
   },
-  priceOverlay: {
+  imageOverlay: {
     position: 'absolute',
-    bottom: responsiveSpacing(36),
-    left: responsiveSpacing(20),
-    backgroundColor: Colors.limeGreen,
-    paddingHorizontal: responsiveSpacing(12),
-    paddingVertical: responsiveSpacing(8),
-    borderRadius: moderateScale(10),
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  priceOverlayText: {
-    color: Colors.black,
-    fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(14),
-    fontWeight: 'bold',
-  },
-  dotsContainer: {
-    position: 'absolute',
-    bottom: responsiveSpacing(14),
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
+    bottom: 0,
+    height: '50%',
+    borderRadius: moderateScale(10),
+  },
+  priceTag: {
+    position: 'absolute',
+    bottom: responsiveSpacing(15),
+    left: responsiveSpacing(7),
+    paddingHorizontal: responsiveSpacing(10),
+    paddingVertical: responsiveSpacing(6),
+    borderRadius: moderateScale(8),
+  },
+  priceText: {
+    color: Colors.limeGreen,
+    fontSize: responsiveFont(18),
+    fontFamily: Fonts.Roboto_Bold,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+  },
+  progressContainer: {
+    position: 'absolute',
+    bottom: responsiveSpacing(8),
+    left: responsiveSpacing(20),
+    right: responsiveSpacing(20),
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  dot: {
-    width: moderateScale(8),
-    height: moderateScale(8),
-    borderRadius: moderateScale(4),
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    marginHorizontal: responsiveSpacing(3),
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
+  progressBars: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: responsiveSpacing(4),
   },
-  activeDot: {
-    backgroundColor: Colors.limeGreen,
-    width: moderateScale(28),
-    borderRadius: moderateScale(4),
-    borderColor: Colors.limeGreen,
+  progressBar: {
+    flex: 1,
+    height: moderateScale(4),
+    borderRadius: moderateScale(2),
   },
   info: {
-    padding: responsiveSpacing(20),
-    backgroundColor: Colors.white,
+    paddingHorizontal: responsiveSpacing(4),
+    paddingTop: responsiveSpacing(8),
+    paddingBottom: responsiveSpacing(12),
   },
   title: {
+    fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(18),
     color: Colors.black,
-    marginBottom: responsiveSpacing(14),
-    lineHeight: responsiveFont(24),
+    lineHeight: responsiveFont(20),
+    marginBottom: responsiveSpacing(6),
   },
-  detailContainer: {
+  infoRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: responsiveSpacing(10),
-    paddingVertical: responsiveSpacing(3),
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: responsiveSpacing(4),
   },
   icon: {
-    width: moderateScale(18),
-    height: moderateScale(18),
-    marginRight: responsiveSpacing(12),
-    marginTop: responsiveSpacing(2),
-    tintColor: Colors.darkGreen,
+    width: responsiveIcon(16),
+    height: responsiveIcon(16),
+    tintColor: Colors.gray60,
   },
-  detail: {
-    color: Colors.black,
+  infoText: {
     fontSize: responsiveFont(14),
+    lineHeight: responsiveFont(18),
+    color: Colors.gray60,
+    fontFamily: Fonts.Roboto_Regular,
+  },
+  addressText: {
+    fontSize: responsiveFont(14),
+    lineHeight: responsiveFont(18),
+    color: Colors.gray60,
     fontFamily: Fonts.Roboto_Regular,
     flex: 1,
-    lineHeight: responsiveFont(20),
+    marginRight: responsiveSpacing(8),
+  },
+  separator: {
+    fontSize: responsiveFont(14),
+    lineHeight: responsiveFont(18),
+    color: Colors.gray60,
+    fontFamily: Fonts.Roboto_Regular,
+    marginHorizontal: responsiveSpacing(8),
+  },
+  carousel: {
+    flex: 1,
+  },
+  gradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: '50%',
+    borderRadius: moderateScale(6),
   },
 });
