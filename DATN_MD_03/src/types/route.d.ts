@@ -21,6 +21,12 @@ export type RootStackParamList = {
     longitude?: number;
     address?: string;
     roomDetail?: Room;
+    isSelectMode?: boolean;
+    onSelectLocation?: (location: {
+      latitude: number;
+      longitude: number;
+      address: string;
+    }) => void;
   };
   AddRooom: {
     location?: {

@@ -40,7 +40,7 @@ const ItemInput = ({
   height = verticalScale(50),
   borderRadius = 24,
 }: InputProps) => {
-  const isMultiline = placeholder === 'Mô tả';
+  const isMultiline = placeholder === 'Mô tả' || placeholder === 'Địa chỉ chi tiết';
   const [inputHeight, setInputHeight] = useState(height);
 
   return (

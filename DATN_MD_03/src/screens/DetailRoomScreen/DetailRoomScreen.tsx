@@ -239,7 +239,8 @@ const DetailRoomScreen: React.FC = () => {
         latitude,
         longitude,
         address: roomDetail.location.addressText,
-        roomDetail: roomDetail
+        roomDetail: roomDetail,
+        isSelectMode: false
       });
     }
   }, [navigation, roomDetail]);
