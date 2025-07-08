@@ -13,7 +13,9 @@ import {
 import EmptyNotification from './components/EmptyNotification';
 import NotificationScreenHeader from './components/NotificationScreenHeader';
 import NotificationHeader from './components/NotificationHeader';
-import NotificationListContainer, { FormattedNotification } from './components/NotificationListContainer';
+import NotificationListContainer, {
+  FormattedNotification,
+} from './components/NotificationListContainer';
 import LoadingAnimation from '../../components/LoadingAnimation';
 import {Colors} from '../../theme/color';
 import {responsiveSpacing} from '../../utils/responsive';
