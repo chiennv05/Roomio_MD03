@@ -57,6 +57,7 @@ interface MapScreenProps {
 export default function MapScreen({route}: MapScreenProps) {
   const navigation = useNavigation<MapScreenNavigationProp>();
   const mapRef = useRef<MapView>(null);
+  const isMapReady = useRef(false);
   const [searchText, setSearchText] = useState('');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<{
@@ -65,8 +66,7 @@ export default function MapScreen({route}: MapScreenProps) {
     address?: string;
   } | null>(null);
 
-  const [isLoadingCurrentLocation, setIsLoadingCurrentLocation] =
-    useState(false);
+  const [isLoadingCurrentLocation, setIsLoadingCurrentLocation] = useState(false);
   const [distance, setDistance] = useState<string>('');
   const [isCalculatingDistance, setIsCalculatingDistance] = useState(false);
 
@@ -88,6 +88,39 @@ export default function MapScreen({route}: MapScreenProps) {
   });
 
   const isSelectMode = route.params?.isSelectMode;
+
+  // Hàm khởi tạo marker và region
+  const initializeMapData = useCallback(() => {
+    if (route.params?.latitude && route.params?.longitude) {
+      const newRegion = {
+        latitude: route.params.latitude,
+        longitude: route.params.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+
+      const roomMarker = {
+        id: 'room',
+        latitude: route.params.latitude,
+        longitude: route.params.longitude,
+        address: route.params.address,
+        type: 'room' as const,
+      };
+
+      setMapRegion(newRegion);
+      setMarkers([roomMarker]);
+      setSelectedLocation({
+        latitude: route.params.latitude,
+        longitude: route.params.longitude,
+        address: route.params.address,
+      });
+
+      // Animate map to new region
+      if (mapRef.current && isMapReady.current) {
+        mapRef.current.animateToRegion(newRegion, 1000);
+      }
+    }
+  }, [route.params]);
 
   const requestLocationPermission = async () => {
     if (Platform.OS === 'android') {
@@ -111,33 +144,17 @@ export default function MapScreen({route}: MapScreenProps) {
     return true;
   };
 
+  // Khởi tạo dữ liệu khi component mount
   useEffect(() => {
     requestLocationPermission();
+    initializeMapData();
+  }, [initializeMapData]);
 
-    // Nếu có tọa độ phòng, hiển thị marker
-    if (route.params?.latitude && route.params?.longitude) {
-      const roomMarker = {
-        id: 'room',
-        latitude: route.params.latitude,
-        longitude: route.params.longitude,
-        address: route.params.address,
-        type: 'room' as const
-      };
-      setMarkers([roomMarker]);
-      setSelectedLocation({
-        latitude: route.params.latitude,
-        longitude: route.params.longitude,
-        address: route.params.address,
-      });
-
-      setMapRegion({
-        latitude: route.params.latitude,
-        longitude: route.params.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      });
-    }
-  }, [route.params?.latitude, route.params?.longitude, route.params?.address]);
+  // Xử lý khi map sẵn sàng
+  const handleMapReady = useCallback(() => {
+    isMapReady.current = true;
+    initializeMapData();
+  }, [initializeMapData]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -341,7 +358,6 @@ export default function MapScreen({route}: MapScreenProps) {
     // Tìm số nhà và tên đường (thường ở đầu)
     for (const part of addressParts) {
       const lowerPart = part.toLowerCase();
-      
       // Bỏ qua nếu chứa từ khóa cần loại bỏ
       if (excludeKeywords.some(keyword => lowerPart.includes(keyword))) {
         continue;
@@ -368,7 +384,6 @@ export default function MapScreen({route}: MapScreenProps) {
         }
         continue;
       }
-      
       // Tìm tên đường
       if ((lowerPart.includes('phố') || lowerPart.includes('đường')) && !streetName) {
         streetName = part.trim();
@@ -645,7 +660,8 @@ export default function MapScreen({route}: MapScreenProps) {
         initialRegion={mapRegion}
         showsUserLocation={false}
         showsMyLocationButton={false}
-        onPress={isSelectMode ? handleMapPress : undefined}>
+        onPress={isSelectMode ? handleMapPress : undefined}
+        onMapReady={handleMapReady}>
         {markers.map(marker => (
           <Marker
             key={marker.id}
@@ -653,23 +669,8 @@ export default function MapScreen({route}: MapScreenProps) {
               latitude: marker.latitude,
               longitude: marker.longitude,
             }}
-            tracksViewChanges={false}>
-            <Image
-              source={{
-                uri: marker.type === 'room' 
-                  ? Icons.IconMaker 
-                  : marker.type === 'current'
-                  ? Icons.IconMyLocation
-                  : Icons.IconMaker
-              }}
-              style={[
-                styles.markerIcon,
-                marker.type === 'current' && styles.currentLocationMarker,
-                marker.type === 'selected' && styles.selectedLocationMarker
-              ]}
-              resizeMode="contain"
-            />
-          </Marker>
+            pinColor={marker.type === 'room' ? 'red' : 'green'}
+          />
         ))}
       </MapView>
 

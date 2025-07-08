@@ -50,8 +50,22 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Title và Price */}
-      <Text style={styles.title} numberOfLines={2}>{name}</Text>
+      {/* Title và Map Button */}
+      <View style={styles.titleContainer}>
+        <Text style={styles.title} numberOfLines={2}>{name}</Text>
+        {onMapPress && (
+          <TouchableOpacity 
+            style={styles.mapButton}
+            onPress={onMapPress}
+            activeOpacity={0.7}
+          >
+            <Image 
+              source={{ uri: Icons.IconMap }}
+              style={styles.mapIcon}
+            />
+          </TouchableOpacity>
+        )}
+      </View>
       <Text style={styles.priceText}>{price}/ tháng</Text>
 
       {/* Room Code */}
@@ -65,7 +79,7 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
         <Text style={styles.roomCode}>Mã phòng: {roomCode}</Text>
       </View>
 
-      {/* Address với icon map */}
+      {/* Address */}
       <View style={styles.addressContainer}>
         <View style={styles.addressIcon}>
           <Image 
@@ -74,21 +88,9 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
           />
         </View>
         <Text style={styles.address}>{address}</Text>
-        {onMapPress && (
-          <TouchableOpacity 
-            style={styles.mapButton}
-            onPress={onMapPress}
-            activeOpacity={0.7}
-          >
-            <Image 
-              source={{ uri: Icons.IconLocationGreen }}
-              style={styles.mapIcon}
-            />
-          </TouchableOpacity>
-        )}
       </View>
 
-      {/* Thông tin 3 cột ngang, không bọc ngoài */}
+      {/* Thông tin 3 cột ngang */}
       <Text style={styles.sectionTitle}>Thông tin</Text>
       <View style={styles.infoRowNoBg}>
         {infoItems.map(item => (
@@ -107,12 +109,31 @@ const styles = StyleSheet.create({
   container: {
     paddingVertical: responsiveSpacing(16),
   },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: responsiveSpacing(8),
+  },
   title: {
+    flex: 1,
     fontSize: responsiveFont(20),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
-    marginBottom: responsiveSpacing(8),
     lineHeight: responsiveFont(24),
+    marginRight: responsiveSpacing(8),
+  },
+  mapButton: {
+    padding: responsiveSpacing(8),
+    borderRadius: responsiveIcon(8),
+    backgroundColor: Colors.limeGreenLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mapIcon: {
+    width: responsiveIcon(24),
+    height: responsiveIcon(24),
+    tintColor: Colors.darkGreen,
   },
   priceText: {
     fontSize: responsiveFont(24),
@@ -166,19 +187,6 @@ const styles = StyleSheet.create({
     color: Colors.black,
     fontFamily: Fonts.Roboto_Regular,
     lineHeight: responsiveFont(18),
-  },
-  mapButton: {
-    marginLeft: responsiveSpacing(8),
-    padding: responsiveSpacing(4),
-    borderRadius: responsiveIcon(16),
-    backgroundColor: Colors.limeGreenLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  mapIcon: {
-    width: responsiveIcon(20),
-    height: responsiveIcon(20),
-    tintColor: Colors.darkGreen,
   },
   sectionTitle: {
     fontSize: responsiveFont(16),
