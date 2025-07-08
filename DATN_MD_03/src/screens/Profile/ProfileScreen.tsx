@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -10,23 +10,23 @@ import {
 import ProfileHeader from './components/ProfileHeader';
 import SettingSwitch from './components/SettingSwitch';
 import SettingItem from './components/SettingItem';
-import {GuestProfileAnimation, LogoutModal} from '../../components';
+import { GuestProfileAnimation, LogoutModal } from '../../components';
 import {
   SCREEN,
   responsiveFont,
   scale,
   verticalScale,
 } from '../../utils/responsive';
-import {Colors} from '../../theme/color';
-import {Fonts} from '../../theme/fonts';
-import {Icons} from '../../assets/icons';
-import {useDispatch, useSelector} from 'react-redux';
-import {logoutUser} from '../../store/slices/authSlice';
-import {useNavigation} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RootStackParamList} from '../../types/route';
-import {RootState, AppDispatch} from '../../store';
-import {checkToken} from '../../utils/tokenCheck';
+import { Colors } from '../../theme/color';
+import { Fonts } from '../../theme/fonts';
+import { Icons } from '../../assets/icons';
+import { useDispatch, useSelector } from 'react-redux';
+import { logoutUser } from '../../store/slices/authSlice';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../types/route';
+import { RootState, AppDispatch } from '../../store';
+import { checkToken } from '../../utils/tokenCheck';
 
 export default function ProfileScreen() {
   const dispatch = useDispatch<AppDispatch>();
@@ -51,23 +51,23 @@ export default function ProfileScreen() {
   const handleConfirmLogout = async () => {
     if (!token) {
       setShowLogoutModal(false);
-      navigation.replace('Login');
+      navigation.navigate('Login', {});
       return;
     }
 
     try {
       await dispatch(logoutUser(token)).unwrap();
       setShowLogoutModal(false);
-      navigation.replace('Login');
+      navigation.navigate('Login', {});
     } catch (error) {
       // Dù có lỗi API, vẫn logout local và navigate
       setShowLogoutModal(false);
-      navigation.replace('Login');
+      navigation.navigate('Login', {});
     }
   };
 
   const handleLogin = () => {
-    navigation.replace('Login');
+    navigation.navigate('Login', {});
   };
 
   const hanleUpdateProfile = () => {
@@ -78,14 +78,32 @@ export default function ProfileScreen() {
         [
           {
             text: 'OK',
-            onPress: () => navigation.replace('Login'), // Chuyển sang màn Login
+            onPress: () => navigation.navigate('Login', {}),
           },
         ],
-        {cancelable: false},
+        { cancelable: false },
       );
       return;
     }
     navigation.navigate('PersonalInformation', {});
+  };
+
+  const handleNavigateToBill = () => {
+    if (!checkToken(token)) {
+      Alert.alert(
+        'Thông báo',
+        'Bạn cần đăng nhập để sử dụng chức năng này',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Login', {}),
+          },
+        ],
+        { cancelable: false },
+      );
+      return;
+    }
+    navigation.navigate('Bill');
   };
 
   // Show guest screen if not logged in
@@ -131,6 +149,7 @@ export default function ProfileScreen() {
           iconStat={Icons.IconPaper}
           label="Hóa đơn thu chi"
           iconEnd={Icons.IconNext}
+          onPress={handleNavigateToBill}
         />
       </View>
 

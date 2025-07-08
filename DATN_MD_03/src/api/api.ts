@@ -4,7 +4,7 @@ import axios, {
   AxiosRequestConfig,
   AxiosResponse,
 } from 'axios';
-import {Platform} from 'react-native';
+import { Platform } from 'react-native';
 import { API_CONFIG, APP_CONFIG } from '../configs'; // Import cấu hình từ file config tập trung
 
 // Định nghĩa kiểu dữ liệu cho response khi API thành công
@@ -51,7 +51,7 @@ instance.interceptors.response.use(
   response => response, // Trả về response nếu thành công
   (error: AxiosError) => {
     // Xử lý các lỗi HTTP khác nhau
-    const {status} = error.response || {};
+    const { status } = error.response || {};
 
     switch (status) {
       case 401:
@@ -81,11 +81,30 @@ const responseBody = <T>(response: AxiosResponse<T>): ApiResponse<T> => {
 
 // Hàm xử lý response khi API call thất bại
 const responseError = (error: AxiosError): ApiError => {
+  // Lấy thông báo lỗi từ response data nếu có
+  let errorMessage = error.message || 'Lỗi không xác định';
+  let errorData = error.response?.data;
+
+  // Nếu response data có message thì ưu tiên sử dụng
+  if (errorData && typeof errorData === 'object') {
+    const data = errorData as Record<string, any>;
+    if (data.message && typeof data.message === 'string') {
+      errorMessage = data.message;
+    } else if (data.error) {
+      errorMessage = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+    }
+  }
+
+  // Thêm status code vào thông báo lỗi nếu debug
+  if (error.response?.status) {
+    console.log(`API Error [${error.response.status}]: ${errorMessage}`);
+  }
+
   return {
     isError: true,
-    message: error.message || 'Lỗi không xác định',
+    message: errorMessage,
     status: error.response?.status,
-    data: error.response?.data,
+    data: errorData,
   };
 };
 

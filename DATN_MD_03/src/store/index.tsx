@@ -1,8 +1,9 @@
-import {configureStore} from '@reduxjs/toolkit';
+import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
 import filterReducer from './slices/filterSlice';
 import roomReducer from './slices/roomSlice';
 import landlordRoomsReducer from './slices/landlordRoomsSlice';
+import billReducer from './slices/billSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     filter: filterReducer,
     room: roomReducer,
     landlordRooms: landlordRoomsReducer,
+    bill: billReducer,
   },
 });
 

@@ -3,20 +3,21 @@ export type PaymentMethod = 'cash' | 'bank_transfer' | 'momo' | 'vnpay' | 'zalop
 
 export interface Invoice {
   _id?: string;
-  contractId: string;
-  roomId: string;
-  tenantId: string;
+  id?: string;
+  contractId: any; // Có thể là string hoặc object với nhiều thông tin
+  roomId: any; // Có thể là string hoặc object với nhiều thông tin
+  tenantId: any; // Có thể là string hoặc object với thông tin người thuê
   landlordId: string;
   invoiceNumber: string;
   status: InvoiceStatus;
-  issueDate: string;
+  issueDate?: string;
   dueDate: string;
   paymentDate?: string;
   paidAmount?: number;
   subtotal: number;
   totalAmount: number;
   note?: string;
-  period: string; // Format: "YYYY-MM" or "YYYY-MM-DD"
+  period?: string | { month: number; year: number }; // API trả về có thể là chuỗi hoặc object
   paymentMethod?: PaymentMethod;
   notified: boolean;
   items?: InvoiceItem[];

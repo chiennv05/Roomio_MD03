@@ -290,9 +290,11 @@ export const Icons = {
   }),
   IconHeartFavourite: Platform.select({
     ios: 'icon_heart_favourite',
-
+<<<<<<< HEAD
+    android: 'asset:/icons/icon_heart_favourite.png',
+=======
     android: 'asset:/icons/icon_heart_favourite.png'
-
+>>>>>>> 48427799603a68c91b0b323c89a5c67705a0f773
   }),
   IconsNotification: Platform.select({
     ios: 'hugeicons_notification',
@@ -343,9 +345,5 @@ export const Icons = {
   IconUnion: Platform.select({
     ios: 'icon_union',
     android: 'asset:/icons/icon_union.png',
-  }),
-  IconCalendar: Platform.select({
-    ios: 'icon_calendar',
-    android: 'asset:/icons/icon_calendar.png',
   }),
 };

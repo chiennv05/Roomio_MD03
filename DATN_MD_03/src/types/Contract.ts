@@ -119,9 +119,51 @@ export interface ContractApproval {
 // ====== Interface chính của Hợp đồng ======
 export interface Contract {
   _id?: string;
-  roomId: string; // ID phòng thuê
-  tenantId: string; // ID người thuê
-  landlordId: string; // ID chủ phòng
+  roomId: string | {
+    _id: string;
+    roomNumber: string;
+    photos: string[];
+    location: {
+      coordinates: {
+        type: string;
+        coordinates: number[];
+      };
+      servicePrices: {
+        electricity: number;
+        water: number;
+      };
+      servicePriceConfig: {
+        electricity: string;
+        water: string;
+      };
+      addressText: string;
+      province: string;
+      district: string;
+      ward: string;
+      street: string;
+      houseNo: string;
+      customServices: Array<{
+        name: string;
+        price: number;
+        priceType: string;
+        description: string;
+        _id: string;
+      }>;
+      _id: string;
+    };
+  }; // ID phòng thuê hoặc object thông tin phòng
+  tenantId: string | {
+    _id: string;
+    username: string;
+    fullName: string;
+    phone: string;
+  }; // ID người thuê hoặc object thông tin người thuê
+  landlordId: string | {
+    _id: string;
+    username: string;
+    fullName: string;
+    phone: string;
+  }; // ID chủ phòng hoặc object thông tin chủ phòng
   contractInfo: ContractInfo; // Chi tiết hợp đồng
   status: ContractStatus; // Trạng thái hiện tại
   previousStatus?: ContractStatus; // Trạng thái trước đó (nếu có)
@@ -133,4 +175,5 @@ export interface Contract {
   statusHistory: StatusHistoryItem[]; // Lịch sử trạng thái
   createdAt?: string; // Ngày tạo
   updatedAt?: string; // Ngày cập nhật cuối
+  sourceNotificationId?: string; // ID thông báo nguồn (nếu có)
 }

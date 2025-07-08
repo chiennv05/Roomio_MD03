@@ -344,8 +344,4 @@ export const Icons = {
     ios: 'icon_union',
     android: 'asset:/icons/icon_union.png',
   }),
-  IconCalendar: Platform.select({
-    ios: 'icon_calendar',
-    android: 'asset:/icons/icon_calendar.png',
-  }),
 };

@@ -21,6 +21,10 @@ import 'react-native-gesture-handler';
 
 import PersonalInformation from '../screens/Profile/PersonalInformation';
 import MyRoomScreen from '../screens/ChuTro/MyRoom/MyRoomScreen';
+import BillScreen from '../screens/Bill/BillScreen';
+import BillDetailScreen from '../screens/Bill/BillDetailScreen';
+import CreateInvoiceScreen from '../screens/Bill/CreateInvoiceScreen';
+import EditInvoiceScreen from '../screens/Bill/EditInvoiceScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -89,6 +93,34 @@ export default function TabScreen() {
           <Stack.Screen
             name="PersonalInformation"
             component={PersonalInformation}
+          />
+          <Stack.Screen
+            name="Bill"
+            component={BillScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="BillDetails"
+            component={BillDetailScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="CreateInvoice"
+            component={CreateInvoiceScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="EditInvoice"
+            component={EditInvoiceScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
           />
 
         </Stack.Navigator>
