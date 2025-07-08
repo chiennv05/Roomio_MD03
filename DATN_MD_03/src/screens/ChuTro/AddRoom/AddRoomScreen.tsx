@@ -17,7 +17,7 @@ import ItemOptions from './components/ItemOptions';
 import {amenitiesOptions} from './utils/amenitiesOptions';
 import {OptionItem} from '../../../types/Options';
 import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
-// import ImagePicker from 'react-native-image-crop-picker';
+import ImagePicker from 'react-native-image-crop-picker';
 import {
   deleteRoomPhoto,
   ImageFile,
@@ -41,6 +41,7 @@ import {RootStackParamList} from '../../../types/route';
 import {useDispatch} from 'react-redux';
 import {AppDispatch} from '../../../store';
 import {createLandlordRoom} from '../../../store/slices/landlordRoomsSlice';
+
 
 export default function AddRoomScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -100,14 +101,32 @@ export default function AddRoomScreen() {
       setIsUploading(true);
       setVisibleImage(true);
       const result = await uploadRoomPhotos(images);
-      console.log(result);
+      console.log('Kết quả upload:', result);
+      
+      // Kiểm tra kết quả trả về có đúng định dạng không
+      if (!result || !result.data || !result.data.photos) {
+        console.error('Kết quả API không đúng định dạng mong đợi:', result);
+        Alert.alert('Lỗi', 'Không thể tải ảnh lên, vui lòng thử lại sau');
+        return;
+      }
+      
       const uploaded = result.data.photos as ImageUploadResult[];
+      console.log('Uploaded photos:', uploaded);
 
-      setImage(prev => [...prev, ...uploaded]);
-      const formattedPhotos = formatPhotoUrls([...image, ...uploaded]);
-      setImageArr(formattedPhotos);
+      // Cập nhật state
+      setImage(prev => {
+        const newImages = [...prev, ...uploaded];
+        console.log('New images state:', newImages);
+        
+        // Cập nhật imageArr sau khi cập nhật image
+        const formattedPhotos = formatPhotoUrls(newImages);
+        setImageArr(formattedPhotos);
+        
+        return newImages;
+      });
     } catch (e) {
       console.error('Lỗi upload:', e);
+      Alert.alert('Lỗi', 'Không thể tải ảnh lên: ' + (e as Error).message);
     } finally {
       setVisibleImage(false);
       setIsUploading(false);
@@ -139,25 +158,99 @@ export default function AddRoomScreen() {
       {cancelable: true},
     );
   };
-
-  // Comment toàn bộ hàm pickImages vì nó sử dụng ImagePicker
-  /* 
-  const pickImages = async () => {
-    try {
-
-
-      await onUpload(images);
-    } catch (error) {
-      console.log('Lỗi chọn ảnh:', error);
-    }
-  };
-  */
-
-  // Thêm hàm tạm thời để tránh lỗi
+  // Hàm chọn ảnh từ thư viện hoặc máy ảnh
   const pickImages = () => {
-    Alert.alert('Thông báo', 'Chức năng chọn ảnh tạm thời không khả dụng.', [
-      {text: 'OK'},
-    ]);
+    Alert.alert(
+      'Chọn ảnh', 
+      'Bạn muốn chọn ảnh từ đâu?', 
+      [
+        {
+          text: 'Máy ảnh', 
+          onPress: () => {
+            ImagePicker.openCamera({
+              width: 1000,
+              height: 1000,
+              cropping: true,
+              includeBase64: false,
+              includeExif: false,
+            })
+            .then(image => {
+              console.log('Ảnh từ máy ảnh:', image);
+              
+              // Kiểm tra dữ liệu trước khi tạo ImageFile
+              if (!image.path || !image.mime) {
+                Alert.alert('Lỗi', 'Không thể lấy thông tin ảnh');
+                return;
+              }
+              
+              const imageFile: ImageFile = {
+                path: image.path,
+                mime: image.mime,
+                filename: image.path.split('/').pop() || `camera_${Date.now()}.jpg`,
+              };
+              
+              console.log('ImageFile được tạo:', imageFile);
+              onUpload([imageFile]);
+            })
+            .catch(e => {
+              console.log('Lỗi camera:', e);
+              if (e.code !== 'E_PICKER_CANCELLED') {
+                Alert.alert('Thông báo', 'Không thể truy cập máy ảnh, vui lòng kiểm tra quyền truy cập');
+              }
+            });
+          },
+        },
+        {
+          text: 'Thư viện', 
+          onPress: () => {
+            ImagePicker.openPicker({
+              multiple: true,
+              maxFiles: 3,  // Giảm xuống 3 ảnh để giảm lỗi
+              mediaType: 'photo',
+              includeBase64: false,
+              includeExif: false,
+            })
+            .then(images => {
+              console.log('Ảnh từ thư viện:', images);
+              
+              // Đảm bảo images là một mảng
+              if (!Array.isArray(images)) {
+                images = [images];
+              }
+              
+              const imageFiles: ImageFile[] = images.map(img => {
+                // Kiểm tra từng thuộc tính
+                if (!img.path || !img.mime) {
+                  console.error('Ảnh không hợp lệ:', img);
+                  throw new Error('Ảnh không hợp lệ');
+                }
+                
+                return {
+                  path: img.path,
+                  mime: img.mime,
+                  filename: img.path.split('/').pop() || `gallery_${Date.now()}.jpg`,
+                };
+              });
+              
+              console.log('Mảng ImageFile được tạo:', imageFiles);
+              
+              if (imageFiles.length > 0) {
+                onUpload(imageFiles);
+              } else {
+                Alert.alert('Thông báo', 'Không có ảnh nào được chọn');
+              }
+            })
+            .catch(e => {
+              console.log('Lỗi thư viện:', e);
+              if (e.code !== 'E_PICKER_CANCELLED') {
+                Alert.alert('Thông báo', 'Không thể truy cập thư viện, vui lòng kiểm tra quyền truy cập');
+              }
+            });
+          }
+        },
+        {text: 'Hủy', style: 'cancel'}
+      ]
+    );
   };
 
   const onclickItemImage = (filename: string) => {
@@ -171,7 +264,6 @@ export default function AddRoomScreen() {
     console.log('bắt buộc');
   };
 
-  //
   const handleClickItemOptionAmenities = useCallback((item: OptionItem) => {
     setAmenities(prev =>
       prev.includes(item.value)
@@ -275,10 +367,18 @@ export default function AddRoomScreen() {
       };
 
       setCustomServices(prev => {
-        const exists = prev.some(i => i.name === customService.name);
-        return exists
-          ? prev.map(i => (i.name === customService.name ? customService : i))
-          : [...prev, customService];
+        // Tìm dịch vụ hiện có theo tên
+        const existingIndex = prev.findIndex(i => i.name === customService.name);
+        
+        if (existingIndex >= 0) {
+          // Nếu đã tồn tại, thay thế
+          const updated = [...prev];
+          updated[existingIndex] = customService;
+          return updated;
+        } else {
+          // Nếu chưa có, thêm mới
+          return [...prev, customService];
+        }
       });
     }
 
@@ -310,6 +410,29 @@ export default function AddRoomScreen() {
       return;
     }
 
+    // Phân tích địa chỉ để lấy thông tin chi tiết
+    const addressParts = addressText.split(',').map(part => part.trim());
+    let province = 'Hà Nội';
+    let district = '';
+    let ward = '';
+    let street = '';
+    let houseNo = '';
+
+    // Nếu có đủ thông tin, phân tích từ địa chỉ đã nhập
+    if (addressParts.length >= 3) {
+      houseNo = addressParts[0]; // Số nhà
+      street = addressParts[1]; // Tên đường
+      ward = addressParts[2]; // Phường/xã
+      
+      if (addressParts.length >= 4) {
+        district = addressParts[3]; // Quận/huyện
+      }
+      
+      if (addressParts.length >= 5) {
+        province = addressParts[4]; // Tỉnh/thành
+      }
+    }
+
     const room: Room = {
       roomNumber: roomNumber,
       area: Number(area),
@@ -319,15 +442,15 @@ export default function AddRoomScreen() {
       photos: imageArr,
       location: {
         addressText: addressText,
-        province: 'Thành phố Hà Nội',
-        district: 'Quận Tây Hồ',
-        ward: 'Phường Thuỵ Khuê',
-        street: 'Phố Nguyễn Đình Thi',
-        houseNo: '95',
-        coordinates: {
-          type: 'Point',
-          coordinates: coordinates,
-        },
+        province: province,
+        district: district,
+        ward: ward,
+        street: street,
+        houseNo: houseNo,
+                  coordinates: {
+            type: 'Point',
+            coordinates: coordinates,
+          },
         servicePrices: servicePrices,
         servicePriceConfig: servicePriceConfig,
       },
@@ -375,7 +498,7 @@ export default function AddRoomScreen() {
   };
 
   const onPressOnpenMap = () => {
-    navigation.navigate('MapScreen');
+    navigation.navigate('MapScreen', {});
   };
 
   return (
@@ -385,7 +508,7 @@ export default function AddRoomScreen() {
       contentContainerStyle={styles.contentContainer}>
       <UIHeader
         title="Tạo bài đăng"
-        onPressLeft={() => {}}
+        onPressLeft={() => navigation.goBack()}
         iconLeft={Icons.IconArrowLeft}
       />
       <View style={styles.content}>

@@ -150,9 +150,9 @@ const landlordRoomsSlice = createSlice({
       })
       .addCase(
         getLandlordRoomDetail.fulfilled,
-        (state, action: PayloadAction<Room>) => {
+        (state, action: PayloadAction<any>) => {
           state.loading = false;
-          state.selectedRoom = action.payload;
+          state.selectedRoom = action.payload.room;
         },
       )
       .addCase(

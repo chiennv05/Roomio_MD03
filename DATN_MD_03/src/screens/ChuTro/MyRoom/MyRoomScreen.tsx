@@ -96,8 +96,8 @@ export default function MyRoomScreen() {
   }, [rooms, selectedFilter, searchText]);
 
   const handleClickItemRooms = useCallback((id: string) => {
-    navigation.navigate('');
-  }, []);
+    navigation.navigate('DetailRoomLandlord', {id});
+  }, [navigation]);
 
   const handleGoback = () => {
     navigation.goBack();

@@ -10,8 +10,16 @@ export type ImageFile = {
 export const uploadRoomPhotos = async (images: ImageFile[]) => {
   const formData = new FormData();
 
+  console.log('Chuẩn bị upload', images.length, 'ảnh:', images);
+  
   images.forEach((img, index) => {
     const fileName = img.filename || `photo_${Date.now()}_${index}.jpg`;
+
+    console.log(`Đang xử lý ảnh ${index}:`, {
+      path: img.path,
+      mime: img.mime,
+      fileName: fileName
+    });
 
     formData.append('photos', {
       uri:
@@ -22,12 +30,21 @@ export const uploadRoomPhotos = async (images: ImageFile[]) => {
   });
 
   try {
-    const response = await api.post('/upload/room-photos', formData);
+    console.log('Đang gửi formData lên server:', formData);
+    const response = await api.post('/upload/room-photos', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
 
     console.log('✅ Upload thành công:', response.data);
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Upload thất bại:', error);
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+      console.error('Status code:', error.response.status);
+    }
     throw error;
   }
 };
