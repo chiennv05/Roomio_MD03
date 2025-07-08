@@ -18,7 +18,6 @@ import NotificationListContainer, {
 } from './components/NotificationListContainer';
 import LoadingAnimation from '../../components/LoadingAnimation';
 import {Colors} from '../../theme/color';
-import {responsiveSpacing} from '../../utils/responsive';
 
 const NotificationScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -28,7 +27,6 @@ const NotificationScreen = () => {
     notifications,
     pagination,
     unreadCount,
-    error,
     refreshing,
     loadingMore,
   } = useSelector((state: RootState) => state.notification);
@@ -145,7 +143,7 @@ const NotificationScreen = () => {
   // Loading state
   if (loading && notifications.length === 0) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <SafeAreaView style={styles.safeArea}>
         <NotificationScreenHeader onMenuPress={handleMenuPress} />
         <View style={styles.loadingContainer}>
           <LoadingAnimation size="large" color={Colors.limeGreen} />
@@ -155,7 +153,7 @@ const NotificationScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safeArea}>
       <NotificationScreenHeader onMenuPress={handleMenuPress} />
 
       <View style={styles.container}>

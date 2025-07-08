@@ -17,4 +17,11 @@ export type RootStackParamList = {
   ContractManagement: undefined;
   ContractDetail: {contractId: string};
   PdfViewer: {pdfUrl: string};
+  MapScreen: {
+    latitude?: number;
+    longitude?: number;
+    address?: string;
+    roomDetail?: Room;
+  };
+
 };

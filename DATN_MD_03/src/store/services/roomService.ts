@@ -1,5 +1,6 @@
 import api from '../../api/api';
-import {RoomFilters} from '../../types/Room';
+import {RoomFilters, DetailRoomResponse} from '../../types/Room';
+// import {sortRoomsByScore} from '../../utils/roomUtils';
 
 export const getRooms = async (filters: RoomFilters = {}) => {
   try {
@@ -59,10 +60,16 @@ export const getRooms = async (filters: RoomFilters = {}) => {
   }
 };
 
-export const getRoomDetail = async (roomId: string, token?: string) => {
+export const getRoomDetail = async (roomId: string, token?: string): Promise<DetailRoomResponse> => {
   try {
     const headers = token ? {Authorization: `Bearer ${token}`} : {};
-    const response = await api.get(`/home/room/${roomId}`, {headers});
+    const response = await api.get(`/home/rooms/${roomId}`, {headers});
+    
+    // Kiểm tra xem response có phải là error không
+    if ('isError' in response && response.isError) {
+      throw new Error(response.message);
+    }
+    
     return response.data;
   } catch (error: any) {
     throw {
@@ -127,8 +134,6 @@ export const getRelatedRoomsFallback = async (
   limit: number = 6,
 ) => {
   try {
-    // console.log('🔄 Using fallback API for related rooms...');
-
     const params = new URLSearchParams();
     params.append('limit', (limit * 3).toString()); // Lấy nhiều hơn để có options filter
 
@@ -138,7 +143,6 @@ export const getRelatedRoomsFallback = async (
 
     // Strategy 1: Lọc theo district nếu có
     if (district) {
-      // console.log('🎯 Strategy 1: Filtering by district:', district);
       const districtParams = new URLSearchParams();
       districtParams.append('limit', (limit * 2).toString());
       districtParams.append('districts', district);
@@ -149,7 +153,6 @@ export const getRelatedRoomsFallback = async (
           relatedRooms = response.data.data.rooms.filter(
             (room: any) => room._id !== currentRoomId,
           );
-          // console.log('📊 Found by district:', relatedRooms.length, 'rooms');
         }
       } catch (error) {
         console.log('⚠️ District filter failed, trying general search...');
@@ -158,7 +161,6 @@ export const getRelatedRoomsFallback = async (
 
     // Strategy 2: Nếu chưa đủ, lấy thêm từ general API
     if (relatedRooms.length < limit) {
-      // console.log('🎯 Strategy 2: General room search for more results');
       response = await api.get(`/home/rooms?${params.toString()}`);
 
       if (response.data?.success && response.data?.data?.rooms) {
@@ -173,11 +175,10 @@ export const getRelatedRoomsFallback = async (
         );
 
         relatedRooms = [...relatedRooms, ...additionalRooms];
-        // console.log('📊 Total after merge:', relatedRooms.length, 'rooms');
       }
     }
 
-    // Strategy 3: Smart sorting - ưu tiên theo location similarity
+    // Strategy 3: Smart sorting - kết hợp location similarity và room score
     if (relatedRooms.length > 0) {
       relatedRooms.sort((a: any, b: any) => {
         const aDistrict = a.location?.district?.toLowerCase() || '';
@@ -188,39 +189,35 @@ export const getRelatedRoomsFallback = async (
         const targetDistrict = district?.toLowerCase() || '';
         const targetProvince = province?.toLowerCase() || '';
 
-        // Ưu tiên same district
-        const aDistrictMatch =
-          aDistrict.includes(targetDistrict) ||
-          targetDistrict.includes(aDistrict);
-        const bDistrictMatch =
-          bDistrict.includes(targetDistrict) ||
-          targetDistrict.includes(bDistrict);
+        // Tính điểm location match (0-2)
+        let aLocationScore = 0;
+        let bLocationScore = 0;
 
-        if (aDistrictMatch && !bDistrictMatch) return -1;
-        if (!aDistrictMatch && bDistrictMatch) return 1;
+        // District match: +2 điểm
+        if (aDistrict.includes(targetDistrict) || targetDistrict.includes(aDistrict)) aLocationScore += 2;
+        if (bDistrict.includes(targetDistrict) || targetDistrict.includes(bDistrict)) bLocationScore += 2;
 
-        // Ưu tiên same province
-        const aProvinceMatch =
-          aProvince.includes(targetProvince) ||
-          targetProvince.includes(aProvince);
-        const bProvinceMatch =
-          bProvince.includes(targetProvince) ||
-          targetProvince.includes(bProvince);
+        // Province match: +1 điểm
+        if (aProvince.includes(targetProvince) || targetProvince.includes(aProvince)) aLocationScore += 1;
+        if (bProvince.includes(targetProvince) || targetProvince.includes(bProvince)) bLocationScore += 1;
 
-        if (aProvinceMatch && !bProvinceMatch) return -1;
-        if (!aProvinceMatch && bProvinceMatch) return 1;
+        // Tính điểm popularity (views + favorites)
+        const aPopularityScore = calculateRoomScore(a);
+        const bPopularityScore = calculateRoomScore(b);
 
-        return 0;
+        // Kết hợp cả 2 điểm số (location có trọng số cao hơn)
+        const LOCATION_WEIGHT = 0.7;
+        const POPULARITY_WEIGHT = 0.3;
+
+        const aFinalScore = (aLocationScore * LOCATION_WEIGHT) + (aPopularityScore * POPULARITY_WEIGHT);
+        const bFinalScore = (bLocationScore * LOCATION_WEIGHT) + (bPopularityScore * POPULARITY_WEIGHT);
+
+        return bFinalScore - aFinalScore;
       });
     }
 
     // Limit final results
     const finalRooms = relatedRooms.slice(0, limit);
-
-    // console.log('✅ Final related rooms:', finalRooms.length, 'rooms');
-    // console.log('📍 Location distribution:', finalRooms.map(room =>
-    //   `${room.location?.district || 'N/A'}, ${room.location?.province || 'N/A'}`
-    // ));
 
     return {
       success: true,
@@ -238,14 +235,35 @@ export const getRelatedRoomsFallback = async (
   }
 };
 
+// Hàm tính điểm popularity cho phòng
+const calculateRoomScore = (room: any): number => {
+  if (!room?.stats) return 0;
+  
+  const VIEW_WEIGHT = 1;
+  const FAVORITE_WEIGHT = 2;
+  
+  const viewScore = (room.stats.viewCount || 0) * VIEW_WEIGHT;
+  const favoriteScore = (room.stats.favoriteCount || 0) * FAVORITE_WEIGHT;
+  
+  return viewScore + favoriteScore;
+};
+
 // API để toggle favorite phòng trọ
 export const toggleRoomFavorite = async (roomId: string, token: string) => {
   try {
-    const response = await api.post(`/home/room/${roomId}/toggle-favorite`, {
+    const endpoint = `/home/room/${roomId}/toggle-favorite`;
+    
+    const response = await api.post(endpoint, {}, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
+    
+    // Kiểm tra xem response có phải là error không
+    if ('isError' in response && response.isError) {
+      throw new Error(response.message);
+    }
+    
     return response.data;
   } catch (error: any) {
     throw {

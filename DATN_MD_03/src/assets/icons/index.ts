@@ -334,22 +334,18 @@ export const Icons = {
   IconTick: Platform.select({
     ios: 'icons_tick',
     android: 'asset:/icons/icons_tick.png',
-
   }),
   IconWarning: Platform.select({
     ios: 'icon_warning',
     android: 'asset:/icons/icon_warning.png',
-
   }),
   IconSelectDate: Platform.select({
     ios: 'icon_select_date',
     android: 'asset:/icons/icon_select_date.png',
-
   }),
   IconEmptyMessage: Platform.select({
     ios: 'icon_empty_message',
     android: 'asset:/icons/icon_empty_message.png',
-
   }),
   IconListTenants: Platform.select({
     ios: 'iconListTenants',
@@ -615,6 +611,21 @@ export const Icons = {
   IconChairDefault: Platform.select({
     ios: 'icon_chair_default',
     android: 'asset:/icons/icon_chair_default.png',
-
+  }),
+  IconTienCoc: Platform.select({
+    ios: 'icon_tien_coc',
+    android: 'asset:/icons/icon_tien_coc.png',
+  }),
+  IconSoNguoi: Platform.select({
+    ios: 'icon_so_nguoi',
+    android: 'asset:/icons/icon_so_nguoi.png',
+  }),
+  IconMaker: Platform.select({
+    ios: 'icon_maker',
+    android: 'asset:/icons/icon_maker.png',
+  }),
+  IconMyLocation: Platform.select({
+    ios: 'icon_my_location',
+    android: 'asset:/icons/icon_my_location.png',
   }),
 };

@@ -9,8 +9,11 @@ export interface Coordinates {
 }
 
 export interface ServicePrices {
-  electricity: number;
-  water: number;
+
+  electricity?: number;
+  water?: number;
+
+
 }
 
 export interface ServicePriceConfig {
@@ -106,7 +109,7 @@ export interface Room {
 // ========== Detail Room Response Types ==========
 export interface DetailRoomData {
   room: Room;
-  isInWishlist: boolean;
+  isFavorited: boolean;
   similarRooms: Room[];
   owner: Owner;
 }
