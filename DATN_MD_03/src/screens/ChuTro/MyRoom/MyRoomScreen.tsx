@@ -96,14 +96,14 @@ export default function MyRoomScreen() {
   }, [rooms, selectedFilter, searchText]);
 
   const handleClickItemRooms = useCallback((id: string) => {
-    console.log('clicked room id:', id);
+    navigation.navigate('');
   }, []);
 
   const handleGoback = () => {
     navigation.goBack();
   };
   const handleAddRoom = () => {
-    navigation.navigate('AddRooom');
+    navigation.navigate('AddRooom', {});
   };
 
   return (

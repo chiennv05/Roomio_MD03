@@ -13,7 +13,6 @@ export type RootStackParamList = {
   TenantList: undefined;
   TenantDetail: {tenantId: string};
   LandlordRoom: undefined;
-  AddRooom: undefined;
   ContractManagement: undefined;
   ContractDetail: {contractId: string};
   PdfViewer: {pdfUrl: string};
@@ -23,5 +22,13 @@ export type RootStackParamList = {
     address?: string;
     roomDetail?: Room;
   };
-
+  AddRooom: {
+    location?: {
+      latitude: number;
+      longitude: number;
+      address?: string;
+    };
+  };
+  DetailRoomLandlord: {id: string};
+  UpdateRoomScreen: {item: Room};
 };

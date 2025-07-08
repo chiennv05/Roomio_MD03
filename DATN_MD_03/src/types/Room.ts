@@ -32,17 +32,16 @@ export interface CustomService {
 // ========== Location ==========
 export interface Location {
   _id?: string;
-  addressText?: string;
+  addressText: string;
   province: string;
   district: string;
   ward: string;
   street: string;
-  houseNo?: string;
+  houseNo: string;
   houseNumber?: string;
-  coordinates?: Coordinates;
-  servicePrices?: ServicePrices;
-  servicePriceConfig?: ServicePriceConfig;
-  customServices?: CustomService[];
+  coordinates: Coordinates;
+  servicePrices: ServicePrices;
+  servicePriceConfig: ServicePriceConfig;
 }
 
 // ========== Owner & Stats ==========
@@ -92,6 +91,7 @@ export interface Room {
   description: string;
   photos: string[];
   location: Location;
+  customServices?: CustomService[];
   amenities: string[];
   furniture: string[];
   stats?: Stats;

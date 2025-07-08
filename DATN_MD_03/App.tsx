@@ -4,6 +4,7 @@ import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {store} from './src/store';
 import TabScreen from './src/navigation/TabScreen';
+import AddRoomScreen from './src/screens/ChuTro/AddRoom/AddRoomScreen';
 
 export default function App() {
   return (

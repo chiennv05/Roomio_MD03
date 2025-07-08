@@ -22,9 +22,32 @@ const WIGHT_IMAGE = SCREEN.width * 0.28;
 
 const ItemService = ({status = false, item, onPress}: ServiceProps) => {
   const iconKey = `${item.iconBase}${status ? 'Selected' : 'Default'}`;
-  console.log(iconKey);
   const icon = Icons[iconKey as keyof typeof Icons];
-  console.log(icon);
+
+  const getPriceUnit = (item: ItemSeviceOptions): string => {
+    const unitMap: Record<string, Record<string, string>> = {
+      electricity: {
+        perUsage: '/kWh',
+        perPerson: '/người',
+        perRoom: '/phòng',
+      },
+      water: {
+        perUsage: '/m³',
+        perPerson: '/người',
+        perRoom: '/phòng',
+      },
+      khac: {
+        perPerson: '/người',
+        perRoom: '/phòng',
+      },
+    };
+
+    return unitMap[item.value]?.[item.priceType ?? ''] ?? '';
+  };
+
+  const priceUnit = getPriceUnit(item);
+  const displayPrice = item.price ?? 0;
+
   return (
     <View
       style={[
@@ -33,7 +56,10 @@ const ItemService = ({status = false, item, onPress}: ServiceProps) => {
       ]}>
       <Image source={{uri: icon}} style={styles.styleIconCenter} />
       <Text style={styles.textTitle}>{item.label}</Text>
-      <Text style={styles.textPrice}>{item.price}</Text>
+      <Text style={styles.textPrice}>
+        {displayPrice}
+        {priceUnit ? ` ${priceUnit}` : ''}
+      </Text>
       <TouchableOpacity
         style={[
           styles.button,

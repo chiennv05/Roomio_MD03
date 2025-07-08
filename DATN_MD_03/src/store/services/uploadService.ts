@@ -7,7 +7,7 @@ export type ImageFile = {
   filename?: string; // tên file (nếu không có sẽ tạo tên mặc định)
 };
 
-export const uploadRoomPhotos = async (images: ImageFile[], token: string) => {
+export const uploadRoomPhotos = async (images: ImageFile[]) => {
   const formData = new FormData();
 
   images.forEach((img, index) => {
@@ -22,12 +22,7 @@ export const uploadRoomPhotos = async (images: ImageFile[], token: string) => {
   });
 
   try {
-    const response = await api.post('/upload/room-photos', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.post('/upload/room-photos', formData);
 
     console.log('✅ Upload thành công:', response.data);
     return response.data;
@@ -37,13 +32,9 @@ export const uploadRoomPhotos = async (images: ImageFile[], token: string) => {
   }
 };
 
-export const deleteRoomPhoto = async (fileName: string, token: string) => {
+export const deleteRoomPhoto = async (fileName: string) => {
   try {
-    const response = await api.delete(`/upload/rooms/${fileName}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.delete(`/upload/rooms/${fileName}`);
 
     console.log('✅ Xóa ảnh thành công:', response.data);
     return response.data;

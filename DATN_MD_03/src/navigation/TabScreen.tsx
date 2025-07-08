@@ -16,7 +16,6 @@ import DetailRoomScreen from '../screens/DetailRoomScreen/DetailRoomScreen';
 import NotificationScreen from '../screens/Notification/NotificationScreen';
 import TenantList from '../screens/ChuTro/TenantList/TenantList';
 import TenantDetailScreen from '../screens/ChuTro/TenantList/TenantDetailScreen';
-import MapScreen from '../screens/ChuTro/AddRoom/MapScreen';
 
 // Import gesture handler để hỗ trợ stack navigation
 import 'react-native-gesture-handler';
@@ -24,9 +23,13 @@ import 'react-native-gesture-handler';
 import PersonalInformation from '../screens/Profile/PersonalInformation';
 import MyRoomScreen from '../screens/ChuTro/MyRoom/MyRoomScreen';
 import AddRoomScreen from '../screens/ChuTro/AddRoom/AddRoomScreen';
+
 import ContractManagement from '../screens/ChuTro/Contract/ContractManagement';
 import ContractDetailScreen from '../screens/ChuTro/Contract/ContractDetailScreen';
 import PdfViewerScreen from '../screens/ChuTro/Contract/PdfViewerScreen';
+import MapScreen from '../screens/ChuTro/AddRoom/MapScreen';
+import RoomDetail from '../screens/ChuTro/RoomDetail/RoomDetail';
+import UpdateRoom from '../screens/ChuTro/UpdateRoom/UpdateRoom';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -114,6 +117,7 @@ export default function TabScreen() {
 
           <Stack.Screen name="LandlordRoom" component={MyRoomScreen} />
           <Stack.Screen name="AddRooom" component={AddRoomScreen} />
+
           <Stack.Screen
             name="ContractManagement"
             component={ContractManagement}
@@ -136,6 +140,8 @@ export default function TabScreen() {
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
+          <Stack.Screen name="DetailRoomLandlord" component={RoomDetail} />
+          <Stack.Screen name="UpdateRoomScreen" component={UpdateRoom} />
         </Stack.Navigator>
       </NavigationContainer>
     </>
