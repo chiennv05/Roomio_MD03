@@ -420,7 +420,8 @@ const DetailRoomScreen: React.FC = () => {
             <ImageCarousel images={roomDetailData.photos} />
             <View style={styles.content}>
               <RoomInfo
-                name={roomDetailData.name}
+                // name={}
+                name = { ""}
                 price={roomDetailData.price}
                 address={roomDetailData.address}
                 roomCode={roomDetailData.roomCode}

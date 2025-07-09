@@ -60,7 +60,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ item, onPress }) => {
   };
 
   const formatPrice = (price: number) => {
-    return `${(price / 1000000).toFixed(1)}.000.000/ tháng`;
+    return `${price.toLocaleString('vi-VN')}đ/tháng`;
   };
 
   return (

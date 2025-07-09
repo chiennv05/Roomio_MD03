@@ -17,7 +17,7 @@ export const convertApiRoomToRoom = (apiRoom: ApiRoom): RoomCardData => {
   const images = apiRoom.photos.map(photo => getImageUrl(photo));
   
   // Format giá tiền theo định dạng Việt Nam (có dấu phẩy ngăn cách)
-  const formattedPrice = `${apiRoom.rentPrice.toLocaleString('vi-VN')} VNĐ/tháng`;
+  const formattedPrice = `${apiRoom.rentPrice.toLocaleString('vi-VN')}đ/tháng`;
   
   // Tạo chuỗi thông tin chi tiết gồm diện tích và địa chỉ
   const detail = `${apiRoom.area}m² • ${apiRoom.location.addressText}`;
@@ -36,7 +36,7 @@ export const convertApiRoomToRoom = (apiRoom: ApiRoom): RoomCardData => {
 
 // Hàm format giá tiền theo định dạng Việt Nam
 export const formatPrice = (price: number): string => {
-  return `${price.toLocaleString('vi-VN')} đồng`;
+  return `${price.toLocaleString('vi-VN')}đ`;
 };
 
 // Hàm format diện tích với đơn vị m²
