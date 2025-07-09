@@ -288,147 +288,97 @@ export default function MapScreen({route}: MapScreenProps) {
 
   // Hàm format địa chỉ
   const formatAddress = (fullAddress: string) => {
-    // Tách địa chỉ thành các phần và đảo ngược thứ tự để dễ xử lý
-    const addressParts = fullAddress.split(',')
-      .map(part => part.trim())
-      .reverse(); // Đảo ngược để bắt đầu từ thành phố
+    // Tách địa chỉ thành các phần
+    const parts = fullAddress.split(',').map(part => part.trim());
     
-    let houseNumber = '';
-    let streetName = '';
-    let ward = '';      // Phường/Xã
-    let district = '';  // Quận/Huyện
-    let city = '';      // Thành phố
+    let houseNumber = '';  // Số nhà
+    let street = '';       // Tên phố
+    let district = '';     // Quận
+    let city = '';        // Thành phố
 
-    // Các từ khóa cần loại bỏ
-    const excludeKeywords = [
-      'ủy ban nhân dân',
-      'ubnd',
-      'tổng công ty',
-      'công ty',
-      'cung thiếu nhi',
-      'bảo tàng',
-      'nhà hát',
-      'đền',
-      'chùa',
-      'french quarter',
-      'hồ',
-      'công viên',
-      'cửa hàng',
-      'shop',
-      'store',
-      'motorcycle',
-    ];
-
-    // Tìm thành phố (thường ở cuối cùng sau khi reverse)
-    for (const part of addressParts) {
-      const lowerPart = part.toLowerCase();
-      if (lowerPart.includes('hà nội')) {
-        city = 'Thành phố Hà Nội';
-        break;
-      }
+    // Xác định thành phố dựa trên địa chỉ
+    const lowerAddress = fullAddress.toLowerCase();
+    if (lowerAddress.includes('hà nội') || lowerAddress.includes('hanoi')) {
+      city = 'Thành phố Hà Nội';
+    } else if (lowerAddress.includes('hồ chí minh') || lowerAddress.includes('ho chi minh') || lowerAddress.includes('hcm') || lowerAddress.includes('sài gòn')) {
+      city = 'Thành phố Hồ Chí Minh';
+    } else if (lowerAddress.includes('đà nẵng') || lowerAddress.includes('da nang')) {
+      city = 'Thành phố Đà Nẵng';
+    } else {
+      // Mặc định là Hà Nội nếu không tìm thấy
+      city = 'Thành phố Hà Nội';
     }
 
-    // Tìm quận/huyện (thường ở gần cuối)
-    for (const part of addressParts) {
+    // Duyệt qua các phần của địa chỉ
+    for (const part of parts) {
       const lowerPart = part.toLowerCase();
+      
+      // Tìm quận/huyện
       if (lowerPart.includes('quận') || lowerPart.includes('huyện')) {
-        district = part.trim();
-        break;
-      }
-    }
-
-    // Tìm phường/xã (thường ở giữa)
-    for (const part of addressParts) {
-      const lowerPart = part.toLowerCase();
-      if (lowerPart.includes('phường') || 
-          lowerPart.includes('xã') || 
-          lowerPart.includes('thị trấn') ||
-          (!lowerPart.includes('quận') && 
-           !lowerPart.includes('phố') && 
-           !lowerPart.includes('đường') && 
-           !lowerPart.includes('số') &&
-           !lowerPart.includes('thành phố') &&
-           !excludeKeywords.some(keyword => lowerPart.includes(keyword)))) {
-        ward = part.trim();
-        break;
-      }
-    }
-
-    // Tìm số nhà và tên đường (thường ở đầu)
-    for (const part of addressParts) {
-      const lowerPart = part.toLowerCase();
-      // Bỏ qua nếu chứa từ khóa cần loại bỏ
-      if (excludeKeywords.some(keyword => lowerPart.includes(keyword))) {
+        district = part;
         continue;
       }
-
-      // Bỏ qua nếu là phường/quận/thành phố
-      if (lowerPart.includes('phường') || 
-          lowerPart.includes('quận') || 
-          lowerPart.includes('thành phố') ||
-          lowerPart.includes('hà nội')) {
-        continue;
-      }
-
-      // Tìm phần tử chứa số
-      if (/\d+/.test(part)) {
-        const match = part.match(/\d+/);
+      
+      // Tìm số nhà và tên phố
+      if (/\d+/.test(part) && !street) {
+        // Nếu phần này chứa số và chưa có tên phố
+        const match = part.match(/(\d+)\s*(.+)?/);
         if (match) {
-          houseNumber = match[0];
-          // Lấy phần còn lại làm tên đường (nếu có)
-          const remainingPart = part.replace(/^\d+\s*,?\s*/i, '').trim();
-          if (remainingPart && (remainingPart.toLowerCase().includes('phố') || remainingPart.toLowerCase().includes('đường'))) {
-            streetName = remainingPart;
+          houseNumber = match[1];
+          if (match[2]) {
+            street = match[2];
           }
         }
         continue;
       }
-      // Tìm tên đường
-      if ((lowerPart.includes('phố') || lowerPart.includes('đường')) && !streetName) {
-        streetName = part.trim();
+      
+      // Nếu phần này chứa từ "phố" hoặc "đường" và chưa có tên phố
+      if ((lowerPart.includes('phố') || lowerPart.includes('đường')) && !street) {
+        street = part;
       }
     }
 
-    // Nếu không tìm thấy số nhà trong phần riêng, tìm trong tên đường
-    if (!houseNumber && streetName) {
-      const match = streetName.match(/\d+/);
-      if (match) {
-        houseNumber = match[0];
-        streetName = streetName.replace(/^\d+\s*,?\s*/i, '').trim();
+    // Nếu không tìm được số nhà hoặc đường phố, lấy phần đầu tiên làm địa chỉ
+    if (!houseNumber && !street && parts.length > 0) {
+      const firstPart = parts[0];
+      if (/\d+/.test(firstPart)) {
+        const match = firstPart.match(/(\d+)\s*(.+)?/);
+        if (match) {
+          houseNumber = match[1];
+          street = match[2] || '';
+        }
+      } else {
+        street = firstPart;
       }
     }
 
-    // Tạo địa chỉ đầy đủ theo thứ tự mong muốn
-    const parts = [];
-    if (houseNumber) parts.push(houseNumber);
-    if (streetName) parts.push(streetName);
-    if (ward) parts.push(ward);
-    if (district) parts.push(district);
-    if (city) parts.push(city);
-
-    // Nếu không đủ thông tin cơ bản
-    if (parts.length < 3) {
-      // Lọc và sắp xếp lại các phần không chứa từ khóa cần loại bỏ
-      const fallbackParts = addressParts
-        .reverse() // Đảo ngược lại để lấy theo thứ tự gốc
-        .filter(part => {
-          const lowerPart = part.toLowerCase();
-          return part.trim() && 
-                 !/^\d{5,6}$/.test(part.trim()) &&
-                 !excludeKeywords.some(keyword => lowerPart.includes(keyword));
-        })
-        .map(part => part.replace(/,?\s*\d{5,6}$/, '').trim())
-        .filter(part => part);
-
-      // Đảm bảo luôn có thành phố ở cuối
-      if (!fallbackParts.some(part => part.toLowerCase().includes('hà nội'))) {
-        fallbackParts.push('Thành phố Hà Nội');
+    // Nếu không tìm được quận/huyện, thử tìm trong các phần còn lại
+    if (!district) {
+      for (const part of parts) {
+        if (!part.toLowerCase().includes('thành phố') && 
+            !part.toLowerCase().includes('tỉnh') &&
+            part !== street &&
+            part !== houseNumber) {
+          district = part;
+          break;
+        }
       }
-
-      return fallbackParts.join(', ');
     }
 
-    return parts.join(', ');
+    // Đảm bảo có đủ thông tin tối thiểu
+    if (!houseNumber) houseNumber = "1";
+    if (!street) street = "Chưa có tên đường";
+    if (!district) district = "Chưa có quận/huyện";
+
+    // Tạo địa chỉ theo format mong muốn
+    const formattedParts = [];
+    
+    if (houseNumber) formattedParts.push(houseNumber);
+    if (street) formattedParts.push(street);
+    if (district) formattedParts.push(district);
+    formattedParts.push(city); // Luôn thêm thành phố vào cuối
+
+    return formattedParts.join(', ');
   };
 
   const handleMapPress = async (e: any) => {

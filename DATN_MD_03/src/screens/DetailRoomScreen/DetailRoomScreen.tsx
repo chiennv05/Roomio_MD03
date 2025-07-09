@@ -23,7 +23,6 @@ import {Colors} from '../../theme/color';
 import {
   responsiveSpacing,
   responsiveFont,
-  responsiveIcon,
 } from '../../utils/responsive';
 import {RootStackParamList} from '../../types/route';
 import {Fonts} from '../../theme/fonts';
@@ -107,7 +106,7 @@ const DetailRoomScreen: React.FC = () => {
       photos: roomDetail.photos || [],
       servicePrices: roomDetail.location?.servicePrices || {},
       servicePriceConfig: roomDetail.location?.servicePriceConfig || {},
-      customServices: roomDetail.location?.customServices || [],
+      customServices: roomDetail.customServices || [],
       amenities: roomDetail.amenities || [],
       furniture: roomDetail.furniture || [],
       ownerName: roomDetail.owner?.fullName || 'Chủ trọ',
