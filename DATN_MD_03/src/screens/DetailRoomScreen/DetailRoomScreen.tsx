@@ -6,7 +6,6 @@ import {
   Text,
   TouchableOpacity,
   StatusBar,
-  Image,
   Alert,
 } from 'react-native';
 import {useRoute, RouteProp, useNavigation} from '@react-navigation/native';
@@ -453,22 +452,6 @@ const DetailRoomScreen: React.FC = () => {
               <View style={styles.divider} />
               <Description text={roomDetailData.description} />
 
-              <TouchableOpacity style={styles.termsButton}>
-                <View style={styles.termsIcon}>
-                  <Image
-                    source={{uri: Icons.IconDieuKhoan}}
-                    style={styles.termsIconImage}
-                  />
-                </View>
-                <Text style={styles.termsText}>
-                  Xem điều khoản và điều kiện
-                </Text>
-                <Image
-                  source={{uri: Icons.IconArrowRight}}
-                  style={styles.termsArrowRight}
-                />
-              </TouchableOpacity>
-
               <View style={styles.divider} />
 
               <RelatedPosts
@@ -626,38 +609,6 @@ const styles = StyleSheet.create({
     color: Colors.textGray,
     textAlign: 'center',
   },
-  termsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.limeGreenLight,
-    paddingVertical: responsiveSpacing(16),
-    paddingHorizontal: responsiveSpacing(16),
-    borderRadius: 8,
-    marginVertical: responsiveSpacing(16),
-    borderWidth: 1,
-    borderColor: Colors.darkGreen,
-  },
-  termsIcon: {
-    width: responsiveIcon(24),
-    height: responsiveIcon(24),
-    marginRight: responsiveSpacing(12),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  termsIconText: {
-    fontSize: responsiveFont(14),
-  },
-  termsText: {
-    flex: 1,
-    color: Colors.darkGreen,
-    fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(14),
-  },
-  termsArrow: {
-    color: Colors.limeGreen,
-    fontSize: responsiveFont(18),
-    fontFamily: Fonts.Roboto_Bold,
-  },
   retryButton: {
     backgroundColor: Colors.limeGreen,
     padding: responsiveSpacing(16),
@@ -677,13 +628,5 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     paddingHorizontal: responsiveSpacing(20),
-  },
-  termsIconImage: {
-    width: responsiveIcon(24),
-    height: responsiveIcon(24),
-  },
-  termsArrowRight: {
-    width: responsiveIcon(12),
-    height: responsiveIcon(24),
   },
 });
