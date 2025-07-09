@@ -42,6 +42,7 @@ export interface Location {
   coordinates: Coordinates;
   servicePrices: ServicePrices;
   servicePriceConfig: ServicePriceConfig;
+  customServices?: CustomService[];
 }
 
 // ========== Owner & Stats ==========

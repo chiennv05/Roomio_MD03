@@ -106,7 +106,7 @@ const DetailRoomScreen: React.FC = () => {
       photos: roomDetail.photos || [],
       servicePrices: roomDetail.location?.servicePrices || {},
       servicePriceConfig: roomDetail.location?.servicePriceConfig || {},
-      customServices: roomDetail.customServices || [],
+      customServices: roomDetail.location?.customServices || [],
       amenities: roomDetail.amenities || [],
       furniture: roomDetail.furniture || [],
       ownerName: roomDetail.owner?.fullName || 'Chủ trọ',

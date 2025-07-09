@@ -124,28 +124,32 @@ const AnimatedServiceItem: React.FC<AnimatedServiceItemProps> = ({ service, inde
 // Hàm lấy icon phù hợp cho custom service dựa trên tên
 const getCustomServiceIcon = (serviceName: string): string => {
   const name = serviceName.toLowerCase();
+  const defaultIcon = Icons.IconServiceSelected || '';
   
   if (name.includes('internet') || name.includes('wifi')) {
-    return Icons.IconWifiMienPhi || Icons.IconVeSinh || '';
+    return Icons.IconWifiMienPhi || defaultIcon;
   }
   if (name.includes('máy giặt') || name.includes('giặt')) {
-    return Icons.IconMayGiat || Icons.IconVeSinh || '';
+    return Icons.IconMayGiat || defaultIcon;
   }
   if (name.includes('gửi xe') || name.includes('parking') || name.includes('xe')) {
-    return Icons.IconGuiXe || Icons.IconVeSinh || '';
+    return Icons.IconGuiXe || defaultIcon;
   }
   if (name.includes('vệ sinh') || name.includes('dọn dẹp') || name.includes('cleaning')) {
-    return Icons.IconVeSinh || '';
+    return Icons.IconVeSinh || defaultIcon;
   }
   if (name.includes('thang máy') || name.includes('elevator')) {
-    return Icons.IconThangMay || Icons.IconVeSinh || '';
+    return Icons.IconThangMay || defaultIcon;
   }
   if (name.includes('bảo vệ') || name.includes('security')) {
-    return Icons.IconBaoVe || Icons.IconVeSinh || '';
+    return Icons.IconBaoVe || defaultIcon;
+  }
+  if (name.includes('sinh hoạt') || name.includes('phí ở')) {
+    return Icons.IconServiceSelected || defaultIcon;
   }
   
-  // Icon mặc định cho dịch vụ
-  return Icons.IconVeSinh || '';
+  // Icon mặc định cho dịch vụ khác
+  return defaultIcon;
 };
 
 const ServiceFees: React.FC<ServiceFeesProps> = ({ 
