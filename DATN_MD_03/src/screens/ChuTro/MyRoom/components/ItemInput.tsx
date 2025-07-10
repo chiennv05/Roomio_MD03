@@ -26,6 +26,7 @@ interface InputProps {
   keyboardType?: KeyboardTypeOptions;
   height?: number;
   borderRadius?: number;
+  onPress?: () => void;
 }
 
 const ItemInput = ({
@@ -39,6 +40,7 @@ const ItemInput = ({
   keyboardType,
   height = verticalScale(50),
   borderRadius = 24,
+  onPress,
 }: InputProps) => {
   const isMultiline = placeholder === 'Mô tả';
   const [inputHeight, setInputHeight] = useState(height);
@@ -54,7 +56,8 @@ const ItemInput = ({
           minHeight: isMultiline ? inputHeight : height,
           alignItems: isMultiline ? 'flex-start' : 'center',
         },
-      ]}>
+      ]}
+      onPress={onPress}>
       <TextInput
         style={[
           styles.containerInput,

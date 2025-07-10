@@ -9,11 +9,8 @@ export interface Coordinates {
 }
 
 export interface ServicePrices {
-
   electricity?: number;
   water?: number;
-
-
 }
 
 export interface ServicePriceConfig {
@@ -27,6 +24,7 @@ export interface CustomService {
   price: number;
   priceType: 'perUsage' | 'perPerson' | 'perRoom';
   description?: string;
+  _delete?: boolean; // Used to mark for deletion
 }
 
 // ========== Location ==========

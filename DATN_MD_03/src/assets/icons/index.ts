@@ -628,4 +628,8 @@ export const Icons = {
     ios: 'icon_my_location',
     android: 'asset:/icons/icon_my_location.png',
   }),
+  IconDownLoad: Platform.select({
+    ios: 'icon_download',
+    android: 'asset:/icons/icon_download.png',
+  }),
 };
