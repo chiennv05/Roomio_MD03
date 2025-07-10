@@ -1,6 +1,5 @@
 import api from '../../api/api';
-import {CreateContractPayload} from '../../types';
-import {ContractTenantResponse} from '../../types/Contract';
+import {CreateContractPayload, UpdateContractPayload} from '../../types';
 
 // Tạo hợp đồng từ thông báo
 export const createContractFromNotification = async (
@@ -26,13 +25,15 @@ export const getMyContracts = async (params?: {
 }) => {
   try {
     const queryParams = new URLSearchParams();
-    
+
     // Thêm tham số phân trang nếu có
     if (params?.page) queryParams.append('page', params.page.toString());
     if (params?.limit) queryParams.append('limit', params.limit.toString());
     if (params?.status) queryParams.append('status', params.status);
-    
-    const url = `/contract/my-contracts${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+    const url = `/contract/my-contracts${
+      queryParams.toString() ? `?${queryParams.toString()}` : ''
+    }`;
     const response = await api.get(url);
     return response.data;
   } catch (error: any) {
@@ -49,10 +50,7 @@ export const getContractDetail = async (contractId: string) => {
   try {
     // Gọi đúng endpoint API
     const response = await api.get(`/contract/${contractId}`);
-    
-    // Kiểm tra và log response để debug
-    console.log('Contract detail response:', JSON.stringify(response.data));
-    
+
     // Trả về response đúng như API
     return response.data;
   } catch (error: any) {
@@ -69,55 +67,80 @@ export const generateContractPDF = async (contractId: string) => {
   try {
     console.log(`Gọi API tạo PDF cho hợp đồng: ${contractId}`);
     const response = await api.post(`/contract/${contractId}/generate-pdf`);
-    
-    // Log kết quả từ API để debug
-    console.log(`API response for contract PDF: ${JSON.stringify(response.data)}`);
-    
+
     // Kiểm tra cấu trúc dữ liệu trả về
     if (!response.data || !response.data.success) {
       throw new Error('API không trả về dữ liệu hợp lệ');
     }
-    
+
     return response.data;
   } catch (error: any) {
     console.error(`Error generating PDF for contract ${contractId}:`, error);
-    
+
     // Log thêm chi tiết lỗi để debug
     if (error.response) {
       console.error('Error response:', error.response.data);
       console.error('Error status:', error.response.status);
     }
-    
+
     throw {
-      message: error.response?.data?.message || error.message || 'Không thể tạo file PDF',
+      message:
+        error.response?.data?.message ||
+        error.message ||
+        'Không thể tạo file PDF',
       status: error.response?.status,
     };
   }
 };
 
 // Upload ảnh hợp đồng đã ký
+// Upload signed contract image
 export const uploadSignedContractImage = async (
   contractId: string,
   formData: FormData,
 ) => {
   try {
+    console.log('Uploading signed contract image for contract:', formData);
+
     const response = await api.post(
-      `/contract/${contractId}/upload-signed`,
+      `/contract/${contractId}/upload-signed`, // Sửa endpoint theo Postman
       formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 30000,
+      },
     );
+
+    console.log('Upload response:', response.data);
+
+    if (!response.data) {
+      throw new Error('API không trả về dữ liệu');
+    }
+
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Upload thất bại');
+    }
+
     return response.data;
   } catch (error: any) {
     console.error(
-      `Error uploading signed image for contract ${contractId}:`,
+      'Error uploading signed image for contract',
+      contractId,
+      ':',
       error,
     );
-    throw {
-      message: error.response?.data?.message || error.message,
-      status: error.response?.status,
-    };
+    if (error.response) {
+      console.error('Error response:', error.response.data);
+      throw new Error(error.response.data?.message || 'Lỗi từ server');
+    } else if (error.request) {
+      throw new Error('Lỗi kết nối mạng');
+    } else {
+      throw new Error(error.message || 'Lỗi không xác định');
+    }
   }
 };
-
 // Admin phê duyệt hợp đồng
 export const approveContract = async (contractId: string) => {
   try {
@@ -163,46 +186,15 @@ export const viewPDFContract = async (contractId: string) => {
 // Cập nhật thông tin hợp đồng
 export const updateContract = async (
   contractId: string,
-  data: CreateContractPayload,
+  data: UpdateContractPayload,
 ) => {
+  console.log(`Updating contract with ID: ${contractId}`, data);
   try {
     const response = await api.patch(`/contract/${contractId}/update`, data);
+    console.log(`Update response for contract ${contractId}:`, response);
     return response.data;
   } catch (error: any) {
     console.error(`Error updating contract ${contractId}:`, error);
-    throw {
-      message: error.response?.data?.message || error.message,
-      status: error.response?.status,
-    };
-  }
-};
-
-// Upload ảnh hợp đồng (khác ảnh đã ký)
-export const uploadContractImages = async (
-  contractId: string,
-  formData: FormData,
-) => {
-  try {
-    const response = await api.post(
-      `/contract/${contractId}/upload-images`,
-      formData,
-    );
-    return response.data;
-  } catch (error: any) {
-    console.error(`Error uploading images for contract ${contractId}:`, error);
-    throw {
-      message: error.response?.data?.message || error.message,
-      status: error.response?.status,
-    };
-  }
-};
-// Xoá hợp đồng
-export const deleteContract = async (contractId: string) => {
-  try {
-    const response = await api.delete(`/contract/${contractId}/delete`);
-    return response.data;
-  } catch (error: any) {
-    console.error(`Error deleting contract ${contractId}:`, error);
     throw {
       message: error.response?.data?.message || error.message,
       status: error.response?.status,
@@ -250,22 +242,6 @@ export const updateCoTenants = async (contractId: string) => {
       `Error updating co-tenants for contract ${contractId}:`,
       error,
     );
-    throw {
-      message: error.response?.data?.message || error.message,
-      status: error.response?.status,
-    };
-  }
-};
-
-// Lấy danh sách người thuê của một hợp đồng
-export const getContractTenants = async (contractId: string) => {
-  try {
-    const response = await api.get<ContractTenantResponse>(
-      `/landlord/contracts/${contractId}/tenants`,
-    );
-    return response.data;
-  } catch (error: any) {
-    console.error('Error fetching contract tenants:', error);
     throw {
       message: error.response?.data?.message || error.message,
       status: error.response?.status,

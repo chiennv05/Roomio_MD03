@@ -2,6 +2,9 @@ import {View, StyleSheet, Alert} from 'react-native';
 import React, {useEffect, useCallback, useState} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {useNavigation} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {RootStackParamList} from '../../types/route';
 import {RootState, AppDispatch} from '../../store';
 import {
   fetchNotifications,
@@ -19,8 +22,11 @@ import NotificationListContainer, {
 import LoadingAnimation from '../../components/LoadingAnimation';
 import {Colors} from '../../theme/color';
 
+type NotificationScreenNavigationProp = StackNavigationProp<RootStackParamList>;
+
 const NotificationScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const navigation = useNavigation<NotificationScreenNavigationProp>();
   const {user, token} = useSelector((state: RootState) => state.auth);
   const {
     loading,
@@ -76,7 +82,6 @@ const NotificationScreen = () => {
   const handleDeleteNotification = useCallback(
     (notificationId: string) => {
       if (user && token) {
-        // Hiển thị dialog xác nhận trước khi xóa
         Alert.alert(
           'Xác nhận xóa',
           'Bạn có chắc chắn muốn xóa thông báo này?',
@@ -100,6 +105,53 @@ const NotificationScreen = () => {
     [dispatch, user, token],
   );
 
+  // Handle notification press - Sự kiện mới thêm
+  const handleNotificationPress = useCallback(
+    (notification: FormattedNotification) => {
+      // Mark as read first
+      if (!notification.isRead) {
+        handleMarkAsRead(notification.id);
+      }
+
+      // Navigate based on notification type
+      switch (notification.type) {
+        case 'hopDong':
+          // Navigate to AddContract screen with notification ID
+          const originalNotification = notifications.find(
+            n => n._id === notification.id,
+          );
+          if (originalNotification) {
+            navigation.navigate('AddContract', {
+              notificationId: notification.id || '',
+            });
+          }
+          break;
+
+        case 'lichXemPhong':
+        case 'schedule':
+          // Navigate to schedule screen
+          // navigation.navigate('ScheduleDetail', {notificationId: notification.id});
+          console.log('Navigate to schedule detail');
+          break;
+
+        case 'thanhToan':
+        case 'bill':
+          // Navigate to bill screen
+          // navigation.navigate('BillDetail', {notificationId: notification.id});
+          console.log('Navigate to bill detail');
+          break;
+
+        case 'heThong':
+        case 'hoTro':
+        default:
+          // Just mark as read, no navigation
+          console.log('System notification - no navigation needed');
+          break;
+      }
+    },
+    [handleMarkAsRead, navigation, notifications],
+  );
+
   // Handle tab change
   const handleTabChange = useCallback(
     (tab: 'all' | 'schedule' | 'bill' | 'contract') => {
@@ -110,7 +162,6 @@ const NotificationScreen = () => {
 
   // Handle menu press
   const handleMenuPress = useCallback(() => {
-    // TODO: Implement menu functionality (mark all as read, settings, etc.)
     console.log('Menu pressed');
   }, []);
 
@@ -172,7 +223,7 @@ const NotificationScreen = () => {
             refreshing={refreshing}
             onLoadMore={handleLoadMore}
             loadingMore={loadingMore}
-            onMarkAsRead={handleMarkAsRead}
+            onMarkAsRead={handleNotificationPress}
             onDeleteNotification={handleDeleteNotification}
           />
         )}

@@ -1,12 +1,15 @@
 import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Image} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RootStackParamList} from '../../../../types/route';
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+
 import {Colors} from '../../../../theme/color';
 import {Fonts} from '../../../../theme/fonts';
-import {scale, responsiveFont, verticalScale} from '../../../../utils/responsive';
-import {Icons} from '../../../../assets/icons';
+import {
+  scale,
+  responsiveFont,
+  verticalScale,
+  SCREEN,
+} from '../../../../utils/responsive';
+import {Contract} from '../../../../types';
 
 // Hàm lấy thông tin trạng thái
 export const getContractStatusInfo = (status: string) => {
@@ -56,82 +59,63 @@ const formatDate = (dateString: string) => {
 };
 
 interface ContractItemProps {
-  contract: any;
+  contract: Contract;
+  onPress: (contractId: string) => void;
 }
 
-const ContractItem = ({contract}: ContractItemProps) => {
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+const ContractItem = ({contract, onPress}: ContractItemProps) => {
   const statusInfo = getContractStatusInfo(contract.status);
 
-  const handlePress = () => {
-    navigation.navigate('ContractDetail', {contractId: contract._id});
-  };
-
-  const handleViewTenants = () => {
-    navigation.navigate('ContractTenants', {contractId: contract._id});
-  };
-
-  const renderThumbnail = () => {
-    if (contract.roomId?.photos && contract.roomId.photos.length > 0) {
-      return (
-        <Image
-          source={{
-            uri: `http://125.212.229.71:4000${contract.roomId.photos[0]}`,
-          }}
-          style={styles.thumbnail}
-          resizeMode="cover"
-        />
-      );
-    } else {
-      return <View style={[styles.thumbnail, {backgroundColor: Colors.gray150}]} />;
-    }
-  };
+  // const handlePress = () => {
+  //   // Chuyển đến màn hình chi tiết hợp đồng
+  //   navigation.navigate('ContractDetail', {contractId: contract._id});
+  // };
 
   return (
-    <TouchableOpacity style={styles.container} onPress={handlePress}>
-      {renderThumbnail()}
-      
+    <TouchableOpacity
+      style={styles.container}
+      onPress={() => onPress(contract._id)}>
       <View style={styles.contentContainer}>
         <View style={styles.header}>
-          <Text style={styles.roomNumber}>{contract.contractInfo.roomNumber}</Text>
-          <View style={[styles.statusBadge, {backgroundColor: statusInfo.color}]}>
+          <Text style={styles.roomNumber}>
+            {contract.contractInfo.roomNumber}
+          </Text>
+          <View
+            style={[styles.statusBadge, {backgroundColor: statusInfo.color}]}>
             <Text style={styles.statusText}>{statusInfo.label}</Text>
           </View>
         </View>
-        
+
         <Text style={styles.address} numberOfLines={1}>
           {contract.contractInfo.roomAddress}
         </Text>
-        
+
         <View style={styles.infoRow}>
           <Text style={styles.label}>Người thuê:</Text>
           <Text style={styles.value}>{contract.contractInfo.tenantName}</Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={styles.label}>Thời hạn:</Text>
-          <Text style={styles.value}>{contract.contractInfo.contractTerm} tháng</Text>
+          <Text style={styles.value}>
+            {contract.contractInfo.contractTerm} tháng
+          </Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={styles.label}>Từ ngày:</Text>
           <Text style={styles.value}>
-            {formatDate(contract.contractInfo.startDate)} - {formatDate(contract.contractInfo.endDate)}
+            {formatDate(contract.contractInfo.startDate)} -{' '}
+            {formatDate(contract.contractInfo.endDate)}
           </Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={styles.label}>Tiền thuê:</Text>
           <Text style={styles.value}>
             {contract.contractInfo.monthlyRent.toLocaleString('vi-VN')} đ/tháng
           </Text>
         </View>
-
-        {/* Nút xem danh sách người thuê */}
-        <TouchableOpacity style={styles.viewTenantsButton} onPress={handleViewTenants}>
-          <Image source={{uri: Icons.IconPersonDefault}} style={styles.buttonIcon} />
-          <Text style={styles.buttonText}>Xem danh sách người thuê</Text>
-        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
@@ -139,7 +123,9 @@ const ContractItem = ({contract}: ContractItemProps) => {
 
 const styles = StyleSheet.create({
   container: {
+    width: SCREEN.width * 0.9,
     flexDirection: 'row',
+
     backgroundColor: Colors.white,
     borderRadius: 10,
     marginBottom: verticalScale(12),
@@ -153,12 +139,8 @@ const styles = StyleSheet.create({
     elevation: 3,
     overflow: 'hidden',
   },
-  thumbnail: {
-    width: scale(100),
-    height: '100%',
-  },
   contentContainer: {
-    flex: 1,
+    flex: 4,
     padding: scale(12),
   },
   header: {
@@ -204,26 +186,6 @@ const styles = StyleSheet.create({
     color: Colors.black,
     flex: 1,
   },
-  viewTenantsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.limeGreenLight,
-    paddingHorizontal: scale(12),
-    paddingVertical: verticalScale(6),
-    borderRadius: 8,
-    marginTop: verticalScale(8),
-  },
-  buttonIcon: {
-    width: scale(16),
-    height: scale(16),
-    tintColor: Colors.darkGreen,
-    marginRight: scale(8),
-  },
-  buttonText: {
-    fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(12),
-    color: Colors.darkGreen,
-  },
 });
 
-export default ContractItem; 
+export default ContractItem;

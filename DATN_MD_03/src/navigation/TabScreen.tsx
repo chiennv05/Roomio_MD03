@@ -27,10 +27,12 @@ import AddRoomScreen from '../screens/ChuTro/AddRoom/AddRoomScreen';
 
 import ContractManagement from '../screens/ChuTro/Contract/ContractManagement';
 import ContractDetailScreen from '../screens/ChuTro/Contract/ContractDetailScreen';
+import AddContract from '../screens/ChuTro/Contract/AddContract';
 import PdfViewerScreen from '../screens/ChuTro/Contract/PdfViewerScreen';
 import MapScreen from '../screens/ChuTro/AddRoom/MapScreen';
 import RoomDetail from '../screens/ChuTro/RoomDetail/RoomDetail';
 import UpdateRoom from '../screens/ChuTro/UpdateRoom/UpdateRoom';
+import UpdateContract from '../screens/ChuTro/Contract/UpdateContract';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -150,6 +152,14 @@ export default function TabScreen() {
           />
           <Stack.Screen name="DetailRoomLandlord" component={RoomDetail} />
           <Stack.Screen name="UpdateRoomScreen" component={UpdateRoom} />
+          <Stack.Screen name="AddContract" component={AddContract} />
+          <Stack.Screen
+            name="UpdateContract"
+            component={UpdateContract}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </>

@@ -38,4 +38,6 @@ export type RootStackParamList = {
   };
   DetailRoomLandlord: {id: string};
   UpdateRoomScreen: {item: Room};
+  AddContract: {notificationId: string};
+  UpdateContract: {contract: Contract};
 };
