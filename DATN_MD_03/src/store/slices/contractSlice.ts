@@ -148,15 +148,16 @@ export const uploadContractImages = createAsyncThunk(
 //cập nhật hợp đồng
 export const updateContractFrom = createAsyncThunk(
   'contract/updateContract',
-
   async (
     {contractId, data}: {contractId: string; data: UpdateContractPayload},
     {rejectWithValue},
   ) => {
-    console.log('Updating contract with ID:', data);
+    console.log('Updating contract with ID:', contractId, data);
     try {
       const response = await updateContract(contractId, data);
-      return response.data;
+      // API trả về { success, message, contract }
+      console.log('Response data:', response);
+      return response.contract; // Trả về contract object từ response
     } catch (err: any) {
       return rejectWithValue(err.message || 'Không thể cập nhật hợp đồng');
     }
@@ -271,6 +272,7 @@ const contractSlice = createSlice({
       }) // cập nhật hợp đồng
       .addCase(updateContractFrom.fulfilled, (state, action) => {
         const updatedContract = action.payload;
+        console.log('Updated contract in reducer:', updatedContract);
 
         // Cập nhật selectedContract nếu nó chính là contract đang sửa
         if (

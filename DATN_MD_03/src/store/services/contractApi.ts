@@ -192,6 +192,12 @@ export const updateContract = async (
   try {
     const response = await api.patch(`/contract/${contractId}/update`, data);
     console.log(`Update response for contract ${contractId}:`, response);
+    
+    // Kiểm tra response có đúng cấu trúc
+    if (!response.data || !response.data.success) {
+      throw new Error(response.data?.message || 'Cập nhật hợp đồng không thành công');
+    }
+    
     return response.data;
   } catch (error: any) {
     console.error(`Error updating contract ${contractId}:`, error);
