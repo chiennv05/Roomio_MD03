@@ -1,5 +1,6 @@
 import api from '../../api/api';
 import {CreateContractPayload} from '../../types';
+import {ContractTenantResponse} from '../../types/Contract';
 
 // Tạo hợp đồng từ thông báo
 export const createContractFromNotification = async (
@@ -249,6 +250,22 @@ export const updateCoTenants = async (contractId: string) => {
       `Error updating co-tenants for contract ${contractId}:`,
       error,
     );
+    throw {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+    };
+  }
+};
+
+// Lấy danh sách người thuê của một hợp đồng
+export const getContractTenants = async (contractId: string) => {
+  try {
+    const response = await api.get<ContractTenantResponse>(
+      `/landlord/contracts/${contractId}/tenants`,
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error('Error fetching contract tenants:', error);
     throw {
       message: error.response?.data?.message || error.message,
       status: error.response?.status,

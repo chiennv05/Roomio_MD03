@@ -15,6 +15,7 @@ export type RootStackParamList = {
   LandlordRoom: undefined;
   ContractManagement: undefined;
   ContractDetail: {contractId: string};
+  ContractTenants: {contractId: string};
   PdfViewer: {pdfUrl: string};
   MapScreen: {
     latitude?: number;

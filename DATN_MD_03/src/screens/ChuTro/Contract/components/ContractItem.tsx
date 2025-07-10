@@ -6,6 +6,7 @@ import {RootStackParamList} from '../../../../types/route';
 import {Colors} from '../../../../theme/color';
 import {Fonts} from '../../../../theme/fonts';
 import {scale, responsiveFont, verticalScale} from '../../../../utils/responsive';
+import {Icons} from '../../../../assets/icons';
 
 // Hàm lấy thông tin trạng thái
 export const getContractStatusInfo = (status: string) => {
@@ -63,13 +64,15 @@ const ContractItem = ({contract}: ContractItemProps) => {
   const statusInfo = getContractStatusInfo(contract.status);
 
   const handlePress = () => {
-    // Chuyển đến màn hình chi tiết hợp đồng
     navigation.navigate('ContractDetail', {contractId: contract._id});
+  };
+
+  const handleViewTenants = () => {
+    navigation.navigate('ContractTenants', {contractId: contract._id});
   };
 
   const renderThumbnail = () => {
     if (contract.roomId?.photos && contract.roomId.photos.length > 0) {
-      // Hiển thị ảnh phòng đầu tiên nếu có
       return (
         <Image
           source={{
@@ -80,7 +83,6 @@ const ContractItem = ({contract}: ContractItemProps) => {
         />
       );
     } else {
-      // Hiển thị View màu xám nếu không có ảnh
       return <View style={[styles.thumbnail, {backgroundColor: Colors.gray150}]} />;
     }
   };
@@ -124,6 +126,12 @@ const ContractItem = ({contract}: ContractItemProps) => {
             {contract.contractInfo.monthlyRent.toLocaleString('vi-VN')} đ/tháng
           </Text>
         </View>
+
+        {/* Nút xem danh sách người thuê */}
+        <TouchableOpacity style={styles.viewTenantsButton} onPress={handleViewTenants}>
+          <Image source={{uri: Icons.IconPersonDefault}} style={styles.buttonIcon} />
+          <Text style={styles.buttonText}>Xem danh sách người thuê</Text>
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
@@ -195,6 +203,26 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(13),
     color: Colors.black,
     flex: 1,
+  },
+  viewTenantsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.limeGreenLight,
+    paddingHorizontal: scale(12),
+    paddingVertical: verticalScale(6),
+    borderRadius: 8,
+    marginTop: verticalScale(8),
+  },
+  buttonIcon: {
+    width: scale(16),
+    height: scale(16),
+    tintColor: Colors.darkGreen,
+    marginRight: scale(8),
+  },
+  buttonText: {
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(12),
+    color: Colors.darkGreen,
   },
 });
 

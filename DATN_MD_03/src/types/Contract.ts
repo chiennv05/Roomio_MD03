@@ -143,3 +143,34 @@ export type CreateContractPayload = {
   additionalTerms: string;
   coTenants?: string[]; // <-- optional
 };
+
+export interface ContractTenantResponse {
+  success: boolean;
+  message: string;
+  data: {
+    contract: {
+      _id: string;
+      status: string;
+      startDate: string;
+      endDate: string;
+    };
+    room: {
+      roomId: string;
+      roomNumber: string;
+      photo: string;
+    };
+    tenants: {
+      mainTenant: {
+        _id: string;
+        username: string;
+        email: string;
+        status: string;
+        fullName: string;
+        phone: string;
+      };
+      coTenants: CoTenant[];
+      tenantCount: number;
+      maxOccupancy: number;
+    };
+  };
+}

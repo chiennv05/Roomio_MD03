@@ -731,11 +731,11 @@ export default function MapScreen({route}: MapScreenProps) {
                 </View>
                 <View style={styles.roomStats}>
                   <Image
-                    source={{uri: Icons.IconHome}}
+                    source={{uri: Icons.IconPersonDefault}}
                     style={styles.statsIcon}
                   />
                   <Text style={styles.statsText}>
-                    Còn trống: {route.params.roomDetail.maxOccupancy || 0} phòng
+                    Số người {route.params.roomDetail.maxOccupancy || 0} 
                   </Text>
                 </View>
               </View>

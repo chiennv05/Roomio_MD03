@@ -3,10 +3,11 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 
 import CustomTabar from './CustomTabar';
 import HomeScreen from '../screens/HomeScreen/HomeScreen';
-import SearchScreen from '../screens/SearchScreen/SearchScreen';
+// import SearchScreen from '../screens/SearchScreen/SearchScreen';
 import FavoriteScreen from '../screens/Favorite/FavoriteScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
-import NotificationScreen from '../screens/Notification/NotificationScreen';
+// import NotificationScreen from '../screens/Notification/NotificationScreen';
+import FindMayScreen from '../screens/FindMapScreen/FindMayScreen';
 const Tab = createBottomTabNavigator();
 export default function UITab() {
   return (
@@ -24,10 +25,10 @@ export default function UITab() {
         }}
       />
       <Tab.Screen 
-        name="Search" 
-        component={SearchScreen}
+        name="Map" 
+        component={FindMayScreen}
         options={{
-          tabBarLabel: 'Tìm kiếm',
+          tabBarLabel: 'Map',
         }}
       />
       <Tab.Screen 

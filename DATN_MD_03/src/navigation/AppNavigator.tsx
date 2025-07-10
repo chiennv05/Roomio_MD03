@@ -6,6 +6,7 @@ import HomeScreen from '../screens/HomeScreen/HomeScreen';
 import ContractDetailScreen from '../screens/ChuTro/Contract/ContractDetailScreen';
 import PdfViewerScreen from '../screens/ChuTro/Contract/PdfViewerScreen';
 import RoomDetail from '../screens/ChuTro/RoomDetail/RoomDetail';
+import ContractTenantsScreen from '../screens/ChuTro/ContractManagement/ContractTenantsScreen';
 import { RootStackParamList } from '../types/route';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -19,6 +20,7 @@ export default function AppNavigator() {
         <Stack.Screen name="ContractDetail" component={ContractDetailScreen} />
         <Stack.Screen name="PdfViewer" component={PdfViewerScreen} />
         <Stack.Screen name="DetailRoomLandlord" component={RoomDetail} />
+        <Stack.Screen name="ContractTenants" component={ContractTenantsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

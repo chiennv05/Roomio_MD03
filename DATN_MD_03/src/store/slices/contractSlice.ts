@@ -1,5 +1,6 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
-import {getMyContracts, getContractDetail, generateContractPDF as genContractPDF} from '../services/contractApi';
+import {getMyContracts, getContractDetail, generateContractPDF as genContractPDF, getContractTenants} from '../services/contractApi';
+import {ContractTenantResponse} from '../../types/Contract';
 
 interface Contract {
   _id: string;
@@ -142,6 +143,9 @@ interface ContractState {
   selectedContract: Contract | null;
   selectedContractLoading: boolean;
   selectedContractError: string | null;
+  contractTenants: ContractTenantResponse['data'] | null;
+  contractTenantsLoading: boolean;
+  contractTenantsError: string | null;
 }
 
 const initialState: ContractState = {
@@ -152,6 +156,9 @@ const initialState: ContractState = {
   selectedContract: null,
   selectedContractLoading: false,
   selectedContractError: null,
+  contractTenants: null,
+  contractTenantsLoading: false,
+  contractTenantsError: null,
 };
 
 // Async thunk để lấy danh sách hợp đồng
@@ -200,19 +207,34 @@ export const generateContractPDF = createAsyncThunk(
   },
 );
 
+// Async thunks
+export const fetchContractTenants = createAsyncThunk(
+  'contract/fetchContractTenants',
+  async (contractId: string, {rejectWithValue}) => {
+    try {
+      const response = await getContractTenants(contractId);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
 const contractSlice = createSlice({
   name: 'contract',
   initialState,
   reducers: {
-    clearContractErrors: (state) => {
+    clearContractErrors: state => {
       state.error = null;
       state.selectedContractError = null;
+      state.contractTenantsError = null;
     },
     clearSelectedContract: (state) => {
       state.selectedContract = null;
     },
+    resetContractState: () => initialState,
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     builder
       // Xử lý fetchMyContracts
       .addCase(fetchMyContracts.pending, (state) => {
@@ -242,9 +264,23 @@ const contractSlice = createSlice({
       .addCase(fetchContractDetail.rejected, (state, action) => {
         state.selectedContractLoading = false;
         state.selectedContractError = action.payload as string;
+      })
+
+      // Xử lý fetchContractTenants
+      .addCase(fetchContractTenants.pending, state => {
+        state.contractTenantsLoading = true;
+        state.contractTenantsError = null;
+      })
+      .addCase(fetchContractTenants.fulfilled, (state, action) => {
+        state.contractTenantsLoading = false;
+        state.contractTenants = action.payload;
+      })
+      .addCase(fetchContractTenants.rejected, (state, action) => {
+        state.contractTenantsLoading = false;
+        state.contractTenantsError = action.payload as string;
       });
   },
 });
 
-export const {clearContractErrors, clearSelectedContract} = contractSlice.actions;
+export const {clearContractErrors, clearSelectedContract, resetContractState} = contractSlice.actions;
 export default contractSlice.reducer; 
