@@ -30,6 +30,7 @@ import PdfViewerScreen from '../screens/ChuTro/Contract/PdfViewerScreen';
 import MapScreen from '../screens/ChuTro/AddRoom/MapScreen';
 import RoomDetail from '../screens/ChuTro/RoomDetail/RoomDetail';
 import UpdateRoom from '../screens/ChuTro/UpdateRoom/UpdateRoom';
+import StatisticScreen from '../screens/ChuTro/Statistic/StatisticScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -142,6 +143,7 @@ export default function TabScreen() {
           />
           <Stack.Screen name="DetailRoomLandlord" component={RoomDetail} />
           <Stack.Screen name="UpdateRoomScreen" component={UpdateRoom} />
+          <Stack.Screen name="StatisticScreen" component={StatisticScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

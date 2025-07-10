@@ -31,4 +31,5 @@ export type RootStackParamList = {
   };
   DetailRoomLandlord: {id: string};
   UpdateRoomScreen: {item: Room};
+  StatisticScreen: undefined;
 };
