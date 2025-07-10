@@ -29,12 +29,16 @@ import {
     deleteInvoiceItem,
     resetDeleteItemState,
     updateInvoiceInStore,
-    completeInvoice
+    completeInvoice,
+    saveInvoiceAsTemplate,
+    resetSaveTemplateState,
+    resetCompleteInvoiceState
 } from '../../store/slices/billSlice';
 import { RootStackParamList } from '../../types/route';
 import { SCREEN, scale, verticalScale } from '../../utils/responsive';
 import { Invoice, InvoiceItem } from '../../types/Bill';
 import { Icons } from '../../assets/icons';
+import SaveTemplateModal from './components/SaveTemplateModal';
 
 type EditInvoiceRouteProps = RouteProp<RootStackParamList, 'EditInvoice'>;
 
@@ -59,7 +63,10 @@ const EditInvoiceScreen = () => {
         updateItemsError,
         deleteItemLoading,
         deleteItemSuccess,
-        deleteItemError
+        deleteItemError,
+        saveTemplateLoading,
+        saveTemplateSuccess,
+        saveTemplateError
     } = useAppSelector(state => state.bill);
 
     // Local state for editable fields
@@ -72,6 +79,9 @@ const EditInvoiceScreen = () => {
     const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
     const [totalAmount, setTotalAmount] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
+
+    // State cho modal lưu mẫu
+    const [saveTemplateModalVisible, setSaveTemplateModalVisible] = useState(false);
 
     // String state for input fields to prevent resetting to 0
     const [itemInputs, setItemInputs] = useState<{
@@ -108,23 +118,15 @@ const EditInvoiceScreen = () => {
     const [customItemPreviousReading, setCustomItemPreviousReading] = useState('0');
     const [customItemCurrentReading, setCustomItemCurrentReading] = useState('0');
 
-    // Handle hardware back button
-    useEffect(() => {
-        const backHandler = () => {
-            handleBackPress();
-            return true; // Prevent default behavior
-        };
+    // State để theo dõi xem hóa đơn đã được lưu thành mẫu hay chưa
+    const [hasBeenSavedAsTemplate, setHasBeenSavedAsTemplate] = useState(false);
 
-        // Add event listener for hardware back button on Android
-        const backHandlerSubscription = Platform.OS === 'android'
-            ? BackHandler.addEventListener('hardwareBackPress', backHandler)
-            : { remove: () => { } };
-
-        // Clean up
-        return () => {
-            backHandlerSubscription.remove();
-        };
-    }, [navigation, token, selectedInvoice]);
+    // State để lưu trữ dữ liệu ban đầu của hóa đơn
+    const [initialInvoiceData, setInitialInvoiceData] = useState({
+        dueDate: '',
+        note: '',
+        items: [] as InvoiceItem[]
+    });
 
     // Load invoice details
     useEffect(() => {
@@ -186,8 +188,33 @@ const EditInvoiceScreen = () => {
             }
 
             setTotalAmount(selectedInvoice.totalAmount);
+
+            // Lưu trữ dữ liệu ban đầu để so sánh sau này
+            setInitialInvoiceData({
+                dueDate: selectedInvoice.dueDate || '',
+                note: selectedInvoice.note || '',
+                items: JSON.parse(JSON.stringify(selectedInvoice.items || []))
+            });
         }
     }, [selectedInvoice]);
+
+    // Handle hardware back button
+    useEffect(() => {
+        const backHandler = () => {
+            handleBackPress();
+            return true; // Prevent default behavior
+        };
+
+        // Add event listener for hardware back button on Android
+        const backHandlerSubscription = Platform.OS === 'android'
+            ? BackHandler.addEventListener('hardwareBackPress', backHandler)
+            : { remove: () => { } };
+
+        // Clean up
+        return () => {
+            backHandlerSubscription.remove();
+        };
+    }, [navigation, token, selectedInvoice]);
 
     // Handle update success
     useEffect(() => {
@@ -271,6 +298,27 @@ const EditInvoiceScreen = () => {
             );
         }
     }, [deleteItemSuccess, deleteItemError, dispatch, token, invoiceId]);
+
+    // Handle save template success/error
+    useEffect(() => {
+        if (saveTemplateSuccess) {
+            setHasBeenSavedAsTemplate(true);
+            Alert.alert(
+                "Thành công",
+                "Đã lưu mẫu hóa đơn thành công!",
+                [{ text: "OK", onPress: () => dispatch(resetSaveTemplateState()) }]
+            );
+            setSaveTemplateModalVisible(false);
+        }
+
+        if (saveTemplateError) {
+            Alert.alert(
+                "Lỗi",
+                `Không thể lưu mẫu hóa đơn: ${saveTemplateError}`,
+                [{ text: "OK", onPress: () => dispatch(resetSaveTemplateState()) }]
+            );
+        }
+    }, [saveTemplateSuccess, saveTemplateError, dispatch]);
 
     // Helper function to safely access nested properties
     const getNestedValue = (obj: any, path: string, defaultValue: any = undefined) => {
@@ -402,6 +450,47 @@ const EditInvoiceScreen = () => {
         if (!errorMessage) {
             const reading = parseInt(value);
             newItems[itemIndex][field] = reading;
+
+            // Nếu đang cập nhật chỉ số cũ, tự động cập nhật chỉ số mới = chỉ số cũ + 1
+            if (field === 'previousReading') {
+                // Chỉ tự động cập nhật nếu chỉ số mới chưa được nhập hoặc bằng với chỉ số cũ trước đó
+                const currentReading = itemInputs[itemId]?.currentReading;
+                const previousOldReading = item.previousReading || 0;
+
+                // Chỉ tự động cập nhật trong các trường hợp:
+                // 1. Chỉ số mới chưa được nhập (undefined hoặc rỗng)
+                // 2. Chỉ số mới đang bằng chỉ số cũ trước đó + 1 (người dùng chưa chỉnh sửa)
+                // 3. Chỉ số mới đang bằng chỉ số cũ trước đó (trường hợp ban đầu)
+                if (
+                    currentReading === undefined ||
+                    currentReading === '' ||
+                    parseInt(currentReading) === previousOldReading + 1 ||
+                    parseInt(currentReading) === previousOldReading
+                ) {
+                    const newCurrentReading = reading + 1;
+
+                    // Cập nhật state itemInputs
+                    setItemInputs(prev => ({
+                        ...prev,
+                        [itemId]: {
+                            ...prev[itemId],
+                            currentReading: newCurrentReading.toString()
+                        }
+                    }));
+
+                    // Cập nhật trực tiếp vào invoiceItems
+                    newItems[itemIndex].currentReading = newCurrentReading;
+
+                    // Xóa lỗi nếu có
+                    setInputErrors(prev => ({
+                        ...prev,
+                        [itemId]: {
+                            ...prev[itemId],
+                            currentReading: ''
+                        }
+                    }));
+                }
+            }
 
             // Recalculate amount for variable items
             if (newItems[itemIndex].type === 'variable') {
@@ -668,6 +757,42 @@ const EditInvoiceScreen = () => {
                     return true;
                 }
 
+                // Kiểm tra chỉ số đồng hồ bằng 0
+                const item = invoiceItems.find(item => item._id === itemId);
+                if (item && item.type === 'variable') {
+                    const prevReading = inputs.previousReading !== undefined ?
+                        parseInt(inputs.previousReading || '0') :
+                        (item.previousReading || 0);
+
+                    const currReading = inputs.currentReading !== undefined ?
+                        parseInt(inputs.currentReading || '0') :
+                        (item.currentReading || 0);
+
+                    // Kiểm tra chỉ số cũ bằng 0
+                    if (prevReading === 0) {
+                        setInputErrors(prev => ({
+                            ...prev,
+                            [itemId]: {
+                                ...prev[itemId],
+                                previousReading: 'Chỉ số không được bằng 0'
+                            }
+                        }));
+                        return true;
+                    }
+
+                    // Kiểm tra chỉ số mới bằng 0
+                    if (currReading === 0) {
+                        setInputErrors(prev => ({
+                            ...prev,
+                            [itemId]: {
+                                ...prev[itemId],
+                                currentReading: 'Chỉ số không được bằng 0'
+                            }
+                        }));
+                        return true;
+                    }
+                }
+
                 // Kiểm tra số lượng
                 if (inputs.quantity !== undefined && inputs.quantity.trim() === '') {
                     setInputErrors(prev => ({
@@ -694,11 +819,151 @@ const EditInvoiceScreen = () => {
             }
         }
 
+        // Kiểm tra các khoản mục có chỉ số bằng 0 nhưng không có trong itemInputs
+        for (const item of invoiceItems) {
+            if (item.type === 'variable' && item._id) {
+                const itemId = item._id;
+
+                // Nếu không có trong itemInputs, kiểm tra giá trị trực tiếp từ item
+                if (!itemInputs[itemId] ||
+                    (itemInputs[itemId].previousReading === undefined &&
+                        itemInputs[itemId].currentReading === undefined)) {
+
+                    if (item.previousReading === 0) {
+                        setInputErrors(prev => ({
+                            ...prev,
+                            [itemId]: {
+                                ...prev[itemId],
+                                previousReading: 'Chỉ số không được bằng 0'
+                            }
+                        }));
+                        return true;
+                    }
+
+                    if (item.currentReading === 0) {
+                        setInputErrors(prev => ({
+                            ...prev,
+                            [itemId]: {
+                                ...prev[itemId],
+                                currentReading: 'Chỉ số không được bằng 0'
+                            }
+                        }));
+                        return true;
+                    }
+                }
+            }
+        }
+
         return false;
+    };
+
+    // Kiểm tra xem hóa đơn có thay đổi so với dữ liệu ban đầu hay không
+    const hasInvoiceChanged = () => {
+        // So sánh ngày đến hạn
+        const currentDueDate = dueDateObj ? dueDateObj.toISOString() : '';
+        if (currentDueDate !== initialInvoiceData.dueDate) {
+            return true;
+        }
+
+        // So sánh ghi chú
+        if (note !== initialInvoiceData.note) {
+            return true;
+        }
+
+        // So sánh các khoản mục
+        if (invoiceItems.length !== initialInvoiceData.items.length) {
+            return true;
+        }
+
+        // Kiểm tra chi tiết từng khoản mục
+        for (let i = 0; i < invoiceItems.length; i++) {
+            const currentItem = invoiceItems[i];
+            const initialItem = initialInvoiceData.items.find(item => item._id === currentItem._id);
+
+            if (!initialItem) {
+                return true; // Khoản mục mới được thêm vào
+            }
+
+            // So sánh các trường quan trọng
+            if (
+                currentItem.name !== initialItem.name ||
+                currentItem.description !== initialItem.description ||
+                currentItem.quantity !== initialItem.quantity ||
+                currentItem.unitPrice !== initialItem.unitPrice ||
+                currentItem.previousReading !== initialItem.previousReading ||
+                currentItem.currentReading !== initialItem.currentReading ||
+                currentItem.amount !== initialItem.amount
+            ) {
+                return true;
+            }
+
+            // Kiểm tra các giá trị trong ô input
+            const itemId = currentItem._id || '';
+            const inputData = itemInputs[itemId];
+
+            if (inputData) {
+                // Kiểm tra tên
+                if (inputData.name !== undefined && inputData.name !== initialItem.name) {
+                    return true;
+                }
+
+                // Kiểm tra mô tả
+                if (inputData.description !== undefined && inputData.description !== initialItem.description) {
+                    return true;
+                }
+
+                // Kiểm tra chỉ số đồng hồ trước
+                if (inputData.previousReading !== undefined) {
+                    const prevReading = inputData.previousReading === '' ? 0 : parseInt(inputData.previousReading);
+                    if (prevReading !== initialItem.previousReading) {
+                        return true;
+                    }
+                }
+
+                // Kiểm tra chỉ số đồng hồ hiện tại
+                if (inputData.currentReading !== undefined) {
+                    const currReading = inputData.currentReading === '' ? 0 : parseInt(inputData.currentReading);
+                    if (currReading !== initialItem.currentReading) {
+                        return true;
+                    }
+                }
+
+                // Kiểm tra số lượng
+                if (inputData.quantity !== undefined) {
+                    const qty = inputData.quantity === '' ? 0 : parseInt(inputData.quantity);
+                    if (qty !== initialItem.quantity) {
+                        return true;
+                    }
+                }
+
+                // Kiểm tra đơn giá
+                if (inputData.unitPrice !== undefined) {
+                    const price = inputData.unitPrice === '' ? 0 : parseInt(inputData.unitPrice);
+                    if (price !== initialItem.unitPrice) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false; // Không có thay đổi
     };
 
     // Tối ưu hóa handleSaveAndGoBack
     const handleSaveAndGoBack = () => {
+        // Nếu đã lưu mẫu, chỉ quay lại màn hình trước đó
+        if (hasBeenSavedAsTemplate) {
+            navigation.navigate('Bill');
+            return;
+        }
+
+        // Nếu không có thay đổi, chỉ quay lại màn hình trước đó
+        if (!hasInvoiceChanged()) {
+            navigation.navigate('Bill');
+            return;
+        }
+
+        // Xử lý lưu và quay lại như bình thường nếu có thay đổi
         if (!token || !selectedInvoice) {
             navigation.navigate('Bill');
             return;
@@ -1019,6 +1284,9 @@ const EditInvoiceScreen = () => {
                                 // Điều hướng sau khi phát hành thành công
                                 setIsLoading(false);
 
+                                // Đặt lại trạng thái completeInvoiceSuccess
+                                dispatch(resetCompleteInvoiceState());
+
                                 // Hiển thị thông báo thành công
                                 Alert.alert(
                                     "Thành công",
@@ -1249,6 +1517,161 @@ const EditInvoiceScreen = () => {
 
         return item.amount || 0;
     };
+
+    // Xử lý lưu mẫu hóa đơn
+    const handleSaveAsTemplate = (templateName: string) => {
+        if (!token || !selectedInvoice) {
+            Alert.alert(
+                "Lỗi",
+                "Không thể lưu mẫu hóa đơn. Thiếu thông tin cần thiết.",
+                [{ text: "Đóng" }]
+            );
+            return;
+        }
+
+        // Kiểm tra lỗi trước khi lưu mẫu
+        if (hasFormErrors()) {
+            Alert.alert(
+                "Lỗi",
+                "Vui lòng nhập hợp lệ tất cả các trường trước khi lưu mẫu hóa đơn.",
+                [{ text: "OK" }]
+            );
+            return;
+        }
+
+        // Hiển thị loading
+        setIsLoading(true);
+
+        // Lưu thông tin quan trọng
+        const originalRoomId = selectedInvoice.roomId;
+        const originalTenantId = selectedInvoice.tenantId;
+        const originalContractId = selectedInvoice.contractId;
+
+        // Cập nhật invoiceItems với dữ liệu mới nhất từ itemInputs
+        const updatedItems = invoiceItems.map(item => {
+            const itemId = item._id || '';
+            const inputData = itemInputs[itemId];
+
+            if (!inputData) return item;
+
+            const updatedItem = { ...item };
+
+            // Cập nhật các trường từ itemInputs
+            if (inputData.name !== undefined) {
+                updatedItem.name = inputData.name;
+            }
+
+            if (inputData.description !== undefined) {
+                updatedItem.description = inputData.description;
+            }
+
+            if (inputData.previousReading !== undefined) {
+                updatedItem.previousReading = inputData.previousReading === '' ? 0 : parseInt(inputData.previousReading);
+            }
+
+            if (inputData.currentReading !== undefined) {
+                updatedItem.currentReading = inputData.currentReading === '' ? 0 : parseInt(inputData.currentReading);
+            }
+
+            if (inputData.quantity !== undefined) {
+                updatedItem.quantity = inputData.quantity === '' ? 0 : parseInt(inputData.quantity);
+            }
+
+            if (inputData.unitPrice !== undefined) {
+                updatedItem.unitPrice = inputData.unitPrice === '' ? 0 : parseInt(inputData.unitPrice);
+            }
+
+            // Tính toán lại amount
+            if (updatedItem.type === 'fixed') {
+                updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
+                if (updatedItem.isPerPerson && updatedItem.personCount) {
+                    updatedItem.amount *= updatedItem.personCount;
+                }
+            } else if (updatedItem.type === 'variable') {
+                const usage = (updatedItem.currentReading || 0) - (updatedItem.previousReading || 0);
+                updatedItem.quantity = usage > 0 ? usage : 0;
+                updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
+            }
+
+            return updatedItem;
+        });
+
+        // Cập nhật state với dữ liệu mới
+        setInvoiceItems(updatedItems);
+
+        // Tính lại tổng tiền
+        const newTotalAmount = updatedItems.reduce((sum, item) => sum + item.amount, 0);
+        setTotalAmount(newTotalAmount);
+
+        // Chuẩn bị dữ liệu cập nhật
+        const dueDateISO = dueDateObj ? dueDateObj.toISOString() : undefined;
+        const basicUpdateData = { dueDate: dueDateISO, note };
+        const editableItems = getEditableItemsData(updatedItems);
+
+        // Cập nhật store trước để UI hiển thị ngay
+        const updatedInvoice = {
+            ...selectedInvoice,
+            dueDate: dueDateISO || selectedInvoice.dueDate,
+            note: note || selectedInvoice.note,
+            roomId: originalRoomId,
+            tenantId: originalTenantId,
+            contractId: originalContractId,
+            items: updatedItems,
+            totalAmount: newTotalAmount
+        };
+
+        // Thực hiện lưu theo thứ tự: khoản mục trước, sau đó là thông tin cơ bản, cuối cùng là lưu mẫu
+        const saveItems = () => {
+            if (editableItems.length > 0) {
+                return dispatch(updateInvoiceItems({
+                    token,
+                    invoiceId,
+                    items: editableItems
+                })).unwrap();
+            }
+            return Promise.resolve();
+        };
+
+        // Lưu khoản mục trước
+        saveItems()
+            .then(() => {
+                // Sau khi lưu khoản mục, lưu thông tin cơ bản
+                return dispatch(updateInvoice({
+                    token,
+                    invoiceId,
+                    updateData: basicUpdateData,
+                    updateType: 'basic'
+                })).unwrap();
+            })
+            .then(() => {
+                // Cập nhật store sau khi lưu thành công
+                dispatch(updateInvoiceInStore(updatedInvoice));
+
+                // Sau khi lưu hóa đơn thành công, lưu mẫu
+                return dispatch(saveInvoiceAsTemplate({
+                    token,
+                    invoiceId,
+                    templateName
+                })).unwrap();
+            })
+            .then(() => {
+                // Đặt lại trạng thái loading
+                setIsLoading(false);
+            })
+            .catch((error) => {
+                console.log('Lỗi cập nhật hóa đơn hoặc lưu mẫu:', error);
+                setIsLoading(false);
+
+                // Hiển thị thông báo lỗi
+                Alert.alert(
+                    "Lỗi",
+                    `Không thể lưu hóa đơn hoặc lưu mẫu: ${error}`,
+                    [{ text: "Đóng" }]
+                );
+            });
+    };
+
+
 
     const renderHeader = () => {
         return (
@@ -1846,19 +2269,36 @@ const EditInvoiceScreen = () => {
                 {renderInvoiceItems()}
                 {renderSummary()}
 
-                <TouchableOpacity
-                    style={[styles.saveButton, { backgroundColor: Colors.primaryGreen }]}
-                    onPress={handleIssueInvoice}
-                    disabled={updateInvoiceLoading}>
-                    {updateInvoiceLoading ? (
-                        <ActivityIndicator size="small" color={Colors.white} />
-                    ) : (
-                        <Text style={styles.saveButtonText}>Phát hành hóa đơn</Text>
-                    )}
-                </TouchableOpacity>
+                <View style={styles.buttonGroup}>
+                    <TouchableOpacity
+                        style={styles.saveTemplateButton}
+                        onPress={() => setSaveTemplateModalVisible(true)}
+                        disabled={updateInvoiceLoading || !selectedInvoice}>
+                        <Text style={styles.saveTemplateText}>Lưu mẫu</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.saveButton, { backgroundColor: Colors.primaryGreen }]}
+                        onPress={handleIssueInvoice}
+                        disabled={updateInvoiceLoading}>
+                        {updateInvoiceLoading ? (
+                            <ActivityIndicator size="small" color={Colors.white} />
+                        ) : (
+                            <Text style={styles.saveButtonText}>Phát hành hóa đơn</Text>
+                        )}
+                    </TouchableOpacity>
+                </View>
             </ScrollView>
 
             {renderCustomItemModal()}
+
+            {/* Modal lưu mẫu hóa đơn */}
+            <SaveTemplateModal
+                visible={saveTemplateModalVisible}
+                onClose={() => setSaveTemplateModalVisible(false)}
+                onSave={handleSaveAsTemplate}
+                loading={saveTemplateLoading}
+            />
         </SafeAreaView>
     );
 };
@@ -2159,15 +2599,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         color: Colors.primaryGreen,
-    },
-    saveButton: {
-        backgroundColor: Colors.primaryGreen,
-        marginHorizontal: 15,
-        marginTop: 20,
-        marginBottom: 20,
-        padding: 15,
-        borderRadius: 8,
-        alignItems: 'center',
     },
     modalSaveButton: {
         flex: 1,
@@ -2493,6 +2924,41 @@ const styles = StyleSheet.create({
     },
     errorNormalContainer: {
         marginTop: 2,
+    },
+    templateButton: {
+        color: Colors.primaryGreen,
+        fontSize: 16,
+        fontWeight: 'bold',
+        padding: 5,
+    },
+    buttonGroup: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginHorizontal: 15,
+        marginTop: 20,
+        marginBottom: 20,
+    },
+    saveTemplateButton: {
+        flex: 1,
+        backgroundColor: Colors.white,
+        padding: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginRight: 10,
+        borderWidth: 1,
+        borderColor: Colors.primaryGreen,
+    },
+    saveTemplateText: {
+        color: Colors.primaryGreen,
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    saveButton: {
+        flex: 1,
+        backgroundColor: Colors.primaryGreen,
+        padding: 15,
+        borderRadius: 8,
+        alignItems: 'center',
     },
 });
 

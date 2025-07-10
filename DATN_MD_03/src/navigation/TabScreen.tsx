@@ -25,6 +25,7 @@ import BillScreen from '../screens/Bill/BillScreen';
 import BillDetailScreen from '../screens/Bill/BillDetailScreen';
 import CreateInvoiceScreen from '../screens/Bill/CreateInvoiceScreen';
 import EditInvoiceScreen from '../screens/Bill/EditInvoiceScreen';
+import InvoiceTemplatesScreen from '../screens/Bill/InvoiceTemplatesScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -118,6 +119,13 @@ export default function TabScreen() {
           <Stack.Screen
             name="EditInvoice"
             component={EditInvoiceScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="InvoiceTemplates"
+            component={InvoiceTemplatesScreen}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}

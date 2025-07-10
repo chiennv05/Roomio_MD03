@@ -650,4 +650,66 @@ export const deleteInvoiceItem = async (token: string, invoiceId: string, itemId
         console.error('Error deleting invoice item:', error.message);
         throw error;
     }
+};
+
+// Save invoice as template
+export const saveInvoiceAsTemplate = async (token: string, invoiceId: string, templateName: string) => {
+    try {
+        const response = await api.post<{ success: boolean; message: string; template: any }>(
+            `/billing/invoices/${invoiceId}/save-as-template`,
+            { templateName },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            },
+        );
+
+        console.log('Save as template API response:', JSON.stringify(response.data, null, 2));
+
+        if ('isError' in response) {
+            throw new Error(response.message);
+        }
+
+        return {
+            success: response.data.success,
+            message: response.data.message || 'Đã lưu hóa đơn như mẫu thành công',
+            data: {
+                template: response.data.template
+            }
+        };
+    } catch (error: any) {
+        console.error('Error saving invoice as template:', error.message);
+        throw error;
+    }
+};
+
+// Get invoice templates
+export const getInvoiceTemplates = async (token: string) => {
+    try {
+        const response = await api.get<{ success: boolean; templates: any[] }>(
+            '/billing/templates',
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            },
+        );
+
+        console.log('Get templates API response:', JSON.stringify(response.data, null, 2));
+
+        if ('isError' in response) {
+            throw new Error(response.message);
+        }
+
+        return {
+            success: response.data.success,
+            data: {
+                templates: response.data.templates || []
+            }
+        };
+    } catch (error: any) {
+        console.error('Error fetching invoice templates:', error.message);
+        throw error;
+    }
 }; 

@@ -8,7 +8,9 @@ import {
     updateInvoice as updateInvoiceService,
     addCustomInvoiceItem as addCustomInvoiceItemService,
     updateInvoiceItems as updateInvoiceItemsService,
-    deleteInvoiceItem as deleteInvoiceItemService
+    deleteInvoiceItem as deleteInvoiceItemService,
+    saveInvoiceAsTemplate as saveInvoiceAsTemplateService,
+    getInvoiceTemplates as getInvoiceTemplatesService
 } from '../services/billService';
 
 // Tạo action để cập nhật hóa đơn trong store mà không cần gọi API
@@ -45,6 +47,12 @@ interface BillState {
     deleteItemLoading: boolean;
     deleteItemSuccess: boolean;
     deleteItemError: string | null;
+    saveTemplateLoading: boolean;
+    saveTemplateSuccess: boolean;
+    saveTemplateError: string | null;
+    templatesLoading: boolean;
+    templates: any[];
+    templatesError: string | null;
 }
 
 const initialState: BillState = {
@@ -78,6 +86,12 @@ const initialState: BillState = {
     deleteItemLoading: false,
     deleteItemSuccess: false,
     deleteItemError: null,
+    saveTemplateLoading: false,
+    saveTemplateSuccess: false,
+    saveTemplateError: null,
+    templatesLoading: false,
+    templates: [],
+    templatesError: null,
 };
 
 // Thunk để lấy danh sách hóa đơn
@@ -285,6 +299,50 @@ export const deleteInvoiceItem = createAsyncThunk(
     }
 );
 
+// Save invoice as template
+export const saveInvoiceAsTemplate = createAsyncThunk(
+    'bill/saveInvoiceAsTemplate',
+    async ({
+        token,
+        invoiceId,
+        templateName
+    }: {
+        token: string;
+        invoiceId: string;
+        templateName: string;
+    }, { rejectWithValue }) => {
+        try {
+            const response = await saveInvoiceAsTemplateService(token, invoiceId, templateName);
+
+            if (!response.success) {
+                throw new Error(response.message || 'Không thể lưu mẫu hóa đơn');
+            }
+
+            return response.data.template;
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Không thể lưu mẫu hóa đơn');
+        }
+    }
+);
+
+// Fetch invoice templates
+export const fetchInvoiceTemplates = createAsyncThunk(
+    'bill/fetchInvoiceTemplates',
+    async ({ token }: { token: string }, { rejectWithValue }) => {
+        try {
+            const response = await getInvoiceTemplatesService(token);
+
+            if (!response.success) {
+                throw new Error('Không thể tải danh sách mẫu hóa đơn');
+            }
+
+            return response.data.templates;
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Không thể tải danh sách mẫu hóa đơn');
+        }
+    }
+);
+
 const billSlice = createSlice({
     name: 'bill',
     initialState,
@@ -322,6 +380,16 @@ const billSlice = createSlice({
             state.deleteItemLoading = false;
             state.deleteItemSuccess = false;
             state.deleteItemError = null;
+        },
+        resetSaveTemplateState: (state) => {
+            state.saveTemplateLoading = false;
+            state.saveTemplateSuccess = false;
+            state.saveTemplateError = null;
+        },
+        resetTemplatesState: (state) => {
+            state.templatesLoading = false;
+            state.templates = [];
+            state.templatesError = null;
         }
     },
     extraReducers: builder => {
@@ -541,6 +609,37 @@ const billSlice = createSlice({
                 state.deleteItemError = action.payload as string;
             })
 
+            // Save template reducers
+            .addCase(saveInvoiceAsTemplate.pending, (state) => {
+                state.saveTemplateLoading = true;
+                state.saveTemplateSuccess = false;
+                state.saveTemplateError = null;
+            })
+            .addCase(saveInvoiceAsTemplate.fulfilled, (state, action) => {
+                state.saveTemplateLoading = false;
+                state.saveTemplateSuccess = true;
+                // No specific action to update state.templates directly here,
+                // as templates are fetched separately.
+            })
+            .addCase(saveInvoiceAsTemplate.rejected, (state, action) => {
+                state.saveTemplateLoading = false;
+                state.saveTemplateError = action.payload as string;
+            })
+
+            // Fetch templates reducers
+            .addCase(fetchInvoiceTemplates.pending, (state) => {
+                state.templatesLoading = true;
+                state.templatesError = null;
+            })
+            .addCase(fetchInvoiceTemplates.fulfilled, (state, action) => {
+                state.templatesLoading = false;
+                state.templates = action.payload;
+            })
+            .addCase(fetchInvoiceTemplates.rejected, (state, action) => {
+                state.templatesLoading = false;
+                state.templatesError = action.payload as string;
+            })
+
             // Xử lý action updateInvoiceInStore
             .addCase(updateInvoiceInStore, (state, action) => {
                 const updatedInvoice = action.payload;
@@ -573,7 +672,9 @@ export const {
     resetUpdateInvoiceState,
     resetAddItemState,
     resetUpdateItemsState,
-    resetDeleteItemState
+    resetDeleteItemState,
+    resetSaveTemplateState,
+    resetTemplatesState
 } = billSlice.actions;
 
 export default billSlice.reducer; 

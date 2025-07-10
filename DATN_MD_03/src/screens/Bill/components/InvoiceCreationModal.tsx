@@ -9,6 +9,7 @@ import {
     Switch,
     Alert,
     Platform,
+    SafeAreaView,
 } from 'react-native';
 import { Colors } from '../../../theme/color';
 import { Contract } from '../../../types/Contract';
@@ -102,11 +103,11 @@ const InvoiceCreationModal: React.FC<InvoiceCreationModalProps> = ({
             onClose();
             onSuccess();
 
-            // Nếu có ID hóa đơn, chuyển đến màn hình chi tiết hóa đơn
+            // Nếu có ID hóa đơn, chuyển đến màn hình chỉnh sửa hoá đơn
             if (newInvoiceId) {
                 // Đợi một chút để modal đóng hoàn toàn trước khi chuyển màn hình
                 setTimeout(() => {
-                    navigation.navigate('BillDetails', { invoiceId: newInvoiceId });
+                    navigation.navigate('EditInvoice', { invoiceId: newInvoiceId });
                 }, 300);
             } else {
                 Alert.alert('Thành công', 'Hóa đơn đã được tạo thành công');
@@ -173,6 +174,7 @@ const InvoiceCreationModal: React.FC<InvoiceCreationModalProps> = ({
             transparent={true}
             animationType="slide"
             onRequestClose={onClose}
+            statusBarTranslucent={true}
         >
             <View style={styles.modalContainer}>
                 <View style={styles.modalContent}>
@@ -247,6 +249,7 @@ const InvoiceCreationModal: React.FC<InvoiceCreationModalProps> = ({
                             <Text style={styles.createButtonText}>Tạo hóa đơn</Text>
                         )}
                     </TouchableOpacity>
+                    <SafeAreaView style={styles.bottomSafeArea} />
                 </View>
             </View>
         </Modal>
@@ -258,14 +261,15 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'flex-end',
+        margin: 0,
     },
     modalContent: {
         backgroundColor: Colors.white,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         padding: 20,
-        paddingBottom: 30,
-        maxHeight: '80%',
+        paddingBottom: Platform.OS === 'ios' ? 0 : 20,
+        maxHeight: '100%',
     },
     header: {
         flexDirection: 'row',
@@ -347,6 +351,10 @@ const styles = StyleSheet.create({
         color: Colors.white,
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    bottomSafeArea: {
+        height: Platform.OS === 'ios' ? 20 : 0,
+        backgroundColor: Colors.white,
     },
 });
 

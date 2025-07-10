@@ -14,4 +14,5 @@ export type RootStackParamList = {
   BillDetails: { invoiceId: string };
   CreateInvoice: { contract?: any };
   EditInvoice: { invoiceId: string };
+  InvoiceTemplates: undefined;
 };

@@ -19,6 +19,7 @@ import { scale, verticalScale, SCREEN } from '../../utils/responsive';
 import { RootStackParamList } from '../../types/route';
 import { Contract } from '../../types/Contract';
 import { formatDate } from '../../utils/formatDate';
+import SaveTemplateModal from './components/SaveTemplateModal';
 
 type CreateInvoiceRouteProp = RouteProp<RootStackParamList, 'CreateInvoice'>;
 
@@ -55,6 +56,10 @@ const CreateInvoiceScreen = () => {
     const [items, setItems] = useState<InvoiceItem[]>([
         { name: 'Tiền thuê phòng', amount: 0, type: 'rent' }
     ]);
+
+    // State cho modal lưu mẫu
+    const [saveTemplateModalVisible, setSaveTemplateModalVisible] = useState(false);
+    const [saveTemplateLoading, setSaveTemplateLoading] = useState(false);
 
     // Cập nhật state từ thông tin hợp đồng
     useEffect(() => {
@@ -119,6 +124,29 @@ const CreateInvoiceScreen = () => {
             'Tính năng tạo hóa đơn đang được phát triển',
             [{ text: 'OK' }]
         );
+    };
+
+    // Xử lý lưu mẫu hóa đơn
+    const handleSaveAsTemplate = (templateName: string) => {
+        setSaveTemplateLoading(true);
+
+        // Trong màn hình tạo hóa đơn, chúng ta không có invoice ID vì hóa đơn chưa được tạo
+        // Hiển thị thông báo cho người dùng biết
+        setTimeout(() => {
+            setSaveTemplateLoading(false);
+            setSaveTemplateModalVisible(false);
+
+            Alert.alert(
+                'Thông báo',
+                'Để lưu mẫu hóa đơn, bạn cần tạo hóa đơn trước. Sau khi tạo hóa đơn, bạn có thể lưu nó như một mẫu từ màn hình chỉnh sửa.',
+                [{ text: 'Đã hiểu' }]
+            );
+        }, 500);
+    };
+
+    // Điều hướng đến màn hình mẫu hóa đơn
+    const navigateToTemplates = () => {
+        navigation.navigate('InvoiceTemplates' as never);
     };
 
     return (
@@ -228,13 +256,29 @@ const CreateInvoiceScreen = () => {
                         </Text>
                     </View>
 
-                    <TouchableOpacity
-                        style={styles.createButton}
-                        onPress={handleCreateInvoice}>
-                        <Text style={styles.createButtonText}>Tạo hóa đơn</Text>
-                    </TouchableOpacity>
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity
+                            style={styles.saveTemplateButton}
+                            onPress={() => setSaveTemplateModalVisible(true)}>
+                            <Text style={styles.saveTemplateButtonText}>Lưu mẫu</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.createButton}
+                            onPress={handleCreateInvoice}>
+                            <Text style={styles.createButtonText}>Tạo hóa đơn</Text>
+                        </TouchableOpacity>
+                    </View>
                 </ScrollView>
             )}
+
+            {/* Modal lưu mẫu hóa đơn */}
+            <SaveTemplateModal
+                visible={saveTemplateModalVisible}
+                onClose={() => setSaveTemplateModalVisible(false)}
+                onSave={handleSaveAsTemplate}
+                loading={saveTemplateLoading}
+            />
         </SafeAreaView>
     );
 };
@@ -277,6 +321,12 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         color: Colors.dearkOlive,
+    },
+    templateButton: {
+        color: Colors.primaryGreen,
+        fontSize: 16,
+        fontWeight: 'bold',
+        padding: 5,
     },
     loadingContainer: {
         flex: 1,
@@ -414,11 +464,32 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: Colors.primaryGreen,
     },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    saveTemplateButton: {
+        backgroundColor: Colors.white,
+        borderWidth: 1,
+        borderColor: Colors.primaryGreen,
+        borderRadius: 8,
+        paddingVertical: 14,
+        alignItems: 'center',
+        flex: 1,
+        marginRight: 10,
+    },
+    saveTemplateButtonText: {
+        color: Colors.primaryGreen,
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
     createButton: {
         backgroundColor: Colors.primaryGreen,
         borderRadius: 8,
         paddingVertical: 14,
         alignItems: 'center',
+        flex: 1,
     },
     createButtonText: {
         color: Colors.white,

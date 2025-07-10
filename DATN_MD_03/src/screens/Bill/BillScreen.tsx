@@ -12,12 +12,13 @@ import {
     Modal,
     Image,
     Alert,
+    Platform,
 } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { fetchInvoices } from '../../store/slices/billSlice';
 import { Invoice } from '../../types/Bill';
 import { Colors } from '../../theme/color';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import { SCREEN, scale, verticalScale } from '../../utils/responsive';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../types/route';
@@ -595,6 +596,21 @@ const BillScreen = () => {
         }
     };
 
+    // Xử lý quay lại màn hình hồ sơ
+    const handleBackToProfile = () => {
+        navigation.dispatch(
+            CommonActions.reset({
+                index: 0,
+                routes: [{ name: 'UITab' }],
+            })
+        );
+    };
+
+    // Điều hướng đến màn hình mẫu hóa đơn
+    const navigateToTemplates = () => {
+        navigation.navigate('InvoiceTemplates');
+    };
+
     if (!user) {
         return (
             <SafeAreaView style={styles.container}>
@@ -607,7 +623,18 @@ const BillScreen = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Text style={styles.title}>Hóa đơn của bạn</Text>
+            <View style={styles.headerContainer}>
+                <TouchableOpacity style={styles.backButton} onPress={handleBackToProfile}>
+                    <Image
+                        source={require('../../assets/icons/icon_arrow_back.png')}
+                        style={styles.backIcon}
+                    />
+                </TouchableOpacity>
+                <Text style={styles.headerText}>Hóa đơn của bạn</Text>
+                <TouchableOpacity onPress={navigateToTemplates}>
+                    <Text style={styles.templateButton}>Mẫu</Text>
+                </TouchableOpacity>
+            </View>
 
             {/* Các tab bộ lọc */}
             <View style={styles.filterTabsWrapper}>
@@ -703,15 +730,48 @@ const BillScreen = () => {
 
 const styles = StyleSheet.create({
     container: {
-        margin: 16,
         flex: 1,
         backgroundColor: Colors.backgroud,
+        marginTop: 10
     },
-    title: {
-        fontSize: 20,
+    headerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: Colors.white,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.lightGray,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.1,
+                shadowRadius: 2,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
+    },
+    backButton: {
+        padding: 5,
+    },
+    backIcon: {
+        width: 24,
+        height: 24,
+        resizeMode: 'contain',
+    },
+    headerText: {
+        fontSize: 18,
         fontWeight: 'bold',
-        margin: 16,
         color: Colors.dearkOlive,
+        textAlign: 'center',
+        flex: 1,
+    },
+    placeholderView: {
+        width: 24,
     },
     centered: {
         flex: 1,
@@ -862,6 +922,16 @@ const styles = StyleSheet.create({
     },
     flatListContent: {
         paddingBottom: 80, // Increased from 20 to 80 to accommodate FAB
+    },
+    templateButton: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: Colors.primaryGreen,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 15,
+        borderWidth: 1,
+        borderColor: Colors.primaryGreen,
     },
 });
 

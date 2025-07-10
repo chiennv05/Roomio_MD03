@@ -8,12 +8,17 @@ import {
     FlatList,
     ActivityIndicator,
     Image,
+    SafeAreaView,
+    Platform,
+    Dimensions,
 } from 'react-native';
 import { Colors } from '../../../theme/color';
 import { Contract } from '../../../types/Contract';
 import { useAppDispatch, useAppSelector } from '../../../hooks/redux';
 import { getMyContracts } from '../../../store/services/billService';
 import { formatDate } from '../../../utils/formatDate';
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface ContractSelectionModalProps {
     visible: boolean;
@@ -27,6 +32,7 @@ const ContractSelectionModal: React.FC<ContractSelectionModalProps> = ({
     onSelectContract,
 }) => {
     const [contracts, setContracts] = useState<Contract[]>([]);
+    const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const { token } = useAppSelector(state => state.auth);
@@ -36,6 +42,12 @@ const ContractSelectionModal: React.FC<ContractSelectionModalProps> = ({
             loadContracts();
         }
     }, [visible, token]);
+
+    // Lọc hợp đồng đang có hiệu lực
+    useEffect(() => {
+        const activeContracts = contracts.filter(contract => contract.status === 'active');
+        setFilteredContracts(activeContracts);
+    }, [contracts]);
 
     const loadContracts = async () => {
         setLoading(true);
@@ -76,18 +88,8 @@ const ContractSelectionModal: React.FC<ContractSelectionModalProps> = ({
             >
                 <View style={styles.contractHeader}>
                     <Text style={styles.roomNumber}>{roomNumber}</Text>
-                    <View style={[styles.statusBadge,
-                    { backgroundColor: item.status === 'active' ? '#4CAF50' : '#FF9800' }]}>
-                        <Text style={styles.statusText}>
-                            {item.status === 'active' ? 'Đang hiệu lực' :
-                                item.status === 'draft' ? 'Bản nháp' :
-                                    item.status === 'pending_signature' ? 'Chờ ký' :
-                                        item.status === 'pending_approval' ? 'Chờ duyệt' :
-                                            item.status === 'expired' ? 'Hết hạn' :
-                                                item.status === 'terminated' ? 'Đã chấm dứt' :
-                                                    item.status === 'rejected' ? 'Bị từ chối' :
-                                                        'Khác'}
-                        </Text>
+                    <View style={[styles.statusBadge, { backgroundColor: '#4CAF50' }]}>
+                        <Text style={styles.statusText}>Đang hiệu lực</Text>
                     </View>
                 </View>
 
@@ -120,6 +122,7 @@ const ContractSelectionModal: React.FC<ContractSelectionModalProps> = ({
             transparent={true}
             animationType="slide"
             onRequestClose={onClose}
+            statusBarTranslucent={true}
         >
             <View style={styles.modalContainer}>
                 <View style={styles.modalContent}>
@@ -142,19 +145,20 @@ const ContractSelectionModal: React.FC<ContractSelectionModalProps> = ({
                                 <Text style={styles.retryButtonText}>Thử lại</Text>
                             </TouchableOpacity>
                         </View>
-                    ) : contracts.length === 0 ? (
+                    ) : filteredContracts.length === 0 ? (
                         <View style={styles.emptyContainer}>
-                            <Text style={styles.emptyText}>Không tìm thấy hợp đồng nào</Text>
+                            <Text style={styles.emptyText}>Không tìm thấy hợp đồng đang có hiệu lực</Text>
                         </View>
                     ) : (
                         <FlatList
-                            data={contracts}
+                            data={filteredContracts}
                             renderItem={renderContractItem}
                             keyExtractor={(item) => item._id || ''}
                             contentContainerStyle={styles.listContainer}
                             showsVerticalScrollIndicator={false}
                         />
                     )}
+                    <SafeAreaView style={styles.bottomSafeArea} />
                 </View>
             </View>
         </Modal>
@@ -166,13 +170,15 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'flex-end',
+        margin: 0,
     },
     modalContent: {
         backgroundColor: Colors.white,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
-        paddingBottom: 20,
-        maxHeight: '80%',
+        overflow: 'hidden',
+        width: '100%',
+        maxHeight: SCREEN_HEIGHT * 0.9,
     },
     header: {
         flexDirection: 'row',
@@ -197,6 +203,7 @@ const styles = StyleSheet.create({
     },
     listContainer: {
         padding: 16,
+        paddingBottom: Platform.OS === 'ios' ? 50 : 30,
     },
     contractItem: {
         backgroundColor: Colors.white,
@@ -286,6 +293,10 @@ const styles = StyleSheet.create({
     emptyText: {
         color: Colors.mediumGray,
         textAlign: 'center',
+    },
+    bottomSafeArea: {
+        height: Platform.OS === 'ios' ? 20 : 0,
+        backgroundColor: Colors.white,
     },
 });
 
