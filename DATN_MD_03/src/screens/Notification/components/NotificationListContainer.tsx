@@ -80,12 +80,7 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
 
   const renderItem = ({item}: {item: FormattedNotification}) => (
     <View style={styles.notificationWrapper}>
-      {/* Ngày ở góc trên ngoài */}
-      <View style={styles.dateContainer}>
-        <Text style={styles.dateText}>{item.date}</Text>
-      </View>
-
-      {/* Notification Card */}
+      {/* Ngày hiển thị dưới dạng text tích hợp trong thông báo */}
       <NotificationItemCard
         id={item.id}
         title={item.title}
@@ -123,6 +118,7 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
       contentContainerStyle={{
         paddingBottom: responsiveSpacing(20),
       }}
+      style={styles.listContainer}
     />
   );
 };
@@ -130,30 +126,11 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
 const styles = StyleSheet.create({
   notificationWrapper: {
     position: 'relative',
-    marginTop: responsiveSpacing(14),
+    marginTop: 0,
   },
-  dateContainer: {
-    position: 'absolute',
-    top: -responsiveSpacing(16),
-    right: responsiveSpacing(32),
-    backgroundColor: Colors.white,
-    width: responsiveSpacing(104),
-    height: responsiveSpacing(32),
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: moderateScale(16),
-    zIndex: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-  },
-  dateText: {
-    fontSize: 14,
-    fontFamily: Fonts.Roboto_Regular,
-    color: Colors.textGray,
-  },
+  listContainer: {
+    flex: 1,
+  }
 });
 
 export default NotificationListContainer;

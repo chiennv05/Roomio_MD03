@@ -63,11 +63,29 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
 
   // Màu icon và background dựa trên trạng thái
   const getStatusColor = () => {
-    if (isRead) {
+    if (type === 'hopDong' || type === 'contract') {
+      // Thông báo hợp đồng - màu xanh lá
+      return {
+        cardBg: isRead ? Colors.gray200 : Colors.limeGreen + '99',
+      };
+    } else if (type === 'thanhToan' || type === 'bill') {
+      // Thông báo thanh toán - màu vàng nếu chưa thanh toán
+      if (content.includes('chưa thanh toán')) {
+        return {
+          cardBg: '#FFEB3B99', // Màu vàng nhạt
+        };
+      } else {
+        return {
+          cardBg: isRead ? Colors.gray200 : Colors.limeGreen + '99',
+        };
+      }
+    } else if (isRead) {
+      // Đã đọc - màu xám
       return {
         cardBg: Colors.gray200,
       };
     } else {
+      // Chưa đọc - màu xanh lá nhạt
       return {
         cardBg: Colors.limeGreen + '99',
       };
@@ -106,11 +124,6 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
               }
             }}
             style={styles.deleteButtonInner}>
-            <Image
-              // source={require('../../../assets/icons/icon_delete.png')}
-              style={styles.deleteIcon}
-              resizeMode="contain"
-            />
             <Text style={styles.deleteText}>Xóa</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -153,6 +166,8 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
           <Text style={styles.content} numberOfLines={2}>
             {content}
           </Text>
+          
+          <Text style={styles.time}>{time}</Text>
         </View>
       </TouchableOpacity>
     </Swipeable>
@@ -163,16 +178,10 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     padding: responsiveSpacing(16),
-    borderRadius: moderateScale(12),
-    marginBottom: responsiveSpacing(12),
-    marginHorizontal: responsiveSpacing(16),
-    height: moderateScale(86),
-    shadowOffset: {
-      width: moderateScale(0),
-      height: moderateScale(1),
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    borderRadius: 0,
+    marginBottom: 5,
+    marginHorizontal: 0,
+    height: moderateScale(100),
   },
   iconContainer: {
     width: moderateScale(40),
@@ -209,15 +218,12 @@ const styles = StyleSheet.create({
   },
   rightActionContainer: {
     width: 80,
-    marginBottom: responsiveSpacing(12),
   },
   deleteButton: {
     flex: 1,
     backgroundColor: Colors.red,
     justifyContent: 'center',
     alignItems: 'center',
-    borderTopRightRadius: moderateScale(12),
-    borderBottomRightRadius: moderateScale(12),
   },
   deleteButtonInner: {
     justifyContent: 'center',
@@ -225,15 +231,9 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  deleteIcon: {
-    width: moderateScale(24),
-    height: moderateScale(24),
-    tintColor: Colors.white,
-    marginBottom: responsiveSpacing(4),
-  },
   deleteText: {
     color: Colors.white,
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Bold,
   },
 });

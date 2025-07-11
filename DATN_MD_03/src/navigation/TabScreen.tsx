@@ -33,6 +33,7 @@ import MapScreen from '../screens/ChuTro/AddRoom/MapScreen';
 import RoomDetail from '../screens/ChuTro/RoomDetail/RoomDetail';
 import UpdateRoom from '../screens/ChuTro/UpdateRoom/UpdateRoom';
 import UpdateContract from '../screens/ChuTro/Contract/UpdateContract';
+import PolicyTerms from '../screens/PolicyTerms/PolicyTerms';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -156,6 +157,13 @@ export default function TabScreen() {
           <Stack.Screen
             name="UpdateContract"
             component={UpdateContract}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="PolicyTerms"
+            component={PolicyTerms}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}

@@ -197,6 +197,7 @@ export default function ProfileScreen() {
             iconStat={Icons.Iconoir_Privacy_Policy}
             label="Điều khoản & chính sách"
             iconEnd={Icons.IconNext}
+            onPress={() => navigation.navigate('PolicyTerms')}
           />
         </View>
 
