@@ -12,7 +12,7 @@ import {
     Platform,
     Image,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, NavigationProp } from '@react-navigation/native';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { Colors } from '../../theme/color';
 import { scale, verticalScale, SCREEN } from '../../utils/responsive';
@@ -20,8 +20,11 @@ import { RootStackParamList } from '../../types/route';
 import { Contract } from '../../types/Contract';
 import { formatDate } from '../../utils/formatDate';
 import SaveTemplateModal from './components/SaveTemplateModal';
+import DatePicker from 'react-native-date-picker';
+import { createInvoice } from '../../store/services/billService';
 
 type CreateInvoiceRouteProp = RouteProp<RootStackParamList, 'CreateInvoice'>;
+type NavigationProps = NavigationProp<RootStackParamList>;
 
 // Định nghĩa kiểu dữ liệu
 interface Room {
@@ -41,7 +44,7 @@ interface InvoiceItem {
 }
 
 const CreateInvoiceScreen = () => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<NavigationProps>();
     const route = useRoute<CreateInvoiceRouteProp>();
     const { contract } = route.params || {};
 
@@ -52,7 +55,10 @@ const CreateInvoiceScreen = () => {
     // State cho form tạo hóa đơn
     const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
     const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
-    const [dueDate, setDueDate] = useState('');
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [datePickerOpen, setDatePickerOpen] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(new Date());
     const [items, setItems] = useState<InvoiceItem[]>([
         { name: 'Tiền thuê phòng', amount: 0, type: 'rent' }
     ]);
@@ -61,11 +67,41 @@ const CreateInvoiceScreen = () => {
     const [saveTemplateModalVisible, setSaveTemplateModalVisible] = useState(false);
     const [saveTemplateLoading, setSaveTemplateLoading] = useState(false);
 
+    // Tạo ngày hạn thanh toán là ngày 10 của tháng đã chọn
+    const getDueDate = () => {
+        // Tạo ngày 10 của tháng đã chọn
+        const dueDate = new Date(selectedYear, selectedMonth - 1, 10);
+
+        // Nếu ngày 10 đã qua trong tháng hiện tại, đặt hạn thanh toán là ngày 10 tháng sau
+        const today = new Date();
+        if (selectedMonth === today.getMonth() + 1 &&
+            selectedYear === today.getFullYear() &&
+            today.getDate() > 10) {
+            dueDate.setMonth(dueDate.getMonth() + 1);
+        }
+
+        return dueDate;
+    };
+
+    // Format date to display month and year
+    const formatMonthYear = (date: Date) => {
+        const months = [
+            'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+            'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+        ];
+        return `${months[date.getMonth()]} ${date.getFullYear()}`;
+    };
+
+    const handleDateChange = (date: Date) => {
+        setSelectedDate(date);
+        setSelectedMonth(date.getMonth() + 1);
+        setSelectedYear(date.getFullYear());
+        setDatePickerOpen(false);
+    };
+
     // Cập nhật state từ thông tin hợp đồng
     useEffect(() => {
         if (contract) {
-            console.log('Contract received:', contract._id);
-
             // Lấy thông tin phòng
             if (typeof contract.roomId === 'object' && contract.roomId) {
                 setSelectedRoom({
@@ -117,13 +153,100 @@ const CreateInvoiceScreen = () => {
     };
 
     // Xử lý tạo hóa đơn
-    const handleCreateInvoice = () => {
-        // TODO: Validate form và gọi API tạo hóa đơn
-        Alert.alert(
-            'Thông báo',
-            'Tính năng tạo hóa đơn đang được phát triển',
-            [{ text: 'OK' }]
-        );
+    const handleCreateInvoice = async () => {
+        if (!contract || !contract._id) {
+            Alert.alert('Lỗi', 'Không tìm thấy thông tin hợp đồng');
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            // Lấy ngày hạn thanh toán là ngày 10 của tháng đã chọn
+            const dueDate = getDueDate();
+
+            // Format due date to YYYY-MM-DD
+            const formattedDueDate = `${dueDate.getFullYear()}-${String(dueDate.getMonth() + 1).padStart(2, '0')}-${String(dueDate.getDate()).padStart(2, '0')}`;
+
+            const requestBody = {
+                contractId: contract._id,
+                month: selectedMonth,
+                year: selectedYear,
+                dueDate: formattedDueDate,
+                includeServices: true
+            };
+
+            const response = await createInvoice(token || '', requestBody);
+
+            if (!response.success) {
+                // Hiển thị thông báo lỗi từ API
+                Alert.alert(
+                    'Lỗi khi tạo hóa đơn',
+                    response.message || 'Có lỗi xảy ra khi tạo hóa đơn. Vui lòng thử lại sau.',
+                    [{ text: 'Đóng' }]
+                );
+                return;
+            }
+
+            // Lấy ID của hóa đơn vừa tạo
+            const newInvoiceId = response.data?.invoice?._id;
+
+            // Hiển thị thông báo thành công
+            Alert.alert(
+                'Thành công',
+                'Hóa đơn đã được tạo thành công',
+                [
+                    {
+                        text: 'OK',
+                        onPress: () => {
+                            // Nếu có ID hóa đơn, chuyển đến màn hình chỉnh sửa hoá đơn
+                            if (newInvoiceId) {
+                                // @ts-ignore
+                                navigation.navigate('EditInvoice', { invoiceId: newInvoiceId });
+                            } else {
+                                navigation.goBack();
+                            }
+                        }
+                    }
+                ]
+            );
+        } catch (error: any) {
+            // Xử lý lỗi HTTP status code
+            if (error.status === 400) {
+                Alert.alert(
+                    'Lỗi dữ liệu',
+                    'Dữ liệu không hợp lệ hoặc hóa đơn đã tồn tại cho tháng này. Vui lòng kiểm tra lại.',
+                    [{ text: 'Đóng' }]
+                );
+            } else if (error.status === 401 || error.status === 403) {
+                Alert.alert(
+                    'Lỗi xác thực',
+                    'Bạn không có quyền tạo hóa đơn hoặc phiên đăng nhập đã hết hạn.',
+                    [{ text: 'Đóng' }]
+                );
+            } else if (error.status === 404) {
+                Alert.alert(
+                    'Không tìm thấy',
+                    'Không tìm thấy hợp đồng cần thiết.',
+                    [{ text: 'Đóng' }]
+                );
+            } else if (error.status === 409) {
+                Alert.alert(
+                    'Hóa đơn đã tồn tại',
+                    `Đã có hóa đơn cho hợp đồng này trong tháng ${selectedMonth}/${selectedYear}`,
+                    [{ text: 'Đóng' }]
+                );
+            } else {
+                // Lỗi khác
+                Alert.alert(
+                    'Lỗi',
+                    error.message || 'Có lỗi xảy ra khi tạo hóa đơn. Vui lòng thử lại sau.',
+                    [{ text: 'Đóng' }]
+                );
+            }
+        } finally {
+            setLoading(false);
+        }
     };
 
     // Xử lý lưu mẫu hóa đơn
@@ -142,11 +265,6 @@ const CreateInvoiceScreen = () => {
                 [{ text: 'Đã hiểu' }]
             );
         }, 500);
-    };
-
-    // Điều hướng đến màn hình mẫu hóa đơn
-    const navigateToTemplates = () => {
-        navigation.navigate('InvoiceTemplates' as never);
     };
 
     return (
@@ -212,12 +330,40 @@ const CreateInvoiceScreen = () => {
                     )}
 
                     <View style={styles.formGroup}>
-                        <Text style={styles.label}>Hạn thanh toán</Text>
-                        <TouchableOpacity style={styles.selectInput}>
+                        <Text style={styles.label}>Kỳ hóa đơn</Text>
+                        <TouchableOpacity
+                            style={styles.selectInput}
+                            onPress={() => setDatePickerOpen(true)}
+                        >
                             <Text style={styles.selectText}>
-                                {dueDate || 'Chọn ngày'}
+                                {formatMonthYear(selectedDate)}
                             </Text>
                         </TouchableOpacity>
+
+                        <DatePicker
+                            modal
+                            open={datePickerOpen}
+                            date={selectedDate}
+                            mode="date"
+                            locale="vi"
+                            title="Chọn tháng và năm"
+                            confirmText="Xác nhận"
+                            cancelText="Hủy"
+                            onConfirm={handleDateChange}
+                            onCancel={() => setDatePickerOpen(false)}
+                        />
+                    </View>
+
+                    <View style={styles.formGroup}>
+                        <Text style={styles.label}>Hạn thanh toán</Text>
+                        <View style={styles.selectInput}>
+                            <Text style={styles.selectText}>
+                                {formatDate(getDueDate().toISOString())} (ngày 10)
+                            </Text>
+                        </View>
+                        <Text style={styles.noteText}>
+                            Hạn thanh toán mặc định là ngày 10 của tháng đã chọn
+                        </Text>
                     </View>
 
                     <Text style={styles.sectionTitle}>Chi tiết hóa đơn</Text>
@@ -495,6 +641,12 @@ const styles = StyleSheet.create({
         color: Colors.white,
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    noteText: {
+        fontSize: 12,
+        color: Colors.mediumGray,
+        marginTop: 4,
+        textAlign: 'right',
     },
 });
 

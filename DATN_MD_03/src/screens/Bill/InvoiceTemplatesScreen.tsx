@@ -14,22 +14,60 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { Colors } from '../../theme/color';
-import { fetchInvoiceTemplates, resetTemplatesState } from '../../store/slices/billSlice';
+import {
+    fetchInvoiceTemplates,
+    resetTemplatesState,
+    deleteInvoiceTemplate,
+    resetDeleteTemplateState
+} from '../../store/slices/billSlice';
+import ContractSelectionModal from './components/ContractSelectionModal';
+import ApplyTemplateModal from './components/ApplyTemplateModal';
+import { Contract } from '../../types/Contract';
 
 const InvoiceTemplatesScreen = () => {
     const navigation = useNavigation();
     const dispatch = useAppDispatch();
     const { token } = useAppSelector(state => state.auth);
-    const { templates, templatesLoading, templatesError } = useAppSelector(state => state.bill);
+    const {
+        templates,
+        templatesLoading,
+        templatesError,
+        deleteTemplateLoading,
+        deleteTemplateSuccess,
+        deleteTemplateError
+    } = useAppSelector(state => state.bill);
     const [refreshing, setRefreshing] = useState(false);
+
+    // State cho modal chọn hợp đồng và áp dụng mẫu
+    const [contractModalVisible, setContractModalVisible] = useState(false);
+    const [applyTemplateModalVisible, setApplyTemplateModalVisible] = useState(false);
+    const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+    const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
 
     useEffect(() => {
         loadTemplates();
 
         return () => {
             dispatch(resetTemplatesState());
+            dispatch(resetDeleteTemplateState());
         };
     }, []);
+
+    // Xử lý khi xóa mẫu thành công
+    useEffect(() => {
+        if (deleteTemplateSuccess) {
+            Alert.alert('Thành công', 'Đã xóa mẫu hóa đơn thành công');
+            dispatch(resetDeleteTemplateState());
+        }
+    }, [deleteTemplateSuccess]);
+
+    // Xử lý khi xóa mẫu thất bại
+    useEffect(() => {
+        if (deleteTemplateError) {
+            Alert.alert('Lỗi', `Không thể xóa mẫu hóa đơn: ${deleteTemplateError}`);
+            dispatch(resetDeleteTemplateState());
+        }
+    }, [deleteTemplateError]);
 
     const loadTemplates = () => {
         if (token) {
@@ -48,11 +86,41 @@ const InvoiceTemplatesScreen = () => {
     };
 
     const handleSelectTemplate = (template: any) => {
-        // TODO: Implement template selection logic
+        setSelectedTemplate(template);
+        setContractModalVisible(true);
+    };
+
+    const handleSelectContract = (contract: Contract) => {
+        setSelectedContract(contract);
+        setContractModalVisible(false);
+        setApplyTemplateModalVisible(true);
+    };
+
+    const handleApplyTemplateSuccess = () => {
+        // Reload templates after successful application
+        loadTemplates();
+    };
+
+    // Xử lý xóa mẫu hóa đơn
+    const handleDeleteTemplate = (template: any) => {
+        if (!token || !template._id) return;
+
         Alert.alert(
-            'Thông báo',
-            'Tính năng sử dụng mẫu hóa đơn đang được phát triển',
-            [{ text: 'OK' }]
+            'Xác nhận xóa',
+            `Bạn có chắc chắn muốn xóa mẫu hóa đơn "${getTemplateName(template)}" không?`,
+            [
+                {
+                    text: 'Hủy',
+                    style: 'cancel'
+                },
+                {
+                    text: 'Xóa',
+                    style: 'destructive',
+                    onPress: () => {
+                        dispatch(deleteInvoiceTemplate({ token, templateId: template._id }));
+                    }
+                }
+            ]
         );
     };
 
@@ -67,6 +135,16 @@ const InvoiceTemplatesScreen = () => {
         return 'N/A';
     };
 
+    const getTemplateName = (item: any) => {
+        // Nếu note có chứa TEMPLATE, lấy phần trước TEMPLATE làm tên mẫu
+        if (item.note && item.note.includes('TEMPLATE')) {
+            return item.note.split('TEMPLATE')[0].trim();
+        }
+
+        // Nếu không, sử dụng kỳ hóa đơn làm tên mẫu
+        return `Mẫu hóa đơn ${formatPeriod(item.period)}`;
+    };
+
     const renderItem = ({ item }: { item: any }) => {
         const roomNumber = item.roomId?.roomNumber ||
             (item.contractId?.contractInfo?.roomNumber || 'Không xác định');
@@ -74,41 +152,51 @@ const InvoiceTemplatesScreen = () => {
         const tenantName = item.tenantId?.fullName ||
             (item.contractId?.contractInfo?.tenantName || 'Không xác định');
 
-        const templateName = item.note?.includes('TEMPLATE')
-            ? item.note.split('TEMPLATE')[0].trim()
-            : formatPeriod(item.period);
+        const templateName = getTemplateName(item);
 
         return (
-            <TouchableOpacity
-                style={styles.templateItem}
-                onPress={() => handleSelectTemplate(item)}
-            >
-                <View style={styles.templateHeader}>
-                    <Text style={styles.templateName}>{templateName}</Text>
-                    <Text style={styles.templateAmount}>
-                        {item.totalAmount?.toLocaleString('vi-VN')} đ
-                    </Text>
-                </View>
-                <View style={styles.templateDetails}>
-                    <Text style={styles.templateDetail}>
-                        <Text style={styles.detailLabel}>Phòng: </Text>
-                        {roomNumber}
-                    </Text>
-                    <Text style={styles.templateDetail}>
-                        <Text style={styles.detailLabel}>Người thuê: </Text>
-                        {tenantName}
-                    </Text>
-                    <Text style={styles.templateDetail}>
-                        <Text style={styles.detailLabel}>Số khoản mục: </Text>
-                        {item.itemCount || (item.items?.length || 0)}
-                    </Text>
-                </View>
-                <View style={styles.templateFooter}>
-                    <Text style={styles.templatePeriod}>
-                        Kỳ hóa đơn: {formatPeriod(item.period)}
-                    </Text>
-                </View>
-            </TouchableOpacity>
+            <View style={styles.templateItem}>
+                <TouchableOpacity
+                    style={styles.templateContent}
+                    onPress={() => handleSelectTemplate(item)}
+                >
+                    <View style={styles.templateHeader}>
+                        <Text style={styles.templateName}>{templateName}</Text>
+                        <Text style={styles.templateAmount}>
+                            {item.totalAmount?.toLocaleString('vi-VN')} đ
+                        </Text>
+                    </View>
+                    <View style={styles.templateDetails}>
+                        <Text style={styles.templateDetail}>
+                            <Text style={styles.detailLabel}>Phòng: </Text>
+                            {roomNumber}
+                        </Text>
+                        <Text style={styles.templateDetail}>
+                            <Text style={styles.detailLabel}>Người thuê: </Text>
+                            {tenantName}
+                        </Text>
+                        <Text style={styles.templateDetail}>
+                            <Text style={styles.detailLabel}>Số khoản mục: </Text>
+                            {item.itemCount || (item.items?.length || 0)}
+                        </Text>
+                    </View>
+                    <View style={styles.templateFooter}>
+                        <Text style={styles.templatePeriod}>
+                            Kỳ hóa đơn: {formatPeriod(item.period)}
+                        </Text>
+                    </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDeleteTemplate(item)}
+                    disabled={deleteTemplateLoading}
+                >
+                    <Image
+                        source={require('../../assets/icons/icon_remove.png')}
+                        style={styles.deleteIcon}
+                    />
+                </TouchableOpacity>
+            </View>
         );
     };
 
@@ -170,6 +258,23 @@ const InvoiceTemplatesScreen = () => {
                 refreshing={refreshing}
                 onRefresh={handleRefresh}
             />
+
+            {/* Modal chọn hợp đồng */}
+            <ContractSelectionModal
+                visible={contractModalVisible}
+                onClose={() => setContractModalVisible(false)}
+                onSelectContract={handleSelectContract}
+            />
+
+            {/* Modal áp dụng mẫu hóa đơn */}
+            <ApplyTemplateModal
+                visible={applyTemplateModalVisible}
+                onClose={() => setApplyTemplateModalVisible(false)}
+                contract={selectedContract}
+                templateId={selectedTemplate?._id || ''}
+                templateName={selectedTemplate ? getTemplateName(selectedTemplate) : ''}
+                onSuccess={handleApplyTemplateSuccess}
+            />
         </SafeAreaView>
     );
 };
@@ -220,8 +325,8 @@ const styles = StyleSheet.create({
     templateItem: {
         backgroundColor: Colors.white,
         borderRadius: 8,
-        padding: 16,
         marginBottom: 12,
+        flexDirection: 'row',
         ...Platform.select({
             ios: {
                 shadowColor: '#000',
@@ -233,6 +338,10 @@ const styles = StyleSheet.create({
                 elevation: 3,
             },
         }),
+    },
+    templateContent: {
+        flex: 1,
+        padding: 16,
     },
     templateHeader: {
         flexDirection: 'row',
@@ -304,6 +413,19 @@ const styles = StyleSheet.create({
     retryText: {
         color: Colors.white,
         fontWeight: 'bold',
+    },
+    deleteButton: {
+        width: 50,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: Colors.lightRed,
+        borderTopRightRadius: 8,
+        borderBottomRightRadius: 8,
+    },
+    deleteIcon: {
+        width: 24,
+        height: 24,
+        tintColor: Colors.white,
     },
 });
 

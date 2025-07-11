@@ -10,7 +10,9 @@ import {
     updateInvoiceItems as updateInvoiceItemsService,
     deleteInvoiceItem as deleteInvoiceItemService,
     saveInvoiceAsTemplate as saveInvoiceAsTemplateService,
-    getInvoiceTemplates as getInvoiceTemplatesService
+    getInvoiceTemplates as getInvoiceTemplatesService,
+    deleteInvoiceTemplate as deleteInvoiceTemplateService,
+    markInvoiceAsPaid as markInvoiceAsPaidService
 } from '../services/billService';
 
 // Tạo action để cập nhật hóa đơn trong store mà không cần gọi API
@@ -32,6 +34,9 @@ interface BillState {
     confirmPaymentLoading: boolean;
     confirmPaymentSuccess: boolean;
     confirmPaymentError: string | null;
+    markAsPaidLoading: boolean;
+    markAsPaidSuccess: boolean;
+    markAsPaidError: string | null;
     completeInvoiceLoading: boolean;
     completeInvoiceSuccess: boolean;
     completeInvoiceError: string | null;
@@ -53,6 +58,9 @@ interface BillState {
     templatesLoading: boolean;
     templates: any[];
     templatesError: string | null;
+    deleteTemplateLoading: boolean;
+    deleteTemplateSuccess: boolean;
+    deleteTemplateError: string | null;
 }
 
 const initialState: BillState = {
@@ -71,6 +79,9 @@ const initialState: BillState = {
     confirmPaymentLoading: false,
     confirmPaymentSuccess: false,
     confirmPaymentError: null,
+    markAsPaidLoading: false,
+    markAsPaidSuccess: false,
+    markAsPaidError: null,
     completeInvoiceLoading: false,
     completeInvoiceSuccess: false,
     completeInvoiceError: null,
@@ -92,6 +103,9 @@ const initialState: BillState = {
     templatesLoading: false,
     templates: [],
     templatesError: null,
+    deleteTemplateLoading: false,
+    deleteTemplateSuccess: false,
+    deleteTemplateError: null,
 };
 
 // Thunk để lấy danh sách hóa đơn
@@ -112,7 +126,6 @@ export const fetchInvoices = createAsyncThunk(
     }, { rejectWithValue }) => {
         try {
             const response = await getInvoices(token, page, limit, status, query);
-            console.log('Processed response in thunk:', response);
 
             if (!response.success) {
                 throw new Error('Không thể tải danh sách hóa đơn');
@@ -123,7 +136,6 @@ export const fetchInvoices = createAsyncThunk(
                 pagination: response.data.pagination,
             };
         } catch (err: any) {
-            console.error('Error in fetchInvoices thunk:', err);
             return rejectWithValue(err.message || 'Không thể tải danh sách hóa đơn');
         }
     },
@@ -155,14 +167,32 @@ export const confirmPayment = createAsyncThunk(
             const response = await confirmInvoicePayment(token, invoiceId);
 
             if (!response.success) {
-                throw new Error(response.message || 'Không thể đánh dấu hóa đơn là đã thanh toán');
+                throw new Error(response.message || 'Không thể xác nhận thanh toán hóa đơn');
             }
 
-            return response.data.invoice;
+            return response.invoice;
         } catch (err: any) {
-            return rejectWithValue(err.message || 'Không thể đánh dấu hóa đơn là đã thanh toán');
+            return rejectWithValue(err.message || 'Không thể xác nhận thanh toán hóa đơn');
         }
     },
+);
+
+// Mark as paid (tenant)
+export const markAsPaid = createAsyncThunk(
+    'bill/markAsPaid',
+    async ({ token, invoiceId, paymentMethod }: { token: string; invoiceId: string; paymentMethod: string }, { rejectWithValue }) => {
+        try {
+            const response = await markInvoiceAsPaidService(token, invoiceId, paymentMethod);
+
+            if (!response.success) {
+                throw new Error(response.message || 'Không thể thanh toán hóa đơn');
+            }
+
+            return response.invoice;
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Không thể thanh toán hóa đơn');
+        }
+    }
 );
 
 // Thunk để hoàn thành hóa đơn
@@ -343,6 +373,24 @@ export const fetchInvoiceTemplates = createAsyncThunk(
     }
 );
 
+// Delete invoice template
+export const deleteInvoiceTemplate = createAsyncThunk(
+    'bill/deleteInvoiceTemplate',
+    async ({ token, templateId }: { token: string; templateId: string }, { rejectWithValue }) => {
+        try {
+            const response = await deleteInvoiceTemplateService(token, templateId);
+
+            if (!response.success) {
+                throw new Error(response.message || 'Không thể xóa mẫu hóa đơn');
+            }
+
+            return { templateId, message: response.message };
+        } catch (error: any) {
+            return rejectWithValue(error.message || 'Không thể xóa mẫu hóa đơn');
+        }
+    }
+);
+
 const billSlice = createSlice({
     name: 'bill',
     initialState,
@@ -355,6 +403,11 @@ const billSlice = createSlice({
             state.confirmPaymentLoading = false;
             state.confirmPaymentSuccess = false;
             state.confirmPaymentError = null;
+        },
+        resetMarkAsPaidState: (state) => {
+            state.markAsPaidLoading = false;
+            state.markAsPaidSuccess = false;
+            state.markAsPaidError = null;
         },
         resetCompleteInvoiceState: (state) => {
             state.completeInvoiceLoading = false;
@@ -390,6 +443,11 @@ const billSlice = createSlice({
             state.templatesLoading = false;
             state.templates = [];
             state.templatesError = null;
+        },
+        resetDeleteTemplateState: (state) => {
+            state.deleteTemplateLoading = false;
+            state.deleteTemplateSuccess = false;
+            state.deleteTemplateError = null;
         }
     },
     extraReducers: builder => {
@@ -447,19 +505,59 @@ const billSlice = createSlice({
             .addCase(confirmPayment.fulfilled, (state, action) => {
                 state.confirmPaymentLoading = false;
                 state.confirmPaymentSuccess = true;
-                state.selectedInvoice = action.payload;
 
-                // Cập nhật hóa đơn trong danh sách nếu có
-                const index = state.invoices.findIndex(invoice =>
-                    invoice._id === action.payload._id || invoice.id === action.payload.id
-                );
-                if (index !== -1) {
-                    state.invoices[index] = action.payload;
+                // Log the received invoice data
+                console.log('confirmPayment.fulfilled - received invoice data:', action.payload);
+
+                // Cập nhật hóa đơn được chọn
+                if (action.payload && action.payload._id) {
+                    state.selectedInvoice = action.payload;
+                    console.log('Updated selectedInvoice with new data');
+                } else {
+                    console.warn('confirmPayment.fulfilled - Invalid invoice data received:', action.payload);
+                }
+
+                // Cập nhật trong danh sách invoices nếu có
+                if (action.payload && action.payload._id) {
+                    const index = state.invoices.findIndex(inv => inv._id === action.payload._id);
+                    if (index !== -1) {
+                        state.invoices[index] = action.payload;
+                        console.log('Updated invoice in invoices list at index:', index);
+                    }
                 }
             })
             .addCase(confirmPayment.rejected, (state, action) => {
                 state.confirmPaymentLoading = false;
                 state.confirmPaymentError = action.payload as string;
+            })
+
+            // Xử lý markAsPaid
+            .addCase(markAsPaid.pending, (state) => {
+                state.markAsPaidLoading = true;
+                state.markAsPaidSuccess = false;
+                state.markAsPaidError = null;
+            })
+            .addCase(markAsPaid.fulfilled, (state, action) => {
+                state.markAsPaidLoading = false;
+                state.markAsPaidSuccess = true;
+
+                // Log the received invoice data
+                console.log('markAsPaid.fulfilled - received invoice data:', action.payload);
+
+                // Cập nhật hóa đơn được chọn
+                if (action.payload && action.payload._id) {
+                    state.selectedInvoice = action.payload;
+
+                    // Cập nhật trong danh sách invoices nếu có
+                    const index = state.invoices.findIndex(inv => inv._id === action.payload._id);
+                    if (index !== -1) {
+                        state.invoices[index] = action.payload;
+                    }
+                }
+            })
+            .addCase(markAsPaid.rejected, (state, action) => {
+                state.markAsPaidLoading = false;
+                state.markAsPaidError = action.payload as string;
             })
 
             // Xử lý completeInvoice
@@ -640,6 +738,23 @@ const billSlice = createSlice({
                 state.templatesError = action.payload as string;
             })
 
+            // Delete template reducers
+            .addCase(deleteInvoiceTemplate.pending, (state) => {
+                state.deleteTemplateLoading = true;
+                state.deleteTemplateSuccess = false;
+                state.deleteTemplateError = null;
+            })
+            .addCase(deleteInvoiceTemplate.fulfilled, (state, action) => {
+                state.deleteTemplateLoading = false;
+                state.deleteTemplateSuccess = true;
+                // Xóa template khỏi danh sách
+                state.templates = state.templates.filter(template => template._id !== action.payload.templateId);
+            })
+            .addCase(deleteInvoiceTemplate.rejected, (state, action) => {
+                state.deleteTemplateLoading = false;
+                state.deleteTemplateError = action.payload as string;
+            })
+
             // Xử lý action updateInvoiceInStore
             .addCase(updateInvoiceInStore, (state, action) => {
                 const updatedInvoice = action.payload;
@@ -657,8 +772,6 @@ const billSlice = createSlice({
                 if (index !== -1) {
                     state.invoices[index] = updatedInvoice;
                 }
-
-                console.log('Đã cập nhật dữ liệu invoice trong store thành công');
             });
     },
 });
@@ -668,13 +781,15 @@ export const {
     clearBillErrors,
     resetBillState,
     resetConfirmPaymentState,
+    resetMarkAsPaidState,
     resetCompleteInvoiceState,
     resetUpdateInvoiceState,
     resetAddItemState,
     resetUpdateItemsState,
     resetDeleteItemState,
     resetSaveTemplateState,
-    resetTemplatesState
+    resetTemplatesState,
+    resetDeleteTemplateState
 } = billSlice.actions;
 
 export default billSlice.reducer; 

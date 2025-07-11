@@ -19,12 +19,15 @@ import {
     confirmPayment,
     resetConfirmPaymentState,
     completeInvoice,
-    resetCompleteInvoiceState
+    resetCompleteInvoiceState,
+    markAsPaid,
+    resetMarkAsPaidState
 } from '../../store/slices/billSlice';
 import { RootStackParamList } from '../../types/route';
 import { SCREEN, scale, verticalScale } from '../../utils/responsive';
 import { Invoice, InvoiceItem } from '../../types/Bill';
 import { Role } from '../../types/User';
+import PaymentMethodModal from './components/PaymentMethodModal';
 
 type BillDetailRouteProps = RouteProp<RootStackParamList, 'BillDetails'>;
 
@@ -41,11 +44,15 @@ const BillDetailScreen = () => {
         confirmPaymentLoading,
         confirmPaymentSuccess,
         confirmPaymentError,
+        markAsPaidLoading,
+        markAsPaidSuccess,
+        markAsPaidError,
         completeInvoiceLoading,
         completeInvoiceSuccess,
         completeInvoiceError
     } = useAppSelector(state => state.bill);
     const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
+    const [paymentModalVisible, setPaymentModalVisible] = useState(false);
 
     // Kiểm tra xem người dùng có phải là chủ trọ không
     const isLandlord = user?.role === 'chuTro';
@@ -59,6 +66,7 @@ const BillDetailScreen = () => {
         return () => {
             dispatch(resetConfirmPaymentState());
             dispatch(resetCompleteInvoiceState());
+            dispatch(resetMarkAsPaidState());
         };
     }, [dispatch, token, invoiceId]);
 
@@ -67,8 +75,16 @@ const BillDetailScreen = () => {
         if (confirmPaymentSuccess) {
             Alert.alert(
                 "Thành công",
-                "Đã đánh dấu hóa đơn là đã thanh toán!",
-                [{ text: "OK" }]
+                "Đã xác nhận thanh toán hóa đơn thành công!",
+                [{
+                    text: "OK",
+                    onPress: () => {
+                        // Reload invoice details after successful confirmation
+                        if (token && invoiceId) {
+                            dispatch(fetchInvoiceDetails({ token, invoiceId }));
+                        }
+                    }
+                }]
             );
             dispatch(resetConfirmPaymentState());
         }
@@ -76,12 +92,42 @@ const BillDetailScreen = () => {
         if (confirmPaymentError) {
             Alert.alert(
                 "Lỗi",
-                `Không thể đánh dấu hóa đơn là đã thanh toán: ${confirmPaymentError}`,
+                `Không thể xác nhận thanh toán hóa đơn: ${confirmPaymentError}`,
                 [{ text: "OK" }]
             );
             dispatch(resetConfirmPaymentState());
         }
-    }, [confirmPaymentSuccess, confirmPaymentError, dispatch]);
+    }, [confirmPaymentSuccess, confirmPaymentError, dispatch, token, invoiceId]);
+
+    // Hiển thị thông báo khi người thuê thanh toán thành công hoặc thất bại
+    useEffect(() => {
+        if (markAsPaidSuccess) {
+            Alert.alert(
+                "Thành công",
+                "Đã thanh toán hóa đơn thành công!",
+                [{
+                    text: "OK",
+                    onPress: () => {
+                        // Reload invoice details after successful payment
+                        if (token && invoiceId) {
+                            dispatch(fetchInvoiceDetails({ token, invoiceId }));
+                        }
+                    }
+                }]
+            );
+            dispatch(resetMarkAsPaidState());
+            setPaymentModalVisible(false);
+        }
+
+        if (markAsPaidError) {
+            Alert.alert(
+                "Lỗi",
+                `Không thể thanh toán hóa đơn: ${markAsPaidError}`,
+                [{ text: "OK" }]
+            );
+            dispatch(resetMarkAsPaidState());
+        }
+    }, [markAsPaidSuccess, markAsPaidError, dispatch, token, invoiceId]);
 
     // Hiển thị thông báo khi hoàn thành hóa đơn thành công hoặc thất bại
     useEffect(() => {
@@ -179,11 +225,11 @@ const BillDetailScreen = () => {
         }
     };
 
-    // Xử lý đánh dấu đã thanh toán
+    // Xử lý xác nhận thanh toán
     const handleConfirmPayment = () => {
         Alert.alert(
-            "Đánh dấu đã thanh toán",
-            "Bạn có chắc chắn muốn đánh dấu hóa đơn này là đã thanh toán bằng tiền mặt?",
+            "Xác nhận thanh toán",
+            "Bạn có chắc chắn muốn xác nhận hoá đơn này đã thanh toán?",
             [
                 {
                     text: "Hủy",
@@ -205,14 +251,14 @@ const BillDetailScreen = () => {
     const handleCompleteInvoice = () => {
         Alert.alert(
             "Hoàn thành hóa đơn",
-            "Bạn có chắc chắn muốn hoàn thành hóa đơn này? Hành động này sẽ đánh dấu hóa đơn là đã thanh toán hoàn toàn.",
+            "Bạn có chắc chắn muốn đánh dấu hóa đơn này là đã hoàn thành?",
             [
                 {
                     text: "Hủy",
                     style: "cancel"
                 },
                 {
-                    text: "Hoàn thành",
+                    text: "Xác nhận",
                     onPress: () => {
                         if (token && invoiceId) {
                             dispatch(completeInvoice({ token, invoiceId }));
@@ -225,23 +271,14 @@ const BillDetailScreen = () => {
 
     // Xử lý thanh toán
     const handlePayment = () => {
-        Alert.alert(
-            "Thanh toán hóa đơn",
-            "Bạn có muốn thanh toán hóa đơn này?",
-            [
-                {
-                    text: "Hủy",
-                    style: "cancel"
-                },
-                {
-                    text: "Thanh toán",
-                    onPress: () => {
-                        // TODO: Điều hướng đến màn hình thanh toán
-                        console.log("Thanh toán hóa đơn:", invoiceId);
-                    }
-                }
-            ]
-        );
+        setPaymentModalVisible(true);
+    };
+
+    // Xử lý chọn phương thức thanh toán
+    const handleSelectPaymentMethod = (paymentMethod: string) => {
+        if (token && invoiceId) {
+            dispatch(markAsPaid({ token, invoiceId, paymentMethod }));
+        }
     };
 
     const renderHeader = () => {
@@ -368,18 +405,18 @@ const BillDetailScreen = () => {
                         {getStatusText(selectedInvoice.status)}
                     </Text>
                 </View>
-                {selectedInvoice.paymentMethod && (
-                    <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>Phương thức:</Text>
-                        <Text style={styles.infoValue}>
-                            {selectedInvoice.paymentMethod === 'bank_transfer'
-                                ? 'Chuyển khoản'
-                                : selectedInvoice.paymentMethod === 'cash'
-                                    ? 'Tiền mặt'
-                                    : selectedInvoice.paymentMethod}
-                        </Text>
-                    </View>
-                )}
+                {/* {selectedInvoice.paymentMethod && (
+                    // <View style={styles.infoRow}>
+                    //     <Text style={styles.infoLabel}>Phương thức:</Text>
+                    //     <Text style={styles.infoValue}>
+                    //         {selectedInvoice.paymentMethod === 'bank_transfer'
+                    //             ? 'Chuyển khoản'
+                    //             : selectedInvoice.paymentMethod === 'cash'
+                    //                 ? 'Tiền mặt'
+                    //                 : selectedInvoice.paymentMethod}
+                    //     </Text>
+                    // </View>
+                )} */}
                 {selectedInvoice.note && (
                     <View style={styles.infoRow}>
                         <Text style={styles.infoLabel}>Ghi chú:</Text>
@@ -441,12 +478,7 @@ const BillDetailScreen = () => {
 
         return (
             <View style={styles.summarySection}>
-                <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Tổng phụ:</Text>
-                    <Text style={styles.summaryValue}>
-                        {selectedInvoice.subtotal.toLocaleString('vi-VN')} đ
-                    </Text>
-                </View>
+
                 <View style={styles.summaryRow}>
                     <Text style={styles.summaryTotal}>Tổng cộng:</Text>
                     <Text style={styles.summaryTotalValue}>
@@ -484,6 +516,7 @@ const BillDetailScreen = () => {
                 {renderHeader()}
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={Colors.primaryGreen} />
+                    <Text style={styles.loadingText}>Đang tải thông tin hóa đơn...</Text>
                 </View>
             </SafeAreaView>
         );
@@ -525,46 +558,83 @@ const BillDetailScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             {renderHeader()}
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-                {renderInvoiceInfo()}
-                {renderInvoiceItems()}
-                {renderSummary()}
 
-                {/* Nút thanh toán cho người thuê khi hóa đơn ở trạng thái issued */}
-                {selectedInvoice.status === 'issued' && !isLandlord && (
-                    <TouchableOpacity style={styles.payButton} onPress={handlePayment}>
-                        <Text style={styles.payButtonText}>Thanh toán ngay</Text>
-                    </TouchableOpacity>
-                )}
-
-                {/* Nút đánh dấu đã thanh toán cho chủ trọ khi hóa đơn ở trạng thái issued */}
-                {selectedInvoice.status === 'issued' && isLandlord && (
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={Colors.primaryGreen} />
+                    <Text style={styles.loadingText}>Đang tải thông tin hóa đơn...</Text>
+                </View>
+            ) : error ? (
+                <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>{error}</Text>
                     <TouchableOpacity
-                        style={styles.confirmButton}
-                        onPress={handleConfirmPayment}
-                        disabled={confirmPaymentLoading}>
-                        {confirmPaymentLoading ? (
-                            <ActivityIndicator size="small" color={Colors.white} />
-                        ) : (
-                            <Text style={styles.confirmButtonText}>Đánh dấu đã thanh toán bằng tiền mặt</Text>
-                        )}
+                        style={styles.retryButton}
+                        onPress={() => {
+                            if (token && invoiceId) {
+                                dispatch(fetchInvoiceDetails({ token, invoiceId }));
+                            }
+                        }}
+                    >
+                        <Text style={styles.retryText}>Thử lại</Text>
                     </TouchableOpacity>
-                )}
+                </View>
+            ) : selectedInvoice ? (
+                <>
+                    <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+                        {renderInvoiceInfo()}
+                        {renderInvoiceItems()}
+                        {renderSummary()}
+                    </ScrollView>
 
-                {/* Nút hoàn thành hóa đơn cho chủ trọ khi hóa đơn ở trạng thái pending_confirmation */}
-                {selectedInvoice.status === 'pending_confirmation' && isLandlord && (
-                    <TouchableOpacity
-                        style={styles.completeButton}
-                        onPress={handleCompleteInvoice}
-                        disabled={completeInvoiceLoading}>
-                        {completeInvoiceLoading ? (
-                            <ActivityIndicator size="small" color={Colors.white} />
-                        ) : (
-                            <Text style={styles.completeButtonText}>Hoàn thành hóa đơn</Text>
-                        )}
-                    </TouchableOpacity>
-                )}
-            </ScrollView>
+                    {/* Hiển thị nút thanh toán nếu là người thuê và hóa đơn chưa thanh toán */}
+                    {!isLandlord && selectedInvoice.status === 'issued' && (
+                        <View style={styles.buttonContainer}>
+                            <TouchableOpacity
+                                style={styles.payButton}
+                                onPress={handlePayment}
+                                disabled={markAsPaidLoading}
+                            >
+                                {markAsPaidLoading ? (
+                                    <ActivityIndicator size="small" color={Colors.white} />
+                                ) : (
+                                    <Text style={styles.payButtonText}>Thanh toán ngay</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                    {/* Hiển thị nút xác nhận thanh toán nếu là chủ trọ và hóa đơn đang chờ xác nhận */}
+                    {isLandlord && selectedInvoice.status === 'pending_confirmation' && (
+                        <View style={styles.buttonContainer}>
+                            <TouchableOpacity
+                                style={styles.confirmButton}
+                                onPress={handleConfirmPayment}
+                                disabled={confirmPaymentLoading}
+                            >
+                                {confirmPaymentLoading ? (
+                                    <ActivityIndicator size="small" color={Colors.white} />
+                                ) : (
+                                    <Text style={styles.confirmButtonText}>Xác nhận đã thanh toán</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+
+                </>
+            ) : (
+                <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>Không tìm thấy thông tin hóa đơn</Text>
+                </View>
+            )}
+
+            {/* Modal chọn phương thức thanh toán */}
+            <PaymentMethodModal
+                visible={paymentModalVisible}
+                onClose={() => setPaymentModalVisible(false)}
+                onSelectPaymentMethod={handleSelectPaymentMethod}
+                isLoading={markAsPaidLoading}
+            />
         </SafeAreaView>
     );
 };
@@ -582,6 +652,10 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 10,
+        color: Colors.mediumGray,
     },
     errorContainer: {
         flex: 1,
@@ -794,15 +868,25 @@ const styles = StyleSheet.create({
         color: Colors.primaryGreen,
     },
     payButton: {
-        backgroundColor: Colors.limeGreen,
+        backgroundColor: Colors.primaryGreen,
         marginHorizontal: 15,
-        marginTop: 20,
         padding: 15,
         borderRadius: 8,
         alignItems: 'center',
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.22,
+                shadowRadius: 2.22,
+            },
+            android: {
+                elevation: 3,
+            },
+        }),
     },
     payButtonText: {
-        color: Colors.dearkOlive,
+        color: Colors.white,
         fontWeight: 'bold',
         fontSize: 16,
     },
@@ -831,6 +915,27 @@ const styles = StyleSheet.create({
         color: Colors.white,
         fontWeight: 'bold',
         fontSize: 16,
+    },
+    buttonContainer: {
+        padding: 15,
+        marginBottom: 15,
+    },
+    paymentButton: {
+        backgroundColor: Colors.limeGreen,
+        padding: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    paymentButtonText: {
+        color: Colors.dearkOlive,
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    scrollView: {
+        flex: 1,
+    },
+    scrollContent: {
+        paddingBottom: verticalScale(30),
     },
 });
 

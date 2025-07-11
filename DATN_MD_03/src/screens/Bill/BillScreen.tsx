@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     View,
     StyleSheet,
@@ -202,21 +202,21 @@ const BillScreen = () => {
         }
     }, [invoices, selectedStatus, selectedRoom, selectedTenant, sortOrder, isLandlord]);
 
-    const loadInvoices = () => {
+    // Hàm để tải dữ liệu hóa đơn
+    const loadInvoices = useCallback((page = 1, shouldRefresh = false) => {
         if (token) {
-            console.log('Loading invoices with token:', token.substring(0, 10) + '...');
-            dispatch(
-                fetchInvoices({
-                    token,
-                    page: pagination.page,
-                    limit: pagination.limit,
-                    status: selectedStatus,
-                }),
-            );
+            // Gọi action để lấy danh sách hóa đơn
+            dispatch(fetchInvoices({
+                token,
+                page,
+                limit: 10,
+                status: selectedStatus,
+            }));
         } else {
-            console.log('No token available, cannot load invoices');
+            // Hiển thị thông báo lỗi nếu không có token
+            Alert.alert('Lỗi', 'Bạn cần đăng nhập để xem hóa đơn');
         }
-    };
+    }, [dispatch, token, selectedStatus]);
 
     useEffect(() => {
         loadInvoices();
@@ -245,7 +245,7 @@ const BillScreen = () => {
         // Kiểm tra xem invoice có ID hay không
         const invoiceId = invoice._id || invoice.id;
         if (!invoiceId) {
-            console.error('Invalid invoice ID', invoice);
+            Alert.alert('Lỗi', 'Không thể mở chi tiết hóa đơn này');
             return;
         }
 
@@ -535,7 +535,7 @@ const BillScreen = () => {
         // Kiểm tra xem invoice có ID hay không
         const invoiceId = invoice._id || invoice.id;
         if (!invoiceId) {
-            console.error('Invalid invoice ID', invoice);
+            Alert.alert('Lỗi', 'Không thể chỉnh sửa hóa đơn này');
             return;
         }
 
@@ -548,7 +548,7 @@ const BillScreen = () => {
         // Kiểm tra xem invoice có ID hay không
         const invoiceId = invoice._id || invoice.id;
         if (!invoiceId) {
-            console.error('Invalid invoice ID', invoice);
+            Alert.alert('Lỗi', 'Không thể xóa hóa đơn này');
             return;
         }
 
@@ -591,7 +591,6 @@ const BillScreen = () => {
                 throw new Error(response.message || 'Có lỗi xảy ra khi xóa hóa đơn');
             }
         } catch (error: any) {
-            console.error('Error deleting invoice:', error);
             Alert.alert('Lỗi', error.message || 'Có lỗi xảy ra khi xóa hóa đơn');
         }
     };
@@ -631,9 +630,13 @@ const BillScreen = () => {
                     />
                 </TouchableOpacity>
                 <Text style={styles.headerText}>Hóa đơn của bạn</Text>
-                <TouchableOpacity onPress={navigateToTemplates}>
-                    <Text style={styles.templateButton}>Mẫu</Text>
-                </TouchableOpacity>
+                {isLandlord ? (
+                    <TouchableOpacity onPress={navigateToTemplates}>
+                        <Text style={styles.templateButton}>Mẫu</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <View style={styles.placeholderView} />
+                )}
             </View>
 
             {/* Các tab bộ lọc */}

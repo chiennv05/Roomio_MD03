@@ -195,12 +195,54 @@ export const getInvoiceDetails = async (token: string, invoiceId: string) => {
 // Xác nhận thanh toán hóa đơn bằng tiền mặt (đánh dấu đã thanh toán)
 export const confirmInvoicePayment = async (token: string, invoiceId: string) => {
     try {
+        console.log('Confirming payment for invoice:', invoiceId);
+
         const response = await api.post<{ success: boolean; message: string; invoice: Invoice }>(
-            `/billing/landlord/invoices/${invoiceId}/mark-as-paid`,
+            `/billing/invoices/${invoiceId}/confirm-payment`,
             {},
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+            },
+        );
+
+        console.log('Confirm payment API response:', JSON.stringify(response.data, null, 2));
+
+        if ('isError' in response) {
+            throw new Error(response.message || 'Có lỗi xảy ra khi xác nhận thanh toán');
+        }
+
+        // Check if the invoice data is present in the response
+        if (!response.data.invoice) {
+            console.error('No invoice data in confirm payment response');
+            throw new Error('Không nhận được dữ liệu hóa đơn từ server');
+        }
+
+        return {
+            success: response.data.success,
+            message: response.data.message || 'Đã xác nhận thanh toán thành công',
+            invoice: response.data.invoice
+        };
+    } catch (error: any) {
+        console.error('Error confirming payment:', error.message);
+        throw error;
+    }
+};
+
+// Người thuê thanh toán hóa đơn với phương thức thanh toán
+export const markInvoiceAsPaid = async (token: string, invoiceId: string, paymentMethod: string) => {
+    try {
+        console.log('Marking invoice as paid:', { invoiceId, paymentMethod });
+
+        const response = await api.post<{ success: boolean; message: string; invoice: Invoice }>(
+            `/billing/tenant/invoices/${invoiceId}/mark-as-paid`,
+            { paymentMethod },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 },
             },
         );
@@ -208,15 +250,13 @@ export const confirmInvoicePayment = async (token: string, invoiceId: string) =>
         console.log('Mark as paid API response:', JSON.stringify(response.data, null, 2));
 
         if ('isError' in response) {
-            throw new Error(response.message);
+            throw new Error(response.message || 'Có lỗi xảy ra khi thanh toán hóa đơn');
         }
 
         return {
             success: response.data.success,
-            message: response.data.message || 'Đã đánh dấu hóa đơn là đã thanh toán',
-            data: {
-                invoice: response.data.invoice
-            }
+            message: response.data.message || 'Đã thanh toán hóa đơn thành công',
+            invoice: response.data.invoice
         };
     } catch (error: any) {
         console.error('Error marking invoice as paid:', error.message);
@@ -391,33 +431,90 @@ export const checkDuplicateInvoice = async (token: string, contractId: string, m
 
         console.log('Checking for duplicate invoice:', { contractId, month, year });
 
-        const response = await api.get<{ success: boolean; exists: boolean; message: string }>(
-            `/billing/invoices/check-duplicate?${queryParams.toString()}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
+        // Kiểm tra xem API endpoint có tồn tại không
+        try {
+            const response = await api.get<{ success: boolean; exists: boolean; message: string }>(
+                `/billing/invoices/check-duplicate?${queryParams.toString()}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
                 },
-            },
-        );
+            );
 
-        console.log('Check duplicate API response:', JSON.stringify(response.data, null, 2));
+            console.log('Check duplicate API response:', JSON.stringify(response.data, null, 2));
 
-        if ('isError' in response) {
-            throw new Error(response.message);
+            if ('isError' in response) {
+                throw new Error(response.message);
+            }
+
+            return {
+                success: response.data.success,
+                exists: response.data.exists || false,
+                message: response.data.message || ''
+            };
+        } catch (apiError: any) {
+            console.error('API Error checking duplicate invoice:', apiError);
+
+            // Nếu API trả về 404 (Not Found), nghĩa là endpoint không tồn tại
+            if (apiError.status === 404) {
+                console.log('API endpoint không tồn tại, thực hiện kiểm tra thủ công');
+
+                // Thực hiện kiểm tra thủ công bằng cách lấy danh sách hóa đơn của hợp đồng
+                // và kiểm tra xem có hóa đơn nào trùng tháng/năm không
+                try {
+                    const invoicesResponse = await api.get<{ success: boolean; invoices: Invoice[] }>(
+                        `/billing/invoices?contractId=${contractId}`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                            },
+                        },
+                    );
+
+                    if ('isError' in invoicesResponse) {
+                        throw new Error(invoicesResponse.message);
+                    }
+
+                    const invoices = invoicesResponse.data.invoices || [];
+                    const duplicateInvoice = invoices.find(invoice => {
+                        if (typeof invoice.period === 'object' && invoice.period) {
+                            return invoice.period.month === month && invoice.period.year === year;
+                        }
+                        return false;
+                    });
+
+                    return {
+                        success: true,
+                        exists: !!duplicateInvoice,
+                        message: duplicateInvoice ? `Đã tồn tại hóa đơn cho tháng ${month}/${year}` : ''
+                    };
+                } catch (fallbackError) {
+                    console.error('Fallback check failed:', fallbackError);
+                    // Nếu kiểm tra thủ công cũng thất bại, giả định không có trùng lặp
+                    return {
+                        success: true,
+                        exists: false,
+                        message: 'Không thể kiểm tra trùng lặp, giả định không có trùng lặp'
+                    };
+                }
+            }
+
+            // Nếu là lỗi khác, giả định không có trùng lặp nhưng ghi log cảnh báo
+            console.warn('Không thể kiểm tra trùng lặp, giả định không có trùng lặp');
+            return {
+                success: true,
+                exists: false,
+                message: 'Không thể kiểm tra trùng lặp, giả định không có trùng lặp'
+            };
         }
-
-        return {
-            success: response.data.success,
-            exists: response.data.exists || false,
-            message: response.data.message || ''
-        };
     } catch (error: any) {
         console.error('Error checking duplicate invoice:', error.message);
-        // Nếu API không hỗ trợ endpoint này, giả lập kết quả không trùng lặp
+        // Trong trường hợp lỗi nghiêm trọng, vẫn giả định không có trùng lặp
         return {
             success: true,
             exists: false,
-            message: 'API endpoint không hỗ trợ kiểm tra trùng lặp'
+            message: 'Lỗi khi kiểm tra trùng lặp: ' + error.message
         };
     }
 };
@@ -652,15 +749,18 @@ export const deleteInvoiceItem = async (token: string, invoiceId: string, itemId
     }
 };
 
-// Save invoice as template
+// Lưu hóa đơn như một mẫu
 export const saveInvoiceAsTemplate = async (token: string, invoiceId: string, templateName: string) => {
     try {
+        console.log('Saving invoice as template:', { invoiceId, templateName });
+
         const response = await api.post<{ success: boolean; message: string; template: any }>(
-            `/billing/invoices/${invoiceId}/save-as-template`,
-            { templateName },
+            `/billing/invoices/${invoiceId}/save-template`,
+            { name: templateName },
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 },
             },
         );
@@ -668,12 +768,12 @@ export const saveInvoiceAsTemplate = async (token: string, invoiceId: string, te
         console.log('Save as template API response:', JSON.stringify(response.data, null, 2));
 
         if ('isError' in response) {
-            throw new Error(response.message);
+            throw new Error(response.message || 'Có lỗi xảy ra khi lưu mẫu hóa đơn');
         }
 
         return {
             success: response.data.success,
-            message: response.data.message || 'Đã lưu hóa đơn như mẫu thành công',
+            message: response.data.message || 'Đã lưu mẫu hóa đơn thành công',
             data: {
                 template: response.data.template
             }
@@ -684,11 +784,13 @@ export const saveInvoiceAsTemplate = async (token: string, invoiceId: string, te
     }
 };
 
-// Get invoice templates
+// Lấy danh sách mẫu hóa đơn
 export const getInvoiceTemplates = async (token: string) => {
     try {
+        console.log('Fetching invoice templates');
+
         const response = await api.get<{ success: boolean; templates: any[] }>(
-            '/billing/templates',
+            `/billing/templates`,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -699,7 +801,7 @@ export const getInvoiceTemplates = async (token: string) => {
         console.log('Get templates API response:', JSON.stringify(response.data, null, 2));
 
         if ('isError' in response) {
-            throw new Error(response.message);
+            throw new Error(response.message || 'Có lỗi xảy ra khi lấy danh sách mẫu hóa đơn');
         }
 
         return {
@@ -709,7 +811,77 @@ export const getInvoiceTemplates = async (token: string) => {
             }
         };
     } catch (error: any) {
-        console.error('Error fetching invoice templates:', error.message);
+        // Trả về danh sách rỗng để tránh crash
+        return {
+            success: false,
+            data: {
+                templates: []
+            }
+        };
+    }
+};
+
+// Xóa mẫu hóa đơn
+export const deleteInvoiceTemplate = async (token: string, templateId: string) => {
+    try {
+        const response = await api.delete<{ success: boolean; message: string }>(
+            `/billing/templates/${templateId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            },
+        );
+
+        if ('isError' in response) {
+            throw new Error(response.message || 'Có lỗi xảy ra khi xóa mẫu hóa đơn');
+        }
+
+        return {
+            success: response.data.success,
+            message: response.data.message || 'Đã xóa mẫu hóa đơn thành công'
+        };
+    } catch (error: any) {
+        throw error;
+    }
+};
+
+// Áp dụng mẫu hóa đơn
+export const applyInvoiceTemplate = async (
+    token: string,
+    templateId: string,
+    data: {
+        contractId: string;
+        month: number;
+        year: number;
+        dueDate: string;
+        keepReadings: boolean;
+    }
+) => {
+    try {
+        const response = await api.post<{ success: boolean; message: string; invoice: any }>(
+            `/billing/templates/${templateId}/apply`,
+            data,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+            },
+        );
+
+        if ('isError' in response) {
+            throw new Error(response.message || 'Có lỗi xảy ra khi áp dụng mẫu hóa đơn');
+        }
+
+        return {
+            success: response.data.success,
+            message: response.data.message || 'Đã áp dụng mẫu hóa đơn thành công',
+            data: {
+                invoice: response.data.invoice
+            }
+        };
+    } catch (error: any) {
         throw error;
     }
 }; 

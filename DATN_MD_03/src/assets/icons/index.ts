@@ -119,6 +119,22 @@ export const Icons = {
     ios: 'icon_room',
     android: 'asset:/icons/icon_room.png',
   }),
+  IconMoney: Platform.select({
+    ios: 'icon_money',
+    android: 'asset:/icons/icon_money.png',
+  }),
+  IconBank: Platform.select({
+    ios: 'icon_bank',
+    android: 'asset:/icons/icon_bank.png',
+  }),
+  IconWallet: Platform.select({
+    ios: 'icon_wallet',
+    android: 'asset:/icons/icon_wallet.png',
+  }),
+  IconClose: Platform.select({
+    ios: 'icon_close',
+    android: 'asset:/icons/icon_close.png',
+  }),
   IconDieuHoa: Platform.select({
     ios: 'icon_dieu_hoa',
     android: 'asset:/icons/icon_dieu_hoa.png',

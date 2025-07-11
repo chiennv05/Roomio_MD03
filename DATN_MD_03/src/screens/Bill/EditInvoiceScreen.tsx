@@ -1094,7 +1094,6 @@ const EditInvoiceScreen = () => {
                 setIsLoading(false);
             })
             .catch((error) => {
-                console.log('Lỗi cập nhật hóa đơn:', error);
                 setIsLoading(false);
 
                 // Vẫn điều hướng để tránh người dùng bị kẹt
@@ -1300,7 +1299,6 @@ const EditInvoiceScreen = () => {
                                 );
                             })
                             .catch((error) => {
-                                console.log('Lỗi phát hành hóa đơn:', error);
                                 setIsLoading(false);
                                 Alert.alert(
                                     "Lỗi",
@@ -1316,10 +1314,8 @@ const EditInvoiceScreen = () => {
 
     // Check if an item is a standard contract item
     const isStandardContractItem = (item: InvoiceItem): boolean => {
-        // Check if it has a templateId (standard indicator of contract item)
-        if (item.templateId) {
-            return true;
-        }
+        // Không coi các khoản mục có templateId là khoản mục tiêu chuẩn không thể chỉnh sửa
+        // Chỉ kiểm tra theo tên và category
 
         // Check for specific standard services by name
         const name = item.name.toLowerCase();
@@ -1349,18 +1345,18 @@ const EditInvoiceScreen = () => {
             canEditMeterReadings: false
         };
 
-        // Check if it's a standard contract item
-        if (isStandardContractItem(item)) {
-            // Contract items are not editable
-            return result;
-        }
-
-        // Allow editing for all utility items
+        // Các khoản mục tiện ích (utility) luôn có thể chỉnh sửa
         if (item.category === 'utility') {
             result.isEditable = true;
             result.canEditDescription = true;
             result.canEditUnitPrice = true;
             result.canEditMeterReadings = true;
+            return result;
+        }
+
+        // Kiểm tra nếu là khoản mục tiêu chuẩn từ hợp đồng (không phải từ mẫu)
+        if (isStandardContractItem(item)) {
+            // Contract items are not editable
             return result;
         }
 
@@ -1450,12 +1446,9 @@ const EditInvoiceScreen = () => {
                             .unwrap()
                             .then(() => {
                                 // Success will be handled by the useEffect
-                                console.log(`Item ${item._id} deleted successfully`);
                             })
                             .catch((error) => {
                                 // Error will be handled by the useEffect
-                                console.error(`Error deleting item ${item._id}:`, error);
-
                                 // Show error alert in case the useEffect doesn't catch it
                                 Alert.alert(
                                     "Lỗi",
@@ -1659,7 +1652,6 @@ const EditInvoiceScreen = () => {
                 setIsLoading(false);
             })
             .catch((error) => {
-                console.log('Lỗi cập nhật hóa đơn hoặc lưu mẫu:', error);
                 setIsLoading(false);
 
                 // Hiển thị thông báo lỗi
@@ -1670,8 +1662,6 @@ const EditInvoiceScreen = () => {
                 );
             });
     };
-
-
 
     const renderHeader = () => {
         return (
@@ -1685,7 +1675,7 @@ const EditInvoiceScreen = () => {
                 <Text style={styles.headerText}>
                     {selectedInvoice ? `Chỉnh sửa hóa đơn ${formatPeriod(selectedInvoice.period)}` : 'Chỉnh sửa hóa đơn'}
                 </Text>
-                <View style={styles.placeholderView} />
+                <View style={{ width: 24 }} />
             </View>
         );
     };

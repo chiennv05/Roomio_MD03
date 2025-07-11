@@ -18,6 +18,7 @@ export const Colors = {
   unselectedText: '#666666',
   divider: '#F0F0F0',
   red: '#FF0000',
+  lightRed: '#FF6B6B',
   gray: '#ccc',
   colorAvata: '#b3c6ff',
 
