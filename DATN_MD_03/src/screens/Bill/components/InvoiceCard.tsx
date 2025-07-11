@@ -131,7 +131,6 @@ const getTenantName = (invoice: Invoice) => {
     if (invoice.contractId && typeof invoice.contractId === 'object' && invoice.contractId.contractInfo) {
         const tenantName = invoice.contractId.contractInfo.tenantName;
         if (tenantName) {
-            console.log('Hiển thị tên người thuê từ contractId.contractInfo.tenantName:', tenantName);
             return tenantName;
         }
     }
@@ -156,7 +155,6 @@ const getTenantName = (invoice: Invoice) => {
     // Nếu tenantId là string, tham chiếu đến hợp đồng để lấy thông tin
     if (tenant && typeof tenant === 'string' && invoice.contractId &&
         typeof invoice.contractId === 'object' && invoice.contractId.contractInfo) {
-        console.log('Hiển thị tên người thuê từ contractId.contractInfo.tenantName (tenantId là string)');
         return invoice.contractId.contractInfo.tenantName;
     }
 
@@ -170,7 +168,6 @@ const getRoomInfo = (invoice: Invoice) => {
     if (invoice.contractId && typeof invoice.contractId === 'object' && invoice.contractId.contractInfo) {
         const roomNumber = invoice.contractId.contractInfo.roomNumber;
         if (roomNumber) {
-            console.log('Hiển thị phòng từ contractId.contractInfo.roomNumber:', roomNumber);
             return roomNumber;
         }
     }
@@ -190,7 +187,6 @@ const getRoomInfo = (invoice: Invoice) => {
     // Nếu roomId là string, tham chiếu đến hợp đồng để lấy thông tin
     if (invoice.roomId && typeof invoice.roomId === 'string' && invoice.contractId &&
         typeof invoice.contractId === 'object' && invoice.contractId.contractInfo) {
-        console.log('Hiển thị phòng từ contractId.contractInfo.roomNumber (roomId là string)');
         return invoice.contractId.contractInfo.roomNumber;
     }
 
@@ -234,6 +230,13 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress, onEdit, onD
                         <Text style={styles.statusText}>{getStatusText(invoice.status)}</Text>
                     </View>
                 </View>
+
+                {/* Chỉ thêm phần hiển thị "Người ở cùng" nếu isRoommate là true */}
+                {invoice.isRoommate && (
+                    <View style={styles.roommateBadge}>
+                        <Text style={styles.roommateText}>Người ở cùng</Text>
+                    </View>
+                )}
 
                 <View style={styles.content}>
                     <Text style={styles.invoiceNumber}>Mã hóa đơn: #{invoice.invoiceNumber}</Text>
@@ -431,6 +434,31 @@ const styles = StyleSheet.create({
         color: Colors.white,
         fontWeight: '600',
         fontSize: 14,
+    },
+    roommateBadge: {
+        position: 'absolute',
+        top: scale(40),
+        right: scale(0),
+        backgroundColor: Colors.primaryGreen + '20',
+        paddingHorizontal: scale(8),
+        paddingVertical: scale(4),
+        borderTopLeftRadius: scale(12),
+        borderBottomLeftRadius: scale(12),
+        borderRightWidth: scale(3),
+        borderRightColor: Colors.primaryGreen,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    roommateText: {
+        fontSize: scale(11),
+        fontWeight: 'bold',
+        color: Colors.primaryGreen,
     },
 });
 

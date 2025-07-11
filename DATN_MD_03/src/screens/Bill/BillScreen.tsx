@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
     View,
     StyleSheet,
@@ -15,17 +15,18 @@ import {
     Platform,
 } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
-import { fetchInvoices } from '../../store/slices/billSlice';
+import { fetchInvoices, fetchRoommateInvoices } from '../../store/slices/billSlice';
 import { Invoice } from '../../types/Bill';
 import { Colors } from '../../theme/color';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import { useNavigation, CommonActions, useFocusEffect } from '@react-navigation/native';
 import { SCREEN, scale, verticalScale } from '../../utils/responsive';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../types/route';
 import { Icons } from '../../assets/icons';
 import { InvoiceCard, ContractSelectionModal, InvoiceCreationModal } from './components';
 import { Contract } from '../../types/Contract';
-import { deleteInvoice } from '../../store/services/billService';
+import { deleteInvoice, checkUserIsCoTenant } from '../../store/services/billService';
+import { api } from '../../api/api';
 
 // Kiểu dữ liệu cho các bộ lọc
 type FilterType = 'status' | 'room' | 'tenant' | 'sort';
@@ -44,6 +45,9 @@ const BillScreen = () => {
     const [selectedStatus, setSelectedStatus] = useState<string | undefined>(
         undefined,
     );
+    
+    // Ref để theo dõi component mounted
+    const isMounted = useRef(true);
 
     // Kiểm tra xem người dùng có phải là chủ trọ không
     const isLandlord = user?.role === 'chuTro';
@@ -202,6 +206,19 @@ const BillScreen = () => {
         }
     }, [invoices, selectedStatus, selectedRoom, selectedTenant, sortOrder, isLandlord]);
 
+    useEffect(() => {
+        // Log danh sách hóa đơn khi có thay đổi
+        if (localInvoices.length > 0) {
+            // Chỉ hiển thị số lượng hóa đơn, không in chi tiết để tránh log quá nhiều
+            console.log('Tổng số hóa đơn:', localInvoices.length);
+            console.log('Số hóa đơn người ở cùng:', localInvoices.filter(inv => inv.isRoommate).length);
+            console.log('Số hóa đơn thường:', localInvoices.filter(inv => !inv.isRoommate).length);
+        }
+    }, [localInvoices]);
+
+    // State để theo dõi xem người dùng có phải là người ở cùng không
+    const [isUserCoTenant, setIsUserCoTenant] = useState(false);
+
     // Hàm để tải dữ liệu hóa đơn
     const loadInvoices = useCallback((page = 1, shouldRefresh = false) => {
         if (token) {
@@ -212,15 +229,93 @@ const BillScreen = () => {
                 limit: 10,
                 status: selectedStatus,
             }));
+            
+            // Nếu người dùng là người thuê và là người ở cùng, lấy hóa đơn người ở cùng
+            if (user?.role === 'nguoiThue' && isUserCoTenant) {
+                console.log('Fetching roommate invoices for tenant user:', user?._id);
+                
+                // Đảm bảo user._id tồn tại trước khi gọi API
+                if (user?._id) {
+                    dispatch(fetchRoommateInvoices({
+                        token,
+                        page: 1, // Luôn bắt đầu từ trang đầu tiên cho hóa đơn người ở cùng
+                        limit: 10,
+                        status: selectedStatus,
+                        userId: user._id, // Truyền ID người dùng hiện tại
+                    }));
+                }
+            }
         } else {
             // Hiển thị thông báo lỗi nếu không có token
             Alert.alert('Lỗi', 'Bạn cần đăng nhập để xem hóa đơn');
         }
+    }, [dispatch, token, selectedStatus, user?.role, user?._id, isUserCoTenant]);
+
+    // Kiểm tra xem người dùng có trong danh sách coTenants không
+    const checkUserInCoTenants = useCallback(async () => {
+        // Chỉ áp dụng cho người thuê, không phải chủ trọ
+        if (!token || isLandlord || !user?._id) {
+            setIsUserCoTenant(false);
+            return;
+        }
+
+        try {
+            // Gọi hàm kiểm tra từ billService
+            const result = await checkUserIsCoTenant(token);
+            
+            if (result.success) {
+                console.log('User coTenant check result:', result.isCoTenant);
+                
+                // Cập nhật state
+                setIsUserCoTenant(result.isCoTenant);
+                
+                // Nếu người dùng không phải là người ở cùng trong bất kỳ hợp đồng nào
+                if (!result.isCoTenant) {
+                    // Hiển thị thông báo
+                    Alert.alert(
+                        'Thông báo',
+                        'Bạn không phải là người ở cùng trong bất kỳ hợp đồng nào. Bạn sẽ chỉ thấy hóa đơn của chính mình.',
+                        [{ text: 'OK', onPress: () => console.log('OK Pressed') }]
+                    );
+                }
+            }
+        } catch (error) {
+            console.error('Error checking coTenant status:', error);
+            setIsUserCoTenant(false);
+        }
+    }, [token, isLandlord, user?._id]);
+
+    // Sử dụng useFocusEffect để kiểm tra khi màn hình được focus
+    useFocusEffect(
+        useCallback(() => {
+            isMounted.current = true;
+            
+            // Kiểm tra trạng thái coTenant khi màn hình được focus
+            checkUserInCoTenants();
+            
+            // Tải dữ liệu hóa đơn
+            if (token) {
+                loadInvoices(1, false);
+            }
+            
+            return () => {
+                isMounted.current = false;
+            };
+        }, [token, loadInvoices, checkUserInCoTenants])
+    );
+
+    // Thêm lại useEffect cho các thay đổi về bộ lọc
+    useEffect(() => {
+        if (token) {
+            loadInvoices(1, false);
+        }
     }, [dispatch, token, selectedStatus]);
 
     useEffect(() => {
-        loadInvoices();
-    }, [dispatch, token, selectedStatus]);
+        return () => {
+            isMounted.current = false;
+        };
+    }, []);
 
     const handleRefresh = () => {
         setRefreshing(true);
@@ -243,14 +338,34 @@ const BillScreen = () => {
 
     const handleInvoicePress = (invoice: Invoice) => {
         // Kiểm tra xem invoice có ID hay không
-        const invoiceId = invoice._id || invoice.id;
+        let invoiceId = invoice._id || invoice.id;
         if (!invoiceId) {
             Alert.alert('Lỗi', 'Không thể mở chi tiết hóa đơn này');
             return;
         }
 
-        // Điều hướng đến màn hình chi tiết
-        navigation.navigate('BillDetails', { invoiceId });
+        // Nếu là hóa đơn người ở cùng, loại bỏ hậu tố "-roommate" khỏi ID
+        if (invoice.isRoommate === true && invoiceId.includes('-roommate')) {
+            invoiceId = invoiceId.replace('-roommate', '');
+        }
+
+        // Ghi log để kiểm tra dữ liệu
+        console.log('Invoice pressed:', {
+            id: invoiceId,
+            isRoommate: invoice.isRoommate,
+            status: invoice.status,
+        });
+
+        // Kiểm tra nếu đây là hóa đơn của người ở cùng
+        if (invoice.isRoommate === true) {
+            console.log('Navigating to RoommateInvoiceDetails with ID:', invoiceId);
+            // Điều hướng đến màn hình chi tiết hóa đơn người ở cùng
+            navigation.navigate('RoommateInvoiceDetails', { invoiceId });
+        } else {
+            console.log('Navigating to BillDetails with ID:', invoiceId);
+            // Điều hướng đến màn hình chi tiết hóa đơn thông thường
+            navigation.navigate('BillDetails', { invoiceId });
+        }
     };
 
     // Xử lý thay đổi loại bộ lọc (tab)
@@ -597,10 +712,14 @@ const BillScreen = () => {
 
     // Xử lý quay lại màn hình hồ sơ
     const handleBackToProfile = () => {
+        // Sử dụng CommonActions để reset navigation stack và chỉ định màn hình ban đầu là UITab
+        // Sau đó sử dụng params của navigation để chỉ định tab cụ thể
         navigation.dispatch(
-            CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'UITab' }],
+            CommonActions.navigate({
+                name: 'UITab',
+                params: {
+                    screen: 'Profile'
+                }
             })
         );
     };
@@ -659,7 +778,12 @@ const BillScreen = () => {
 
             <FlatList
                 data={localInvoices.length > 0 ? localInvoices : invoices}
-                keyExtractor={item => item._id?.toString() || item.id?.toString() || item.invoiceNumber}
+                keyExtractor={item => {
+                    // Tạo key duy nhất cho mỗi item
+                    const baseId = item._id?.toString() || item.id?.toString() || item.invoiceNumber;
+                    // Thêm hậu tố isRoommate để đảm bảo tính duy nhất
+                    return item.isRoommate ? `${baseId}-roommate` : baseId;
+                }}
                 renderItem={({ item }) => (
                     <InvoiceCard
                         invoice={item}
@@ -738,6 +862,7 @@ const styles = StyleSheet.create({
         marginTop: 10
     },
     headerContainer: {
+        paddingTop: 20,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',

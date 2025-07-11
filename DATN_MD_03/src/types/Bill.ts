@@ -1,4 +1,4 @@
-export type InvoiceStatus = 'draft' | 'issued' | 'paid' | 'overdue' | 'canceled' | 'pending_confirmation';
+export type InvoiceStatus = 'draft' | 'issued' | 'paid' | 'overdue' | 'canceled' | 'pending_confirmation' | 'pending';
 export type PaymentMethod = 'cash' | 'bank_transfer' | 'momo' | 'vnpay' | 'zalopay';
 
 export interface Invoice {
@@ -23,6 +23,10 @@ export interface Invoice {
   items?: InvoiceItem[];
   createdAt?: string;
   updatedAt?: string;
+  month?: number; // Tháng của hóa đơn
+  year?: number; // Năm của hóa đơn
+  paidAt?: string; // Thời điểm đánh dấu đã thanh toán
+  isRoommate?: boolean; // Đánh dấu đây là hóa đơn của người ở cùng
 }
 
 export interface InvoiceItem {

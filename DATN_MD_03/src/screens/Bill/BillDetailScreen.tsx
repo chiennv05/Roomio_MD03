@@ -641,7 +641,7 @@ const BillDetailScreen = () => {
 
 const styles = StyleSheet.create({
     container: {
-        marginTop: 10,
+        
         flex: 1,
         backgroundColor: Colors.backgroud,
     },
@@ -680,6 +680,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     headerContainer: {
+        paddingTop: 20,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',

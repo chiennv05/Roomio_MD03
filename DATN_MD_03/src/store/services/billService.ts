@@ -51,6 +51,7 @@ export const getInvoices = async (
     limit: number = 10,
     status?: string,
     query?: string,
+    signal?: AbortSignal,
 ) => {
     try {
         const queryParams = new URLSearchParams();
@@ -65,8 +66,10 @@ export const getInvoices = async (
             queryParams.append('search', query);
         }
 
-        console.log('API Request to:', `/billing/invoices?${queryParams.toString()}`);
-        console.log('Headers:', { Authorization: `Bearer ${token}` });
+        // Log chỉ trong môi trường dev
+        if (__DEV__) {
+            console.log('API Request to:', `/billing/invoices?${queryParams.toString()}`);
+        }
 
         const response = await api.get<InvoicesResponse>(
             `/billing/invoices?${queryParams.toString()}`,
@@ -74,10 +77,9 @@ export const getInvoices = async (
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
+                signal, // Thêm signal để hủy request
             },
         );
-
-        console.log('Invoices API response:', JSON.stringify(response, null, 2));
 
         if ('isError' in response) {
             throw new Error(response.message);
@@ -99,7 +101,101 @@ export const getInvoices = async (
             }
         };
     } catch (error: any) {
-        console.error('Error fetching invoices:', error.message, error);
+        // Kiểm tra nếu là lỗi do abort
+        if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+            console.log('Request aborted');
+            throw error;
+        }
+        
+        console.error('Error fetching invoices:', error.message);
+        // Trả về dữ liệu rỗng để tránh crash
+        return {
+            success: false,
+            data: {
+                invoices: [],
+                pagination: {
+                    totalDocs: 0,
+                    totalPages: 1,
+                    page: 1,
+                    limit: 10,
+                    hasNextPage: false,
+                    hasPrevPage: false
+                }
+            }
+        };
+    }
+};
+
+// Lấy danh sách hóa đơn của người ở cùng (roommate)
+export const getRoommateInvoices = async (
+    token: string,
+    page: number = 1,
+    limit: number = 10,
+    status?: string,
+    query?: string,
+    signal?: AbortSignal,
+) => {
+    try {
+        const queryParams = new URLSearchParams();
+        queryParams.append('page', page.toString());
+        queryParams.append('limit', limit.toString());
+
+        if (status) {
+            queryParams.append('status', status);
+        }
+
+        if (query) {
+            queryParams.append('search', query);
+        }
+
+        // Log chỉ trong môi trường dev
+        if (__DEV__) {
+            console.log('API Request to:', `/billing/roommate/invoices?${queryParams.toString()}`);
+        }
+
+        const response = await api.get<InvoicesResponse>(
+            `/billing/roommate/invoices?${queryParams.toString()}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                signal, // Thêm signal để hủy request
+            },
+        );
+
+        if ('isError' in response) {
+            throw new Error(response.message);
+        }
+
+        // Đánh dấu tất cả các hóa đơn là của người ở cùng
+        const invoicesWithRoommate = response.data.invoices?.map(invoice => ({
+            ...invoice,
+            isRoommate: true // Luôn đảm bảo thuộc tính này được đặt
+        })) || [];
+
+        // Nếu không có pagination từ API, tạo mặc định
+        return {
+            success: response.data.success,
+            data: {
+                invoices: invoicesWithRoommate,
+                pagination: {
+                    totalDocs: response.data.invoices?.length || 0,
+                    totalPages: 1,
+                    page: page,
+                    limit: limit,
+                    hasNextPage: false,
+                    hasPrevPage: page > 1
+                }
+            }
+        };
+    } catch (error: any) {
+        // Kiểm tra nếu là lỗi do abort
+        if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+            console.log('Request aborted');
+            throw error;
+        }
+        
+        console.error('Error fetching roommate invoices:', error.message);
         // Trả về dữ liệu rỗng để tránh crash
         return {
             success: false,
@@ -188,6 +284,83 @@ export const getInvoiceDetails = async (token: string, invoiceId: string) => {
         };
     } catch (error: any) {
         console.error('Error fetching invoice details:', error.message);
+        throw error;
+    }
+};
+
+// Lấy chi tiết hóa đơn người ở cùng
+export const getRoommateInvoiceDetails = async (token: string, invoiceId: string) => {
+    try {
+        console.log('Fetching roommate invoice details for:', invoiceId);
+
+        const response = await api.get<{ success: boolean; invoice: Invoice; items: any[] }>(
+            `/billing/roommate/invoices/${invoiceId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            },
+        );
+
+        console.log('Roommate invoice details API response structure:', {
+            success: response.data.success,
+            hasInvoice: !!response.data.invoice,
+            hasItems: Array.isArray(response.data.items),
+            invoiceStructure: response.data.invoice ? {
+                hasRoomId: !!response.data.invoice.roomId,
+                roomIdType: response.data.invoice.roomId ? typeof response.data.invoice.roomId : 'undefined',
+                hasTenantId: !!response.data.invoice.tenantId,
+                tenantIdType: response.data.invoice.tenantId ? typeof response.data.invoice.tenantId : 'undefined',
+                hasContractId: !!response.data.invoice.contractId,
+                contractIdType: response.data.invoice.contractId ? typeof response.data.invoice.contractId : 'undefined',
+            } : 'No invoice data'
+        });
+
+        if ('isError' in response) {
+            throw new Error(response.message);
+        }
+
+        // Process the invoice data to ensure consistent format
+        const processedInvoice = { 
+            ...response.data.invoice,
+            isRoommate: true // Đánh dấu đây là hóa đơn của người ở cùng
+        };
+
+        // Thêm items vào invoice nếu có
+        if (response.data.items && Array.isArray(response.data.items)) {
+            processedInvoice.items = response.data.items;
+        }
+
+        // Nếu contractId là object nhưng không có contractInfo, thử lấy lại từ API
+        if (processedInvoice.contractId &&
+            typeof processedInvoice.contractId === 'object' &&
+            !processedInvoice.contractId.contractInfo) {
+
+            console.log('Phát hiện contractId thiếu thông tin contractInfo, cố gắng lấy thêm dữ liệu');
+
+            // Lưu ID của hợp đồng để có thể tham chiếu sau này
+            const contractId = typeof processedInvoice.contractId === 'object' ?
+                processedInvoice.contractId._id : processedInvoice.contractId;
+
+            // Lưu lại thông tin roomId và tenantId để sử dụng cho việc hiển thị
+            // ngay cả khi không thể lấy được thông tin hợp đồng đầy đủ
+            if (typeof processedInvoice.roomId === 'string' && contractId) {
+                console.log('roomId là string, cần hiển thị từ thông tin hợp đồng');
+            }
+
+            if (typeof processedInvoice.tenantId === 'string' && contractId) {
+                console.log('tenantId là string, cần hiển thị từ thông tin hợp đồng');
+            }
+        }
+
+        return {
+            success: response.data.success,
+            data: {
+                invoice: processedInvoice
+            }
+        };
+    } catch (error: any) {
+        console.error('Error fetching roommate invoice details:', error.message);
         throw error;
     }
 };
@@ -755,8 +928,8 @@ export const saveInvoiceAsTemplate = async (token: string, invoiceId: string, te
         console.log('Saving invoice as template:', { invoiceId, templateName });
 
         const response = await api.post<{ success: boolean; message: string; template: any }>(
-            `/billing/invoices/${invoiceId}/save-template`,
-            { name: templateName },
+            `/billing/invoices/${invoiceId}/save-as-template`,
+            { templateName: templateName },
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -883,5 +1056,70 @@ export const applyInvoiceTemplate = async (
         };
     } catch (error: any) {
         throw error;
+    }
+}; 
+
+// Kiểm tra xem người dùng có trong danh sách coTenants không
+export const checkUserIsCoTenant = async (token: string) => {
+    try {
+        // Gọi API để kiểm tra xem người dùng có trong danh sách coTenants không
+        const response = await api.get('/contract/check-cotenant', {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        if ('isError' in response) {
+            throw new Error(response.message || 'Có lỗi xảy ra khi kiểm tra trạng thái người ở cùng');
+        }
+
+        return {
+            success: response.data.success,
+            isCoTenant: response.data.isCoTenant,
+            contracts: response.data.contracts || []
+        };
+    } catch (error: any) {
+        console.error('Error checking coTenant status:', error.message);
+        
+        // Nếu API endpoint chưa tồn tại, trả về một kết quả giả lập dựa trên dữ liệu hiện có
+        // Đây là một giải pháp tạm thời cho đến khi API được triển khai
+        try {
+            // Thử gọi API lấy danh sách hợp đồng
+            const contractsResponse = await api.get('/contract/my-contracts', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            
+            if ('isError' in contractsResponse) {
+                throw new Error(contractsResponse.message);
+            }
+            
+            // Kiểm tra xem người dùng có trong danh sách coTenants của bất kỳ hợp đồng nào không
+            const contracts = contractsResponse.data.data?.contracts || [];
+            let isCoTenant = false;
+            
+            for (const contract of contracts) {
+                if (contract.contractInfo && contract.contractInfo.coTenants && 
+                    Array.isArray(contract.contractInfo.coTenants) && 
+                    contract.contractInfo.coTenants.length > 0) {
+                    isCoTenant = true;
+                    break;
+                }
+            }
+            
+            return {
+                success: true,
+                isCoTenant,
+                contracts
+            };
+        } catch (fallbackError: any) {
+            console.error('Error in fallback coTenant check:', fallbackError.message);
+            return {
+                success: false,
+                isCoTenant: false,
+                contracts: []
+            };
+        }
     }
 }; 

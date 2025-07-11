@@ -2,7 +2,9 @@ import { createSlice, createAsyncThunk, PayloadAction, createAction } from '@red
 import { Invoice } from '../../types/Bill';
 import {
     getInvoices,
+    getRoommateInvoices,
     getInvoiceDetails,
+    getRoommateInvoiceDetails,
     confirmInvoicePayment,
     confirmInvoiceCompletion,
     updateInvoice as updateInvoiceService,
@@ -22,6 +24,7 @@ interface BillState {
     loading: boolean;
     invoices: Invoice[];
     selectedInvoice: Invoice | null;
+    roommateInvoice: Invoice | null; // Thêm state cho hóa đơn người ở cùng
     error: string | null;
     pagination: {
         page: number;
@@ -67,6 +70,7 @@ const initialState: BillState = {
     loading: false,
     invoices: [],
     selectedInvoice: null,
+    roommateInvoice: null, // Khởi tạo giá trị mặc định
     error: null,
     pagination: {
         page: 1,
@@ -117,15 +121,17 @@ export const fetchInvoices = createAsyncThunk(
         limit = 10,
         status,
         query,
+        signal,
     }: {
         token: string;
         page?: number;
         limit?: number;
         status?: string;
         query?: string;
+        signal?: AbortSignal;
     }, { rejectWithValue }) => {
         try {
-            const response = await getInvoices(token, page, limit, status, query);
+            const response = await getInvoices(token, page, limit, status, query, signal);
 
             if (!response.success) {
                 throw new Error('Không thể tải danh sách hóa đơn');
@@ -136,7 +142,66 @@ export const fetchInvoices = createAsyncThunk(
                 pagination: response.data.pagination,
             };
         } catch (err: any) {
+            if (err.name === 'AbortError') {
+                return rejectWithValue('Request was cancelled');
+            }
             return rejectWithValue(err.message || 'Không thể tải danh sách hóa đơn');
+        }
+    },
+);
+
+// Thunk để lấy danh sách hóa đơn của người ở cùng
+export const fetchRoommateInvoices = createAsyncThunk(
+    'bill/fetchRoommateInvoices',
+    async ({
+        token,
+        page = 1,
+        limit = 10,
+        status,
+        query,
+        userId, // Thêm userId vào tham số
+        signal,
+    }: {
+        token: string;
+        page?: number;
+        limit?: number;
+        status?: string;
+        query?: string;
+        userId: string; // ID của người dùng hiện tại
+        signal?: AbortSignal;
+    }, { rejectWithValue }) => {
+        try {
+            const response = await getRoommateInvoices(token, page, limit, status, query, signal);
+
+            if (!response.success) {
+                throw new Error('Không thể tải danh sách hóa đơn người ở cùng');
+            }
+
+            // Lọc hóa đơn người ở cùng dựa trên userId và coTenants
+            const filteredInvoices = response.data.invoices.filter(invoice => {
+                // Kiểm tra nếu invoice có contractId và contractInfo
+                if (invoice.contractId && 
+                    typeof invoice.contractId === 'object' && 
+                    invoice.contractId.contractInfo && 
+                    invoice.contractId.contractInfo.coTenants) {
+                    
+                    // Kiểm tra xem userId có trong danh sách coTenants không
+                    return invoice.contractId.contractInfo.coTenants.some(
+                        (coTenant: any) => coTenant.userId === userId
+                    );
+                }
+                return false; // Nếu không có thông tin hợp đồng hoặc coTenants, không hiển thị
+            });
+
+            return {
+                invoices: filteredInvoices,
+                pagination: response.data.pagination,
+            };
+        } catch (err: any) {
+            if (err.name === 'AbortError') {
+                return rejectWithValue('Request was cancelled');
+            }
+            return rejectWithValue(err.message || 'Không thể tải danh sách hóa đơn người ở cùng');
         }
     },
 );
@@ -155,6 +220,24 @@ export const fetchInvoiceDetails = createAsyncThunk(
             return response.data.invoice;
         } catch (err: any) {
             return rejectWithValue(err.message || 'Không thể tải chi tiết hóa đơn');
+        }
+    },
+);
+
+// Thunk để lấy chi tiết hóa đơn của người ở cùng
+export const fetchRoommateInvoiceDetails = createAsyncThunk(
+    'bill/fetchRoommateInvoiceDetails',
+    async ({ token, invoiceId }: { token: string; invoiceId: string }, { rejectWithValue }) => {
+        try {
+            const response = await getRoommateInvoiceDetails(token, invoiceId);
+
+            if (!response.success) {
+                throw new Error('Không thể tải chi tiết hóa đơn của người ở cùng');
+            }
+
+            return response.data.invoice;
+        } catch (err: any) {
+            return rejectWithValue(err.message || 'Không thể tải chi tiết hóa đơn của người ở cùng');
         }
     },
 );
@@ -482,6 +565,49 @@ const billSlice = createSlice({
                 state.error = action.payload as string;
             })
 
+            // Xử lý fetchRoommateInvoices
+            .addCase(fetchRoommateInvoices.pending, state => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchRoommateInvoices.fulfilled, (state, action) => {
+                state.loading = false;
+                
+                // Kiểm tra và đảm bảo mỗi hóa đơn người ở cùng đều có isRoommate = true
+                // Thêm hậu tố "-roommate" vào _id và id để đảm bảo tính duy nhất
+                const roommateInvoices = action.payload.invoices.map(invoice => ({
+                    ...invoice,
+                    _id: invoice._id ? `${invoice._id}-roommate` : undefined,
+                    id: invoice.id ? `${invoice.id}-roommate` : undefined,
+                    isRoommate: true // Luôn đảm bảo thuộc tính này được đặt
+                }));
+                
+                // Kiểm tra khi nối thêm dữ liệu mới (trang > 1)
+                if (action.meta.arg.page && action.meta.arg.page > 1) {
+                    // Nối thêm dữ liệu mới vào danh sách hiện tại
+                    // Lọc ra các hóa đơn người ở cùng hiện tại để tránh trùng lặp
+                    const currentInvoices = state.invoices.filter(invoice => !invoice.isRoommate);
+                    state.invoices = [...currentInvoices, ...roommateInvoices];
+                } else {
+                    // Trang đầu tiên: giữ lại các hóa đơn thông thường và thêm hóa đơn người ở cùng
+                    const regularInvoices = state.invoices.filter(invoice => !invoice.isRoommate);
+                    state.invoices = [...regularInvoices, ...roommateInvoices];
+                }
+
+                state.pagination = {
+                    page: action.payload.pagination.page,
+                    limit: action.payload.pagination.limit,
+                    totalDocs: action.payload.pagination.totalDocs,
+                    totalPages: action.payload.pagination.totalPages,
+                    hasNextPage: action.payload.pagination.hasNextPage,
+                    hasPrevPage: action.payload.pagination.hasPrevPage,
+                };
+            })
+            .addCase(fetchRoommateInvoices.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+
             // Xử lý fetchInvoiceDetails
             .addCase(fetchInvoiceDetails.pending, state => {
                 state.loading = true;
@@ -494,6 +620,26 @@ const billSlice = createSlice({
             .addCase(fetchInvoiceDetails.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
+            })
+
+            // Xử lý fetchRoommateInvoiceDetails
+            .addCase(fetchRoommateInvoiceDetails.pending, state => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchRoommateInvoiceDetails.fulfilled, (state, action) => {
+                state.loading = false;
+                // Đảm bảo hóa đơn của người ở cùng được đánh dấu đúng
+                state.roommateInvoice = {
+                    ...action.payload,
+                    isRoommate: true
+                };
+                console.log("Roommate invoice details loaded:", state.roommateInvoice._id);
+            })
+            .addCase(fetchRoommateInvoiceDetails.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+                state.roommateInvoice = null; // Đặt lại state khi có lỗi
             })
 
             // Xử lý confirmPayment

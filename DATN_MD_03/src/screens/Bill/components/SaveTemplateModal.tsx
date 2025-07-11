@@ -16,15 +16,38 @@ interface SaveTemplateModalProps {
     onClose: () => void;
     onSave: (templateName: string) => void;
     loading: boolean;
+    existingTemplateNames?: string[]; // Thêm mảng tên mẫu đã tồn tại
+    saveError?: string; // Thêm lỗi từ server khi lưu
+    maxLength?: number; // Độ dài tối đa cho tên mẫu
 }
 
-const SaveTemplateModal = ({ visible, onClose, onSave, loading }: SaveTemplateModalProps) => {
+const SaveTemplateModal = ({ 
+    visible, 
+    onClose, 
+    onSave, 
+    loading, 
+    existingTemplateNames = [],
+    saveError,
+    maxLength = 50 
+}: SaveTemplateModalProps) => {
     const [templateName, setTemplateName] = useState('');
     const [error, setError] = useState('');
 
     const handleSave = () => {
         if (!templateName.trim()) {
             setError('Vui lòng nhập tên mẫu hóa đơn');
+            return;
+        }
+
+        // Kiểm tra độ dài tên mẫu
+        if (templateName.trim().length > maxLength) {
+            setError(`Tên mẫu không được quá ${maxLength} ký tự`);
+            return;
+        }
+
+        // Kiểm tra tên mẫu đã tồn tại chưa
+        if (existingTemplateNames.includes(templateName.trim())) {
+            setError('Tên mẫu đã tồn tại, vui lòng chọn tên khác');
             return;
         }
 
@@ -58,9 +81,14 @@ const SaveTemplateModal = ({ visible, onClose, onSave, loading }: SaveTemplateMo
                                 setError('');
                             }}
                             placeholder="Nhập tên mẫu hóa đơn"
+                            maxLength={maxLength}
                             autoFocus
                         />
                         {error ? <Text style={styles.errorText}>{error}</Text> : null}
+                        {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}
+                        <Text style={styles.charCounter}>
+                            {templateName.length}/{maxLength}
+                        </Text>
                     </View>
 
                     <View style={styles.buttonContainer}>
@@ -145,6 +173,12 @@ const styles = StyleSheet.create({
         color: Colors.red,
         fontSize: 12,
         marginTop: 5,
+    },
+    charCounter: {
+        fontSize: 12,
+        color: Colors.mediumGray,
+        textAlign: 'right',
+        marginTop: 4,
     },
     buttonContainer: {
         flexDirection: 'row',

@@ -12,6 +12,7 @@ export type RootStackParamList = {
   LandlordRoom: undefined;
   Bill: undefined;
   BillDetails: { invoiceId: string };
+  RoommateInvoiceDetails: { invoiceId: string }; // Thêm route mới cho chi tiết hóa đơn người ở cùng
   CreateInvoice: { contract?: any };
   EditInvoice: { invoiceId: string };
   InvoiceTemplates: undefined;

@@ -2295,7 +2295,7 @@ const EditInvoiceScreen = () => {
 
 const styles = StyleSheet.create({
     container: {
-        marginTop: 10,
+        
         flex: 1,
         backgroundColor: Colors.backgroud,
     },
@@ -2329,7 +2329,7 @@ const styles = StyleSheet.create({
         color: Colors.white,
         fontWeight: 'bold',
     },
-    headerContainer: {
+    headerContainer: {paddingTop: 20,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',

@@ -11,7 +11,12 @@ export const Colors = {
   darkGray: '#444444',
 
   primaryGreen: '#86B600',
-
+  
+  primary: '#86B600', // Alias for primaryGreen
+  success: '#5EB600', // Alias for darkGreen
+  warning: '#FFC107', // Amber color
+  error: '#FF6B6B', // Alias for lightRed
+  info: '#2196F3', // Blue color
 
   cardBg: '#FFFFFF',
   textGray: '#A0A0A0',
