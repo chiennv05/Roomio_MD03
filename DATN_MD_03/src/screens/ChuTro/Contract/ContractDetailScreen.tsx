@@ -26,6 +26,8 @@ import {
   handlePickImages,
   handleViewImage,
 } from './utils/contractEvents';
+import {getPriceUnitLabel} from './utils/getPriceUnitLabel';
+import InfoRow from './components/InfoRow';
 
 // Format tiền tệ
 const formatCurrency = (amount: number) => {
@@ -179,112 +181,84 @@ const ContractDetailScreen = () => {
         {/* Thông tin phòng */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Thông tin phòng</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Số phòng:</Text>
-            <Text style={styles.value}>{contract.contractInfo.roomNumber}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Địa chỉ:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.roomAddress}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Diện tích:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.roomArea} m²
-            </Text>
-          </View>
+          <InfoRow label="Tên phòng" value={contract.contractInfo.roomNumber} />
+          <InfoRow label="Địa chỉ" value={contract.contractInfo.roomAddress} />
+          <InfoRow
+            label="Diện tích"
+            value={`${contract.contractInfo.roomArea} m²`}
+          />
         </View>
 
         {/* Thông tin hợp đồng */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Thông tin hợp đồng</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Ngày bắt đầu:</Text>
-            <Text style={styles.value}>
-              {formatFullDate(contract.contractInfo.startDate)}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Ngày kết thúc:</Text>
-            <Text style={styles.value}>
-              {formatFullDate(contract.contractInfo.endDate)}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Thời hạn:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.contractTerm} tháng
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Giá thuê:</Text>
-            <Text style={styles.value}>
-              {formatCurrency(contract.contractInfo.monthlyRent)}/tháng
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Tiền đặt cọc:</Text>
-            <Text style={styles.value}>
-              {formatCurrency(contract.contractInfo.deposit)}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Số người tối đa:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.maxOccupancy} người
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Số người hiện tại:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.tenantCount} người
-            </Text>
-          </View>
+
+          <InfoRow
+            label="Ngày bắt đầu"
+            value={formatFullDate(contract.contractInfo.startDate)}
+          />
+          <InfoRow
+            label="Ngày kết thúc"
+            value={formatFullDate(contract.contractInfo.endDate)}
+          />
+          <InfoRow
+            label="Thời hạn"
+            value={`${contract.contractInfo.contractTerm} tháng`}
+          />
+          <InfoRow
+            label="Giá thuê"
+            value={`${formatCurrency(contract.contractInfo.monthlyRent)}/tháng`}
+          />
+          <InfoRow
+            label="Tiền đặt cọc"
+            value={formatCurrency(contract.contractInfo.deposit)}
+          />
+          <InfoRow
+            label="Số người tối đa"
+            value={`${contract.contractInfo.maxOccupancy} người`}
+          />
+          <InfoRow
+            label="Số người hiện tại"
+            value={`${contract.contractInfo.tenantCount} người`}
+          />
         </View>
 
         {/* Dịch vụ */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Dịch vụ</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Tiền điện:</Text>
-            <Text style={styles.value}>
-              {formatCurrency(contract.contractInfo.serviceFees.electricity)}/
-              {contract.contractInfo.serviceFeeConfig.electricity === 'perUsage'
-                ? 'số'
-                : 'phòng'}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Tiền nước:</Text>
-            <Text style={styles.value}>
-              {formatCurrency(contract.contractInfo.serviceFees.water)}/
-              {contract.contractInfo.serviceFeeConfig.water === 'perUsage'
-                ? 'khối'
-                : 'phòng'}
-            </Text>
-          </View>
+
+          <InfoRow
+            label="Tiền điện"
+            value={`${formatCurrency(
+              contract.contractInfo.serviceFees.electricity,
+            )}/${getPriceUnitLabel(
+              contract.contractInfo.serviceFeeConfig.electricity,
+              'electricity',
+            )}`}
+          />
+
+          <InfoRow
+            label="Tiền nước"
+            value={`${formatCurrency(
+              contract.contractInfo.serviceFees.water,
+            )}/${getPriceUnitLabel(
+              contract.contractInfo.serviceFeeConfig.water,
+              'water',
+            )}`}
+          />
 
           {/* Dịch vụ tùy chọn */}
           {contract.contractInfo.customServices &&
-            contract.contractInfo.customServices.length > 0 && (
-              <>
-                {contract.contractInfo.customServices.map(service => (
-                  <View key={service._id} style={styles.infoRow}>
-                    <Text style={styles.label}>{service.name}:</Text>
-                    <Text style={styles.value}>
-                      {formatCurrency(service.price)}/
-                      {service.priceType === 'perPerson'
-                        ? 'người'
-                        : service.priceType === 'perRoom'
-                        ? 'phòng'
-                        : 'lần sử dụng'}
-                    </Text>
-                  </View>
-                ))}
-              </>
-            )}
+            contract.contractInfo.customServices.length > 0 &&
+            contract.contractInfo.customServices.map(service => (
+              <InfoRow
+                key={service._id}
+                label={service.name}
+                value={`${formatCurrency(service.price)}/${getPriceUnitLabel(
+                  service.priceType,
+                )}`}
+              />
+            ))}
         </View>
 
         {/* Nội thất */}
@@ -314,57 +288,36 @@ const ContractDetailScreen = () => {
         {/* Thông tin người thuê */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Thông tin người thuê</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Họ tên:</Text>
-            <Text style={styles.value}>{contract.contractInfo.tenantName}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Số điện thoại:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.tenantPhone}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Email:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.tenantEmail}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>CCCD:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.tenantIdentityNumber}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Địa chỉ:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.tenantAddress}
-            </Text>
-          </View>
+
+          <InfoRow label="Họ tên" value={contract.contractInfo.tenantName} />
+          <InfoRow
+            label="Số điện thoại"
+            value={contract.contractInfo.tenantPhone}
+          />
+          <InfoRow label="Email" value={contract.contractInfo.tenantEmail} />
+          <InfoRow
+            label="CCCD"
+            value={contract.contractInfo.tenantIdentityNumber}
+          />
+          <InfoRow
+            label="Địa chỉ"
+            value={contract.contractInfo.tenantAddress}
+          />
         </View>
 
         {/* Thông tin chủ trọ */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Thông tin chủ trọ</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Họ tên:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.landlordName}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Số điện thoại:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.landlordPhone}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>CCCD:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.landlordIdentityNumber}
-            </Text>
-          </View>
+
+          <InfoRow label="Họ tên" value={contract.contractInfo.landlordName} />
+          <InfoRow
+            label="Số điện thoại"
+            value={contract.contractInfo.landlordPhone}
+          />
+          <InfoRow
+            label="CCCD"
+            value={contract.contractInfo.landlordIdentityNumber}
+          />
         </View>
 
         {/* Người ở cùng */}
@@ -372,21 +325,13 @@ const ContractDetailScreen = () => {
           contract.contractInfo.coTenants.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Người ở cùng</Text>
+
               {contract.contractInfo.coTenants.map((coTenant, index) => (
                 <View key={coTenant._id || index} style={styles.coTenantItem}>
-                  <View style={styles.infoRow}>
-                    <Text style={styles.label}>Tên:</Text>
-                    <Text style={styles.value}>{coTenant.username}</Text>
-                  </View>
-                  <View style={styles.infoRow}>
-                    <Text style={styles.label}>Email:</Text>
-                    <Text style={styles.value}>{coTenant.email}</Text>
-                  </View>
+                  <InfoRow label="Tên" value={coTenant.username} />
+                  <InfoRow label="Email" value={coTenant.email} />
                   {coTenant.phone && (
-                    <View style={styles.infoRow}>
-                      <Text style={styles.label}>Điện thoại:</Text>
-                      <Text style={styles.value}>{coTenant.phone}</Text>
-                    </View>
+                    <InfoRow label="Điện thoại" value={coTenant.phone} />
                   )}
                 </View>
               ))}

@@ -65,7 +65,8 @@ export default function MapScreen({route}: MapScreenProps) {
     address?: string;
   } | null>(null);
 
-  const [isLoadingCurrentLocation, setIsLoadingCurrentLocation] = useState(false);
+  const [isLoadingCurrentLocation, setIsLoadingCurrentLocation] =
+    useState(false);
   const [distance, setDistance] = useState<string>('');
   const [isCalculatingDistance, setIsCalculatingDistance] = useState(false);
 
@@ -194,9 +195,9 @@ export default function MapScreen({route}: MapScreenProps) {
         latitude: lat,
         longitude: lon,
         address: item.display_name,
-        type: 'current' as const
+        type: 'current' as const,
       };
-      
+
       setMarkers(prev => {
         const roomMarker = prev.find(m => m.type === 'room');
         return roomMarker ? [roomMarker, currentMarker] : [currentMarker];
@@ -290,19 +291,27 @@ export default function MapScreen({route}: MapScreenProps) {
   const formatAddress = (fullAddress: string) => {
     // Tách địa chỉ thành các phần
     const parts = fullAddress.split(',').map(part => part.trim());
-    
-    let houseNumber = '';  // Số nhà
-    let street = '';       // Tên phố
-    let district = '';     // Quận
-    let city = '';        // Thành phố
+
+    let houseNumber = ''; // Số nhà
+    let street = ''; // Tên phố
+    let district = ''; // Quận
+    let city = ''; // Thành phố
 
     // Xác định thành phố dựa trên địa chỉ
     const lowerAddress = fullAddress.toLowerCase();
     if (lowerAddress.includes('hà nội') || lowerAddress.includes('hanoi')) {
       city = 'Thành phố Hà Nội';
-    } else if (lowerAddress.includes('hồ chí minh') || lowerAddress.includes('ho chi minh') || lowerAddress.includes('hcm') || lowerAddress.includes('sài gòn')) {
+    } else if (
+      lowerAddress.includes('hồ chí minh') ||
+      lowerAddress.includes('ho chi minh') ||
+      lowerAddress.includes('hcm') ||
+      lowerAddress.includes('sài gòn')
+    ) {
       city = 'Thành phố Hồ Chí Minh';
-    } else if (lowerAddress.includes('đà nẵng') || lowerAddress.includes('da nang')) {
+    } else if (
+      lowerAddress.includes('đà nẵng') ||
+      lowerAddress.includes('da nang')
+    ) {
       city = 'Thành phố Đà Nẵng';
     } else {
       // Mặc định là Hà Nội nếu không tìm thấy
@@ -312,13 +321,13 @@ export default function MapScreen({route}: MapScreenProps) {
     // Duyệt qua các phần của địa chỉ
     for (const part of parts) {
       const lowerPart = part.toLowerCase();
-      
+
       // Tìm quận/huyện
       if (lowerPart.includes('quận') || lowerPart.includes('huyện')) {
         district = part;
         continue;
       }
-      
+
       // Tìm số nhà và tên phố
       if (/\d+/.test(part) && !street) {
         // Nếu phần này chứa số và chưa có tên phố
@@ -331,9 +340,12 @@ export default function MapScreen({route}: MapScreenProps) {
         }
         continue;
       }
-      
+
       // Nếu phần này chứa từ "phố" hoặc "đường" và chưa có tên phố
-      if ((lowerPart.includes('phố') || lowerPart.includes('đường')) && !street) {
+      if (
+        (lowerPart.includes('phố') || lowerPart.includes('đường')) &&
+        !street
+      ) {
         street = part;
       }
     }
@@ -355,10 +367,12 @@ export default function MapScreen({route}: MapScreenProps) {
     // Nếu không tìm được quận/huyện, thử tìm trong các phần còn lại
     if (!district) {
       for (const part of parts) {
-        if (!part.toLowerCase().includes('thành phố') && 
-            !part.toLowerCase().includes('tỉnh') &&
-            part !== street &&
-            part !== houseNumber) {
+        if (
+          !part.toLowerCase().includes('thành phố') &&
+          !part.toLowerCase().includes('tỉnh') &&
+          part !== street &&
+          part !== houseNumber
+        ) {
           district = part;
           break;
         }
@@ -366,13 +380,13 @@ export default function MapScreen({route}: MapScreenProps) {
     }
 
     // Đảm bảo có đủ thông tin tối thiểu
-    if (!houseNumber) houseNumber = "1";
-    if (!street) street = "Chưa có tên đường";
-    if (!district) district = "Chưa có quận/huyện";
+    if (!houseNumber) houseNumber = '1';
+    if (!street) street = 'Chưa có tên đường';
+    if (!district) district = 'Chưa có quận/huyện';
 
     // Tạo địa chỉ theo format mong muốn
     const formattedParts = [];
-    
+
     if (houseNumber) formattedParts.push(houseNumber);
     if (street) formattedParts.push(street);
     if (district) formattedParts.push(district);
@@ -385,7 +399,7 @@ export default function MapScreen({route}: MapScreenProps) {
     if (!isSelectMode) return;
 
     const {latitude, longitude} = e.nativeEvent.coordinate;
-    
+
     try {
       // Lấy địa chỉ từ tọa độ đã chọn
       const fullAddress = await reverseGeocoding(latitude, longitude);
@@ -394,7 +408,7 @@ export default function MapScreen({route}: MapScreenProps) {
       setSelectedLocation({
         latitude,
         longitude,
-        address: formattedAddress
+        address: formattedAddress,
       });
 
       // Trong case 2, chỉ hiển thị 1 marker đỏ cho vị trí đã chọn
@@ -404,9 +418,9 @@ export default function MapScreen({route}: MapScreenProps) {
           latitude,
           longitude,
           address: formattedAddress,
-          type: 'current' as const
+          type: 'current' as const,
         };
-        
+
         setMarkers(prev => {
           const roomMarker = prev.find(m => m.type === 'room');
           return roomMarker ? [roomMarker, currentMarker] : [currentMarker];
@@ -415,11 +429,11 @@ export default function MapScreen({route}: MapScreenProps) {
     } catch (error) {
       console.error('Lỗi khi lấy địa chỉ:', error);
       const addressText = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-      
+
       setSelectedLocation({
         latitude,
         longitude,
-        address: addressText
+        address: addressText,
       });
 
       if (isSelectMode) {
@@ -428,9 +442,9 @@ export default function MapScreen({route}: MapScreenProps) {
           latitude,
           longitude,
           address: addressText,
-          type: 'current' as const
+          type: 'current' as const,
         };
-        
+
         setMarkers(prev => {
           const roomMarker = prev.find(m => m.type === 'room');
           return roomMarker ? [roomMarker, currentMarker] : [currentMarker];
@@ -486,7 +500,7 @@ export default function MapScreen({route}: MapScreenProps) {
           setSelectedLocation({
             latitude,
             longitude,
-            address: formattedAddress
+            address: formattedAddress,
           });
 
           const currentMarker = {
@@ -494,22 +508,21 @@ export default function MapScreen({route}: MapScreenProps) {
             latitude,
             longitude,
             address: formattedAddress,
-            type: 'current' as const
+            type: 'current' as const,
           };
 
           setMarkers(prev => {
             const roomMarker = prev.find(m => m.type === 'room');
             return roomMarker ? [roomMarker, currentMarker] : [currentMarker];
           });
-
         } catch (error) {
           console.error('Lỗi khi lấy địa chỉ:', error);
           const addressText = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-          
+
           setSelectedLocation({
             latitude,
             longitude,
-            address: addressText
+            address: addressText,
           });
 
           const currentMarker = {
@@ -517,7 +530,7 @@ export default function MapScreen({route}: MapScreenProps) {
             latitude,
             longitude,
             address: addressText,
-            type: 'current' as const
+            type: 'current' as const,
           };
 
           setMarkers(prev => {
@@ -620,13 +633,12 @@ export default function MapScreen({route}: MapScreenProps) {
             }}>
             <Image
               source={{
-                uri: marker.type === 'room' 
-                  ? Icons.IconMaker 
-                  : Icons.IconMyMarker
+                uri:
+                  marker.type === 'room' ? Icons.IconMaker : Icons.IconMyMarker,
               }}
               style={[
                 styles.markerIcon,
-                marker.type === 'current' && styles.currentLocationMarker
+                marker.type === 'current' && styles.currentLocationMarker,
               ]}
               resizeMode="contain"
             />
@@ -663,86 +675,89 @@ export default function MapScreen({route}: MapScreenProps) {
       </TouchableOpacity>
 
       {/* Bottom Container */}
-      {isSelectMode ? (
-        // Hiển thị địa điểm đã chọn cho chế độ chọn địa điểm
-        selectedLocation && (
-          <View style={styles.bottomContainer}>
-            <View style={styles.selectedLocationContainer}>
-              <Text style={styles.selectedLocationTitle}>Địa điểm bạn đã chọn</Text>
-              <Text style={styles.selectedLocationAddress} numberOfLines={2}>
-                {selectedLocation.address || 'Chưa có địa chỉ'}
-              </Text>
-            </View>
-            <ItemButtonConfirm
-              title="Xác nhận"
-              onPress={handleConfirmLocation}
-              icon={Icons.IconRemoveWhite}
-              onPressIcon={handleGoBack}
-            />
-          </View>
-        )
-      ) : (
-        // Hiển thị thông tin phòng cho chế độ xem chi tiết
-        selectedLocation && route.params?.roomDetail && (
-          <View style={styles.bottomContainer}>
-            <TouchableOpacity
-              style={styles.roomCard}
-              onPress={handleNavigateToDetail}
-              activeOpacity={0.8}>
-              {route.params.roomDetail.photos &&
-              route.params.roomDetail.photos.length > 0 ? (
-                <View style={styles.roomImage}>
-                  <Image
-                    source={{uri: getImageUrl(route.params.roomDetail.photos[0])}}
-                    style={[styles.roomImage, {position: 'absolute'}]}
-                    resizeMode="cover"
-                    onError={() => console.log('Image load error')}
-                    defaultSource={{uri: Icons.IconHome}}
-                  />
-                </View>
-              ) : (
-                <View style={[styles.roomImage, styles.roomImagePlaceholder]}>
-                  <Image
-                    source={{uri: Icons.IconHome}}
-                    style={styles.placeholderIcon}
-                  />
-                </View>
-              )}
-              <View style={styles.roomInfo}>
-                <Text style={styles.roomName} numberOfLines={2}>
-                  {route.params.roomDetail.description || 'Phòng trọ'}
+      {isSelectMode
+        ? // Hiển thị địa điểm đã chọn cho chế độ chọn địa điểm
+          selectedLocation && (
+            <View style={styles.bottomContainer}>
+              <View style={styles.selectedLocationContainer}>
+                <Text style={styles.selectedLocationTitle}>
+                  Địa điểm bạn đã chọn
                 </Text>
-                <Text style={styles.roomPrice}>
-                  Từ{' '}
-                  {(route.params.roomDetail.rentPrice || 0).toLocaleString(
-                    'vi-VN',
-                  )}
-                  đ/tháng
+                <Text style={styles.selectedLocationAddress} numberOfLines={2}>
+                  {selectedLocation.address || 'Chưa có địa chỉ'}
                 </Text>
-                <View style={styles.locationRow}>
-                  <Image
-                    source={{uri: Icons.IconLocation}}
-                    style={styles.locationIcon}
-                  />
-                  <Text style={styles.locationText} numberOfLines={1}>
-                    {route.params.roomDetail.location?.addressText ||
-                      'Đang cập nhật địa chỉ'}
-                  </Text>
-                </View>
-                <View style={styles.roomStats}>
-                  <Image
-                    source={{uri: Icons.IconPersonDefault}}
-                    style={styles.statsIcon}
-                  />
-                  <Text style={styles.statsText}>
-                    Số người {route.params.roomDetail.maxOccupancy || 0} 
-                  </Text>
-                </View>
               </View>
-            </TouchableOpacity>
-          </View>
-        )
-      )}
+              <ItemButtonConfirm
+                title="Xác nhận"
+                onPress={handleConfirmLocation}
+                icon={Icons.IconRemoveWhite}
+                onPressIcon={handleGoBack}
+              />
+            </View>
+          )
+        : // Hiển thị thông tin phòng cho chế độ xem chi tiết
+          selectedLocation &&
+          route.params?.roomDetail && (
+            <View style={styles.bottomContainer}>
+              <TouchableOpacity
+                style={styles.roomCard}
+                onPress={handleNavigateToDetail}
+                activeOpacity={0.8}>
+                {route.params.roomDetail.photos &&
+                route.params.roomDetail.photos.length > 0 ? (
+                  <View style={styles.roomImage}>
+                    <Image
+                      source={{
+                        uri: getImageUrl(route.params.roomDetail.photos[0]),
+                      }}
+                      style={[styles.roomImage, {position: 'absolute'}]}
+                      resizeMode="cover"
+                      onError={() => console.log('Image load error')}
+                      defaultSource={{uri: Icons.IconHome}}
+                    />
+                  </View>
+                ) : (
+                  <View style={[styles.roomImage, styles.roomImagePlaceholder]}>
+                    <Image
+                      source={{uri: Icons.IconHome}}
+                      style={styles.placeholderIcon}
+                    />
+                  </View>
+                )}
+                <View style={styles.roomInfo}>
+                  <Text style={styles.roomName} numberOfLines={2}>
+                    {route.params.roomDetail.description || 'Phòng trọ'}
+                  </Text>
+                  <Text style={styles.roomPrice}>
+                    Từ{' '}
+                    {(route.params.roomDetail.rentPrice || 0).toLocaleString(
+                      'vi-VN',
+                    )}
+                    đ/tháng
+                  </Text>
+                  <View style={styles.locationRow}>
+                    <Image
+                      source={{uri: Icons.IconLocation}}
+                      style={styles.locationIcon}
+                    />
+                    <Text style={styles.locationText} numberOfLines={1}>
+                      {route.params.roomDetail.location?.addressText ||
+                        'Đang cập nhật địa chỉ'}
+                    </Text>
+                  </View>
+                  <View style={styles.roomStats}>
+                    <Image
+                      source={{uri: Icons.IconPersonDefault}}
+                      style={styles.statsIcon}
+                    />
+                    <Text style={styles.statsText}>
+                      Số người {route.params.roomDetail.maxOccupancy || 0}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </View>
+          )}
     </View>
   );
 }
