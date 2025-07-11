@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
+  FlatList,
 } from 'react-native';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -21,13 +22,14 @@ import {AppDispatch, RootState} from '../../../store';
 import {fetchContractDetail} from '../../../store/slices/contractSlice';
 import {getContractStatusInfo} from './components/ContractItem';
 import {UIHeader} from '../MyRoom/components';
-import {
-  handleViewPDF,
-  handlePickImages,
-  handleViewImage,
-} from './utils/contractEvents';
+import {handleViewPDF, handlePickImages} from './utils/contractEvents';
 import {getPriceUnitLabel} from './utils/getPriceUnitLabel';
 import InfoRow from './components/InfoRow';
+import ModalLoading from '../AddRoom/components/ModalLoading';
+import ModalShowImageContract from './components/ModalShowImageContract';
+import ItemTitle from '../AddRoom/components/ItemTitle ';
+import ItemImage from './components/ItemImage';
+import {useContractImageActions} from '../AddRoom/hooks/useContractImageActions';
 
 // Format tiền tệ
 const formatCurrency = (amount: number) => {
@@ -55,6 +57,8 @@ const ContractDetailScreen = () => {
   const route = useRoute<RouteProp<RootStackParamList, 'ContractDetail'>>();
   const dispatch = useDispatch<AppDispatch>();
   const {contractId} = route.params;
+  const {onDeleteAllImages, onDeleteImage} =
+    useContractImageActions(contractId);
 
   const {
     selectedContract,
@@ -63,6 +67,9 @@ const ContractDetailScreen = () => {
     uploadingImages,
   } = useSelector((state: RootState) => state.contract);
 
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [isVisibleImage, setIsVisibleImage] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   useEffect(() => {
     dispatch(fetchContractDetail(contractId));
   }, [contractId, dispatch]);
@@ -74,7 +81,13 @@ const ContractDetailScreen = () => {
   // Event Handlers
   const onViewPDF = () => {
     if (selectedContract) {
-      handleViewPDF(selectedContract, contractId, dispatch, navigation);
+      handleViewPDF(
+        selectedContract,
+        contractId,
+        dispatch,
+        navigation,
+        setGeneratingPDF,
+      );
     }
   };
 
@@ -83,9 +96,12 @@ const ContractDetailScreen = () => {
   };
 
   const onViewImage = (index: number) => {
-    handleViewImage(index);
+    setSelectedImageIndex(index);
+    setIsVisibleImage(true);
   };
-
+  const onDeleteOneImage = (fileName: string) => {
+    onDeleteImage(fileName);
+  };
   // Hiển thị màn hình loading
   if (selectedContractLoading) {
     return (
@@ -147,14 +163,17 @@ const ContractDetailScreen = () => {
   }
 
   const handleGoUpdateContract = () => {
-    console.log('updta');
     navigation.navigate('UpdateContract', {
       contract: selectedContract,
     });
   };
+
   const contract = selectedContract;
+  const imageList = contract.signedContractImages || [];
   const statusInfo = getContractStatusInfo(contract.status);
-  const canUploadImages = contract.status === 'pending_signature';
+  const canUploadImages =
+    contract.status === 'pending_signature' ||
+    contract.status === 'pending_approval';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -342,24 +361,25 @@ const ContractDetailScreen = () => {
         {contract.signedContractImages &&
           contract.signedContractImages.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Ảnh hợp đồng đã ký</Text>
-              <ScrollView
+              <ItemTitle
+                title="Ảnh hợp đồng đã ký"
+                icon={Icons.IconAdd}
+                onPress={onDeleteAllImages}
+              />
+              <FlatList
+                data={contract.signedContractImages}
+                keyExtractor={(_, index) => `signed-image-${index}`}
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.imageContainer}>
-                {contract.signedContractImages.map((imageUrl, index) => (
-                  <TouchableOpacity
-                    key={`signed-image-${index}`}
-                    style={styles.imageWrapper}
-                    onPress={() => onViewImage(index)}>
-                    <Image
-                      source={{uri: imageUrl}}
-                      style={styles.contractImage}
-                      resizeMode="cover"
-                    />
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+                renderItem={({item, index}) => (
+                  <ItemImage
+                    imageUrl={item}
+                    index={index}
+                    onViewImage={onViewImage}
+                    onDelete={onDeleteOneImage}
+                  />
+                )}
+              />
             </View>
           )}
 
@@ -428,6 +448,13 @@ const ContractDetailScreen = () => {
         </TouchableOpacity>
 
         <View style={styles.bottomSpace} />
+        <ModalLoading loading={true} visible={generatingPDF} />
+        <ModalShowImageContract
+          visible={isVisibleImage}
+          images={imageList}
+          initialIndex={selectedImageIndex}
+          onClose={() => setIsVisibleImage(false)}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -572,16 +599,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     paddingVertical: verticalScale(8),
   },
-  imageWrapper: {
-    marginRight: scale(10),
-  },
-  contractImage: {
-    width: scale(200),
-    height: scale(280),
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.lightGray,
-  },
+
   historyItem: {
     marginBottom: verticalScale(12),
     padding: scale(10),

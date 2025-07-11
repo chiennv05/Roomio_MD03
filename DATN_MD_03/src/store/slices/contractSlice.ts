@@ -6,10 +6,14 @@ import {
   uploadSignedContractImage,
   createContractFromNotification,
   updateContract,
+  createNewContract,
+  deleteSignedImages,
+  deleteSignedImage,
 } from '../services/contractApi';
 import {
   Contract,
   CreateContractPayload,
+  CreateContractPayloadWithoutNotification,
   Pagination,
   UpdateContractPayload,
 } from '../../types';
@@ -67,7 +71,18 @@ export const createContractFromNotificationThunk = createAsyncThunk(
     }
   },
 );
-
+// Tạo hợp đồng mới không qua thông báo
+export const createNewContractThunk = createAsyncThunk(
+  'contract/createNewContract',
+  async (data: CreateContractPayloadWithoutNotification, {rejectWithValue}) => {
+    try {
+      const response = await createNewContract(data);
+      return response;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Không thể tạo hợp đồng mới');
+    }
+  },
+);
 // Lấy chi tiết hợp đồng
 export const fetchContractDetail = createAsyncThunk(
   'contract/fetchContractDetail',
@@ -90,6 +105,7 @@ export const generateContractPDF = createAsyncThunk(
   async (contractId: string, {rejectWithValue}) => {
     try {
       const response = await genContractPDF(contractId);
+      console.log(response);
       return response;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Không thể tạo file PDF hợp đồng');
@@ -103,7 +119,11 @@ export const generateContractPDF = createAsyncThunk(
 export const uploadContractImages = createAsyncThunk(
   'contract/uploadContractImages',
   async (
-    {contractId, images}: {contractId: string; images: ImageFile[]},
+    {
+      contractId,
+      images,
+      append,
+    }: {contractId: string; images: ImageFile[]; append: boolean},
     {rejectWithValue, getState},
   ) => {
     console.log('Upload thunk called with:', {contractId, images});
@@ -114,10 +134,11 @@ export const uploadContractImages = createAsyncThunk(
 
       if (
         !selectedContract ||
-        selectedContract.status !== 'pending_signature'
+        (selectedContract.status !== 'pending_signature' &&
+          selectedContract.status !== 'pending_approval')
       ) {
         return rejectWithValue(
-          'Chỉ có thể upload ảnh khi hợp đồng đang chờ ký',
+          'Chỉ có thể upload ảnh khi hợp đồng đang chờ ký hoặc chờ phê duyệt',
         );
       }
 
@@ -134,7 +155,11 @@ export const uploadContractImages = createAsyncThunk(
       });
 
       console.log('FormData prepared, calling API...');
-      const response = await uploadSignedContractImage(contractId, formData);
+      const response = await uploadSignedContractImage(
+        contractId,
+        formData,
+        append,
+      );
       console.log('API response:', response);
 
       return response;
@@ -160,6 +185,42 @@ export const updateContractFrom = createAsyncThunk(
       return response.contract; // Trả về contract object từ response
     } catch (err: any) {
       return rejectWithValue(err.message || 'Không thể cập nhật hợp đồng');
+    }
+  },
+);
+// Thêm vào đầu file, bên dưới các import hiện tại
+export const deleteAllSignedImages = createAsyncThunk<
+  {success: boolean; message: string},
+  string,
+  {rejectValue: string; state: any}
+>(
+  'contract/deleteAllSignedImages',
+  async (contractId, {rejectWithValue, getState}) => {
+    const state = getState() as any;
+    // kiểm tra trạng thái nếu cần
+    try {
+      const response = await deleteSignedImages(contractId);
+      return response; // { success, message }
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Xóa ảnh thất bại');
+    }
+  },
+);
+
+export const deleteSignedImageThunk = createAsyncThunk<
+  {success: boolean; message: string; fileName: string},
+  {contractId: string; fileName: string},
+  {rejectValue: string; state: any}
+>(
+  'contract/deleteSignedImage',
+  async ({contractId, fileName}, {rejectWithValue, getState}) => {
+    const state = getState() as any;
+    // kiểm tra trạng thái nếu cần
+    try {
+      const response = await deleteSignedImage(contractId, fileName);
+      return {...response, fileName};
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Xóa ảnh thất bại');
     }
   },
 );
@@ -230,19 +291,26 @@ const contractSlice = createSlice({
       )
 
       // Tạo file PDF hợp đồng
-      .addCase(generateContractPDF.pending, state => {
-        state.selectedContractLoading = true;
-        state.selectedContractError = null;
-      })
       .addCase(generateContractPDF.fulfilled, (state, action) => {
         state.selectedContractLoading = false;
         if (state.selectedContract) {
-          state.selectedContract.contractPdfUrl = action.payload.pdfUrl;
+          // Cập nhật contractPdfUrl và status từ response
+          state.selectedContract.contractPdfUrl =
+            action.payload.data.viewPdfUrl;
+          state.selectedContract.status = action.payload.data.status;
         }
-      })
-      .addCase(generateContractPDF.rejected, (state, action) => {
-        state.selectedContractLoading = false;
-        state.selectedContractError = action.payload as string;
+
+        // Cập nhật trong danh sách contracts nếu cần
+        const contractIndex = state.contracts.findIndex(
+          contract => contract._id === state.selectedContract?._id,
+        );
+        if (contractIndex !== -1 && state.selectedContract) {
+          state.contracts[contractIndex] = {
+            ...state.contracts[contractIndex],
+            contractPdfUrl: action.payload.data.viewPdfUrl,
+            status: action.payload.data.status,
+          };
+        }
       })
 
       // Upload ảnh hợp đồng
@@ -251,21 +319,24 @@ const contractSlice = createSlice({
         state.error = null;
       })
       .addCase(uploadContractImages.fulfilled, (state, action) => {
-        console.log(`Upload successful:`, action.payload);
         state.uploadingImages = false;
-        // Cập nhật selectedContract với dữ liệu từ response
-        if (state.selectedContract && action.payload.contract) {
-          // Cập nhật toàn bộ contract với dữ liệu mới từ server
-          state.selectedContract = action.payload.contract;
-        }
-        // Cập nhật trong danh sách contracts nếu có
-        const contractIndex = state.contracts.findIndex(
-          contract => contract._id === action.payload.contractId,
-        );
-        if (contractIndex !== -1 && action.payload.contract) {
-          state.contracts[contractIndex] = action.payload.contract;
+
+        const payload = action.payload;
+        const updatedContract = payload.data?.contract;
+        const contractId = payload.data?.contractId;
+
+        if (updatedContract) {
+          // Cập nhật selectedContract
+          state.selectedContract = updatedContract;
+
+          // Cập nhật trong danh sách contracts
+          const idx = state.contracts.findIndex(c => c._id === contractId);
+          if (idx !== -1) {
+            state.contracts[idx] = updatedContract;
+          }
         }
       })
+
       .addCase(uploadContractImages.rejected, (state, action) => {
         state.uploadingImages = false;
         state.error = action.payload as string;
@@ -292,9 +363,87 @@ const contractSlice = createSlice({
       })
       .addCase(updateContractFrom.rejected, (state, action) => {
         state.error = action.payload as string;
-      });
+      })
+      // Tạo hợp đồng mới không qua thông báo
+      .addCase(createNewContractThunk.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createNewContractThunk.fulfilled, (state, action) => {
+        state.loading = false;
 
-    //
+        // Thêm hợp đồng mới vào danh sách
+        if (action.payload.contract) {
+          state.contracts.unshift(action.payload.contract);
+        }
+      })
+      .addCase(createNewContractThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(deleteAllSignedImages.pending, state => {
+        state.uploadingImages = true;
+        state.error = null;
+      })
+      .addCase(deleteAllSignedImages.fulfilled, (state, action) => {
+        state.uploadingImages = false;
+        // 1. Xóa hết mảng ảnh trong selectedContract
+        if (state.selectedContract) {
+          state.selectedContract.signedContractImages = [];
+        }
+        // 2. Cập nhật trong list contracts nếu cần
+        const idxAll = state.contracts.findIndex(
+          c => c._id === action.meta.arg,
+        );
+        if (idxAll !== -1) {
+          state.contracts[idxAll].signedContractImages = [];
+        }
+      })
+      .addCase(deleteAllSignedImages.rejected, (state, action) => {
+        state.uploadingImages = false;
+        state.error = action.payload as string;
+      })
+
+      // Xóa 1 ảnh theo fileName
+      .addCase(deleteSignedImageThunk.pending, state => {
+        state.uploadingImages = true;
+        state.error = null;
+      })
+      .addCase(deleteSignedImageThunk.fulfilled, (state, action) => {
+        state.uploadingImages = false;
+        const {contractId, fileName} = action.meta.arg;
+
+        const matchFileName = (url: string) => {
+          return url.split('/').pop() === fileName;
+        };
+
+        // 1. Loại ảnh khỏi selectedContract
+        if (
+          state.selectedContract &&
+          state.selectedContract._id === contractId &&
+          Array.isArray(state.selectedContract.signedContractImages)
+        ) {
+          state.selectedContract.signedContractImages =
+            state.selectedContract.signedContractImages.filter(
+              imgUrl => !matchFileName(imgUrl),
+            );
+        }
+
+        // 2. Loại ảnh khỏi danh sách contracts
+        const idx = state.contracts.findIndex(c => c._id === contractId);
+        if (
+          idx !== -1 &&
+          Array.isArray(state.contracts[idx].signedContractImages)
+        ) {
+          state.contracts[idx].signedContractImages = state.contracts[
+            idx
+          ].signedContractImages.filter(imgUrl => !matchFileName(imgUrl));
+        }
+      })
+      .addCase(deleteSignedImageThunk.rejected, (state, action) => {
+        state.uploadingImages = false;
+        state.error = action.payload as string;
+      });
   },
 });
 
