@@ -9,6 +9,8 @@ import {
   createNewContract,
   deleteSignedImages,
   deleteSignedImage,
+  extendContract,
+  terminateContract,
 } from '../services/contractApi';
 import {
   Contract,
@@ -221,6 +223,37 @@ export const deleteSignedImageThunk = createAsyncThunk<
       return {...response, fileName};
     } catch (err: any) {
       return rejectWithValue(err.message || 'Xóa ảnh thất bại');
+    }
+  },
+);
+export const extendContractThunk = createAsyncThunk<
+  any,
+  {contractId: string; months: number},
+  {rejectValue: string}
+>(
+  'contract/extendContract',
+  async ({contractId, months}, {rejectWithValue}) => {
+    try {
+      const response = await extendContract(contractId, months); // Gọi API đã viết
+      return response.contract; // Trả về object hợp đồng đã cập nhật
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Không thể gia hạn hợp đồng');
+    }
+  },
+);
+
+export const terminateContractThunk = createAsyncThunk<
+  any,
+  {contractId: string; reason: string},
+  {rejectValue: string}
+>(
+  'contract/terminateContract',
+  async ({contractId, reason}, {rejectWithValue}) => {
+    try {
+      const response = await terminateContract(contractId, reason); // <-- API đã có
+      return response.contract;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Không thể chấm dứt hợp đồng');
     }
   },
 );
@@ -442,6 +475,48 @@ const contractSlice = createSlice({
       })
       .addCase(deleteSignedImageThunk.rejected, (state, action) => {
         state.uploadingImages = false;
+        state.error = action.payload as string;
+      })
+      .addCase(extendContractThunk.fulfilled, (state, action) => {
+        const extendedContract = action.payload;
+
+        // Cập nhật selectedContract nếu khớp ID
+        if (
+          state.selectedContract &&
+          state.selectedContract._id === extendedContract._id
+        ) {
+          state.selectedContract = extendedContract;
+        }
+
+        // Cập nhật trong danh sách contracts nếu khớp
+        const index = state.contracts.findIndex(
+          c => c._id === extendedContract._id,
+        );
+        if (index !== -1) {
+          state.contracts[index] = extendedContract;
+        }
+      })
+      .addCase(extendContractThunk.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+      .addCase(terminateContractThunk.fulfilled, (state, action) => {
+        const terminatedContract = action.payload;
+
+        if (
+          state.selectedContract &&
+          state.selectedContract._id === terminatedContract._id
+        ) {
+          state.selectedContract = terminatedContract;
+        }
+
+        const index = state.contracts.findIndex(
+          c => c._id === terminatedContract._id,
+        );
+        if (index !== -1) {
+          state.contracts[index] = terminatedContract;
+        }
+      })
+      .addCase(terminateContractThunk.rejected, (state, action) => {
         state.error = action.payload as string;
       });
   },

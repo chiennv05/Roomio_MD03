@@ -228,9 +228,11 @@ export const updateContract = async (
 };
 
 // Chấm dứt hợp đồng
-export const terminateContract = async (contractId: string) => {
+export const terminateContract = async (contractId: string, reason: string) => {
   try {
-    const response = await api.patch(`/contract/${contractId}/terminate`);
+    const response = await api.patch(`/contract/${contractId}/terminate`, {
+      reason,
+    });
     return response.data;
   } catch (error: any) {
     console.error(`Error terminating contract ${contractId}:`, error);

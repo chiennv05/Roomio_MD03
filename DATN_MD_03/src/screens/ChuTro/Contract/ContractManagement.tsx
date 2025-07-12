@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   conatinerFilter: {
     width: SCREEN.width,
     justifyContent: 'center',
-    marginVertical: responsiveSpacing(10),
+    marginVertical: responsiveSpacing(20),
   },
 
   loadingContainer: {

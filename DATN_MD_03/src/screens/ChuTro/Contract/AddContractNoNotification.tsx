@@ -46,6 +46,18 @@ export default function AddContractNoNotification() {
 
   // Get date limits
   const {today, maxDate} = getDateLimits(5);
+  const clearForm = () => {
+    setRoomId('');
+    setRoomName('');
+    setMaxOccupancy(0);
+    setTenantUsername('');
+    setContractTerm(12);
+    setStartDate('');
+    setRules('');
+    setAdditionalTerms('');
+    setCoTenants('');
+    setStartDateObj(new Date());
+  };
 
   const handleGoBack = () => {
     navigation.goBack();
@@ -95,6 +107,7 @@ export default function AddContractNoNotification() {
       .unwrap()
       .then(() => {
         Alert.alert('Thành công', 'Hợp đồng đã được tạo!');
+        clearForm();
         navigation.navigate('ContractManagement');
       })
       .catch((error: string) => {
@@ -116,6 +129,13 @@ export default function AddContractNoNotification() {
     setMaxOccupancy(maxOccupancys);
   };
 
+  const handleClearFormWithConfirm = () => {
+    Alert.alert('Xác nhận', 'Bạn có chắc muốn xóa toàn bộ dữ liệu đã nhập?', [
+      {text: 'Hủy', style: 'cancel'},
+      {text: 'Đồng ý', onPress: clearForm},
+    ]);
+  };
+
   return (
     <ScrollView style={styles.container}>
       <UIHeader
@@ -123,89 +143,91 @@ export default function AddContractNoNotification() {
         onPressLeft={handleGoBack}
         iconLeft={Icons.IconArrowLeft}
       />
-      <ItemInput
-        placeholder="Người đại diện (tên đăng nhập)"
-        value={tenantUsername}
-        onChangeText={setTenantUsername}
-        editable={true}
-        borderRadius={10}
-      />
-      {/* Contract Term Input with DatePicker */}
-      <ItemInput
-        placeholder="Tên phòng (ví dụ: Phòng 101)"
-        value={roomName}
-        onChangeText={() => {}}
-        editable={false} // Không cho phép chỉnh sửa trực tiếp
-        borderRadius={10}
-        onPress={handleSearchRoom} // Mở modal tìm kiếm phòng
-      />
-      <ItemInput
-        placeholder="Thời hạn hợp đồng (tháng)"
-        value={contractTerm.toString()}
-        onChangeText={text => setContractTerm(Number(text))}
-        editable={true}
-        borderRadius={10}
-        keyboardType="numeric"
-      />
-      {/* Start Date Input with DatePicker */}
-      <ItemInput
-        placeholder="Ngày bắt đầu"
-        value={startDate || ''}
-        onChangeText={() => {}} // Empty function since it's not editable
-        editable={false}
-        borderRadius={10}
-        onPress={() => setOpenStartDatePicker(true)}
-      />
-      <ItemInput
-        placeholder="Điều khoản nội quy"
-        value={rules}
-        onChangeText={setRules}
-        editable={true}
-        borderRadius={10}
-        height={100} // Increased height for multiline
-      />
-      <ItemInput
-        placeholder="Điều khoản bổ sung"
-        value={additionalTerms}
-        onChangeText={setAdditionalTerms}
-        editable={true}
-        borderRadius={10}
-        height={responsiveSpacing(100)} // Increased height for multiline
-      />
-      <ItemInput
-        placeholder="Người cùng thuê (cách nhau bằng dấu phẩy)"
-        value={coTenants}
-        onChangeText={setCoTenants} // Đơn giản hơn
-        editable={true}
-        borderRadius={10}
-      />
+      <View style={styles.containerContent}>
+        <ItemInput
+          placeholder="Người đại diện (tên đăng nhập)"
+          value={tenantUsername}
+          onChangeText={setTenantUsername}
+          editable={true}
+          borderRadius={10}
+        />
+        {/* Contract Term Input with DatePicker */}
+        <ItemInput
+          placeholder="Tên phòng (ví dụ: Phòng 101)"
+          value={roomName}
+          onChangeText={() => {}}
+          editable={false} // Không cho phép chỉnh sửa trực tiếp
+          borderRadius={10}
+          onPress={handleSearchRoom} // Mở modal tìm kiếm phòng
+        />
+        <ItemInput
+          placeholder="Thời hạn hợp đồng (tháng)"
+          value={contractTerm.toString()}
+          onChangeText={text => setContractTerm(Number(text))}
+          editable={true}
+          borderRadius={10}
+          keyboardType="numeric"
+        />
+        {/* Start Date Input with DatePicker */}
+        <ItemInput
+          placeholder="Ngày bắt đầu"
+          value={startDate || ''}
+          onChangeText={() => {}} // Empty function since it's not editable
+          editable={false}
+          borderRadius={10}
+          onPress={() => setOpenStartDatePicker(true)}
+        />
+        <ItemInput
+          placeholder="Điều khoản nội quy"
+          value={rules}
+          onChangeText={setRules}
+          editable={true}
+          borderRadius={10}
+          height={100} // Increased height for multiline
+        />
+        <ItemInput
+          placeholder="Điều khoản bổ sung"
+          value={additionalTerms}
+          onChangeText={setAdditionalTerms}
+          editable={true}
+          borderRadius={10}
+          height={responsiveSpacing(100)} // Increased height for multiline
+        />
+        <ItemInput
+          placeholder="Người cùng thuê (cách nhau bằng dấu phẩy)"
+          value={coTenants}
+          onChangeText={setCoTenants} // Đơn giản hơn
+          editable={true}
+          borderRadius={10}
+        />
 
-      <View style={styles.conatinerButton}>
-        <ItemButtonConfirm
-          title="Tạo hợp đồng"
-          onPress={handleAddContract}
-          onPressIcon={() => {}}
-          icon={Icons.IconDelete}
+        <View style={styles.conatinerButton}>
+          <ItemButtonConfirm
+            title="Tạo hợp đồng"
+            onPress={handleAddContract}
+            onPressIcon={handleClearFormWithConfirm}
+            icon={Icons.IconDelete}
+          />
+        </View>
+        {/* Start Date DatePicker */}
+        <DatePicker
+          modal
+          open={openStartDatePicker}
+          date={startDateObj}
+          title="Chọn ngày bắt đầu hợp đồng"
+          mode="date"
+          locale="vi"
+          minimumDate={today}
+          maximumDate={maxDate}
+          onConfirm={handleStartDateConfirm}
+          onCancel={() => setOpenStartDatePicker(false)}
+        />
+        <ModalSearchRoom
+          visible={modalSearchRoomVisible}
+          onSelectRoom={handleSelectRoom}
+          onClose={() => setModalSearchRoomVisible(false)}
         />
       </View>
-      {/* Start Date DatePicker */}
-      <DatePicker
-        modal
-        open={openStartDatePicker}
-        date={startDateObj}
-        title="Chọn ngày bắt đầu hợp đồng"
-        mode="date"
-        locale="vi"
-        minimumDate={today}
-        maximumDate={maxDate}
-        onConfirm={handleStartDateConfirm}
-        onCancel={() => setOpenStartDatePicker(false)}
-      />
-      <ModalSearchRoom
-        visible={modalSearchRoomVisible}
-        onSelectRoom={handleSelectRoom}
-        onClose={() => setModalSearchRoomVisible(false)}
-      />
     </ScrollView>
   );
 }
@@ -215,6 +237,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.white,
     paddingHorizontal: 16,
+  },
+  containerContent: {
+    paddingVertical: responsiveSpacing(20),
   },
   conatinerButton: {
     marginTop: 16,

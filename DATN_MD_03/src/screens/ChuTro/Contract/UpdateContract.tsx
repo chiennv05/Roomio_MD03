@@ -36,6 +36,7 @@ export default function UpdateContract() {
     contract?.contractInfo?.additionalTerms || '',
   );
   const [isUpdated, setIsUpdated] = useState(false);
+
   useEffect(() => {
     if (!contract || !contract.contractInfo) {
       Alert.alert('Lỗi', 'Thông tin hợp đồng không đầy đủ', [
@@ -219,7 +220,6 @@ export default function UpdateContract() {
         iconLeft={Icons.IconArrowLeft}
         onPressLeft={handleCancelUpdate}
       />
-
       <Text style={styles.label}>Nội quy</Text>
       <TextInput
         style={styles.input}
@@ -279,6 +279,13 @@ const styles = StyleSheet.create({
   },
   containerScroll: {
     paddingBottom: responsiveSpacing(50),
+  },
+  title: {
+    fontSize: responsiveFont(16),
+    fontWeight: 'bold',
+    marginTop: 20,
+    color: Colors.black,
+    textAlign: 'center',
   },
   label: {
     fontSize: responsiveFont(16),
