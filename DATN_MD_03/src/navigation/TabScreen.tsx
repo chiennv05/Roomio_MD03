@@ -34,6 +34,7 @@ import RoomDetail from '../screens/ChuTro/RoomDetail/RoomDetail';
 import UpdateRoom from '../screens/ChuTro/UpdateRoom/UpdateRoom';
 import UpdateContract from '../screens/ChuTro/Contract/UpdateContract';
 import PolicyTerms from '../screens/PolicyTerms/PolicyTerms';
+import StatisticScreen from '../screens/ChuTro/Statistic/StatisticScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -168,6 +169,7 @@ export default function TabScreen() {
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
+          <Stack.Screen name="StatisticScreen" component={StatisticScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

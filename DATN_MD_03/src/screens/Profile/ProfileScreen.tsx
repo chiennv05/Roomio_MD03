@@ -117,6 +117,10 @@ export default function ProfileScreen() {
     navigation.navigate('LandlordRoom');
   };
 
+  const handleGoStatistic = () => {
+    navigation.navigate('StatisticScreen');
+  };
+
   // Show normal profile screen for logged in users
   return (
     <SafeAreaView style={styles.container}>
@@ -175,7 +179,7 @@ export default function ProfileScreen() {
                 iconStat={Icons.IconPaper}
                 label="Thống kê "
                 iconEnd={Icons.IconNext}
-                onPress={handleGoLandlord}
+                onPress={handleGoStatistic}
               />
               <SettingItem
                 iconStat={Icons.IconPaper}
