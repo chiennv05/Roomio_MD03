@@ -22,13 +22,12 @@ import {Icons} from '../../../assets/icons';
 import HeaderWithBack from './components/HeaderWithBack';
 import TenantItem from './components/TenantItem';
 import SearchBar from './components/SearchBar';
-import Pagination from './components/Pagination';
 import {LoadingView, ErrorView, EmptyView} from './components/LoadingAndError';
 
 const TenantList = () => {
   const dispatch = useDispatch<AppDispatch>();
   
-  const {tenants, loading, error, pagination} = useSelector(
+  const {tenants, loading, error} = useSelector(
     (state: RootState) => state.tenant,
   );
   const token = useSelector((state: RootState) => state.auth.token);
@@ -36,7 +35,7 @@ const TenantList = () => {
   const [searchText, setSearchText] = useState('');
   const [filters, setFilters] = useState<TenantFilters>({
     page: 1,
-    limit: 10,
+    limit: 50, // Tăng giới hạn để hiển thị nhiều hơn
     search: '',
     status: '',
   });
@@ -52,13 +51,6 @@ const TenantList = () => {
     setFilters(prev => ({...prev, search: searchText, page: 1}));
   };
 
-  // Hàm xử lý khi chuyển trang
-  const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= (pagination?.totalPages || 1)) {
-      setFilters(prev => ({...prev, page: newPage}));
-    }
-  };
-
   // Render khi đang loading
   if (loading && (!tenants || tenants.length === 0)) {
     return (
@@ -69,7 +61,7 @@ const TenantList = () => {
           <LoadingView message="Đang tải dữ liệu..." />
         </View>
       </SafeAreaView>
-    );
+    ); 
   }
 
   // Render khi có lỗi
@@ -126,17 +118,6 @@ const TenantList = () => {
           showsVerticalScrollIndicator={false}
           onRefresh={() => dispatch(fetchTenants({token: token || '', filters}))}
           refreshing={loading}
-          ListFooterComponent={
-            pagination ? (
-              <Pagination
-                currentPage={pagination.page}
-                totalPages={pagination.totalPages}
-                hasPrevPage={pagination.hasPrevPage}
-                hasNextPage={pagination.hasNextPage}
-                onPageChange={handlePageChange}
-              />
-            ) : null
-          }
         />
       </View>
     </SafeAreaView>
