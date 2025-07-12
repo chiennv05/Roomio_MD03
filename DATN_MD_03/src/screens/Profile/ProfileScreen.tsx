@@ -104,6 +104,11 @@ export default function ProfileScreen() {
     navigation.navigate('ContractManagement');
   };
 
+  // Hàm xử lý khi nhấn vào "Yêu cầu hỗ trợ"
+  const handleSupportPress = () => {
+    navigation.navigate('SupportScreen');
+  };
+
   // Show guest screen if not logged in
   if (isGuest) {
     return (
@@ -190,8 +195,9 @@ export default function ProfileScreen() {
         <View style={styles.box}>
           <SettingItem
             iconStat={Icons.IconLightReport}
-            label="Báo cáo sự cố"
+            label="Yêu cầu hỗ trợ"
             iconEnd={Icons.IconNext}
+            onPress={handleSupportPress}
           />
           <SettingItem
             iconStat={Icons.Iconoir_Privacy_Policy}
