@@ -5,6 +5,7 @@ export const Icons = {
     ios: 'icon_arrow_left',
     android: 'asset:/icons/icon_arrow_left.png',
   }),
+
   IconArrowBack: Platform.select({
     ios: 'icon_arrow_back',
     android: 'asset:/icons/icon_arrow_back.png',
@@ -25,6 +26,7 @@ export const Icons = {
     ios: 'icon_notification',
     android: 'asset:/icons/icon_notification.png',
   }),
+
   IconEyesOn: Platform.select({
     ios: 'icon_eyes_on',
     android: 'asset:/icons/icon_eyes_on.png',
@@ -116,6 +118,22 @@ export const Icons = {
   IconRoom: Platform.select({
     ios: 'icon_room',
     android: 'asset:/icons/icon_room.png',
+  }),
+  IconMoney: Platform.select({
+    ios: 'icon_money',
+    android: 'asset:/icons/icon_money.png',
+  }),
+  IconBank: Platform.select({
+    ios: 'icon_bank',
+    android: 'asset:/icons/icon_bank.png',
+  }),
+  IconWallet: Platform.select({
+    ios: 'icon_wallet',
+    android: 'asset:/icons/icon_wallet.png',
+  }),
+  IconClose: Platform.select({
+    ios: 'icon_close',
+    android: 'asset:/icons/icon_close.png',
   }),
   IconDieuHoa: Platform.select({
     ios: 'icon_dieu_hoa',
@@ -288,6 +306,7 @@ export const Icons = {
   }),
   IconHeartFavourite: Platform.select({
     ios: 'icon_heart_favourite',
+
     android: 'asset:/icons/icon_heart_favourite.png',
   }),
   IconsNotification: Platform.select({
@@ -640,5 +659,9 @@ export const Icons = {
   IconDownLoad: Platform.select({
     ios: 'icon_download',
     android: 'asset:/icons/icon_download.png',
+  }),
+  IconCalendar: Platform.select({
+    ios: 'icon_calendar',
+    android: 'asset:/icons/icon_calendar.png',
   }),
 };

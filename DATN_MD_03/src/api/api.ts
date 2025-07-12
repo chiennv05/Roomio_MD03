@@ -61,7 +61,9 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
   response => response,
   (error: AxiosError) => {
+    // Xử lý các lỗi HTTP khác nhau
     const {status} = error.response || {};
+
     switch (status) {
       case 401:
         console.log('🔒 Lỗi xác thực - có thể cần đăng nhập lại');
@@ -87,12 +89,37 @@ instance.interceptors.response.use(
 const responseBody = <T>(response: AxiosResponse<T>): ApiResponse<T> =>
   response;
 
-const responseError = (error: AxiosError): ApiError => ({
-  isError: true,
-  message: error.message || 'Lỗi không xác định',
-  status: error.response?.status,
-  data: error.response?.data,
-});
+// Hàm xử lý response khi API call thất bại
+const responseError = (error: AxiosError): ApiError => {
+  // Lấy thông báo lỗi từ response data nếu có
+  let errorMessage = error.message || 'Lỗi không xác định';
+  let errorData = error.response?.data;
+
+  // Nếu response data có message thì ưu tiên sử dụng
+  if (errorData && typeof errorData === 'object') {
+    const data = errorData as Record<string, any>;
+    if (data.message && typeof data.message === 'string') {
+      errorMessage = data.message;
+    } else if (data.error) {
+      errorMessage =
+        typeof data.error === 'string'
+          ? data.error
+          : JSON.stringify(data.error);
+    }
+  }
+
+  // Thêm status code vào thông báo lỗi nếu debug
+  if (error.response?.status) {
+    console.log(`API Error [${error.response.status}]: ${errorMessage}`);
+  }
+
+  return {
+    isError: true,
+    message: errorMessage,
+    status: error.response?.status,
+    data: errorData,
+  };
+};
 
 // ===== API wrapper =====
 export const api = {
