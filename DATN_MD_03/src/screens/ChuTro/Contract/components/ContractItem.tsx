@@ -1,11 +1,15 @@
 import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Image} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RootStackParamList} from '../../../../types/route';
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+
 import {Colors} from '../../../../theme/color';
 import {Fonts} from '../../../../theme/fonts';
-import {scale, responsiveFont, verticalScale} from '../../../../utils/responsive';
+import {
+  scale,
+  responsiveFont,
+  verticalScale,
+  SCREEN,
+} from '../../../../utils/responsive';
+import {Contract} from '../../../../types';
 
 // Hàm lấy thông tin trạng thái
 export const getContractStatusInfo = (status: string) => {
@@ -55,69 +59,57 @@ const formatDate = (dateString: string) => {
 };
 
 interface ContractItemProps {
-  contract: any;
+  contract: Contract;
+  onPress: (contractId: string) => void;
 }
 
-const ContractItem = ({contract}: ContractItemProps) => {
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+const ContractItem = ({contract, onPress}: ContractItemProps) => {
   const statusInfo = getContractStatusInfo(contract.status);
 
-  const handlePress = () => {
-    // Chuyển đến màn hình chi tiết hợp đồng
-    navigation.navigate('ContractDetail', {contractId: contract._id});
-  };
-
-  const renderThumbnail = () => {
-    if (contract.roomId?.photos && contract.roomId.photos.length > 0) {
-      // Hiển thị ảnh phòng đầu tiên nếu có
-      return (
-        <Image
-          source={{
-            uri: `http://125.212.229.71:4000${contract.roomId.photos[0]}`,
-          }}
-          style={styles.thumbnail}
-          resizeMode="cover"
-        />
-      );
-    } else {
-      // Hiển thị View màu xám nếu không có ảnh
-      return <View style={[styles.thumbnail, {backgroundColor: Colors.gray150}]} />;
-    }
-  };
+  // const handlePress = () => {
+  //   // Chuyển đến màn hình chi tiết hợp đồng
+  //   navigation.navigate('ContractDetail', {contractId: contract._id});
+  // };
 
   return (
-    <TouchableOpacity style={styles.container} onPress={handlePress}>
-      {renderThumbnail()}
-      
+    <TouchableOpacity
+      style={styles.container}
+      onPress={() => onPress(contract._id)}>
       <View style={styles.contentContainer}>
         <View style={styles.header}>
-          <Text style={styles.roomNumber}>{contract.contractInfo.roomNumber}</Text>
-          <View style={[styles.statusBadge, {backgroundColor: statusInfo.color}]}>
+          <Text style={styles.roomNumber}>
+            {contract.contractInfo.roomNumber}
+          </Text>
+          <View
+            style={[styles.statusBadge, {backgroundColor: statusInfo.color}]}>
             <Text style={styles.statusText}>{statusInfo.label}</Text>
           </View>
         </View>
-        
+
         <Text style={styles.address} numberOfLines={1}>
           {contract.contractInfo.roomAddress}
         </Text>
-        
+
         <View style={styles.infoRow}>
           <Text style={styles.label}>Người thuê:</Text>
           <Text style={styles.value}>{contract.contractInfo.tenantName}</Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={styles.label}>Thời hạn:</Text>
-          <Text style={styles.value}>{contract.contractInfo.contractTerm} tháng</Text>
+          <Text style={styles.value}>
+            {contract.contractInfo.contractTerm} tháng
+          </Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={styles.label}>Từ ngày:</Text>
           <Text style={styles.value}>
-            {formatDate(contract.contractInfo.startDate)} - {formatDate(contract.contractInfo.endDate)}
+            {formatDate(contract.contractInfo.startDate)} -{' '}
+            {formatDate(contract.contractInfo.endDate)}
           </Text>
         </View>
-        
+
         <View style={styles.infoRow}>
           <Text style={styles.label}>Tiền thuê:</Text>
           <Text style={styles.value}>
@@ -131,7 +123,9 @@ const ContractItem = ({contract}: ContractItemProps) => {
 
 const styles = StyleSheet.create({
   container: {
+    width: SCREEN.width * 0.9,
     flexDirection: 'row',
+
     backgroundColor: Colors.white,
     borderRadius: 10,
     marginBottom: verticalScale(12),
@@ -145,12 +139,8 @@ const styles = StyleSheet.create({
     elevation: 3,
     overflow: 'hidden',
   },
-  thumbnail: {
-    width: scale(100),
-    height: '100%',
-  },
   contentContainer: {
-    flex: 1,
+    flex: 4,
     padding: scale(12),
   },
   header: {
@@ -198,4 +188,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ContractItem; 
+export default ContractItem;

@@ -1,10 +1,17 @@
 import React from 'react';
-import { FlatList, RefreshControl, View, ActivityIndicator, StyleSheet, Text } from 'react-native';
+import {
+  FlatList,
+  RefreshControl,
+  View,
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+} from 'react-native';
 import NotificationItemCard from './NotificationItemCard';
-import { Colors } from '../../../theme/color';
-import { Fonts } from '../../../theme/fonts';
-import { responsiveSpacing, responsiveFont, moderateScale } from '../../../utils/responsive';
-import { Icons } from '../../../assets/icons';
+import {Colors} from '../../../theme/color';
+import {Fonts} from '../../../theme/fonts';
+import {responsiveSpacing, moderateScale} from '../../../utils/responsive';
+import {Icons} from '../../../assets/icons';
 
 // Định nghĩa kiểu dữ liệu cho thông báo đã được format
 export interface FormattedNotification {
@@ -23,11 +30,11 @@ interface NotificationListContainerProps {
   refreshing?: boolean;
   onLoadMore?: () => void;
   loadingMore?: boolean;
-  onMarkAsRead?: (notificationId: string) => void;
+  onMarkAsRead?: (notification: FormattedNotification) => void;
   onDeleteNotification?: (notificationId: string) => void; // Thêm callback xóa thông báo
 }
 
-const NotificationListContainer: React.FC<NotificationListContainerProps> = ({ 
+const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
   notifications,
   onRefresh,
   refreshing = false,
@@ -40,7 +47,7 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
 
   const handleNotificationPress = (notification: FormattedNotification) => {
     if (!notification.isRead && onMarkAsRead) {
-      onMarkAsRead(notification.id);
+      onMarkAsRead(notification);
     }
   };
 
@@ -53,10 +60,11 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
   const renderFooter = () => {
     if (!loadingMore) return null;
     return (
-      <View style={{
-        paddingVertical: responsiveSpacing(20),
-        alignItems: 'center',
-      }}>
+      <View
+        style={{
+          paddingVertical: responsiveSpacing(20),
+          alignItems: 'center',
+        }}>
         <ActivityIndicator size="small" color={Colors.limeGreen} />
       </View>
     );
@@ -70,14 +78,9 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
     }
   };
 
-  const renderItem = ({ item }: { item: FormattedNotification }) => (
+  const renderItem = ({item}: {item: FormattedNotification}) => (
     <View style={styles.notificationWrapper}>
-      {/* Ngày ở góc trên ngoài */}
-      <View style={styles.dateContainer}>
-        <Text style={styles.dateText}>{item.date}</Text>
-      </View>
-      
-      {/* Notification Card */}
+      {/* Ngày hiển thị dưới dạng text tích hợp trong thông báo */}
       <NotificationItemCard
         id={item.id}
         title={item.title}
@@ -115,6 +118,7 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
       contentContainerStyle={{
         paddingBottom: responsiveSpacing(20),
       }}
+      style={styles.listContainer}
     />
   );
 };
@@ -122,31 +126,11 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
 const styles = StyleSheet.create({
   notificationWrapper: {
     position: 'relative',
-    marginTop: responsiveSpacing(14),
+    marginTop: 0,
   },
-  dateContainer: {
-    position: 'absolute',
-    top: -responsiveSpacing(16),
-    right: responsiveSpacing(32),
-    backgroundColor: Colors.white,
-    width: responsiveSpacing(104),
-    height: responsiveSpacing(32),
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: moderateScale(16),
-    zIndex: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-  
-  },
-  dateText: {
-    fontSize: 14,
-    fontFamily: Fonts.Roboto_Regular,
-    color: Colors.textGray,
-  },
+  listContainer: {
+    flex: 1,
+  }
 });
 
-export default NotificationListContainer; 
+export default NotificationListContainer;

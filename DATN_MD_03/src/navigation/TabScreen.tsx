@@ -16,6 +16,7 @@ import DetailRoomScreen from '../screens/DetailRoomScreen/DetailRoomScreen';
 import NotificationScreen from '../screens/Notification/NotificationScreen';
 import TenantList from '../screens/ChuTro/TenantList/TenantList';
 import TenantDetailScreen from '../screens/ChuTro/TenantList/TenantDetailScreen';
+import ContractTenantsScreen from '../screens/ChuTro/ContractManagement/ContractTenantsScreen';
 
 // Import gesture handler để hỗ trợ stack navigation
 import 'react-native-gesture-handler';
@@ -26,10 +27,18 @@ import AddRoomScreen from '../screens/ChuTro/AddRoom/AddRoomScreen';
 
 import ContractManagement from '../screens/ChuTro/Contract/ContractManagement';
 import ContractDetailScreen from '../screens/ChuTro/Contract/ContractDetailScreen';
+import AddContract from '../screens/ChuTro/Contract/AddContract';
 import PdfViewerScreen from '../screens/ChuTro/Contract/PdfViewerScreen';
 import MapScreen from '../screens/ChuTro/AddRoom/MapScreen';
 import RoomDetail from '../screens/ChuTro/RoomDetail/RoomDetail';
 import UpdateRoom from '../screens/ChuTro/UpdateRoom/UpdateRoom';
+import UpdateContract from '../screens/ChuTro/Contract/UpdateContract';
+import PolicyTerms from '../screens/PolicyTerms/PolicyTerms';
+import StatisticScreen from '../screens/ChuTro/Statistic/StatisticScreen';
+import SupportScreen from '../screens/Support/SupportScreen';
+import AddNewSupport from '../screens/Support/AddNewSupport';
+import SupportDetail from '../screens/Support/SupportDetail';
+import UpdateSupport from '../screens/Support/UpdateSupport';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -114,6 +123,13 @@ export default function TabScreen() {
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
+          <Stack.Screen
+            name="ContractTenants"
+            component={ContractTenantsScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
 
           <Stack.Screen name="LandlordRoom" component={MyRoomScreen} />
           <Stack.Screen name="AddRooom" component={AddRoomScreen} />
@@ -142,6 +158,38 @@ export default function TabScreen() {
           />
           <Stack.Screen name="DetailRoomLandlord" component={RoomDetail} />
           <Stack.Screen name="UpdateRoomScreen" component={UpdateRoom} />
+          <Stack.Screen name="SupportScreen" component={SupportScreen} />
+          <Stack.Screen name="AddNewSupport" component={AddNewSupport} />
+          <Stack.Screen
+            name="SupportDetail"
+            component={SupportDetail}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen name="AddContract" component={AddContract} />
+          <Stack.Screen
+            name="UpdateContract"
+            component={UpdateContract}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="UpdateSupport"
+            component={UpdateSupport}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="PolicyTerms"
+            component={PolicyTerms}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen name="StatisticScreen" component={StatisticScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

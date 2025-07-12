@@ -16,6 +16,7 @@ interface HeaderProps {
   iconRight?: string;
   onPressLeft?: () => void;
   onPressRight?: () => void;
+  color?: string;
 }
 
 const UIHeader = ({
@@ -24,9 +25,10 @@ const UIHeader = ({
   iconRight,
   onPressLeft,
   onPressRight,
+  color,
 }: HeaderProps) => {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {backgroundColor: color}]}>
       <View style={styles.containerLeftAndRight}>
         {iconLeft && (
           <TouchableOpacity style={styles.styleButton} onPress={onPressLeft}>

@@ -21,4 +21,9 @@ export const Colors = {
   gray150: '#D9D9D9',
   grayLight: '#CCCCCC',
   gray60: '#626262',
+  lightGreenBackground: '#F0F8F0',
+  lightBlueBackground: '#F0F0F8',
+  lightYellowBackground: '#F8F8F0',
+  lightPurpleBackground: '#F8F0F8',
+  lightOrangeBackground: '#F8F4F0',
 };

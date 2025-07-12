@@ -15,12 +15,24 @@ export type RootStackParamList = {
   LandlordRoom: undefined;
   ContractManagement: undefined;
   ContractDetail: {contractId: string};
+  ContractTenants: {contractId: string};
   PdfViewer: {pdfUrl: string};
+  PolicyTerms: undefined;
+  SupportScreen: undefined;
+  AddNewSupport: undefined;
+  SupportDetail: {supportId: string};
+  UpdateSupport: {supportId: string};
   MapScreen: {
     latitude?: number;
     longitude?: number;
     address?: string;
     roomDetail?: Room;
+    isSelectMode?: boolean;
+    onSelectLocation?: (location: {
+      latitude: number;
+      longitude: number;
+      address: string;
+    }) => void;
   };
   AddRooom: {
     location?: {
@@ -31,4 +43,7 @@ export type RootStackParamList = {
   };
   DetailRoomLandlord: {id: string};
   UpdateRoomScreen: {item: Room};
+  AddContract: {notificationId: string};
+  UpdateContract: {contract: Contract};
+  StatisticScreen: undefined;
 };

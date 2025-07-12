@@ -1,3 +1,5 @@
+import {Contract} from './Contract';
+
 export interface CoTenant {
   _id: string;
   username: string;
@@ -62,7 +64,7 @@ export interface TenantDetailResponse {
   message: string;
   data: {
     tenant: TenantDetail;
-    activeContract: ContractHistoryItem | null;
+    activeContract: Contract | null;
     contractHistory: ContractHistoryItem[];
     totalContracts: number;
   };
@@ -94,7 +96,7 @@ export interface TenantState {
   
   // Chi tiết người thuê
   selectedTenant: TenantDetail | null;
-  activeContract: ContractHistoryItem | null;
+  activeContract: Contract | null;
   contractHistory: ContractHistoryItem[];
   totalContracts: number;
   detailLoading: boolean;

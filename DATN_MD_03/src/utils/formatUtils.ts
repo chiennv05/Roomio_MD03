@@ -18,10 +18,10 @@ export const formatDate = (dateString?: string): string => {
 /**
  * Format số tiền thành dạng có dấu chấm ngăn cách và đơn vị tiền tệ
  */
-export const formatMoney = (money?: number, currency: string = 'VNĐ'): string => {
+export const formatMoney = (money?: number, suffix: string = '/tháng'): string => {
   if (money === undefined || money === null) return 'Không có';
   try {
-    return money.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' ' + currency;
+    return money.toLocaleString('vi-VN') + 'đ' + suffix;
   } catch (error) {
     return 'Số tiền không hợp lệ';
   }

@@ -1,13 +1,19 @@
-import {Alert, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {Alert, ScrollView, StyleSheet, Text, View, SafeAreaView, StatusBar} from 'react-native';
 import React, {useCallback, useEffect, useState} from 'react';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import {useDispatch} from 'react-redux';
+import {AppDispatch} from '../../../store';
 import {Colors} from '../../../theme/color';
 import {ItemInput, UIHeader} from '../MyRoom/components';
 import {Icons} from '../../../assets/icons';
 import {
   moderateScale,
-  responsiveSpacing,
   SCREEN,
+  verticalScale,
 } from '../../../utils/responsive';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {RootStackParamList} from '../../../types/route';
+import {createLandlordRoom} from '../../../store/slices/landlordRoomsSlice';
 import ItemTitle from './components/ItemTitle ';
 import ItemImage from './components/ItemImage';
 import ItemService from './components/ItemService';
@@ -35,16 +41,11 @@ import {
 } from '../../../types';
 import ModalService from './components/ModalService';
 import {validateRoomForm} from './utils/validateFromData';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
-import {RootStackParamList} from '../../../types/route';
-import {useDispatch} from 'react-redux';
-import {AppDispatch} from '../../../store';
-import {createLandlordRoom} from '../../../store/slices/landlordRoomsSlice';
 
+type AddRoomNavigationProp = StackNavigationProp<RootStackParamList>;
 
 export default function AddRoomScreen() {
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<AddRoomNavigationProp>();
   const route = useRoute();
   const dispatch = useDispatch<AppDispatch>();
   const [roomNumber, setRoomNumber] = useState('');
@@ -102,14 +103,12 @@ export default function AddRoomScreen() {
       setVisibleImage(true);
       const result = await uploadRoomPhotos(images);
       console.log('Kết quả upload:', result);
-      
       // Kiểm tra kết quả trả về có đúng định dạng không
       if (!result || !result.data || !result.data.photos) {
         console.error('Kết quả API không đúng định dạng mong đợi:', result);
         Alert.alert('Lỗi', 'Không thể tải ảnh lên, vui lòng thử lại sau');
         return;
       }
-      
       const uploaded = result.data.photos as ImageUploadResult[];
       console.log('Uploaded photos:', uploaded);
 
@@ -117,11 +116,9 @@ export default function AddRoomScreen() {
       setImage(prev => {
         const newImages = [...prev, ...uploaded];
         console.log('New images state:', newImages);
-        
         // Cập nhật imageArr sau khi cập nhật image
         const formattedPhotos = formatPhotoUrls(newImages);
         setImageArr(formattedPhotos);
-        
         return newImages;
       });
     } catch (e) {
@@ -176,19 +173,16 @@ export default function AddRoomScreen() {
             })
             .then(image => {
               console.log('Ảnh từ máy ảnh:', image);
-              
               // Kiểm tra dữ liệu trước khi tạo ImageFile
               if (!image.path || !image.mime) {
                 Alert.alert('Lỗi', 'Không thể lấy thông tin ảnh');
                 return;
               }
-              
               const imageFile: ImageFile = {
                 path: image.path,
                 mime: image.mime,
                 filename: image.path.split('/').pop() || `camera_${Date.now()}.jpg`,
               };
-              
               console.log('ImageFile được tạo:', imageFile);
               onUpload([imageFile]);
             })
@@ -212,28 +206,23 @@ export default function AddRoomScreen() {
             })
             .then(images => {
               console.log('Ảnh từ thư viện:', images);
-              
               // Đảm bảo images là một mảng
               if (!Array.isArray(images)) {
                 images = [images];
               }
-              
               const imageFiles: ImageFile[] = images.map(img => {
                 // Kiểm tra từng thuộc tính
                 if (!img.path || !img.mime) {
                   console.error('Ảnh không hợp lệ:', img);
                   throw new Error('Ảnh không hợp lệ');
                 }
-                
                 return {
                   path: img.path,
                   mime: img.mime,
                   filename: img.path.split('/').pop() || `gallery_${Date.now()}.jpg`,
                 };
               });
-              
               console.log('Mảng ImageFile được tạo:', imageFiles);
-              
               if (imageFiles.length > 0) {
                 onUpload(imageFiles);
               } else {
@@ -369,7 +358,6 @@ export default function AddRoomScreen() {
       setCustomServices(prev => {
         // Tìm dịch vụ hiện có theo tên
         const existingIndex = prev.findIndex(i => i.name === customService.name);
-        
         if (existingIndex >= 0) {
           // Nếu đã tồn tại, thay thế
           const updated = [...prev];
@@ -423,11 +411,9 @@ export default function AddRoomScreen() {
       houseNo = addressParts[0]; // Số nhà
       street = addressParts[1]; // Tên đường
       ward = addressParts[2]; // Phường/xã
-      
       if (addressParts.length >= 4) {
         district = addressParts[3]; // Quận/huyện
       }
-      
       if (addressParts.length >= 5) {
         province = addressParts[4]; // Tỉnh/thành
       }
@@ -498,149 +484,163 @@ export default function AddRoomScreen() {
   };
 
   const onPressOnpenMap = () => {
-    navigation.navigate('MapScreen', {});
+    navigation.navigate('MapScreen', {
+      isSelectMode: true,
+      onSelectLocation: (location: any) => {
+        setAddressText(location.address);
+        setCoordinates([location.longitude, location.latitude]);
+      },
+    });
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.contentContainer}>
-      <UIHeader
-        title="Tạo bài đăng"
-        onPressLeft={() => navigation.goBack()}
-        iconLeft={Icons.IconArrowLeft}
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={Colors.white}
+        translucent={true}
       />
-      <View style={styles.content}>
-        <ItemTitle title="Thông tin bài đăng" />
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentContainer}>
+        <UIHeader
+          title="Tạo bài đăng"
+          onPressLeft={() => navigation.goBack()}
+          iconLeft={Icons.IconArrowLeft}
+        />
+        <View style={styles.content}>
+          <ItemTitle title="Thông tin bài đăng" />
 
-        <View style={styles.containerInputRow}>
+          <View style={styles.containerInputRow}>
+            <ItemInput
+              placeholder="Số phòng"
+              value={roomNumber}
+              onChangeText={setRoomNumber}
+              editable={true}
+              width={SCREEN.width * 0.43}
+            />
+            <ItemInput
+              placeholder="Diện tích"
+              value={area?.toString() || ''}
+              onChangeText={text => {
+                const value = text.replace(/[^0-9]/g, '');
+                setArea(value === '' ? '' : parseInt(value, 10));
+              }}
+              editable={true}
+              keyboardType="numeric"
+              width={SCREEN.width * 0.43}
+            />
+          </View>
           <ItemInput
-            placeholder="Số phòng"
-            value={roomNumber}
-            onChangeText={setRoomNumber}
+            placeholder="Địa chỉ chi tiết"
+            value={addressText}
+            onChangeText={setAddressText}
+            iconRight={Icons.IconMap}
+            onPressIcon={onPressOnpenMap}
             editable={true}
-            width={SCREEN.width * 0.43}
+            height={verticalScale(60)}
           />
+          <View style={styles.containerInputRow}>
+            <ItemInput
+              placeholder="Số người"
+              value={maxOccupancy?.toString() || ''}
+              onChangeText={text => {
+                const value = text.replace(/[^0-9]/g, '');
+                setMaxOccupancy(value === '' ? '' : parseInt(value, 10));
+              }}
+              editable={true}
+              keyboardType="numeric"
+              width={SCREEN.width * 0.43}
+            />
+            <ItemInput
+              placeholder="Giá tiền"
+              value={rentPrice?.toString() || ''}
+              onChangeText={text => {
+                const value = text.replace(/[^0-9]/g, '');
+                setRentPrice(value === '' ? '' : parseInt(value, 10));
+              }}
+              editable={true}
+              keyboardType="numeric"
+              width={SCREEN.width * 0.43}
+            />
+          </View>
           <ItemInput
-            placeholder="Diện tích"
-            value={area?.toString() || ''}
-            onChangeText={text => {
-              const value = text.replace(/[^0-9]/g, '');
-              setArea(value === '' ? '' : parseInt(value, 10));
-            }}
+            placeholder="Mô tả"
+            value={description}
+            onChangeText={setDescription}
             editable={true}
-            keyboardType="numeric"
-            width={SCREEN.width * 0.43}
+            height={moderateScale(100)}
+            borderRadius={10}
           />
-        </View>
-        <ItemInput
-          placeholder="Địa chỉ tiết"
-          value={addressText}
-          onChangeText={setAddressText}
-          iconRight={Icons.IconMap}
-          onPressIcon={onPressOnpenMap}
-          editable={false}
-        />
-        <View style={styles.containerInputRow}>
-          <ItemInput
-            placeholder="Số người"
-            value={maxOccupancy?.toString() || ''}
-            onChangeText={text => {
-              const value = text.replace(/[^0-9]/g, '');
-              setMaxOccupancy(value === '' ? '' : parseInt(value, 10));
-            }}
-            editable={true}
-            keyboardType="numeric"
-            width={SCREEN.width * 0.43}
-          />
-          <ItemInput
-            placeholder="Giá tiền"
-            value={rentPrice?.toString() || ''}
-            onChangeText={text => {
-              const value = text.replace(/[^0-9]/g, '');
-              setRentPrice(value === '' ? '' : parseInt(value, 10));
-            }}
-            editable={true}
-            keyboardType="numeric"
-            width={SCREEN.width * 0.43}
-          />
-        </View>
-        <ItemInput
-          placeholder="Mô tả"
-          value={description}
-          onChangeText={setDescription}
-          editable={true}
-          height={moderateScale(100)}
-          borderRadius={10}
-        />
-        <ItemTitle title="Hình ảnh" icon={Icons.IconAdd} onPress={pickImages} />
-        <View style={styles.containerImage}>
-          {image.length === 0 ? (
-            <Text>Chưa có ảnh nào được chọn</Text>
-          ) : (
+          <ItemTitle title="Hình ảnh" icon={Icons.IconAdd} onPress={pickImages} />
+          <View style={styles.containerImage}>
+            {image.length === 0 ? (
+              <Text>Chưa có ảnh nào được chọn</Text>
+            ) : (
+              <FlatList
+                data={image}
+                numColumns={3}
+                scrollEnabled={false}
+                showsVerticalScrollIndicator={false}
+                keyExtractor={item => item.id}
+                renderItem={({item, index}) => (
+                  <ItemImage
+                    key={index}
+                    item={item}
+                    onDeleteImage={onDeleteImage}
+                    onClickItem={onclickItemImage}
+                  />
+                )}
+              />
+            )}
+          </View>
+          <ItemTitle title="Phí dịch vụ" />
+          <View style={styles.containerImage}>
             <FlatList
-              data={image}
+              data={serviceOptionList}
+              keyExtractor={(_, index) => index.toString()}
               numColumns={3}
               scrollEnabled={false}
               showsVerticalScrollIndicator={false}
-              keyExtractor={item => item.id}
-              renderItem={({item, index}) => (
-                <ItemImage
-                  key={index}
+              renderItem={({item}) => (
+                <ItemService
+                  status={item.status}
                   item={item}
-                  onDeleteImage={onDeleteImage}
-                  onClickItem={onclickItemImage}
+                  onPress={handleClickItem}
                 />
               )}
             />
-          )}
-        </View>
-        <ItemTitle title="Phí dịch vụ" />
-        <View style={styles.containerImage}>
+          </View>
+
+          <ItemTitle title="Tiện nghi" />
           <FlatList
-            data={serviceOptionList}
-            keyExtractor={(_, index) => index.toString()}
-            numColumns={3}
+            numColumns={2}
+            scrollEnabled={false}
+            data={amenitiesOptions}
+            showsVerticalScrollIndicator={false}
+            keyExtractor={item => item.value}
+            renderItem={renderAmenityItem}
+          />
+          <ItemTitle title="Nội thất" />
+          <FlatList
+            numColumns={2}
             scrollEnabled={false}
             showsVerticalScrollIndicator={false}
-            renderItem={({item}) => (
-              <ItemService
-                status={item.status}
-                item={item}
-                onPress={handleClickItem}
-              />
-            )}
+            data={furnitureOptions}
+            keyExtractor={item => item.value}
+            renderItem={renderFurnitureItem}
           />
+          <View style={styles.containerButton}>
+            <ItemButtonConfirm
+              onPress={handleCreatePost}
+              title="Tạo bài đăng"
+              icon={Icons.IconAdd}
+              onPressIcon={() => {}}
+            />
+          </View>
         </View>
-
-        <ItemTitle title="Tiện nghi" />
-        <FlatList
-          numColumns={2}
-          scrollEnabled={false}
-          data={amenitiesOptions}
-          showsVerticalScrollIndicator={false}
-          keyExtractor={item => item.value}
-          renderItem={renderAmenityItem}
-        />
-        <ItemTitle title="Nội thất" />
-        <FlatList
-          numColumns={2}
-          scrollEnabled={false}
-          showsVerticalScrollIndicator={false}
-          data={furnitureOptions}
-          keyExtractor={item => item.value}
-          renderItem={renderFurnitureItem}
-        />
-        <View style={styles.containerButton}>
-          <ItemButtonConfirm
-            onPress={handleCreatePost}
-            title="Tạo bài đăng"
-            icon={Icons.IconAdd}
-            onPressIcon={() => {}}
-          />
-        </View>
-      </View>
+      </ScrollView>
       <ModalLoading
         visible={visibleImage}
         loading={isUploading}
@@ -653,15 +653,19 @@ export default function AddRoomScreen() {
         item={itemServiceEdit}
         handleCancel={handleCancelModal}
       />
-    </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.white,
-    paddingBottom: responsiveSpacing(20),
+    paddingTop: StatusBar.currentHeight || 0,
   },
   contentContainer: {
     flexGrow: 1, // cần thiết để justifyContent hoạt động

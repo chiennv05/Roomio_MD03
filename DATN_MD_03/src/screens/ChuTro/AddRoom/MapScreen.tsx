@@ -10,7 +10,6 @@ import {
   Text,
   ActivityIndicator,
   Alert,
-  ImageStyle,
 } from 'react-native';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
@@ -34,15 +33,30 @@ import {
 import {Suggestion} from '../../../types/Suggestion';
 import ItemAddress from './components/ItemAddress';
 import Geolocation from '@react-native-community/geolocation';
+import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
 
 type MapScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   'MapScreen'
 >;
 
-export default function MapScreen({route}: {route: any}) {
+interface MapScreenProps {
+  route: {
+    params: {
+      latitude?: number;
+      longitude?: number;
+      address?: string;
+      roomDetail?: any;
+      isSelectMode?: boolean;
+      onSelectLocation?: (location: any) => void;
+    };
+  };
+}
+
+export default function MapScreen({route}: MapScreenProps) {
   const navigation = useNavigation<MapScreenNavigationProp>();
   const mapRef = useRef<MapView>(null);
+  const isMapReady = useRef(false);
   const [searchText, setSearchText] = useState('');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<{
@@ -51,8 +65,7 @@ export default function MapScreen({route}: {route: any}) {
     address?: string;
   } | null>(null);
 
-  const [isLoadingCurrentLocation, setIsLoadingCurrentLocation] =
-    useState(false);
+  const [isLoadingCurrentLocation, setIsLoadingCurrentLocation] = useState(false);
   const [distance, setDistance] = useState<string>('');
   const [isCalculatingDistance, setIsCalculatingDistance] = useState(false);
 
@@ -62,7 +75,7 @@ export default function MapScreen({route}: {route: any}) {
       latitude: number;
       longitude: number;
       address?: string;
-      isRoom?: boolean;
+      type: 'room' | 'current' | 'selected';
     }>
   >([]);
 
@@ -72,6 +85,41 @@ export default function MapScreen({route}: {route: any}) {
     latitudeDelta: 0.01,
     longitudeDelta: 0.01,
   });
+
+  const isSelectMode = route.params?.isSelectMode;
+
+  // Hàm khởi tạo marker và region
+  const initializeMapData = useCallback(() => {
+    if (route.params?.latitude && route.params?.longitude) {
+      const newRegion = {
+        latitude: route.params.latitude,
+        longitude: route.params.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+
+      const roomMarker = {
+        id: 'room',
+        latitude: route.params.latitude,
+        longitude: route.params.longitude,
+        address: route.params.address,
+        type: 'room' as const,
+      };
+
+      setMapRegion(newRegion);
+      setMarkers([roomMarker]);
+      setSelectedLocation({
+        latitude: route.params.latitude,
+        longitude: route.params.longitude,
+        address: route.params.address,
+      });
+
+      // Animate map to new region
+      if (mapRef.current && isMapReady.current) {
+        mapRef.current.animateToRegion(newRegion, 1000);
+      }
+    }
+  }, [route.params]);
 
   const requestLocationPermission = async () => {
     if (Platform.OS === 'android') {
@@ -95,34 +143,17 @@ export default function MapScreen({route}: {route: any}) {
     return true;
   };
 
+  // Khởi tạo dữ liệu khi component mount
   useEffect(() => {
     requestLocationPermission();
+    initializeMapData();
+  }, [initializeMapData]);
 
-    // Nếu có tọa độ phòng, hiển thị marker
-    if (route.params?.latitude && route.params?.longitude) {
-      const roomMarker = {
-        id: 'room',
-        latitude: route.params.latitude,
-        longitude: route.params.longitude,
-        address: route.params.address,
-        isRoom: true,
-      };
-      setMarkers([roomMarker]);
-      setSelectedLocation({
-        latitude: route.params.latitude,
-        longitude: route.params.longitude,
-        address: route.params.address,
-      });
-
-      // Set initial map region
-      setMapRegion({
-        latitude: route.params.latitude,
-        longitude: route.params.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      });
-    }
-  }, [route.params?.latitude, route.params?.longitude, route.params?.address]);
+  // Xử lý khi map sẵn sàng
+  const handleMapReady = useCallback(() => {
+    isMapReady.current = true;
+    initializeMapData();
+  }, [initializeMapData]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -150,7 +181,6 @@ export default function MapScreen({route}: {route: any}) {
     setSuggestions([]);
     setSearchText(item.display_name);
 
-    // Cập nhật selectedLocation
     const newLocation = {
       latitude: lat,
       longitude: lon,
@@ -158,16 +188,21 @@ export default function MapScreen({route}: {route: any}) {
     };
     setSelectedLocation(newLocation);
 
-    // Thêm marker mới vào danh sách
-    const newMarker = {
-      id: Date.now().toString(),
-      latitude: lat,
-      longitude: lon,
-      address: item.display_name,
-    };
-    setMarkers([newMarker]); // Chỉ hiển thị marker mới nhất
+    if (isSelectMode) {
+      const currentMarker = {
+        id: 'currentLocation',
+        latitude: lat,
+        longitude: lon,
+        address: item.display_name,
+        type: 'current' as const
+      };
+      
+      setMarkers(prev => {
+        const roomMarker = prev.find(m => m.type === 'room');
+        return roomMarker ? [roomMarker, currentMarker] : [currentMarker];
+      });
+    }
 
-    // Di chuyển map đến vị trí mới
     if (mapRef.current) {
       mapRef.current.animateToRegion(region, 1000);
     }
@@ -251,7 +286,159 @@ export default function MapScreen({route}: {route: any}) {
     }
   }, [route.params?.roomDetail]);
 
-  // Cập nhật hàm handleGetCurrentLocation
+  // Hàm format địa chỉ
+  const formatAddress = (fullAddress: string) => {
+    // Tách địa chỉ thành các phần
+    const parts = fullAddress.split(',').map(part => part.trim());
+    
+    let houseNumber = '';  // Số nhà
+    let street = '';       // Tên phố
+    let district = '';     // Quận
+    let city = '';        // Thành phố
+
+    // Xác định thành phố dựa trên địa chỉ
+    const lowerAddress = fullAddress.toLowerCase();
+    if (lowerAddress.includes('hà nội') || lowerAddress.includes('hanoi')) {
+      city = 'Thành phố Hà Nội';
+    } else if (lowerAddress.includes('hồ chí minh') || lowerAddress.includes('ho chi minh') || lowerAddress.includes('hcm') || lowerAddress.includes('sài gòn')) {
+      city = 'Thành phố Hồ Chí Minh';
+    } else if (lowerAddress.includes('đà nẵng') || lowerAddress.includes('da nang')) {
+      city = 'Thành phố Đà Nẵng';
+    } else {
+      // Mặc định là Hà Nội nếu không tìm thấy
+      city = 'Thành phố Hà Nội';
+    }
+
+    // Duyệt qua các phần của địa chỉ
+    for (const part of parts) {
+      const lowerPart = part.toLowerCase();
+      
+      // Tìm quận/huyện
+      if (lowerPart.includes('quận') || lowerPart.includes('huyện')) {
+        district = part;
+        continue;
+      }
+      
+      // Tìm số nhà và tên phố
+      if (/\d+/.test(part) && !street) {
+        // Nếu phần này chứa số và chưa có tên phố
+        const match = part.match(/(\d+)\s*(.+)?/);
+        if (match) {
+          houseNumber = match[1];
+          if (match[2]) {
+            street = match[2];
+          }
+        }
+        continue;
+      }
+      
+      // Nếu phần này chứa từ "phố" hoặc "đường" và chưa có tên phố
+      if ((lowerPart.includes('phố') || lowerPart.includes('đường')) && !street) {
+        street = part;
+      }
+    }
+
+    // Nếu không tìm được số nhà hoặc đường phố, lấy phần đầu tiên làm địa chỉ
+    if (!houseNumber && !street && parts.length > 0) {
+      const firstPart = parts[0];
+      if (/\d+/.test(firstPart)) {
+        const match = firstPart.match(/(\d+)\s*(.+)?/);
+        if (match) {
+          houseNumber = match[1];
+          street = match[2] || '';
+        }
+      } else {
+        street = firstPart;
+      }
+    }
+
+    // Nếu không tìm được quận/huyện, thử tìm trong các phần còn lại
+    if (!district) {
+      for (const part of parts) {
+        if (!part.toLowerCase().includes('thành phố') && 
+            !part.toLowerCase().includes('tỉnh') &&
+            part !== street &&
+            part !== houseNumber) {
+          district = part;
+          break;
+        }
+      }
+    }
+
+    // Đảm bảo có đủ thông tin tối thiểu
+    if (!houseNumber) houseNumber = "1";
+    if (!street) street = "Chưa có tên đường";
+    if (!district) district = "Chưa có quận/huyện";
+
+    // Tạo địa chỉ theo format mong muốn
+    const formattedParts = [];
+    
+    if (houseNumber) formattedParts.push(houseNumber);
+    if (street) formattedParts.push(street);
+    if (district) formattedParts.push(district);
+    formattedParts.push(city); // Luôn thêm thành phố vào cuối
+
+    return formattedParts.join(', ');
+  };
+
+  const handleMapPress = async (e: any) => {
+    if (!isSelectMode) return;
+
+    const {latitude, longitude} = e.nativeEvent.coordinate;
+    
+    try {
+      // Lấy địa chỉ từ tọa độ đã chọn
+      const fullAddress = await reverseGeocoding(latitude, longitude);
+      const formattedAddress = formatAddress(fullAddress);
+
+      setSelectedLocation({
+        latitude,
+        longitude,
+        address: formattedAddress
+      });
+
+      // Trong case 2, chỉ hiển thị 1 marker đỏ cho vị trí đã chọn
+      if (isSelectMode) {
+        const currentMarker = {
+          id: 'currentLocation',
+          latitude,
+          longitude,
+          address: formattedAddress,
+          type: 'current' as const
+        };
+        
+        setMarkers(prev => {
+          const roomMarker = prev.find(m => m.type === 'room');
+          return roomMarker ? [roomMarker, currentMarker] : [currentMarker];
+        });
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy địa chỉ:', error);
+      const addressText = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+      
+      setSelectedLocation({
+        latitude,
+        longitude,
+        address: addressText
+      });
+
+      if (isSelectMode) {
+        const currentMarker = {
+          id: 'currentLocation',
+          latitude,
+          longitude,
+          address: addressText,
+          type: 'current' as const
+        };
+        
+        setMarkers(prev => {
+          const roomMarker = prev.find(m => m.type === 'room');
+          return roomMarker ? [roomMarker, currentMarker] : [currentMarker];
+        });
+      }
+    }
+  };
+
   const handleGetCurrentLocation = async () => {
     const hasPermission = await requestLocationPermission();
     if (!hasPermission) {
@@ -269,7 +456,6 @@ export default function MapScreen({route}: {route: any}) {
         const {latitude, longitude} = position.coords;
 
         let region;
-        // Nếu có vị trí phòng, tính toán region để hiển thị cả 2 điểm
         if (route.params?.roomDetail?.location?.coordinates?.coordinates) {
           const [roomLong, roomLat] =
             route.params.roomDetail.location.coordinates.coordinates;
@@ -278,7 +464,6 @@ export default function MapScreen({route}: {route: any}) {
             {latitude: roomLat, longitude: roomLong},
           );
 
-          // Tính lại khoảng cách khi lấy vị trí hiện tại
           await calculateRouteDistance(
             {latitude, longitude},
             {latitude: roomLat, longitude: roomLong},
@@ -293,63 +478,56 @@ export default function MapScreen({route}: {route: any}) {
         }
 
         setMapRegion(region);
-        setSelectedLocation({latitude, longitude});
-
-        if (mapRef.current) {
-          mapRef.current.animateToRegion(region, 1000);
-        }
 
         try {
-          const address = await reverseGeocoding(latitude, longitude);
+          const fullAddress = await reverseGeocoding(latitude, longitude);
+          const formattedAddress = formatAddress(fullAddress);
 
-          // Cập nhật selectedLocation với địa chỉ mới
-          setSelectedLocation(prev =>
-            prev ? {...prev, address} : {latitude, longitude, address},
-          );
+          setSelectedLocation({
+            latitude,
+            longitude,
+            address: formattedAddress
+          });
 
-          // Tạo marker cho vị trí hiện tại
-          const currentLocationMarker = {
+          const currentMarker = {
             id: 'currentLocation',
             latitude,
             longitude,
-            address,
-            isRoom: false,
+            address: formattedAddress,
+            type: 'current' as const
           };
 
-          // Giữ lại marker phòng nếu có
-          const roomMarker = markers.find(m => m.isRoom);
-          if (roomMarker) {
-            setMarkers([roomMarker, currentLocationMarker]);
-          } else {
-            setMarkers([currentLocationMarker]);
-          }
+          setMarkers(prev => {
+            const roomMarker = prev.find(m => m.type === 'room');
+            return roomMarker ? [roomMarker, currentMarker] : [currentMarker];
+          });
+
         } catch (error) {
           console.error('Lỗi khi lấy địa chỉ:', error);
           const addressText = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+          
+          setSelectedLocation({
+            latitude,
+            longitude,
+            address: addressText
+          });
 
-          // Cập nhật selectedLocation với tọa độ
-          setSelectedLocation(prev =>
-            prev
-              ? {...prev, address: addressText}
-              : {latitude, longitude, address: addressText},
-          );
-
-          // Tạo marker cho vị trí hiện tại
-          const currentLocationMarker = {
+          const currentMarker = {
             id: 'currentLocation',
             latitude,
             longitude,
             address: addressText,
-            isRoom: false,
+            type: 'current' as const
           };
 
-          // Giữ lại marker phòng nếu có
-          const roomMarker = markers.find(m => m.isRoom);
-          if (roomMarker) {
-            setMarkers([roomMarker, currentLocationMarker]);
-          } else {
-            setMarkers([currentLocationMarker]);
-          }
+          setMarkers(prev => {
+            const roomMarker = prev.find(m => m.type === 'room');
+            return roomMarker ? [roomMarker, currentMarker] : [currentMarker];
+          });
+        }
+
+        if (mapRef.current) {
+          mapRef.current.animateToRegion(region, 1000);
         }
       },
       error => {
@@ -366,6 +544,19 @@ export default function MapScreen({route}: {route: any}) {
     setIsLoadingCurrentLocation(false);
   };
 
+  const handleConfirmLocation = () => {
+    if (selectedLocation) {
+      navigation.goBack();
+      // Truyền dữ liệu về màn AddRoom thông qua route.params
+      if (route.params?.onSelectLocation) {
+        route.params.onSelectLocation({
+          ...selectedLocation,
+          address: selectedLocation.address || searchText,
+        });
+      }
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Back Button */}
@@ -373,39 +564,42 @@ export default function MapScreen({route}: {route: any}) {
         <Image source={{uri: Icons.IconArrowLeft}} style={styles.backIcon} />
       </TouchableOpacity>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer} pointerEvents="box-none">
-        <View style={styles.searchInputContainer} pointerEvents="box-none">
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Tìm kiếm địa điểm..."
-            value={searchText}
-            onChangeText={setSearchText}
-            placeholderTextColor={Colors.grayLight}
-            autoCorrect={false}
-            autoCapitalize="none"
-          />
-          <TouchableOpacity style={styles.searchButton}>
-            <Image
-              source={{uri: Icons.IconSeachBlack}}
-              style={styles.searchIcon}
+      {/* Search Bar - Chỉ hiển thị trong chế độ chọn địa điểm */}
+      {isSelectMode && (
+        <View style={styles.searchContainer} pointerEvents="box-none">
+          <View style={styles.searchInputContainer} pointerEvents="box-none">
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Tìm kiếm địa điểm..."
+              value={searchText}
+              onChangeText={setSearchText}
+              placeholderTextColor={Colors.grayLight}
+              autoCorrect={false}
+              autoCapitalize="none"
+              multiline={false}
+              maxLength={100}
             />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity style={styles.searchButton}>
+              <Image
+                source={{uri: Icons.IconSeachBlack}}
+                style={styles.searchIcon}
+              />
+            </TouchableOpacity>
+          </View>
 
-        {/* Search Suggestions Dropdown */}
-        {suggestions.length > 0 && (
-          <FlatList
-            data={suggestions}
-            keyExtractor={item => item.place_id.toString()}
-            style={styles.dropdown}
-            renderItem={({item}) => (
-              <ItemAddress item={item} onPress={handleSelectSuggestion} />
-            )}
-            showsVerticalScrollIndicator={false}
-          />
-        )}
-      </View>
+          {suggestions.length > 0 && (
+            <FlatList
+              data={suggestions}
+              keyExtractor={item => item.place_id.toString()}
+              style={styles.dropdown}
+              renderItem={({item}) => (
+                <ItemAddress item={item} onPress={handleSelectSuggestion} />
+              )}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
+        </View>
+      )}
 
       {/* Map */}
       <MapView
@@ -413,26 +607,35 @@ export default function MapScreen({route}: {route: any}) {
         style={styles.map}
         provider={PROVIDER_GOOGLE}
         initialRegion={mapRegion}
-        showsUserLocation={true}
-        showsMyLocationButton={false}>
-        {route.params?.latitude && route.params?.longitude && (
+        showsUserLocation={false}
+        showsMyLocationButton={false}
+        onPress={isSelectMode ? handleMapPress : undefined}
+        onMapReady={handleMapReady}>
+        {markers.map(marker => (
           <Marker
+            key={marker.id}
             coordinate={{
-              latitude: route.params.latitude,
-              longitude: route.params.longitude,
-            }}
-            tracksViewChanges={false}>
+              latitude: marker.latitude,
+              longitude: marker.longitude,
+            }}>
             <Image
-              source={{uri: Icons.IconMaker}}
-              style={styles.markerIcon}
+              source={{
+                uri: marker.type === 'room' 
+                  ? Icons.IconMaker 
+                  : Icons.IconMyMarker
+              }}
+              style={[
+                styles.markerIcon,
+                marker.type === 'current' && styles.currentLocationMarker
+              ]}
               resizeMode="contain"
             />
           </Marker>
-        )}
+        ))}
       </MapView>
 
-      {/* Distance Badge */}
-      {distance && !isCalculatingDistance && (
+      {/* Distance Badge - Chỉ hiển thị khi xem chi tiết phòng */}
+      {!isSelectMode && distance && !isCalculatingDistance && (
         <View style={styles.distanceBadge}>
           <Image
             source={{uri: Icons.IconLocation}}
@@ -459,147 +662,92 @@ export default function MapScreen({route}: {route: any}) {
         </View>
       </TouchableOpacity>
 
-      {/* Room Info Card */}
-      {selectedLocation && route.params?.roomDetail && (
-        <View style={styles.bottomContainer}>
-          <TouchableOpacity
-            style={styles.roomCard}
-            onPress={handleNavigateToDetail}
-            activeOpacity={0.8}>
-            {route.params.roomDetail.photos &&
-            route.params.roomDetail.photos.length > 0 ? (
-              <View style={styles.roomImage}>
-                <Image
-                  source={{uri: getImageUrl(route.params.roomDetail.photos[0])}}
-                  style={[styles.roomImage, {position: 'absolute'}]}
-                  resizeMode="cover"
-                  onError={() => console.log('Image load error')}
-                  defaultSource={{uri: Icons.IconHome}}
-                />
-              </View>
-            ) : (
-              <View style={[styles.roomImage, styles.roomImagePlaceholder]}>
-                <Image
-                  source={{uri: Icons.IconHome}}
-                  style={styles.placeholderIcon}
-                />
-              </View>
-            )}
-            <View style={styles.roomInfo}>
-              <Text style={styles.roomName} numberOfLines={2}>
-                {route.params.roomDetail.description || 'Phòng trọ'}
+      {/* Bottom Container */}
+      {isSelectMode ? (
+        // Hiển thị địa điểm đã chọn cho chế độ chọn địa điểm
+        selectedLocation && (
+          <View style={styles.bottomContainer}>
+            <View style={styles.selectedLocationContainer}>
+              <Text style={styles.selectedLocationTitle}>Địa điểm bạn đã chọn</Text>
+              <Text style={styles.selectedLocationAddress} numberOfLines={2}>
+                {selectedLocation.address || 'Chưa có địa chỉ'}
               </Text>
-              <Text style={styles.roomPrice}>
-                Từ{' '}
-                {(route.params.roomDetail.rentPrice || 0).toLocaleString(
-                  'vi-VN',
-                )}
-                đ/tháng
-              </Text>
-              <View style={styles.locationRow}>
-                <Image
-                  source={{uri: Icons.IconLocation}}
-                  style={styles.locationIcon}
-                />
-                <Text style={styles.locationText} numberOfLines={1}>
-                  {route.params.roomDetail.location?.addressText ||
-                    'Đang cập nhật địa chỉ'}
-                </Text>
-              </View>
-              <View style={styles.roomStats}>
-                <Image
-                  source={{uri: Icons.IconHome}}
-                  style={styles.statsIcon}
-                />
-                <Text style={styles.statsText}>
-                  Còn trống: {route.params.roomDetail.maxOccupancy || 0} phòng
-                </Text>
-              </View>
             </View>
-            <TouchableOpacity style={styles.favoriteButton}>
-              <Image
-                source={{uri: Icons.IconHeartDefaut}}
-                style={styles.favoriteIcon}
-              />
+            <ItemButtonConfirm
+              title="Xác nhận"
+              onPress={handleConfirmLocation}
+              icon={Icons.IconRemoveWhite}
+              onPressIcon={handleGoBack}
+            />
+          </View>
+        )
+      ) : (
+        // Hiển thị thông tin phòng cho chế độ xem chi tiết
+        selectedLocation && route.params?.roomDetail && (
+          <View style={styles.bottomContainer}>
+            <TouchableOpacity
+              style={styles.roomCard}
+              onPress={handleNavigateToDetail}
+              activeOpacity={0.8}>
+              {route.params.roomDetail.photos &&
+              route.params.roomDetail.photos.length > 0 ? (
+                <View style={styles.roomImage}>
+                  <Image
+                    source={{uri: getImageUrl(route.params.roomDetail.photos[0])}}
+                    style={[styles.roomImage, {position: 'absolute'}]}
+                    resizeMode="cover"
+                    onError={() => console.log('Image load error')}
+                    defaultSource={{uri: Icons.IconHome}}
+                  />
+                </View>
+              ) : (
+                <View style={[styles.roomImage, styles.roomImagePlaceholder]}>
+                  <Image
+                    source={{uri: Icons.IconHome}}
+                    style={styles.placeholderIcon}
+                  />
+                </View>
+              )}
+              <View style={styles.roomInfo}>
+                <Text style={styles.roomName} numberOfLines={2}>
+                  {route.params.roomDetail.description || 'Phòng trọ'}
+                </Text>
+                <Text style={styles.roomPrice}>
+                  Từ{' '}
+                  {(route.params.roomDetail.rentPrice || 0).toLocaleString(
+                    'vi-VN',
+                  )}
+                  đ/tháng
+                </Text>
+                <View style={styles.locationRow}>
+                  <Image
+                    source={{uri: Icons.IconLocation}}
+                    style={styles.locationIcon}
+                  />
+                  <Text style={styles.locationText} numberOfLines={1}>
+                    {route.params.roomDetail.location?.addressText ||
+                      'Đang cập nhật địa chỉ'}
+                  </Text>
+                </View>
+                <View style={styles.roomStats}>
+                  <Image
+                    source={{uri: Icons.IconPersonDefault}}
+                    style={styles.statsIcon}
+                  />
+                  <Text style={styles.statsText}>
+                    Số người {route.params.roomDetail.maxOccupancy || 0} 
+                  </Text>
+                </View>
+              </View>
             </TouchableOpacity>
-          </TouchableOpacity>
-        </View>
+          </View>
+        )
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  roomCard: {
-    flexDirection: 'row',
-    backgroundColor: Colors.white,
-    borderRadius: responsiveSpacing(12),
-    padding: responsiveSpacing(12),
-    marginBottom: responsiveSpacing(16),
-  },
-  roomImage: {
-    width: responsiveSpacing(80),
-    height: responsiveSpacing(80),
-    borderRadius: responsiveSpacing(8),
-  },
-  roomImagePlaceholder: {
-    backgroundColor: Colors.lightGray,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderIcon: {
-    width: responsiveIcon(32),
-    height: responsiveIcon(32),
-    tintColor: Colors.darkGray,
-  },
-  roomInfo: {
-    flex: 1,
-    marginLeft: responsiveSpacing(12),
-  },
-  roomName: {
-    fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.black,
-    marginBottom: responsiveSpacing(4),
-  },
-  roomPrice: {
-    fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.darkGreen,
-    marginBottom: responsiveSpacing(4),
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: responsiveSpacing(4),
-  },
-  locationText: {
-    flex: 1,
-    fontSize: responsiveFont(12),
-    color: Colors.textGray,
-    marginLeft: responsiveSpacing(4),
-  },
-  roomStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statsIcon: {
-    width: responsiveIcon(16),
-    height: responsiveIcon(16),
-    tintColor: Colors.darkGreen,
-  },
-  statsText: {
-    fontSize: responsiveFont(12),
-    color: Colors.textGray,
-    marginLeft: responsiveSpacing(4),
-  },
-  favoriteButton: {
-    padding: responsiveSpacing(4),
-  },
-  favoriteIcon: {
-    width: responsiveIcon(24),
-    height: responsiveIcon(24),
-  },
   container: {
     flex: 1,
     backgroundColor: Colors.white,
@@ -651,6 +799,7 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.black,
+    paddingVertical: 0,
   },
   searchButton: {
     width: responsiveIcon(40),
@@ -679,20 +828,52 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
+  markerIcon: {
+    width: responsiveIcon(32),
+    height: responsiveIcon(32),
+  },
+  currentLocationMarker: {
+    width: responsiveIcon(28),
+    height: responsiveIcon(28),
+  },
+  selectedLocationMarker: {
+    tintColor: Colors.darkGreen,
+  },
+  distanceBadge: {
+    position: 'absolute',
+    top: responsiveSpacing(100),
+    alignSelf: 'center',
+    backgroundColor: Colors.white,
+    borderRadius: responsiveSpacing(20),
+    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(8),
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  distanceBadgeIcon: {
+    width: responsiveIcon(16),
+    height: responsiveIcon(16),
+    marginRight: responsiveSpacing(8),
+    tintColor: Colors.darkGreen,
+  },
+  distanceBadgeText: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.black,
+  },
   myLocationButton: {
     position: 'absolute',
+    bottom: responsiveSpacing(200),
     right: responsiveSpacing(16),
-    bottom: responsiveSpacing(200), // Di chuyển xuống dưới
-    width: responsiveIcon(48),
-    height: responsiveIcon(48),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  myLocationIconContainer: {
-    width: responsiveIcon(48),
-    height: responsiveIcon(48),
-    backgroundColor: Colors.limeGreen,
-    borderRadius: responsiveIcon(24),
+    width: responsiveIcon(40),
+    height: responsiveIcon(40),
+    backgroundColor: Colors.white,
+    borderRadius: responsiveIcon(20),
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -701,10 +882,16 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  myLocationIconContainer: {
+    width: responsiveIcon(40),
+    height: responsiveIcon(40),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   myLocationIcon: {
     width: responsiveIcon(24),
     height: responsiveIcon(24),
-    tintColor: Colors.black,
+    tintColor: Colors.darkGreen,
   },
   bottomContainer: {
     position: 'absolute',
@@ -712,8 +899,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: Colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: responsiveSpacing(20),
+    borderTopRightRadius: responsiveSpacing(20),
     padding: responsiveSpacing(16),
     shadowColor: '#000',
     shadowOffset: {width: 0, height: -2},
@@ -721,103 +908,87 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  addressCard: {
-    backgroundColor: Colors.white,
+  selectedLocationContainer: {
     marginBottom: responsiveSpacing(16),
   },
-  addressHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  selectedLocationTitle: {
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
     marginBottom: responsiveSpacing(8),
   },
-  locationIcon: {
-    width: responsiveIcon(20),
-    height: responsiveIcon(20),
-    tintColor: Colors.darkGreen,
-    marginRight: responsiveSpacing(8),
-  },
-  addressTitle: {
-    fontSize: responsiveFont(16),
-    fontWeight: 'bold',
-    color: Colors.black,
-  },
-  addressText: {
+  selectedLocationAddress: {
     fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
     color: Colors.textGray,
     lineHeight: responsiveFont(20),
   },
-  loadingContainer: {
+  roomCard: {
     flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: Colors.white,
+    borderRadius: responsiveSpacing(12),
+    padding: responsiveSpacing(12),
+    marginBottom: responsiveSpacing(16),
   },
-  loadingText: {
-    marginLeft: responsiveSpacing(8),
-    fontSize: responsiveFont(14),
-    color: Colors.textGray,
+  roomImage: {
+    width: responsiveSpacing(80),
+    height: responsiveSpacing(80),
+    borderRadius: responsiveSpacing(8),
   },
-  confirmButton: {
-    backgroundColor: Colors.darkGreen,
-    paddingVertical: responsiveSpacing(16),
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  confirmButtonText: {
-    color: Colors.white,
-    fontSize: responsiveFont(16),
-    fontFamily: Fonts.Roboto_Bold,
-  },
-  // Marker icon styles
-  customMarkerContainer: {
-    alignItems: 'center',
+  roomImagePlaceholder: {
+    backgroundColor: Colors.lightGray,
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  customMarker: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 3,
-  },
-  currentLocationMarker: {
-    backgroundColor: '#2196F3',
-    borderColor: '#fff',
-  },
-  roomMarker: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#fff',
-  },
-  markerIcon: {
+  placeholderIcon: {
     width: responsiveIcon(32),
     height: responsiveIcon(32),
-  } as ImageStyle,
-  distanceBadge: {
-    position: 'absolute',
-    top: responsiveSpacing(120),
-    left: responsiveSpacing(16),
-    right: responsiveSpacing(16),
-    backgroundColor: Colors.limeGreen,
-    borderRadius: responsiveSpacing(20),
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: responsiveSpacing(8),
-    paddingHorizontal: responsiveSpacing(12),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    tintColor: Colors.darkGray,
   },
-  distanceBadgeIcon: {
-    width: responsiveIcon(16),
-    height: responsiveIcon(16),
-    tintColor: Colors.darkGreen,
+  roomInfo: {
+    flex: 1,
+    marginLeft: responsiveSpacing(12),
   },
-  distanceBadgeText: {
-    marginLeft: responsiveSpacing(8),
+  roomName: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+    marginBottom: responsiveSpacing(4),
+  },
+  roomPrice: {
     fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.darkGreen,
+    marginBottom: responsiveSpacing(4),
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: responsiveSpacing(4),
+  },
+  locationIcon: {
+    width: responsiveIcon(16),
+    height: responsiveIcon(16),
+    tintColor: Colors.darkGreen,
+    marginRight: responsiveSpacing(4),
+  },
+  locationText: {
+    flex: 1,
+    fontSize: responsiveFont(12),
+    color: Colors.textGray,
+  },
+  roomStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statsIcon: {
+    width: responsiveIcon(16),
+    height: responsiveIcon(16),
+    tintColor: Colors.darkGreen,
+    marginRight: responsiveSpacing(4),
+  },
+  statsText: {
+    fontSize: responsiveFont(12),
+    color: Colors.textGray,
   },
 });

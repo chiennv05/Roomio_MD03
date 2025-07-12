@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Image,
 } from 'react-native';
 import {Colors} from '../../../../theme/color';

@@ -1,12 +1,8 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   SafeAreaView,
-  TouchableOpacity,
-  ScrollView,
-  Image,
   FlatList,
   ActivityIndicator,
   RefreshControl,
@@ -16,60 +12,80 @@ import {useDispatch, useSelector} from 'react-redux';
 import {Icons} from '../../../assets/icons';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
-import {SCREEN, scale, verticalScale, responsiveFont} from '../../../utils/responsive';
+import {
+  scale,
+  verticalScale,
+  responsiveFont,
+  responsiveSpacing,
+  SCREEN,
+} from '../../../utils/responsive';
 import {AppDispatch, RootState} from '../../../store';
 import {fetchMyContracts} from '../../../store/slices/contractSlice';
 import ContractItem from './components/ContractItem';
 import EmptyContract from './components/EmptyContract';
-import FilterStatus from './components/FilterStatus';
 import Pagination from './components/Pagination';
+import {UIHeader} from '../MyRoom/components';
+import FilterStatusItem from './components/FilterStatusItem';
+import {filterOptionsContract} from './utils/filterContract';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {RootStackParamList} from '../../../types/route';
 
 const ContractManagement = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const dispatch = useDispatch<AppDispatch>();
-  
+
+  const [selectedFilter, setSelectedFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
-  
-  const {contracts, pagination, loading, error} = useSelector(
+  const [itemsPerPage] = useState(10);
+
+  const {contracts, pagination, loading} = useSelector(
     (state: RootState) => state.contract,
   );
 
-  // Tải danh sách hợp đồng
-  useEffect(() => {
-    loadContracts();
-  }, [filterStatus, currentPage]);
-
-  const loadContracts = async () => {
-    try {
+  // Load contracts với params truyền vào
+  const loadContracts = useCallback(
+    async ({
+      page = currentPage,
+      limit = itemsPerPage,
+      status = selectedFilter,
+    }: {
+      page?: number;
+      limit?: number;
+      status?: string;
+    }) => {
+      const statusToSend = status === 'all' ? undefined : status;
       await dispatch(
         fetchMyContracts({
-          page: currentPage,
-          limit: itemsPerPage,
-          status: filterStatus || undefined,
+          page,
+          limit,
+          status: statusToSend,
         }),
       );
-    } catch (error) {
-      console.error('Failed to load contracts:', error);
-    }
-  };
+    },
+    [dispatch, currentPage, itemsPerPage, selectedFilter],
+  );
 
-  // Xử lý khi kéo để làm mới
+  // Gọi load khi filter hoặc page thay đổi
+  useEffect(() => {
+    loadContracts({page: currentPage, status: selectedFilter});
+  }, [selectedFilter, currentPage, loadContracts]); // thiếu 'loadContracts'
+
+  // Kéo để làm mới
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadContracts();
+    setCurrentPage(1); // reset về trang đầu
+    await loadContracts({page: 1, status: selectedFilter});
     setRefreshing(false);
   };
 
-  // Thay đổi trạng thái lọc
-  const handleFilterChange = (status: string | null) => {
-    setFilterStatus(status);
-    setCurrentPage(1); // Quay về trang đầu tiên khi thay đổi bộ lọc
-  };
+  // Chọn filter
+  const handleClickFilter = useCallback((value: string) => {
+    setSelectedFilter(value);
+    setCurrentPage(1);
+  }, []);
 
-  // Thay đổi trang
+  // Chuyển trang
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -78,84 +94,74 @@ const ContractManagement = () => {
     navigation.goBack();
   };
 
-  // Hiển thị lỗi
-  if (error) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-            <Image
-              source={{uri: Icons.IconArrowBack}}
-              style={{width: 24, height: 24}}
-            />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Quản lý hợp đồng</Text>
-          <View style={styles.emptyView} />
-        </View>
-
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>
-            Có lỗi xảy ra: {error}. Vui lòng thử lại.
-          </Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadContracts}>
-            <Text style={styles.retryText}>Thử lại</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
+  const handleGoContractDetail = (contractId: string) => {
+    navigation.navigate('ContractDetail', {contractId});
+  };
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-          <Image
-            source={{uri: Icons.IconArrowBack}}
-            style={{width: 24, height: 24}}
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Quản lý hợp đồng</Text>
-        <View style={styles.emptyView} />
-      </View>
-
-      <FilterStatus
-        selectedStatus={filterStatus}
-        onSelectStatus={handleFilterChange}
+      <UIHeader
+        title="Quản lý hợp đồng"
+        iconLeft={Icons.IconArrowLeft}
+        onPressLeft={handleGoBack}
       />
 
-      {loading && !refreshing ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.darkGreen} />
-        </View>
-      ) : contracts.length === 0 ? (
-        <EmptyContract />
-      ) : (
-        <>
-          <FlatList
-            data={contracts}
-            keyExtractor={item => item._id}
-            renderItem={({item}) => <ContractItem contract={item} />}
-            contentContainerStyle={styles.contractList}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                colors={[Colors.darkGreen]}
-                tintColor={Colors.darkGreen}
-              />
-            }
-          />
-
-          {pagination && (
-            <Pagination
-              currentPage={pagination.page}
-              totalPages={pagination.totalPages}
-              onPageChange={handlePageChange}
+      <View style={styles.conatinerFilter}>
+        <FlatList
+          keyExtractor={(_, index) => index.toString()}
+          horizontal={true}
+          showsHorizontalScrollIndicator={false}
+          data={filterOptionsContract}
+          renderItem={({item, index}) => (
+            <FilterStatusItem
+              item={item}
+              isSelected={item.value === selectedFilter}
+              onPress={handleClickFilter}
+              index={index}
             />
           )}
-        </>
-      )}
+        />
+      </View>
+      <View style={styles.containerListRooms}>
+        {loading && !refreshing ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.darkGreen} />
+          </View>
+        ) : contracts.length === 0 ? (
+          <EmptyContract />
+        ) : (
+          <>
+            <FlatList
+              data={contracts}
+              keyExtractor={(_, index) => index.toString()}
+              renderItem={({item, index}) => (
+                <ContractItem
+                  key={index}
+                  contract={item}
+                  onPress={handleGoContractDetail}
+                />
+              )}
+              contentContainerStyle={styles.contractList}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  colors={[Colors.darkGreen]}
+                  tintColor={Colors.darkGreen}
+                />
+              }
+            />
+
+            {pagination && (
+              <Pagination
+                currentPage={pagination.page}
+                totalPages={pagination.totalPages}
+                onPageChange={handlePageChange}
+              />
+            )}
+          </>
+        )}
+      </View>
     </SafeAreaView>
   );
 };
@@ -164,28 +170,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroud,
-  },
-  header: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: scale(16),
-    paddingVertical: verticalScale(12),
-    backgroundColor: Colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.gray150,
   },
-  backButton: {
-    padding: scale(8),
+  conatinerFilter: {
+    width: SCREEN.width,
+    justifyContent: 'center',
+    marginVertical: responsiveSpacing(10),
   },
-  headerTitle: {
-    fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(18),
-    color: Colors.black,
-  },
-  emptyView: {
-    width: scale(40),
-  },
+
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -217,6 +209,11 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(16),
     color: Colors.white,
+  },
+  containerListRooms: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

@@ -50,9 +50,11 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Title và Price */}
+      {/* Giá */}
+      <Text style={styles.priceText}>{price}đ/tháng</Text>
+
+      {/* Title */}
       <Text style={styles.title} numberOfLines={2}>{name}</Text>
-      <Text style={styles.priceText}>{price}/ tháng</Text>
 
       {/* Room Code */}
       <View style={styles.roomCodeContainer}>
@@ -65,7 +67,7 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
         <Text style={styles.roomCode}>Mã phòng: {roomCode}</Text>
       </View>
 
-      {/* Address với icon map */}
+      {/* Address */}
       <View style={styles.addressContainer}>
         <View style={styles.addressIcon}>
           <Image 
@@ -74,21 +76,24 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
           />
         </View>
         <Text style={styles.address}>{address}</Text>
-        {onMapPress && (
-          <TouchableOpacity 
-            style={styles.mapButton}
-            onPress={onMapPress}
-            activeOpacity={0.7}
-          >
-            <Image 
-              source={{ uri: Icons.IconLocationGreen }}
-              style={styles.mapIcon}
-            />
-          </TouchableOpacity>
-        )}
       </View>
 
-      {/* Thông tin 3 cột ngang, không bọc ngoài */}
+      {/* Map Button */}
+      {onMapPress && (
+        <TouchableOpacity 
+          style={styles.mapButtonNew}
+          onPress={onMapPress}
+          activeOpacity={0.7}
+        >
+          <Image 
+            source={{ uri: Icons.IconMap }}
+            style={styles.mapIconNew}
+          />
+          <Text style={styles.mapText}>Bấm vào đây để xem vị trí phòng</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Thông tin 3 cột ngang */}
       <Text style={styles.sectionTitle}>Thông tin</Text>
       <View style={styles.infoRowNoBg}>
         {infoItems.map(item => (
@@ -107,18 +112,18 @@ const styles = StyleSheet.create({
   container: {
     paddingVertical: responsiveSpacing(16),
   },
-  title: {
-    fontSize: responsiveFont(20),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.black,
-    marginBottom: responsiveSpacing(8),
-    lineHeight: responsiveFont(24),
-  },
   priceText: {
     fontSize: responsiveFont(24),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.darkGreen,
-    marginBottom: responsiveSpacing(16),
+    marginBottom: responsiveSpacing(8),
+  },
+  title: {
+    fontSize: responsiveFont(1),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+    lineHeight: responsiveFont(1),
+    marginBottom: responsiveSpacing(8),
   },
   roomCodeContainer: {
     flexDirection: 'row',
@@ -145,7 +150,7 @@ const styles = StyleSheet.create({
   addressContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: responsiveSpacing(24),
+    marginBottom: responsiveSpacing(8),
   },
   addressIcon: {
     width: 20,
@@ -167,18 +172,24 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Regular,
     lineHeight: responsiveFont(18),
   },
-  mapButton: {
-    marginLeft: responsiveSpacing(8),
-    padding: responsiveSpacing(4),
-    borderRadius: responsiveIcon(16),
-    backgroundColor: Colors.limeGreenLight,
-    justifyContent: 'center',
+  mapButtonNew: {
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: Colors.limeGreenLight,
+    padding: responsiveSpacing(12),
+    borderRadius: responsiveSpacing(8),
+    marginBottom: responsiveSpacing(16),
   },
-  mapIcon: {
-    width: responsiveIcon(20),
-    height: responsiveIcon(20),
+  mapIconNew: {
+    width: responsiveIcon(24),
+    height: responsiveIcon(24),
     tintColor: Colors.darkGreen,
+    marginRight: responsiveSpacing(8),
+  },
+  mapText: {
+    fontSize: responsiveFont(14),
+    color: Colors.darkGreen,
+    fontFamily: Fonts.Roboto_Bold,
   },
   sectionTitle: {
     fontSize: responsiveFont(16),

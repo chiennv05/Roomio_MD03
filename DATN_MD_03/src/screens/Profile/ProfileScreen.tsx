@@ -35,12 +35,12 @@ export default function ProfileScreen() {
   const token = useSelector((state: RootState) => state.auth.token);
   const user = useSelector((state: RootState) => state.auth.user);
   const loading = useSelector((state: RootState) => state.auth.loading);
-
+  console.log(token);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   // Check if user is guest (not logged in)
   const isGuest = !checkToken(token) || !user;
-  
+
   // Check if user is landlord (chủ trọ)
   const isLandlord = user?.role === 'chuTro';
 
@@ -104,6 +104,11 @@ export default function ProfileScreen() {
     navigation.navigate('ContractManagement');
   };
 
+  // Hàm xử lý khi nhấn vào "Yêu cầu hỗ trợ"
+  const handleSupportPress = () => {
+    navigation.navigate('SupportScreen');
+  };
+
   // Show guest screen if not logged in
   if (isGuest) {
     return (
@@ -117,15 +122,18 @@ export default function ProfileScreen() {
     navigation.navigate('LandlordRoom');
   };
 
+  const handleGoStatistic = () => {
+    navigation.navigate('StatisticScreen');
+  };
+
   // Show normal profile screen for logged in users
   return (
     <SafeAreaView style={styles.container}>
       <ProfileHeader />
-      
-      <ScrollView 
+
+      <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollViewContent}
-      >
+        contentContainerStyle={styles.scrollViewContent}>
         <View style={styles.box}>
           <SettingSwitch
             iconStat={Icons.IconsNotification}
@@ -148,7 +156,7 @@ export default function ProfileScreen() {
           />
           <SettingItem
             iconStat={Icons.IconContract}
-            label={isLandlord ? "Quản lý hợp đồng" : "Hợp đồng thuê"}
+            label={isLandlord ? 'Quản lý hợp đồng' : 'Hợp đồng thuê'}
             iconEnd={Icons.IconNext}
             onPress={handleContractPress}
           />
@@ -157,7 +165,7 @@ export default function ProfileScreen() {
             label="Hóa đơn thu chi"
             iconEnd={Icons.IconNext}
           />
-          
+
           {/* Chỉ hiển thị các tùy chọn cho chủ trọ nếu user có role là chuTro */}
           {isLandlord && (
             <>
@@ -172,18 +180,18 @@ export default function ProfileScreen() {
                 iconEnd={Icons.IconNext}
                 onPress={handleTenantListPress}
               />
-               <SettingItem
-            iconStat={Icons.IconPaper}
-            label="Thống kê "
-            iconEnd={Icons.IconNext}
-            onPress={handleGoLandlord}
-          />
-            <SettingItem
-            iconStat={Icons.IconPaper}
-            label="Quản lý phòng trọ "
-            iconEnd={Icons.IconNext}
-            onPress={handleGoLandlord}
-          />
+              <SettingItem
+                iconStat={Icons.IconPaper}
+                label="Thống kê "
+                iconEnd={Icons.IconNext}
+                onPress={handleGoStatistic}
+              />
+              <SettingItem
+                iconStat={Icons.IconPaper}
+                label="Quản lý phòng trọ "
+                iconEnd={Icons.IconNext}
+                onPress={handleGoLandlord}
+              />
             </>
           )}
         </View>
@@ -191,20 +199,21 @@ export default function ProfileScreen() {
         <View style={styles.box}>
           <SettingItem
             iconStat={Icons.IconLightReport}
-            label="Báo cáo sự cố"
+            label="Yêu cầu hỗ trợ"
             iconEnd={Icons.IconNext}
+            onPress={handleSupportPress}
           />
           <SettingItem
             iconStat={Icons.Iconoir_Privacy_Policy}
             label="Điều khoản & chính sách"
             iconEnd={Icons.IconNext}
+            onPress={() => navigation.navigate('PolicyTerms')}
           />
         </View>
 
-   
-
-
-        <TouchableOpacity onPress={handleShowLogoutModal} style={styles.logoutButtonContainer}>
+        <TouchableOpacity
+          onPress={handleShowLogoutModal}
+          style={styles.logoutButtonContainer}>
           <Text style={styles.button}>Đăng xuất</Text>
         </TouchableOpacity>
       </ScrollView>

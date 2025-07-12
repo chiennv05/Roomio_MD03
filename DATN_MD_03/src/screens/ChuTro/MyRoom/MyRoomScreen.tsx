@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -107,78 +109,90 @@ export default function MyRoomScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <UIHeader
-        title="Phòng trọ của tôi"
-        onPressLeft={handleGoback}
-        iconLeft={Icons.IconArrowLeft}
-        iconRight={Icons.IconAdd}
-        onPressRight={handleAddRoom}
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={Colors.backgroud}
+        translucent={true}
       />
-
-      {/* Tìm kiếm */}
-      <View style={styles.conatinerSearch}>
-        <ItemInput
-          placeholder="Tìm bài viết đã đăng"
-          value={searchText}
-          onChangeText={setSearchText}
-          editable={true}
-          width={SCREEN.width * 0.8}
+      <View style={styles.container}>
+        <UIHeader
+          title="Phòng trọ của tôi"
+          onPressLeft={handleGoback}
+          iconLeft={Icons.IconArrowLeft}
+          iconRight={Icons.IconAdd}
+          onPressRight={handleAddRoom}
         />
-        <TouchableOpacity style={styles.styleButton}>
-          <Image
-            source={{uri: Icons.IconSeachBlack}}
-            style={styles.styleIcon}
+
+        {/* Tìm kiếm */}
+        <View style={styles.conatinerSearch}>
+          <ItemInput
+            placeholder="Tìm bài viết đã đăng"
+            value={searchText}
+            onChangeText={setSearchText}
+            editable={true}
+            width={SCREEN.width * 0.8}
           />
-        </TouchableOpacity>
-      </View>
-
-      {/* Filter - Animated */}
-      <Animated.View style={[styles.conatinerFilter, animatedFilterStyle]}>
-        <FlatList
-          keyExtractor={(_, index) => index.toString()}
-          horizontal={true}
-          showsHorizontalScrollIndicator={false}
-          data={ALL_ROOM_STATUSES}
-          renderItem={({item, index}) => (
-            <ItemFilter
-              item={item}
-              isSelected={item.value === selectedFilter}
-              onPress={handleClickFilter}
-              index={index}
+          <TouchableOpacity style={styles.styleButton}>
+            <Image
+              source={{uri: Icons.IconSeachBlack}}
+              style={styles.styleIcon}
             />
-          )}
-        />
-      </Animated.View>
+          </TouchableOpacity>
+        </View>
 
-      {/* Danh sách phòng */}
-      <View style={styles.containerListRooms}>
-        {loading && <LoadingAnimation size="medium" color={Colors.limeGreen} />}
-        <FlatList
-          data={filteredRooms}
-          horizontal={false}
-          showsVerticalScrollIndicator={false}
-          keyExtractor={(_, index) => index.toString()}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-          renderItem={({item, index}) => (
-            <ItemRoom
-              item={item}
-              onPress={handleClickItemRooms}
-              index={index}
-            />
-          )}
-        />
+        {/* Filter - Animated */}
+        <Animated.View style={[styles.conatinerFilter, animatedFilterStyle]}>
+          <FlatList
+            keyExtractor={(_, index) => index.toString()}
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            data={ALL_ROOM_STATUSES}
+            renderItem={({item, index}) => (
+              <ItemFilter
+                item={item}
+                isSelected={item.value === selectedFilter}
+                onPress={handleClickFilter}
+                index={index}
+              />
+            )}
+          />
+        </Animated.View>
+
+        {/* Danh sách phòng */}
+        <View style={styles.containerListRooms}>
+          {loading && <LoadingAnimation size="medium" color={Colors.limeGreen} />}
+          <FlatList
+            data={filteredRooms}
+            horizontal={false}
+            showsVerticalScrollIndicator={false}
+            keyExtractor={(_, index) => index.toString()}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            renderItem={({item, index}) => (
+              <ItemRoom
+                item={item}
+                onPress={handleClickItemRooms}
+                index={index}
+              />
+            )}
+          />
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: Colors.backgroud,
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.backgroud,
     alignItems: 'center',
+    paddingTop: StatusBar.currentHeight || 0,
   },
   conatinerSearch: {
     flexDirection: 'row',
