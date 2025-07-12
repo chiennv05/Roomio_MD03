@@ -18,6 +18,10 @@ export type RootStackParamList = {
   ContractTenants: {contractId: string};
   PdfViewer: {pdfUrl: string};
   PolicyTerms: undefined;
+  SupportScreen: undefined;
+  AddNewSupport: undefined;
+  SupportDetail: {supportId: string};
+  UpdateSupport: {supportId: string};
   MapScreen: {
     latitude?: number;
     longitude?: number;
