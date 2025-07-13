@@ -8,7 +8,6 @@ import PdfViewerScreen from '../screens/ChuTro/Contract/PdfViewerScreen';
 import RoomDetail from '../screens/ChuTro/RoomDetail/RoomDetail';
 import ContractTenantsScreen from '../screens/ChuTro/ContractManagement/ContractTenantsScreen';
 import {RootStackParamList} from '../types/route';
-
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function AppNavigator() {

@@ -9,30 +9,25 @@ export const Colors = {
   mediumGray: '#A0A0A0',
   lightGray: '#F5F5F5',
   darkGray: '#444444',
-
+<<<<<<< HEAD
+  primaryGreen: '#5EB600',
+=======
   primaryGreen: '#86B600',
 
-  primary: '#86B600', // Alias for primaryGreen
-  success: '#5EB600', // Alias for darkGreen
-  warning: '#FFC107', // Amber color
-  error: '#FF6B6B', // Alias for lightRed
-  info: '#2196F3', // Blue color
-
+>>>>>>> 48427799603a68c91b0b323c89a5c67705a0f773
   cardBg: '#FFFFFF',
   textGray: '#A0A0A0',
   unselectedText: '#666666',
   divider: '#F0F0F0',
   red: '#FF0000',
-  lightRed: '#FF6B6B',
   gray: '#ccc',
   colorAvata: '#b3c6ff',
+<<<<<<< HEAD
   gray200: '#E0E0E0',
   gray150: '#D9D9D9',
   grayLight: '#CCCCCC',
   gray60: '#626262',
-  lightGreenBackground: '#F0F8F0',
-  lightBlueBackground: '#F0F0F8',
-  lightYellowBackground: '#F8F8F0',
-  lightPurpleBackground: '#F8F0F8',
-  lightOrangeBackground: '#F8F4F0',
+=======
+
+>>>>>>> 48427799603a68c91b0b323c89a5c67705a0f773
 };

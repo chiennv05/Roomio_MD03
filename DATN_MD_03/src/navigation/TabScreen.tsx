@@ -1,4 +1,5 @@
 import React from 'react';
+
 import {StatusBar} from 'react-native';
 import {createStackNavigator, TransitionPresets} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/route';
@@ -24,7 +25,6 @@ import 'react-native-gesture-handler';
 import PersonalInformation from '../screens/Profile/PersonalInformation';
 import MyRoomScreen from '../screens/ChuTro/MyRoom/MyRoomScreen';
 import AddRoomScreen from '../screens/ChuTro/AddRoom/AddRoomScreen';
-
 import ContractManagement from '../screens/ChuTro/Contract/ContractManagement';
 import ContractDetailScreen from '../screens/ChuTro/Contract/ContractDetailScreen';
 import AddContract from '../screens/ChuTro/Contract/AddContract';
@@ -39,6 +39,12 @@ import SupportScreen from '../screens/Support/SupportScreen';
 import AddNewSupport from '../screens/Support/AddNewSupport';
 import SupportDetail from '../screens/Support/SupportDetail';
 import UpdateSupport from '../screens/Support/UpdateSupport';
+import BillScreen from '../screens/Bill/BillScreen';
+import BillDetailScreen from '../screens/Bill/BillDetailScreen';
+import RoommateInvoiceDetailScreen from '../screens/Bill/RoommateInvoiceDetailScreen';
+import CreateInvoiceScreen from '../screens/Bill/CreateInvoiceScreen';
+import EditInvoiceScreen from '../screens/Bill/EditInvoiceScreen';
+import InvoiceTemplatesScreen from '../screens/Bill/InvoiceTemplatesScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -117,8 +123,22 @@ export default function TabScreen() {
             }}
           />
           <Stack.Screen
+            name="Bill"
+            component={BillScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
             name="TenantDetail"
             component={TenantDetailScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="BillDetails"
+            component={BillDetailScreen}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}
@@ -130,7 +150,34 @@ export default function TabScreen() {
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
-
+          <Stack.Screen
+            name="RoommateInvoiceDetails"
+            component={RoommateInvoiceDetailScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="CreateInvoice"
+            component={CreateInvoiceScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="EditInvoice"
+            component={EditInvoiceScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="InvoiceTemplates"
+            component={InvoiceTemplatesScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
           <Stack.Screen name="LandlordRoom" component={MyRoomScreen} />
           <Stack.Screen name="AddRooom" component={AddRoomScreen} />
 

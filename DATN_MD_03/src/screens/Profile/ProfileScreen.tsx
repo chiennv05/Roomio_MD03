@@ -55,18 +55,18 @@ export default function ProfileScreen() {
   const handleConfirmLogout = async () => {
     if (!token) {
       setShowLogoutModal(false);
-      navigation.replace('Login', {});
+      navigation.navigate('Login', {});
       return;
     }
 
     try {
       await dispatch(logoutUser(token)).unwrap();
       setShowLogoutModal(false);
-      navigation.replace('Login', {});
+      navigation.navigate('Login', {});
     } catch (error) {
       // Dù có lỗi API, vẫn logout local và navigate
       setShowLogoutModal(false);
-      navigation.replace('Login', {});
+      navigation.navigate('Login', {});
     }
   };
 
@@ -107,6 +107,23 @@ export default function ProfileScreen() {
   // Hàm xử lý khi nhấn vào "Yêu cầu hỗ trợ"
   const handleSupportPress = () => {
     navigation.navigate('SupportScreen');
+  };
+  const handleNavigateToBill = () => {
+    if (!checkToken(token)) {
+      Alert.alert(
+        'Thông báo',
+        'Bạn cần đăng nhập để sử dụng chức năng này',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('Login', {}),
+          },
+        ],
+        {cancelable: false},
+      );
+      return;
+    }
+    navigation.navigate('Bill');
   };
 
   // Show guest screen if not logged in
@@ -164,6 +181,7 @@ export default function ProfileScreen() {
             iconStat={Icons.IconPaper}
             label="Hóa đơn thu chi"
             iconEnd={Icons.IconNext}
+            onPress={handleNavigateToBill}
           />
 
           {/* Chỉ hiển thị các tùy chọn cho chủ trọ nếu user có role là chuTro */}

@@ -8,6 +8,7 @@ import FavoriteScreen from '../screens/Favorite/FavoriteScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 // import NotificationScreen from '../screens/Notification/NotificationScreen';
 import FindMayScreen from '../screens/FindMapScreen/FindMayScreen';
+
 const Tab = createBottomTabNavigator();
 export default function UITab() {
   return (
@@ -17,30 +18,31 @@ export default function UITab() {
         headerShown: false,
         tabBarHideOnKeyboard: true,
       }}>
-      <Tab.Screen 
-        name="Home" 
+      <Tab.Screen
+        name="Home"
         component={HomeScreen}
         options={{
           tabBarLabel: 'Trang chủ',
         }}
       />
-      <Tab.Screen 
-        name="Map" 
+
+      <Tab.Screen
+        name="Map"
         component={FindMayScreen}
         options={{
           tabBarLabel: 'Map',
         }}
       />
-      <Tab.Screen 
-        name="Favorite" 
+      <Tab.Screen
+        name="Favorite"
         component={FavoriteScreen}
         options={{
           tabBarLabel: 'Yêu thích',
         }}
       />
-     
-      <Tab.Screen 
-        name="Profile" 
+
+      <Tab.Screen
+        name="Profile"
         component={ProfileScreen}
         options={{
           tabBarLabel: 'Cá nhân',
