@@ -684,7 +684,10 @@ export default function MapScreen({route}: MapScreenProps) {
                   Địa điểm bạn đã chọn
                 </Text>
                 <Text style={styles.selectedLocationAddress} numberOfLines={2}>
-                  {selectedLocation.address || 'Chưa có địa chỉ'}
+                  {(selectedLocation.address || 'Chưa có địa chỉ').replace(
+                    /(Tỉnh|Thành phố)\s+/gi,
+                    '',
+                  )}
                 </Text>
               </View>
               <ItemButtonConfirm
