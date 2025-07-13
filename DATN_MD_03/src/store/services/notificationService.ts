@@ -77,4 +77,4 @@ export const deleteNotification = async (
       status: error.response?.status,
     };
   }
-};
+}; 

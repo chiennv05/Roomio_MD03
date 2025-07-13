@@ -47,7 +47,10 @@ export const supportService = {
 
   // Create a new support request
   createSupportRequest: async (supportData: Omit<Support, '_id' | 'userId' | 'status' | 'createdAt' | 'updatedAt'>) => {
-    return api.post<{ success: boolean; message: string; data: Support }>('/support', supportData);
+    console.log('Creating support request with data:', supportData);
+    const result = await api.post<{ success: boolean; message: string; data: Support }>('/support/create', supportData);
+    console.log('Support request creation result:', result);
+    return result;
   },
 
   // Get a single support request by ID
