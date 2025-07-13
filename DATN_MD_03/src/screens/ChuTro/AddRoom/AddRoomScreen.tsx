@@ -72,8 +72,6 @@ export default function AddRoomScreen() {
   const [imageArr, setImageArr] = useState<string[]>([]);
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
 
-  console.log(image);
-
   const [visibleLocationModal, setVisibleLocationModal] = useState(false);
   const [address, setAddress] = useState<string>('');
   const [province, setProvince] = useState('');
@@ -103,7 +101,7 @@ export default function AddRoomScreen() {
     });
 
   const [customServices, setCustomServices] = useState<CustomService[]>([]);
-
+  console.log('hi', customServices);
   const [itemServiceEdit, setItemServiceEdit] = useState<
     ItemSeviceOptions | undefined
   >();
@@ -423,7 +421,90 @@ export default function AddRoomScreen() {
     setModalVisibleService(false);
     setItemServiceEdit(undefined);
   };
+  const handleDeleteService = (item: ItemSeviceOptions) => {
+    if (!item) return;
 
+    Alert.alert(
+      'Xác nhận xóa',
+      `Bạn có chắc chắn muốn xóa dịch vụ "${item.label}" không?`,
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel',
+        },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: () => {
+            try {
+              // Kiểm tra loại dịch vụ và xử lý tương ứng
+              if (item.category === 'required') {
+                // Đối với dịch vụ bắt buộc (điện, nước)
+                if (item.value === 'electricity') {
+                  // Reset giá điện về 0
+                  setServicePrices(prev => ({
+                    ...prev,
+                    electricity: 0,
+                  }));
+                  setServicePriceConfig(prev => ({
+                    ...prev,
+                    electricity: 'perUsage',
+                  }));
+                } else if (item.value === 'water') {
+                  // Reset giá nước về 0
+                  setServicePrices(prev => ({
+                    ...prev,
+                    water: 0,
+                  }));
+                  setServicePriceConfig(prev => ({
+                    ...prev,
+                    water: 'perUsage',
+                  }));
+                }
+
+                // Reset lại item trong serviceOptionList về trạng thái ban đầu
+                setServiceOptionList(prev =>
+                  prev.map(i => {
+                    if (i.id === item.id) {
+                      return {
+                        ...i,
+                        price: undefined,
+                        priceType: undefined,
+                        description: undefined,
+                        status: false, // Đặt về trạng thái chưa cấu hình
+                      };
+                    }
+                    return i;
+                  }),
+                );
+              } else {
+                // Đối với dịch vụ tùy chọn
+                // Xóa khỏi serviceOptionList
+                setServiceOptionList(prev =>
+                  prev.filter(i => i.id !== item.id),
+                );
+
+                // Xóa khỏi customServices
+                setCustomServices(prev =>
+                  prev.filter(service => service.name !== item.label),
+                );
+              }
+
+              // Đóng modal và reset item edit
+              setModalVisibleService(false);
+              setItemServiceEdit(undefined);
+
+              console.log(`Đã xóa dịch vụ: ${item.label}`);
+            } catch (error) {
+              console.error('Lỗi khi xóa dịch vụ:', error);
+              Alert.alert('Lỗi', 'Không thể xóa dịch vụ. Vui lòng thử lại.');
+            }
+          },
+        },
+      ],
+      {cancelable: true},
+    );
+  };
   const handleCancelModal = () => {
     setModalVisibleService(false);
   };
@@ -561,7 +642,6 @@ export default function AddRoomScreen() {
     onClose();
   };
 
-  console.log('imageArr', imageArr);
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar
@@ -747,6 +827,7 @@ export default function AddRoomScreen() {
         handleSave={handleSaveModal}
         item={itemServiceEdit}
         handleCancel={handleCancelModal}
+        handleDelete={handleDeleteService}
       />
       <LocationModal
         visible={visibleLocationModal}

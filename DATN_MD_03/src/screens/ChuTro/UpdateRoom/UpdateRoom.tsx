@@ -38,7 +38,8 @@ import ItemOptions from '../AddRoom/components/ItemOptions';
 import ModalLoading from '../AddRoom/components/ModalLoading';
 import ModalService from '../AddRoom/components/ModalService';
 import LocationModal from '../AddRoom/components/LocationModal';
-import {ItemSeviceOptions, CustomService} from '../../../types';
+import {CustomService} from '../../../types';
+
 import {SelectedAddress} from '../../../types/Address';
 import ImagePicker from 'react-native-image-crop-picker';
 import {
@@ -48,6 +49,7 @@ import {
 } from '../../../store/services/uploadService';
 import {ImageUploadResult} from '../../../types/ImageUploadResult';
 import {formatPhotoUrls} from '../AddRoom/utils/fomatImageUrl';
+import {ItemSeviceOptions} from '../AddRoom/utils/seviceOptions';
 
 type UpdateRoomRouteProp = {
   params: {
@@ -271,12 +273,20 @@ export default function UpdateRoom() {
   const handleSaveModal = (item: ItemSeviceOptions) => {
     if (!item) return;
 
-    const isTemplateKhac = item.value === 'khac';
-    const isNew = isTemplateKhac || item.id === undefined || item.id === 3;
+    // *** SỬA: Logic xác định item mới đúng hơn ***
+    const existingItem = serviceOptionList.find(
+      service => service.id === item.id,
+    );
+    const isEditingExisting = existingItem !== undefined;
+
+    // Item chỉ được coi là mới khi:
+    // 1. Đang chỉnh sửa template "khác" (value === 'khac')
+    // 2. Hoặc không có ID (item mới hoàn toàn)
+    const isCreatingNew = item.value === 'khac' || !isEditingExisting;
 
     const itemWithId: ItemSeviceOptions = {
       ...item,
-      id: isNew
+      id: isCreatingNew
         ? serviceOptionList.length > 0
           ? Math.max(...serviceOptionList.map(i => i.id ?? 0)) + 1
           : 1
@@ -284,6 +294,7 @@ export default function UpdateRoom() {
     };
 
     if (itemWithId.category === 'required') {
+      // Xử lý dịch vụ bắt buộc (điện, nước)
       if (itemWithId.value === 'electricity') {
         setServicePrices(prev => ({
           ...prev,
@@ -301,18 +312,12 @@ export default function UpdateRoom() {
         }));
       }
 
+      // Cập nhật item trong serviceOptionList
       setServiceOptionList(prev =>
         prev.map(i => (i.id === itemWithId.id ? {...i, ...itemWithId} : i)),
       );
     } else {
-      if (isNew) {
-        setServiceOptionList(prev => [...prev, itemWithId]);
-      } else {
-        setServiceOptionList(prev =>
-          prev.map(i => (i.id === itemWithId.id ? {...i, ...itemWithId} : i)),
-        );
-      }
-
+      // Xử lý dịch vụ tùy chọn
       const customService: CustomService = {
         name: itemWithId.label,
         price: itemWithId.price ?? 0,
@@ -320,22 +325,69 @@ export default function UpdateRoom() {
         description: itemWithId.description ?? '',
       };
 
-      setCustomServices(prev => {
-        const existingIndex = prev.findIndex(
-          i => i.name === customService.name,
+      if (isCreatingNew) {
+        // Thêm mới
+        setServiceOptionList(prev => [...prev, itemWithId]);
+        setCustomServices(prev => [...prev, customService]);
+      } else {
+        // Cập nhật item có sẵn
+        setServiceOptionList(prev =>
+          prev.map(i => (i.id === itemWithId.id ? {...i, ...itemWithId} : i)),
         );
-        if (existingIndex >= 0) {
-          const updated = [...prev];
-          updated[existingIndex] = customService;
-          return updated;
-        } else {
-          return [...prev, customService];
-        }
-      });
+
+        // Cập nhật customServices dựa trên name cũ của item
+        setCustomServices(prev => {
+          const oldItemName = existingItem?.label || itemWithId.label;
+          const existingIndex = prev.findIndex(i => i.name === oldItemName);
+
+          if (existingIndex >= 0) {
+            const updated = [...prev];
+            updated[existingIndex] = customService;
+            return updated;
+          } else {
+            return [...prev, customService];
+          }
+        });
+      }
     }
 
     setModalVisibleService(false);
     setItemServiceEdit(undefined);
+  };
+
+  // Thêm hàm xử lý xóa dịch vụ
+  const handleDeleteService = (item: ItemSeviceOptions) => {
+    if (!item) return;
+
+    Alert.alert(
+      'Xác nhận xóa',
+      `Bạn có chắc chắn muốn xóa dịch vụ "${item.label}" không?`,
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel',
+        },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: () => {
+            // Xóa khỏi serviceOptionList
+            setServiceOptionList(prev => prev.filter(i => i.id !== item.id));
+
+            // Xóa khỏi customServices nếu là dịch vụ tùy chọn
+            if (item.category === 'optional') {
+              setCustomServices(prev =>
+                prev.filter(i => i.name !== item.label),
+              );
+            }
+
+            // Đóng modal
+            setModalVisibleService(false);
+            setItemServiceEdit(undefined);
+          },
+        },
+      ],
+    );
   };
 
   // Options handling
@@ -715,6 +767,7 @@ export default function UpdateRoom() {
         handleSave={handleSaveModal}
         item={itemServiceEdit}
         handleCancel={handleCancelModal}
+        handleDelete={handleDeleteService} // Thêm prop này
       />
 
       <LocationModal
