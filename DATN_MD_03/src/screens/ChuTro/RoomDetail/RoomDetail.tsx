@@ -72,8 +72,13 @@ export default function RoomDetail() {
       />
       <View style={styles.container}>
         <View style={styles.statusBarBackground} />
-        <Header onGoBack={() => navigation.goBack()} onEdit={handleNavigateToUpdate} />
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <Header
+          onGoBack={() => navigation.goBack()}
+          onEdit={handleNavigateToUpdate}
+        />
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}>
           <ImageSlider photos={selectedRoom.photos || []} />
           <InfoSection room={selectedRoom} formatNumber={formatNumber} />
           <AddressSection addressText={selectedRoom.location?.addressText} />

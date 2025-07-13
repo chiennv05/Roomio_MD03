@@ -92,7 +92,7 @@ export default function AddRoomScreen() {
 
   const [modalVisibleService, setModalVisibleService] = useState(false);
   const [servicePrices, setServicePrices] = useState<ServicePrices>({
-    electricity: 0,
+    electricity: 0, // Có thể để 0 nhưng cần check khi gửi API
     water: 0,
   });
 
@@ -350,7 +350,7 @@ export default function AddRoomScreen() {
   //modal add
   const handleSaveModal = (item: ItemSeviceOptions) => {
     if (!item) return;
-    console.log(item);
+    console.log('Saving service item:', item);
 
     const isTemplateKhac = item.value === 'khac';
     const isNew = isTemplateKhac || item.id === undefined || item.id === 3;
@@ -365,7 +365,9 @@ export default function AddRoomScreen() {
     };
 
     if (itemWithId.category === 'required') {
+      // *** SỬA CHÍNH TẠI ĐÂY ***
       if (itemWithId.value === 'electricity') {
+        console.log('Setting electricity price:', itemWithId.price);
         setServicePrices(prev => ({
           ...prev,
           electricity: itemWithId.price ?? 0,
@@ -375,6 +377,7 @@ export default function AddRoomScreen() {
           electricity: itemWithId.priceType ?? 'perRoom',
         }));
       } else if (itemWithId.value === 'water') {
+        console.log('Setting water price:', itemWithId.price);
         setServicePrices(prev => ({...prev, water: itemWithId.price ?? 0}));
         setServicePriceConfig(prev => ({
           ...prev,
@@ -382,22 +385,20 @@ export default function AddRoomScreen() {
         }));
       }
 
+      // Cập nhật serviceOptionList để hiển thị giá
       setServiceOptionList(prev =>
         prev.map(i => (i.id === itemWithId.id ? {...i, ...itemWithId} : i)),
       );
     } else {
-      console.log(isNew);
+      // Logic cho custom services...
       if (isNew) {
-        // ✅ Thêm mới nếu tạo từ template 'khac'
         setServiceOptionList(prev => [...prev, itemWithId]);
       } else {
-        // ✅ Cập nhật nếu đã tồn tại
         setServiceOptionList(prev =>
           prev.map(i => (i.id === itemWithId.id ? {...i, ...itemWithId} : i)),
         );
       }
 
-      // Cập nhật custom service
       const customService: CustomService = {
         name: itemWithId.label,
         price: itemWithId.price ?? 0,
@@ -406,17 +407,14 @@ export default function AddRoomScreen() {
       };
 
       setCustomServices(prev => {
-        // Tìm dịch vụ hiện có theo tên
         const existingIndex = prev.findIndex(
           i => i.name === customService.name,
         );
         if (existingIndex >= 0) {
-          // Nếu đã tồn tại, thay thế
           const updated = [...prev];
           updated[existingIndex] = customService;
           return updated;
         } else {
-          // Nếu chưa có, thêm mới
           return [...prev, customService];
         }
       });
@@ -456,6 +454,14 @@ export default function AddRoomScreen() {
       Alert.alert('Thiếu tọa độ', 'Vui lòng chọn vị trí trên bản đồ.');
       return;
     }
+    const finalServicePrices = {
+      electricity: servicePrices.electricity || 0, // Đảm bảo không null/undefined
+      water: servicePrices.water || 0,
+    };
+
+    console.log('Final service prices before API:', finalServicePrices);
+    console.log('Service price config:', servicePriceConfig);
+
     const room: Room = {
       roomNumber: roomNumber,
       area: Number(area),
@@ -474,7 +480,7 @@ export default function AddRoomScreen() {
           type: 'Point',
           coordinates: coordinates,
         },
-        servicePrices: servicePrices,
+        servicePrices: finalServicePrices, // Sử dụng finalServicePrices
         servicePriceConfig: servicePriceConfig,
       },
       customServices: customServices,
@@ -482,9 +488,10 @@ export default function AddRoomScreen() {
       furniture: furniture,
     };
 
+    console.log('Room object before API:', JSON.stringify(room, null, 2));
+
     try {
       const res = await dispatch(createLandlordRoom(room));
-      console.log('Payload gửi:', JSON.stringify(room, null, 2));
       if (createLandlordRoom.fulfilled.match(res)) {
         Alert.alert('Thành công', 'Tạo phòng trọ thành công!');
         clearForm();
