@@ -287,7 +287,6 @@ const TenantDetailScreen = () => {
             <Image source={{uri: Icons.IconElectrical}} style={styles.sectionHeaderIcon} />
             <Text style={styles.sectionIconText}>Dịch vụ</Text>
           </View>
-          
           <View style={styles.servicesList}>
             <InfoRow 
               label="Điện" 
