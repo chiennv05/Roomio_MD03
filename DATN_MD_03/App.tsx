@@ -6,8 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { store } from './src/store';
 
 import TabScreen from './src/navigation/TabScreen';
-import AddRoomScreen from './src/screens/ChuTro/AddRoom/AddRoomScreen';
-import AddContract from './src/screens/ChuTro/Contract/AddContract';
+import {MenuProvider} from 'react-native-popup-menu';
 
 export default function App() {
   return (
@@ -15,7 +14,9 @@ export default function App() {
     <SafeAreaProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <Provider store={store}>
-          <TabScreen />
+          <MenuProvider>
+            <TabScreen />
+          </MenuProvider>
         </Provider>
       </GestureHandlerRootView>
     </SafeAreaProvider>

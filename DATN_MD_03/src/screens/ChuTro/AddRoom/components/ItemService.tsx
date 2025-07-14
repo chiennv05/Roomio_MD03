@@ -45,6 +45,7 @@ const ItemService = ({status = false, item, onPress}: ServiceProps) => {
     return unitMap[item.value]?.[item.priceType ?? ''] ?? '';
   };
 
+  console.log('item', item);
   const priceUnit = getPriceUnit(item);
   const displayPrice = item.price ?? 0;
 

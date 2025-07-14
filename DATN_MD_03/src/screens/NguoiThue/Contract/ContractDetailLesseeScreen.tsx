@@ -19,23 +19,16 @@ import {scale, verticalScale, responsiveFont} from '../../../utils/responsive';
 import {Icons} from '../../../assets/icons';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../../store';
-import {
-  extendContractThunk,
-  fetchContractDetail,
-  terminateContractThunk,
-} from '../../../store/slices/contractSlice';
-import {getContractStatusInfo} from './components/ContractItem';
-import {UIHeader} from '../MyRoom/components';
-import {handleViewPDF, handlePickImages} from './utils/contractEvents';
-import {getPriceUnitLabel} from './utils/getPriceUnitLabel';
-import InfoRow from './components/InfoRow';
-import ModalLoading from '../AddRoom/components/ModalLoading';
-import ModalShowImageContract from './components/ModalShowImageContract';
-import ItemTitle from '../AddRoom/components/ItemTitle ';
+import {fetchContractDetail} from '../../../store/slices/contractSlice';
+
+import {UIHeader} from '../../ChuTro/MyRoom/components';
+import {getPriceUnitLabel} from '../../ChuTro/Contract/utils/getPriceUnitLabel';
+import InfoRow from '../../ChuTro/Contract/components/InfoRow';
+import ModalShowImageContract from '../../ChuTro/Contract/components/ModalShowImageContract';
+import ItemTitle from '../../ChuTro/AddRoom/components/ItemTitle ';
+import {getContractStatusInfo} from '../../ChuTro/Contract/components/ContractItem';
 import ItemImage from './components/ItemImage';
-import {useContractImageActions} from '../AddRoom/hooks/useContractImageActions';
-import ContractMenu from './components/ContractMenu';
-import ModalConfirmContract from './components/ModalConfirmContract';
+
 // Format tiền tệ
 const formatCurrency = (amount: number) => {
   return amount.toLocaleString('vi-VN') + ' đ';
@@ -57,26 +50,17 @@ const formatDateTime = (dateString: string) => {
   }/${date.getFullYear()} ${hours}:${minutes}`;
 };
 
-const ContractDetailScreen = () => {
+const ContractDetailLesseeScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const route = useRoute<RouteProp<RootStackParamList, 'ContractDetail'>>();
+  const route =
+    useRoute<RouteProp<RootStackParamList, 'ContractDetailLessee'>>();
   const dispatch = useDispatch<AppDispatch>();
 
-  const [showModal, setShowModal] = useState(false);
-  const [action, setAction] = useState<'extend' | 'terminate' | null>(null);
-  const [value, setValue] = useState('');
   const {contractId} = route.params;
-  const {onDeleteAllImages, onDeleteImage} =
-    useContractImageActions(contractId);
 
-  const {
-    selectedContract,
-    selectedContractLoading,
-    selectedContractError,
-    uploadingImages,
-  } = useSelector((state: RootState) => state.contract);
+  const {selectedContract, selectedContractLoading, selectedContractError} =
+    useSelector((state: RootState) => state.contract);
 
-  const [generatingPDF, setGeneratingPDF] = useState(false);
   const [isVisibleImage, setIsVisibleImage] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   useEffect(() => {
@@ -98,149 +82,19 @@ const ContractDetailScreen = () => {
         Alert.alert('Thông báo', 'Hợp đồng đã bị từ chối, không thể xem PDF.');
         return;
       }
-      handleViewPDF(
-        selectedContract,
-        contractId,
-        dispatch,
-        navigation,
-        setGeneratingPDF,
-      );
     }
-  };
-
-  const onPickImages = () => {
-    handlePickImages(selectedContract, contractId, dispatch);
+    if (!selectedContract || !selectedContract.contractPdfUrl) {
+      Alert.alert('Thông báo', 'Không có hợp đồng PDF để xem.');
+      return;
+    }
+    navigation.navigate('PdfViewer', {
+      pdfUrl: selectedContract?.contractPdfUrl || '',
+    });
   };
 
   const onViewImage = (index: number) => {
     setSelectedImageIndex(index);
     setIsVisibleImage(true);
-  };
-  const handleDeleteAllImage = () => {
-    if (!selectedContract) return;
-
-    const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
-
-    if (!allowedStatuses.includes(selectedContract.status)) {
-      Alert.alert(
-        'Không thể xóa ảnh',
-        'Chỉ có thể xóa ảnh hợp đồng ở trạng thái Nháp, Chờ ký hoặc Chờ duyệt.',
-      );
-      return;
-    }
-
-    onDeleteAllImages();
-  };
-  const onDeleteOneImage = (fileName: string) => {
-    if (!selectedContract) return;
-
-    const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
-
-    if (!allowedStatuses.includes(selectedContract.status)) {
-      Alert.alert(
-        'Không thể xóa ảnh',
-        'Chỉ có thể xóa ảnh hợp đồng ở trạng thái Nháp, Chờ ký hoặc Chờ duyệt.',
-      );
-      return;
-    }
-
-    onDeleteImage(fileName);
-  };
-
-  // gia hạn hợp đồng
-  const onExtendContract = () => {
-    if (!selectedContract) return;
-    if (selectedContract.status !== 'pending_signature') {
-      Alert.alert(
-        'Không thể gia hạn',
-        'Chỉ có thể gia hạn hợp đồng ở trạng thái Chờ ký.',
-      );
-      return;
-    }
-    setAction('extend');
-    setValue('');
-    setShowModal(true);
-  };
-
-  const onTerminateContract = () => {
-    if (!selectedContract) return;
-    if (selectedContract.status === 'terminated') {
-      Alert.alert('Không thể chấm dứt', 'Hợp đồng đã bị chấm dứt trước đó.');
-      return;
-    }
-    if (selectedContract.status === 'draft') {
-      Alert.alert(
-        'Không thể chấm dứt',
-        'Hợp đồng ở trạng thái Nháp không thể chấm dứt.',
-      );
-      return;
-    }
-    if (selectedContract.status === 'pending_signature') {
-      Alert.alert(
-        'Không thể chấm dứt',
-        'Hợp đồng ở trạng thái Chờ ký không thể chấm dứt.',
-      );
-      return;
-    }
-    if (selectedContract.status === 'pending_approval') {
-      Alert.alert(
-        'Không thể chấm dứt',
-        'Hợp đồng ở trạng thái Chờ duyệt không thể chấm dứt.',
-      );
-      return;
-    }
-    if (selectedContract.status === 'rejected') {
-      Alert.alert(
-        'Không thể chấm dứt',
-        'Hợp đồng đã bị từ chối không thể chấm dứt.',
-      );
-      return;
-    }
-
-    setAction('terminate');
-    setValue('');
-    setShowModal(true);
-  };
-
-  const handleSubmit = async () => {
-    if (!selectedContract) return;
-
-    try {
-      if (action === 'extend') {
-        const months = parseInt(value.trim());
-        if (isNaN(months) || months <= 0) {
-          Alert.alert('Lỗi', 'Vui lòng nhập số tháng hợp lệ.');
-          return;
-        }
-
-        await dispatch(
-          extendContractThunk({
-            contractId: selectedContract._id,
-            months,
-          }),
-        ).unwrap();
-
-        Alert.alert('Thành công', 'Gia hạn hợp đồng thành công');
-        setShowModal(false);
-      } else if (action === 'terminate') {
-        if (value.trim() === '') {
-          Alert.alert('Lỗi', 'Vui lòng nhập lý do chấm dứt');
-          return;
-        }
-
-        await dispatch(
-          terminateContractThunk({
-            contractId: selectedContract._id,
-            reason: value.trim(),
-          }),
-        ).unwrap();
-
-        Alert.alert('Thành công', 'Chấm dứt hợp đồng thành công');
-        setShowModal(false);
-      }
-    } catch (err: any) {
-      Alert.alert('Lỗi', err?.message || 'Thao tác thất bại');
-    }
   };
 
   // Hiển thị màn hình loading
@@ -251,13 +105,6 @@ const ContractDetailScreen = () => {
           title="Chi tiết hợp đồng"
           iconLeft={Icons.IconArrowLeft}
           onPressLeft={handleGoBack}
-          iconRight={
-            <ContractMenu
-              onEdit={() => {}}
-              onExtend={() => {}}
-              onTerminate={() => {}}
-            />
-          }
         />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.darkGreen} />
@@ -275,13 +122,6 @@ const ContractDetailScreen = () => {
           title="Chi tiết hợp đồng"
           iconLeft={Icons.IconArrowLeft}
           onPressLeft={handleGoBack}
-          iconRight={
-            <ContractMenu
-              onEdit={() => {}}
-              onExtend={() => {}}
-              onTerminate={() => {}}
-            />
-          }
         />
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>
@@ -305,13 +145,6 @@ const ContractDetailScreen = () => {
           title="Chi tiết hợp đồng"
           iconLeft={Icons.IconArrowLeft}
           onPressLeft={handleGoBack}
-          iconRight={
-            <ContractMenu
-              onEdit={() => {}}
-              onExtend={() => {}}
-              onTerminate={() => {}}
-            />
-          }
         />
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>
@@ -322,27 +155,9 @@ const ContractDetailScreen = () => {
     );
   }
 
-  const handleGoUpdateContract = () => {
-    const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
-
-    if (selectedContract && allowedStatuses.includes(selectedContract.status)) {
-      navigation.navigate('UpdateContract', {
-        contract: selectedContract,
-      });
-    } else {
-      Alert.alert(
-        'Không thể chỉnh sửa',
-        'Chỉ có thể chỉnh sửa hợp đồng ở trạng thái Nháp, Chờ ký hoặc Chờ duyệt.',
-      );
-    }
-  };
-
   const contract = selectedContract;
   const imageList = contract.signedContractImages || [];
   const statusInfo = getContractStatusInfo(contract.status);
-  const canUploadImages =
-    contract.status === 'pending_signature' ||
-    contract.status === 'pending_approval';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -350,13 +165,6 @@ const ContractDetailScreen = () => {
         title="Chi tiết hợp đồng"
         iconLeft={Icons.IconArrowLeft}
         onPressLeft={handleGoBack}
-        iconRight={
-          <ContractMenu
-            onEdit={handleGoUpdateContract}
-            onExtend={onExtendContract}
-            onTerminate={onTerminateContract}
-          />
-        }
       />
 
       <ScrollView
@@ -535,11 +343,7 @@ const ContractDetailScreen = () => {
         {contract.signedContractImages &&
           contract.signedContractImages.length > 0 && (
             <View style={styles.section}>
-              <ItemTitle
-                title="Ảnh hợp đồng đã ký"
-                icon={Icons.IconAdd}
-                onPress={handleDeleteAllImage}
-              />
+              <ItemTitle title="Ảnh hợp đồng đã ký" />
               <FlatList
                 data={contract.signedContractImages}
                 keyExtractor={(_, index) => `signed-image-${index}`}
@@ -550,7 +354,6 @@ const ContractDetailScreen = () => {
                     imageUrl={item}
                     index={index}
                     onViewImage={onViewImage}
-                    onDelete={onDeleteOneImage}
                   />
                 )}
               />
@@ -600,42 +403,17 @@ const ContractDetailScreen = () => {
           </Text>
         </View>
 
-        {/* Nút upload ảnh */}
-        {canUploadImages && (
-          <TouchableOpacity
-            style={[styles.pdfButton, uploadingImages && styles.disabledButton]}
-            onPress={onPickImages}
-            disabled={uploadingImages}>
-            <Text style={styles.pdfButtonText}>
-              {uploadingImages ? 'Đang upload...' : 'Upload ảnh hợp đồng ký'}
-            </Text>
-          </TouchableOpacity>
-        )}
-
         {/* Nút xem PDF */}
         <TouchableOpacity style={styles.pdfButton} onPress={onViewPDF}>
-          <Text style={styles.pdfButtonText}>
-            {contract.status === 'draft'
-              ? 'Tạo Hợp đồng PDF'
-              : 'Xem Hợp đồng PDF'}
-          </Text>
+          <Text style={styles.pdfButtonText}>Xem Hợp đồng PDF</Text>
         </TouchableOpacity>
 
         <View style={styles.bottomSpace} />
-        <ModalLoading loading={true} visible={generatingPDF} />
         <ModalShowImageContract
           visible={isVisibleImage}
           images={imageList}
           initialIndex={selectedImageIndex}
           onClose={() => setIsVisibleImage(false)}
-        />
-        <ModalConfirmContract
-          visible={showModal}
-          onClose={() => setShowModal(false)}
-          action={action}
-          value={value}
-          setValue={setValue}
-          onSubmit={handleSubmit}
         />
       </ScrollView>
     </SafeAreaView>
@@ -819,4 +597,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ContractDetailScreen;
+export default ContractDetailLesseeScreen;

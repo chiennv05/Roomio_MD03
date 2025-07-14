@@ -21,16 +21,17 @@ import {
 } from '../../../utils/responsive';
 import {AppDispatch, RootState} from '../../../store';
 import {fetchMyContracts} from '../../../store/slices/contractSlice';
-import ContractItem from './components/ContractItem';
-import EmptyContract from './components/EmptyContract';
-import Pagination from './components/Pagination';
-import {UIHeader} from '../MyRoom/components';
-import FilterStatusItem from './components/FilterStatusItem';
-import {filterOptionsContract} from './utils/filterContract';
+
+import FilterStatusItem from '../../ChuTro/Contract/components/FilterStatusItem';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
+import {UIHeader} from '../../ChuTro/MyRoom/components';
+import EmptyContract from '../../ChuTro/Contract/components/EmptyContract';
+import ContractItem from '../../ChuTro/Contract/components/ContractItem';
+import Pagination from '../../ChuTro/Contract/components/Pagination';
+import {filterOptionsContract} from './utils/filterContract';
 
-const ContractManagement = () => {
+const ContractLessee = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const dispatch = useDispatch<AppDispatch>();
 
@@ -95,19 +96,14 @@ const ContractManagement = () => {
   };
 
   const handleGoContractDetail = (contractId: string) => {
-    navigation.navigate('ContractDetail', {contractId});
-  };
-  const handleGoAddContract = () => {
-    navigation.navigate('AddContractNoNotification');
+    navigation.navigate('ContractDetailLessee', {contractId});
   };
   return (
     <SafeAreaView style={styles.container}>
       <UIHeader
-        title="Quản lý hợp đồng"
+        title="Hợp đồng của tôi"
         iconLeft={Icons.IconArrowLeft}
         onPressLeft={handleGoBack}
-        iconRight={Icons.IconAdd}
-        onPressRight={handleGoAddContract}
       />
 
       <View style={styles.conatinerFilter}>
@@ -222,4 +218,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ContractManagement;
+export default ContractLessee;

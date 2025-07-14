@@ -56,4 +56,7 @@ export type RootStackParamList = {
   CreateInvoice: {contract?: any};
   EditInvoice: {invoiceId: string};
   InvoiceTemplates: undefined;
+  AddContractNoNotification: undefined;
+  ContractLessee: undefined;
+  ContractDetailLessee: {contractId: string};
 };

@@ -203,6 +203,15 @@ export type CreateContractPayload = {
   additionalTerms: string;
   coTenants?: string[]; // <-- optional
 };
+export type CreateContractPayloadWithoutNotification = {
+  roomId: string;
+  tenantUsername: string;
+  coTenants: string[];
+  contractTerm: number; // số tháng hoặc kỳ hạn, bạn có thể đổi thành enum nếu cần
+  startDate: string; // định dạng yyyy-MM-dd
+  rules: string;
+  additionalTerms: string;
+};
 
 export interface ContractTenantResponse {
   success: boolean;

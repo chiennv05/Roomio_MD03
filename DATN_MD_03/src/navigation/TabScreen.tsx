@@ -45,6 +45,9 @@ import RoommateInvoiceDetailScreen from '../screens/Bill/RoommateInvoiceDetailSc
 import CreateInvoiceScreen from '../screens/Bill/CreateInvoiceScreen';
 import EditInvoiceScreen from '../screens/Bill/EditInvoiceScreen';
 import InvoiceTemplatesScreen from '../screens/Bill/InvoiceTemplatesScreen';
+import AddContractNoNotification from '../screens/ChuTro/Contract/AddContractNoNotification';
+import ContractLessee from '../screens/NguoiThue/Contract/ContractLessee';
+import ContractDetailLesseeScreen from '../screens/NguoiThue/Contract/ContractDetailLesseeScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -230,8 +233,29 @@ export default function TabScreen() {
             }}
           />
           <Stack.Screen
+            name="AddContractNoNotification"
+            component={AddContractNoNotification}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
             name="PolicyTerms"
             component={PolicyTerms}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="ContractLessee"
+            component={ContractLessee}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="ContractDetailLessee"
+            component={ContractDetailLesseeScreen}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}

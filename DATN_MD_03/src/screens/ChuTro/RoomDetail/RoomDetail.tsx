@@ -4,8 +4,6 @@ import {useRoute} from '@react-navigation/native';
 import {Colors} from '../../../theme/color';
 import {useRoomDetail} from './hooks';
 import {
-  Header,
-  ImageSlider,
   InfoSection,
   AddressSection,
   DescriptionSection,
@@ -16,6 +14,8 @@ import {
   LoadingState,
   ErrorState,
 } from './components';
+import HeaderItem from './components/HeaderItem';
+import ImageCarousel from '../../DetailRoomScreen/components/ImageCarousel';
 
 type RoomDetailRouteProp = {
   params: {
@@ -34,6 +34,7 @@ export default function RoomDetail() {
     handleNavigateToUpdate,
     formatNumber,
     handleRetry,
+    handleDeleteRoom, // Thêm function này
     navigation,
   } = useRoomDetail(roomId);
 
@@ -72,9 +73,16 @@ export default function RoomDetail() {
       />
       <View style={styles.container}>
         <View style={styles.statusBarBackground} />
-        <Header onGoBack={() => navigation.goBack()} onEdit={handleNavigateToUpdate} />
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          <ImageSlider photos={selectedRoom.photos || []} />
+
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}>
+          <HeaderItem
+            onGoBack={() => navigation.goBack()}
+            onUpdate={handleNavigateToUpdate}
+            onDelete={handleDeleteRoom} // Thêm prop này
+          />
+          <ImageCarousel images={selectedRoom.photos || []} />
           <InfoSection room={selectedRoom} formatNumber={formatNumber} />
           <AddressSection addressText={selectedRoom.location?.addressText} />
           <DescriptionSection description={selectedRoom.description} />

@@ -14,13 +14,13 @@ import {
   District,
   Ward,
   SelectedAddress,
-} from '../../../types/Address';
-import {Colors} from '../../../theme/color';
+} from '../../../../types/Address';
+import {Colors} from '../../../../theme/color';
 import {
   responsiveFont,
   responsiveSpacing,
   moderateScale,
-} from '../../../utils/responsive';
+} from '../../../../utils/responsive';
 
 interface LocationModalProps {
   visible: boolean;
@@ -58,14 +58,16 @@ const LocationModal: React.FC<LocationModalProps> = ({
     try {
       const response = await fetch('https://provinces.open-api.vn/api/');
       const data = await response.json();
+
       // Filter to only include the 3 main cities
       const mainCities = data.filter((province: Province) => {
         return (
           province.code === 1 || // Thành phố Hà Nội
           province.code === 48 || // Thành phố Đà Nẵng
-          province.code === 79 // Thành phố Hồ Chí Minh
-        );
+          province.code === 79
+        ); // Thành phố Hồ Chí Minh
       });
+
       setProvinces(mainCities);
     } catch (error) {
       Alert.alert('Lỗi', 'Không thể tải danh sách tỉnh thành');
@@ -242,20 +244,6 @@ const LocationModal: React.FC<LocationModalProps> = ({
               </ScrollView>
             )}
           </View>
-
-          {/* Footer - Show when user has made some selection but not complete */}
-          {tempSelected.province && currentStep !== 'ward' && (
-            <View style={styles.footer}>
-              <TouchableOpacity
-                style={styles.confirmButton}
-                onPress={handleConfirmSelection}>
-                <Text style={styles.confirmText}>
-                  Xác nhận với{' '}
-                  {tempSelected.district ? 'Quận/Huyện' : 'Tỉnh/Thành phố'} này
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
         </View>
       </View>
     </Modal>

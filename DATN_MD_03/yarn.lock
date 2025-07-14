@@ -6007,6 +6007,11 @@ react-native-pdf@^6.7.7:
     crypto-js "4.2.0"
     deprecated-react-native-prop-types "^2.3.0"
 
+react-native-popup-menu@^0.18.0:
+  version "0.18.0"
+  resolved "https://registry.npmjs.org/react-native-popup-menu/-/react-native-popup-menu-0.18.0.tgz"
+  integrity sha512-XD3gyp/hwL5YWw2J034DerfvbJ6S2YHqAzvqAFRU+UGnFD4JyTqggfm4UyynBD26O1PDoRb45Loil+NZCGfCnA==
+
 react-native-reanimated-carousel@^4.0.2:
   version "4.0.2"
   resolved "https://registry.npmjs.org/react-native-reanimated-carousel/-/react-native-reanimated-carousel-4.0.2.tgz"
@@ -6085,6 +6090,7 @@ react-native-webview@^13.15.0:
     invariant "2.2.4"
 
 react-native@*, "react-native@>= 0.30.0", "react-native@>= 0.50.0", "react-native@>= 0.64.3", react-native@>=0.42.0, react-native@>=0.48.4, react-native@>=0.57, react-native@>=0.57.0, react-native@>=0.64.0, react-native@>=0.70.3, react-native@0.79.2:
+
   version "0.79.2"
   resolved "https://registry.npmjs.org/react-native/-/react-native-0.79.2.tgz"
   integrity sha512-AnGzb56JvU5YCL7cAwg10+ewDquzvmgrMddiBM0GAWLwQM/6DJfGd2ZKrMuKKehHerpDDZgG+EY64gk3x3dEkw==
@@ -6147,7 +6153,11 @@ react-test-renderer@19.0.0:
     react-is "^19.0.0"
     scheduler "^0.25.0"
 
+<<<<<<< HEAD
 react@*, "react@^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", "react@^16.9.0 || ^17.0.0 || ^18 || ^19", "react@^18.0 || ^19", react@^19.0.0, "react@> 16.7.0", "react@>= 15.2.1", "react@>= 17.0.1", "react@>= 18.2.0", react@>=16, react@>=16.0, react@>=16.4.0, react@>=16.8, react@>=17.0.0, react@>=18.0.0, react@19.0.0:
+=======
+react@*, "react@^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", "react@^16.9.0 || ^17.0.0 || ^18 || ^19", "react@^18.0 || ^19", react@^19.0.0, "react@>= 15.2.1", "react@>= 17.0.1", "react@>= 18.2.0", react@>=16, react@>=16.0, react@>=16.4.0, react@>=16.8, react@>=17.0.0, react@>=18.0.0, react@19.0.0:
+>>>>>>> af454b17e10b3c86175e72d976066c973af4edf1
   version "19.0.0"
   resolved "https://registry.npmjs.org/react/-/react-19.0.0.tgz"
   integrity sha512-V8AVnmPIICiWpGfm6GLzCR/W5FXLchHop40W4nXBmdlEceh16rCN8O8LNWm5bh5XUX91fh7KpA+W0TgMKmgTpQ==

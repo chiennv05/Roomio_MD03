@@ -1,4 +1,12 @@
-import {Alert, ScrollView, StyleSheet, Text, View, SafeAreaView, StatusBar} from 'react-native';
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  StatusBar,
+} from 'react-native';
 import React, {useCallback, useEffect, useState} from 'react';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {useDispatch} from 'react-redux';
@@ -8,6 +16,7 @@ import {ItemInput, UIHeader} from '../MyRoom/components';
 import {Icons} from '../../../assets/icons';
 import {
   moderateScale,
+  responsiveSpacing,
   SCREEN,
   verticalScale,
 } from '../../../utils/responsive';
@@ -41,6 +50,8 @@ import {
 } from '../../../types';
 import ModalService from './components/ModalService';
 import {validateRoomForm} from './utils/validateFromData';
+import LocationModal from './components/LocationModal';
+import {SelectedAddress} from '../../../types/Address';
 
 type AddRoomNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -57,8 +68,18 @@ export default function AddRoomScreen() {
   const [furniture, setFurniture] = useState<string[]>([]);
   const [image, setImage] = useState<ImageUploadResult[]>([]);
   const [rentPrice, setRentPrice] = useState<number | ''>();
+  const [displayRentPrice, setDisplayRentPrice] = useState('');
   const [imageArr, setImageArr] = useState<string[]>([]);
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
+
+  const [visibleLocationModal, setVisibleLocationModal] = useState(false);
+  const [address, setAddress] = useState<string>('');
+  const [province, setProvince] = useState('');
+  const [district, setDistrict] = useState('');
+  const [ward, setWard] = useState('');
+  const [street, setStreet] = useState('');
+  const [houseNo, setHouseNo] = useState('');
+
   // modal
   const [isUploading, setIsUploading] = useState(false);
   const [visibleImage, setVisibleImage] = useState(false);
@@ -69,7 +90,7 @@ export default function AddRoomScreen() {
 
   const [modalVisibleService, setModalVisibleService] = useState(false);
   const [servicePrices, setServicePrices] = useState<ServicePrices>({
-    electricity: 0,
+    electricity: 0, // Có thể để 0 nhưng cần check khi gửi API
     water: 0,
   });
 
@@ -80,17 +101,21 @@ export default function AddRoomScreen() {
     });
 
   const [customServices, setCustomServices] = useState<CustomService[]>([]);
-
+  console.log('hi', customServices);
   const [itemServiceEdit, setItemServiceEdit] = useState<
     ItemSeviceOptions | undefined
   >();
 
   useEffect(() => {
     const params = (route as any).params;
-    if (!params?.location) return;
+    if (!params?.location) {
+      return;
+    }
 
-    const {address, latitude, longitude} = params.location;
-    if (address) setAddressText(address);
+    const {address: addressTextParam, latitude, longitude} = params.location;
+    if (addressTextParam) {
+      setAddressText(addressTextParam);
+    }
     if (latitude && longitude) {
       setCoordinates([longitude, latitude]);
     }
@@ -145,7 +170,15 @@ export default function AddRoomScreen() {
           onPress: async () => {
             try {
               await deleteRoomPhoto(fileName);
+
               setImage(prev => prev.filter(img => img.fileName !== fileName));
+
+              setImageArr(prev =>
+                prev.filter(img => {
+                  const lastSegment = img.split('/').pop(); // lấy phần fileName cuối
+                  return lastSegment !== fileName;
+                }),
+              );
             } catch (error) {
               console.log('Xoá ảnh thất bại');
             }
@@ -155,25 +188,31 @@ export default function AddRoomScreen() {
       {cancelable: true},
     );
   };
+
   // Hàm chọn ảnh từ thư viện hoặc máy ảnh
   const pickImages = () => {
-    Alert.alert(
-      'Chọn ảnh', 
-      'Bạn muốn chọn ảnh từ đâu?', 
-      [
-        {
-          text: 'Máy ảnh', 
-          onPress: () => {
-            ImagePicker.openCamera({
-              width: 1000,
-              height: 1000,
-              cropping: true,
-              includeBase64: false,
-              includeExif: false,
-            })
+    const remainingSlots = 15 - image.length;
+    if (remainingSlots <= 0) {
+      Alert.alert('Thông báo', 'Bạn đã chọn tối đa 15 ảnh.');
+      return;
+    }
+
+    Alert.alert('Chọn ảnh', 'Bạn muốn chọn ảnh từ đâu?', [
+      {
+        text: 'Máy ảnh',
+        onPress: () => {
+          if (image.length >= 15) {
+            Alert.alert('Thông báo', 'Bạn đã chọn tối đa 15 ảnh.');
+            return;
+          }
+          ImagePicker.openCamera({
+            width: 1000,
+            height: 1000,
+            cropping: true,
+            includeBase64: false,
+            includeExif: false,
+          })
             .then(image => {
-              console.log('Ảnh từ máy ảnh:', image);
-              // Kiểm tra dữ liệu trước khi tạo ImageFile
               if (!image.path || !image.mime) {
                 Alert.alert('Lỗi', 'Không thể lấy thông tin ảnh');
                 return;
@@ -181,48 +220,56 @@ export default function AddRoomScreen() {
               const imageFile: ImageFile = {
                 path: image.path,
                 mime: image.mime,
-                filename: image.path.split('/').pop() || `camera_${Date.now()}.jpg`,
+                filename:
+                  image.path.split('/').pop() || `camera_${Date.now()}.jpg`,
               };
-              console.log('ImageFile được tạo:', imageFile);
               onUpload([imageFile]);
             })
             .catch(e => {
-              console.log('Lỗi camera:', e);
               if (e.code !== 'E_PICKER_CANCELLED') {
-                Alert.alert('Thông báo', 'Không thể truy cập máy ảnh, vui lòng kiểm tra quyền truy cập');
+                Alert.alert(
+                  'Thông báo',
+                  'Không thể truy cập máy ảnh, vui lòng kiểm tra quyền truy cập',
+                );
               }
             });
-          },
         },
-        {
-          text: 'Thư viện', 
-          onPress: () => {
-            ImagePicker.openPicker({
-              multiple: true,
-              maxFiles: 3,  // Giảm xuống 3 ảnh để giảm lỗi
-              mediaType: 'photo',
-              includeBase64: false,
-              includeExif: false,
-            })
+      },
+      {
+        text: 'Thư viện',
+        onPress: () => {
+          ImagePicker.openPicker({
+            multiple: true,
+            maxFiles: Math.min(15, remainingSlots), // chỉ cho chọn tối đa 3 ảnh/lần và không vượt quá 15 ảnh
+            mediaType: 'photo',
+            includeBase64: false,
+            includeExif: false,
+          })
             .then(images => {
-              console.log('Ảnh từ thư viện:', images);
-              // Đảm bảo images là một mảng
               if (!Array.isArray(images)) {
                 images = [images];
               }
+
+              if (images.length > remainingSlots) {
+                Alert.alert(
+                  'Thông báo',
+                  `Bạn chỉ có thể chọn thêm tối đa ${remainingSlots} ảnh.`,
+                );
+                return;
+              }
+
               const imageFiles: ImageFile[] = images.map(img => {
-                // Kiểm tra từng thuộc tính
                 if (!img.path || !img.mime) {
-                  console.error('Ảnh không hợp lệ:', img);
                   throw new Error('Ảnh không hợp lệ');
                 }
                 return {
                   path: img.path,
                   mime: img.mime,
-                  filename: img.path.split('/').pop() || `gallery_${Date.now()}.jpg`,
+                  filename:
+                    img.path.split('/').pop() || `gallery_${Date.now()}.jpg`,
                 };
               });
-              console.log('Mảng ImageFile được tạo:', imageFiles);
+
               if (imageFiles.length > 0) {
                 onUpload(imageFiles);
               } else {
@@ -230,16 +277,17 @@ export default function AddRoomScreen() {
               }
             })
             .catch(e => {
-              console.log('Lỗi thư viện:', e);
               if (e.code !== 'E_PICKER_CANCELLED') {
-                Alert.alert('Thông báo', 'Không thể truy cập thư viện, vui lòng kiểm tra quyền truy cập');
+                Alert.alert(
+                  'Thông báo',
+                  'Không thể truy cập thư viện, vui lòng kiểm tra quyền truy cập',
+                );
               }
             });
-          }
         },
-        {text: 'Hủy', style: 'cancel'}
-      ]
-    );
+      },
+      {text: 'Hủy', style: 'cancel'},
+    ]);
   };
 
   const onclickItemImage = (filename: string) => {
@@ -300,7 +348,7 @@ export default function AddRoomScreen() {
   //modal add
   const handleSaveModal = (item: ItemSeviceOptions) => {
     if (!item) return;
-    console.log(item);
+    console.log('Saving service item:', item);
 
     const isTemplateKhac = item.value === 'khac';
     const isNew = isTemplateKhac || item.id === undefined || item.id === 3;
@@ -315,7 +363,9 @@ export default function AddRoomScreen() {
     };
 
     if (itemWithId.category === 'required') {
+      // *** SỬA CHÍNH TẠI ĐÂY ***
       if (itemWithId.value === 'electricity') {
+        console.log('Setting electricity price:', itemWithId.price);
         setServicePrices(prev => ({
           ...prev,
           electricity: itemWithId.price ?? 0,
@@ -325,6 +375,7 @@ export default function AddRoomScreen() {
           electricity: itemWithId.priceType ?? 'perRoom',
         }));
       } else if (itemWithId.value === 'water') {
+        console.log('Setting water price:', itemWithId.price);
         setServicePrices(prev => ({...prev, water: itemWithId.price ?? 0}));
         setServicePriceConfig(prev => ({
           ...prev,
@@ -332,22 +383,20 @@ export default function AddRoomScreen() {
         }));
       }
 
+      // Cập nhật serviceOptionList để hiển thị giá
       setServiceOptionList(prev =>
         prev.map(i => (i.id === itemWithId.id ? {...i, ...itemWithId} : i)),
       );
     } else {
-      console.log(isNew);
+      // Logic cho custom services...
       if (isNew) {
-        // ✅ Thêm mới nếu tạo từ template 'khac'
         setServiceOptionList(prev => [...prev, itemWithId]);
       } else {
-        // ✅ Cập nhật nếu đã tồn tại
         setServiceOptionList(prev =>
           prev.map(i => (i.id === itemWithId.id ? {...i, ...itemWithId} : i)),
         );
       }
 
-      // Cập nhật custom service
       const customService: CustomService = {
         name: itemWithId.label,
         price: itemWithId.price ?? 0,
@@ -356,15 +405,14 @@ export default function AddRoomScreen() {
       };
 
       setCustomServices(prev => {
-        // Tìm dịch vụ hiện có theo tên
-        const existingIndex = prev.findIndex(i => i.name === customService.name);
+        const existingIndex = prev.findIndex(
+          i => i.name === customService.name,
+        );
         if (existingIndex >= 0) {
-          // Nếu đã tồn tại, thay thế
           const updated = [...prev];
           updated[existingIndex] = customService;
           return updated;
         } else {
-          // Nếu chưa có, thêm mới
           return [...prev, customService];
         }
       });
@@ -373,7 +421,90 @@ export default function AddRoomScreen() {
     setModalVisibleService(false);
     setItemServiceEdit(undefined);
   };
+  const handleDeleteService = (item: ItemSeviceOptions) => {
+    if (!item) return;
 
+    Alert.alert(
+      'Xác nhận xóa',
+      `Bạn có chắc chắn muốn xóa dịch vụ "${item.label}" không?`,
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel',
+        },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: () => {
+            try {
+              // Kiểm tra loại dịch vụ và xử lý tương ứng
+              if (item.category === 'required') {
+                // Đối với dịch vụ bắt buộc (điện, nước)
+                if (item.value === 'electricity') {
+                  // Reset giá điện về 0
+                  setServicePrices(prev => ({
+                    ...prev,
+                    electricity: 0,
+                  }));
+                  setServicePriceConfig(prev => ({
+                    ...prev,
+                    electricity: 'perUsage',
+                  }));
+                } else if (item.value === 'water') {
+                  // Reset giá nước về 0
+                  setServicePrices(prev => ({
+                    ...prev,
+                    water: 0,
+                  }));
+                  setServicePriceConfig(prev => ({
+                    ...prev,
+                    water: 'perUsage',
+                  }));
+                }
+
+                // Reset lại item trong serviceOptionList về trạng thái ban đầu
+                setServiceOptionList(prev =>
+                  prev.map(i => {
+                    if (i.id === item.id) {
+                      return {
+                        ...i,
+                        price: undefined,
+                        priceType: undefined,
+                        description: undefined,
+                        status: false, // Đặt về trạng thái chưa cấu hình
+                      };
+                    }
+                    return i;
+                  }),
+                );
+              } else {
+                // Đối với dịch vụ tùy chọn
+                // Xóa khỏi serviceOptionList
+                setServiceOptionList(prev =>
+                  prev.filter(i => i.id !== item.id),
+                );
+
+                // Xóa khỏi customServices
+                setCustomServices(prev =>
+                  prev.filter(service => service.name !== item.label),
+                );
+              }
+
+              // Đóng modal và reset item edit
+              setModalVisibleService(false);
+              setItemServiceEdit(undefined);
+
+              console.log(`Đã xóa dịch vụ: ${item.label}`);
+            } catch (error) {
+              console.error('Lỗi khi xóa dịch vụ:', error);
+              Alert.alert('Lỗi', 'Không thể xóa dịch vụ. Vui lòng thử lại.');
+            }
+          },
+        },
+      ],
+      {cancelable: true},
+    );
+  };
   const handleCancelModal = () => {
     setModalVisibleService(false);
   };
@@ -383,9 +514,16 @@ export default function AddRoomScreen() {
       roomNumber,
       area,
       addressText,
+      houseNo,
+      street,
+      ward,
+      district,
+      province,
       maxOccupancy,
       imageArr,
       serviceOptionList,
+      description,
+      rentPrice,
     });
 
     if (!result.valid) {
@@ -397,27 +535,13 @@ export default function AddRoomScreen() {
       Alert.alert('Thiếu tọa độ', 'Vui lòng chọn vị trí trên bản đồ.');
       return;
     }
+    const finalServicePrices = {
+      electricity: servicePrices.electricity || 0, // Đảm bảo không null/undefined
+      water: servicePrices.water || 0,
+    };
 
-    // Phân tích địa chỉ để lấy thông tin chi tiết
-    const addressParts = addressText.split(',').map(part => part.trim());
-    let province = 'Hà Nội';
-    let district = '';
-    let ward = '';
-    let street = '';
-    let houseNo = '';
-
-    // Nếu có đủ thông tin, phân tích từ địa chỉ đã nhập
-    if (addressParts.length >= 3) {
-      houseNo = addressParts[0]; // Số nhà
-      street = addressParts[1]; // Tên đường
-      ward = addressParts[2]; // Phường/xã
-      if (addressParts.length >= 4) {
-        district = addressParts[3]; // Quận/huyện
-      }
-      if (addressParts.length >= 5) {
-        province = addressParts[4]; // Tỉnh/thành
-      }
-    }
+    console.log('Final service prices before API:', finalServicePrices);
+    console.log('Service price config:', servicePriceConfig);
 
     const room: Room = {
       roomNumber: roomNumber,
@@ -433,11 +557,11 @@ export default function AddRoomScreen() {
         ward: ward,
         street: street,
         houseNo: houseNo,
-                  coordinates: {
-            type: 'Point',
-            coordinates: coordinates,
-          },
-        servicePrices: servicePrices,
+        coordinates: {
+          type: 'Point',
+          coordinates: coordinates,
+        },
+        servicePrices: finalServicePrices, // Sử dụng finalServicePrices
         servicePriceConfig: servicePriceConfig,
       },
       customServices: customServices,
@@ -445,9 +569,10 @@ export default function AddRoomScreen() {
       furniture: furniture,
     };
 
+    console.log('Room object before API:', JSON.stringify(room, null, 2));
+
     try {
       const res = await dispatch(createLandlordRoom(room));
-      console.log('Payload gửi:', JSON.stringify(room, null, 2));
       if (createLandlordRoom.fulfilled.match(res)) {
         Alert.alert('Thành công', 'Tạo phòng trọ thành công!');
         clearForm();
@@ -492,6 +617,30 @@ export default function AddRoomScreen() {
       },
     });
   };
+  // mở hàm lấy danh sách tỉnh thành
+  const handleOpenLocationModal = () => {
+    setVisibleLocationModal(true);
+  };
+  const onClose = () => {
+    setVisibleLocationModal(false);
+  };
+  const handleSelectLocation = (item: SelectedAddress) => {
+    const fullProvinceName = item.province?.name || '';
+    const districtName = item.district?.name || '';
+    const wardName = item.ward?.name || '';
+    const provinceName = fullProvinceName.replace(/^Tỉnh\s|^Thành phố\s/i, '');
+    // Ghép địa chỉ đầy đủ
+    const fullAddress = [provinceName, districtName, wardName]
+      .filter(Boolean)
+      .join(', ');
+    setAddress(fullAddress);
+
+    setProvince(provinceName);
+    setDistrict(districtName);
+    setWard(wardName);
+    // Nếu bạn có thêm: setFullAddress(fullAddress); thì lưu luôn chuỗi
+    onClose();
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -533,13 +682,33 @@ export default function AddRoomScreen() {
             />
           </View>
           <ItemInput
+            placeholder="Địa chỉ"
+            value={address}
+            onChangeText={setAddress}
+            editable={false}
+            onPress={handleOpenLocationModal}
+            height={verticalScale(50)}
+          />
+          <ItemInput
+            placeholder="Đường (VD: Nguyễn Trãi)"
+            value={street}
+            onChangeText={setStreet}
+            editable={true}
+          />
+          <ItemInput
+            placeholder="Số nhà (VD: 123)"
+            value={houseNo}
+            onChangeText={setHouseNo}
+            editable={true}
+          />
+          <ItemInput
             placeholder="Địa chỉ chi tiết"
             value={addressText}
             onChangeText={setAddressText}
             iconRight={Icons.IconMap}
             onPressIcon={onPressOnpenMap}
             editable={true}
-            height={verticalScale(60)}
+            height={verticalScale(50)}
           />
           <View style={styles.containerInputRow}>
             <ItemInput
@@ -555,10 +724,12 @@ export default function AddRoomScreen() {
             />
             <ItemInput
               placeholder="Giá tiền"
-              value={rentPrice?.toString() || ''}
+              value={displayRentPrice}
               onChangeText={text => {
-                const value = text.replace(/[^0-9]/g, '');
-                setRentPrice(value === '' ? '' : parseInt(value, 10));
+                const numeric = text.replace(/[^0-9]/g, '');
+                setRentPrice(numeric === '' ? '' : parseInt(numeric, 10));
+                const formatted = numeric.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                setDisplayRentPrice(formatted);
               }}
               editable={true}
               keyboardType="numeric"
@@ -573,7 +744,11 @@ export default function AddRoomScreen() {
             height={moderateScale(100)}
             borderRadius={10}
           />
-          <ItemTitle title="Hình ảnh" icon={Icons.IconAdd} onPress={pickImages} />
+          <ItemTitle
+            title="Hình ảnh"
+            icon={Icons.IconAdd}
+            onPress={pickImages}
+          />
           <View style={styles.containerImage}>
             {image.length === 0 ? (
               <Text>Chưa có ảnh nào được chọn</Text>
@@ -652,6 +827,12 @@ export default function AddRoomScreen() {
         handleSave={handleSaveModal}
         item={itemServiceEdit}
         handleCancel={handleCancelModal}
+        handleDelete={handleDeleteService}
+      />
+      <LocationModal
+        visible={visibleLocationModal}
+        onClose={onClose}
+        onSelect={handleSelectLocation}
       />
     </SafeAreaView>
   );
@@ -685,6 +866,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   containerButton: {
-    marginVertical: 10,
+    marginBottom: responsiveSpacing(50),
+    marginTop: responsiveSpacing(20),
   },
 });

@@ -9,6 +9,7 @@ import React, {useState} from 'react';
 import {
   responsiveFont,
   responsiveIcon,
+  responsiveSpacing,
   SCREEN,
   verticalScale,
 } from '../../../../utils/responsive';
@@ -42,7 +43,12 @@ const ItemInput = ({
   borderRadius = 24,
   onPress,
 }: InputProps) => {
-  const isMultiline = placeholder === 'Mô tả' || placeholder === 'Địa chỉ chi tiết';
+  const isMultiline =
+    placeholder === 'Mô tả' ||
+    placeholder === 'Địa chỉ chi tiết' ||
+    placeholder === 'Điều khoản bổ sung' ||
+    placeholder === 'Điều khoản nội quy' ||
+    placeholder === 'Địa chỉ';
   const [inputHeight, setInputHeight] = useState(height);
 
   return (
@@ -66,6 +72,7 @@ const ItemInput = ({
             minHeight: height,
             height: isMultiline ? inputHeight : height,
           },
+          {paddingEnd: iconRight ? responsiveSpacing(20) : 0},
         ]}
         multiline={isMultiline}
         placeholder={placeholder}
@@ -110,7 +117,7 @@ const styles = StyleSheet.create({
   },
   multilineInput: {
     paddingTop: 10,
-    paddingBottom: 10,
+    paddingBottom: 0,
   },
   styleIcon: {
     width: responsiveIcon(24),

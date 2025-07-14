@@ -100,8 +100,13 @@ export default function ProfileScreen() {
 
   // Hàm xử lý khi nhấn vào "Quản lý hợp đồng"
   const handleContractPress = () => {
-    // Chuyển đến màn hình ContractManagement
-    navigation.navigate('ContractManagement');
+    if (isLandlord) {
+      // Nếu là chủ
+      navigation.navigate('ContractManagement');
+    } else {
+      // Nếu là người thuê
+      navigation.navigate('ContractLessee');
+    }
   };
 
   // Hàm xử lý khi nhấn vào "Yêu cầu hỗ trợ"

@@ -13,13 +13,13 @@ import {ItemInput} from '../../MyRoom/components';
 import DropDownPicker from 'react-native-dropdown-picker';
 import {priceTypeList} from '../utils/priceType';
 import {ItemSeviceOptions} from '../utils/seviceOptions';
-import {CustomService} from '../../../../types';
 
 interface ItemModal {
   visible: boolean;
   handleSave: (item: ItemSeviceOptions) => void;
   item: ItemSeviceOptions | undefined;
   handleCancel: () => void;
+  handleDelete?: (item: ItemSeviceOptions) => void; // *** THÊM prop handleDelete ***
 }
 
 export default function ModalService({
@@ -27,6 +27,7 @@ export default function ModalService({
   handleSave,
   item,
   handleCancel,
+  handleDelete, // *** THÊM param handleDelete ***
 }: ItemModal) {
   const isSaved = item?.status === true;
   const [name, setName] = useState('');
@@ -35,6 +36,7 @@ export default function ModalService({
   const [description, setDescription] = useState('');
   const [open, setOpen] = useState(false);
   console.log(item);
+
   useEffect(() => {
     if (!item) return;
     if (item?.label !== 'Dịch vụ khác') {
@@ -56,7 +58,17 @@ export default function ModalService({
     }
     return false;
   };
+
+  // *** THÊM: Function kiểm tra có thể xóa không ***
+  const isDeletable = () => {
+    if (!item) return false;
+    // Chỉ cho phép xóa dịch vụ tùy chọn và không phải template "khác"
+    return item.category === 'optional' && item.value !== 'khac';
+  };
+
   const editable = isEditable();
+  const canDelete = isDeletable();
+
   const handleSaveBtn = () => {
     if (!item) return;
 
@@ -82,11 +94,33 @@ export default function ModalService({
       category: item.category ?? 'optional',
       iconBase: item.iconBase ?? 'IconService',
       status: true,
-      // ❌ Không tạo id ở đây
     };
 
-    handleSave(updatedItem); // Trả dữ liệu về cha
+    handleSave(updatedItem);
     handleCancel();
+  };
+
+  // *** THÊM: Function xử lý xóa ***
+  const handleDeleteBtn = () => {
+    if (!item || !handleDelete) return;
+
+    Alert.alert(
+      'Xác nhận xóa',
+      `Bạn có chắc chắn muốn xóa dịch vụ "${item.label}" không?`,
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel',
+        },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: () => {
+            handleDelete(item);
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -97,7 +131,9 @@ export default function ModalService({
       statusBarTranslucent>
       <View style={styles.modal}>
         <View style={styles.container}>
-          <Text style={styles.title}>Thêm dịch vụ</Text>
+          <Text style={styles.title}>
+            {item?.label === 'Dịch vụ khác' ? 'Thêm dịch vụ' : 'Sửa dịch vụ'}
+          </Text>
 
           {/* Dropdown chọn loại tính phí */}
           <View style={styles.dropdownWrapper}>
@@ -147,6 +183,16 @@ export default function ModalService({
               />
             )}
           </View>
+
+          {/* *** THÊM: Nút xóa (hiện khi có thể xóa) *** */}
+          {canDelete && (
+            <TouchableOpacity
+              style={styles.deleteBtn}
+              onPress={handleDeleteBtn}>
+              <Text style={styles.deleteText}>Xóa dịch vụ</Text>
+            </TouchableOpacity>
+          )}
+
           <View style={styles.buttonGroup}>
             <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel}>
               <Text style={styles.cancelText}>Huỷ</Text>
@@ -208,10 +254,26 @@ const styles = StyleSheet.create({
     gap: 12,
     zIndex: 10,
   },
+  // *** THÊM: Style cho nút xóa ***
+  deleteBtn: {
+    marginTop: 16,
+    marginBottom: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: '#ff4444',
+    borderRadius: 8,
+    alignSelf: 'center',
+  },
+  deleteText: {
+    color: '#fff',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
   buttonGroup: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: 12,
+    marginTop: 16,
   },
   cancelBtn: {
     paddingHorizontal: 20,
