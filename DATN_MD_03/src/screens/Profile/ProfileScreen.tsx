@@ -188,11 +188,6 @@ export default function ProfileScreen() {
           {isLandlord && (
             <>
               <SettingItem
-                iconStat={Icons.IconRomManagement}
-                label="Quản lý phòng trọ"
-                iconEnd={Icons.IconNext}
-              />
-              <SettingItem
                 iconStat={Icons.IconListTenants}
                 label="Danh sách người thuê"
                 iconEnd={Icons.IconNext}
