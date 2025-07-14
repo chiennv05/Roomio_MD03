@@ -1,5 +1,5 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { Support } from '../../types/Support';
+import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
+import {Support} from '../../types/Support';
 import supportService from '../services/supportService';
 
 interface SupportState {
@@ -45,7 +45,10 @@ const initialState: SupportState = {
 // Async thunks
 export const fetchSupportRequests = createAsyncThunk(
   'support/fetchSupportRequests',
-  async (params: { status?: string; category?: string; page?: number; limit?: number }, { rejectWithValue }) => {
+  async (
+    params: {status?: string; category?: string; page?: number; limit?: number},
+    {rejectWithValue},
+  ) => {
     try {
       const response = await supportService.getSupportRequests(params);
       if ('isError' in response) {
@@ -55,12 +58,12 @@ export const fetchSupportRequests = createAsyncThunk(
     } catch (error) {
       return rejectWithValue('Không thể lấy danh sách yêu cầu hỗ trợ');
     }
-  }
+  },
 );
 
 export const deleteSupportRequest = createAsyncThunk(
   'support/deleteSupportRequest',
-  async (id: string, { rejectWithValue }) => {
+  async (id: string, {rejectWithValue}) => {
     try {
       const response = await supportService.deleteSupportRequest(id);
       if ('isError' in response) {
@@ -70,20 +73,20 @@ export const deleteSupportRequest = createAsyncThunk(
     } catch (error) {
       return rejectWithValue('Không thể xóa yêu cầu hỗ trợ');
     }
-  }
+  },
 );
 
 const supportSlice = createSlice({
   name: 'support',
   initialState,
   reducers: {
-    clearSupportState: (_state) => {
+    clearSupportState: _state => {
       return initialState;
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     builder
-      .addCase(fetchSupportRequests.pending, (state) => {
+      .addCase(fetchSupportRequests.pending, state => {
         state.loading = true;
         state.error = null;
       })
@@ -97,7 +100,7 @@ const supportSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(deleteSupportRequest.pending, (state) => {
+      .addCase(deleteSupportRequest.pending, state => {
         state.loading = true;
         state.error = null;
       })
@@ -105,11 +108,14 @@ const supportSlice = createSlice({
         state.loading = false;
         // Remove the deleted support request from the state
         state.supportRequests = state.supportRequests.filter(
-          (request) => request._id !== action.payload
+          request => request._id !== action.payload,
         );
         // Update summary counts
         if (state.summary) {
-          state.summary.totalRequests = Math.max(0, state.summary.totalRequests - 1);
+          state.summary.totalRequests = Math.max(
+            0,
+            state.summary.totalRequests - 1,
+          );
         }
       })
       .addCase(deleteSupportRequest.rejected, (state, action) => {
@@ -119,5 +125,5 @@ const supportSlice = createSlice({
   },
 });
 
-export const { clearSupportState } = supportSlice.actions;
+export const {clearSupportState} = supportSlice.actions;
 export default supportSlice.reducer;
