@@ -8,9 +8,6 @@ import {
   Easing,
   FlatList,
   ViewToken,
-  Modal,
-  TextInput,
-  TouchableOpacity,
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
