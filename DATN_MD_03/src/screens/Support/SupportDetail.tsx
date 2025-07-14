@@ -12,12 +12,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ToastAndroid,
 } from 'react-native';
 import {useRoute, useNavigation, RouteProp} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {supportService} from '../../store/services/supportService';
 import {Support, SupportMessage} from '../../types/Support';
-import {useAppSelector} from '../../hooks/redux';
 
 type SupportDetailRouteParams = {
   supportId: string;
@@ -28,22 +28,14 @@ const SupportDetail: React.FC = () => {
     useRoute<RouteProp<Record<string, SupportDetailRouteParams>, string>>();
   const navigation = useNavigation();
   const {supportId} = route.params || {};
-  
-  // Lấy token từ Redux store
-  const {token} = useAppSelector(state => state.auth);
 
+  // Không cần lấy token vì supportService đã tự xử lý token
   const [supportData, setSupportData] = useState<Support | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
-  // Lưu ID tin nhắn cuối cùng để kiểm tra tin nhắn mới
-  const [lastMessageId, setLastMessageId] = useState<string | null>(null);
-  // Thêm state để theo dõi việc polling
-  const [isPolling, setIsPolling] = useState(true);
-  // Khoảng thời gian polling (mỗi 3 giây)
-  const POLLING_INTERVAL = 3000;
 
   const fetchSupportDetail = useCallback(async () => {
     if (!supportId) {
@@ -58,20 +50,7 @@ const SupportDetail: React.FC = () => {
         setError(response.message);
       } else {
         const data = response.data.data;
-        console.log('Support data:', JSON.stringify(data));
         setSupportData(data);
-        
-        // Cập nhật lastMessageId nếu có tin nhắn mới
-        if (data.messages && data.messages.length > 0) {
-          const newestMessage = data.messages[data.messages.length - 1];
-          if (newestMessage._id && newestMessage._id !== lastMessageId) {
-            setLastMessageId(newestMessage._id || null);
-            // Cuộn xuống tin nhắn mới nhất
-            setTimeout(() => {
-              scrollViewRef.current?.scrollToEnd({animated: true});
-            }, 200);
-          }
-        }
       }
     } catch (err) {
       setError('Không thể tải thông tin yêu cầu hỗ trợ');
@@ -79,42 +58,12 @@ const SupportDetail: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [supportId, lastMessageId]);
+  }, [supportId]);
 
   // Lần đầu tải dữ liệu
   useEffect(() => {
     fetchSupportDetail();
   }, [fetchSupportDetail]);
-
-  // Thiết lập polling để cập nhật tin nhắn mới
-  useEffect(() => {
-    let pollingInterval: NodeJS.Timeout;
-
-    if (isPolling && supportId) {
-      pollingInterval = setInterval(() => {
-        // Chỉ fetch khi không trong quá trình gửi tin nhắn
-        if (!sendingMessage) {
-          fetchSupportDetail();
-        }
-      }, POLLING_INTERVAL);
-    }
-
-    // Dừng polling khi component unmount
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
-    };
-  }, [fetchSupportDetail, isPolling, supportId, sendingMessage]);
-
-  // Dừng polling khi rời khỏi màn hình
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', () => {
-      setIsPolling(false);
-    });
-
-    return unsubscribe;
-  }, [navigation]);
 
   // Format date
   const formatDate = (dateString?: string) => {
@@ -178,7 +127,16 @@ const SupportDetail: React.FC = () => {
   const handleGoBack = () => {
     navigation.goBack();
   };
-  
+
+  // Hiển thị thông báo dựa vào platform
+  const showToast = (message: string) => {
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(message, ToastAndroid.SHORT);
+    } else {
+      Alert.alert('Thông báo', message, [{text: 'OK'}], {cancelable: true});
+    }
+  };
+
   // Handle sending a new message
   const handleSendMessage = async () => {
     if (!message.trim()) {
@@ -193,18 +151,23 @@ const SupportDetail: React.FC = () => {
 
     try {
       setSendingMessage(true);
-      
+
       // Gọi API gửi tin nhắn qua supportService để tự xử lý token
-      const response = await supportService.replyToSupport(supportId, message.trim());
-      
+      const response = await supportService.replyToSupport(
+        supportId,
+        message.trim(),
+      );
+
       if ('isError' in response) {
         Alert.alert('Lỗi', response.message || 'Không thể gửi tin nhắn');
       } else {
-        // Clear the input field
-        setMessage('');
-        
-        // Cập nhật lại danh sách tin nhắn sau khi gửi
-        fetchSupportDetail();
+        // Hiển thị thông báo thành công
+        showToast('Gửi tin nhắn thành công');
+
+        // Quay lại màn hình danh sách hỗ trợ
+        setTimeout(() => {
+          navigation.goBack();
+        }, 500);
       }
     } catch (err) {
       console.error('Error sending message:', err);
@@ -250,17 +213,15 @@ const SupportDetail: React.FC = () => {
         <View style={styles.headerRight} />
       </View>
 
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={{flex: 1}}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
-        <ScrollView 
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
+        <ScrollView
           ref={scrollViewRef}
           style={styles.content}
           contentContainerStyle={styles.contentContainer}
-          showsVerticalScrollIndicator={false}
-        >
+          showsVerticalScrollIndicator={false}>
           <View style={styles.card}>
             <Text style={styles.title}>{supportData.title}</Text>
 
@@ -316,60 +277,75 @@ const SupportDetail: React.FC = () => {
               </View>
             </View>
 
-    
-            
             {/* Hiển thị tin nhắn trao đổi */}
             {supportData.messages && supportData.messages.length > 0 && (
               <View style={styles.contentSection}>
                 <Text style={styles.sectionTitle}>Tin nhắn trao đổi</Text>
-                {supportData.messages.map((msg: SupportMessage, index: number) => (
-                  <View 
-                    key={index} 
-                    style={[
-                      styles.messageContainer,
-                      msg.sender === 'admin' ? styles.adminMessage : styles.userMessage,
-                    ]}
-                  >
-                    <View style={styles.messageHeader}>
-                      <Text style={[
-                        styles.messageSender,
-                        msg.sender === 'admin' ? styles.adminSender : styles.userSender
+                {supportData.messages.map(
+                  (msg: SupportMessage, index: number) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.messageContainer,
+                        msg.sender === 'admin'
+                          ? styles.adminMessage
+                          : styles.userMessage,
                       ]}>
-                        {msg.sender === 'admin' ? 'Admin' : 'Khách hàng'}
-                      </Text>
-                      <Text style={styles.messageTime}>
-                        {formatDate(msg.createdAt)}
-                      </Text>
+                      <View style={styles.messageHeader}>
+                        <Text
+                          style={[
+                            styles.messageSender,
+                            msg.sender === 'admin'
+                              ? styles.adminSender
+                              : styles.userSender,
+                          ]}>
+                          {msg.sender === 'admin' ? 'Admin' : 'Khách hàng'}
+                        </Text>
+                        <Text style={styles.messageTime}>
+                          {formatDate(msg.createdAt)}
+                        </Text>
+                      </View>
+                      <Text style={styles.messageContent}>{msg.message}</Text>
                     </View>
-                    <Text style={styles.messageContent}>{msg.message}</Text>
-                  </View>
-                ))}
+                  ),
+                )}
               </View>
             )}
           </View>
         </ScrollView>
-        
-        {/* Message input section - always show regardless of status */}
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.messageInput}
-            placeholder="Nhập tin nhắn để gửi cho Admin"
-            value={message}
-            onChangeText={setMessage}
-            multiline
-            maxLength={500}
-          />
-          <TouchableOpacity 
-            style={[styles.sendButton, !message.trim() && styles.disabledButton]} 
-            onPress={handleSendMessage}
-            disabled={!message.trim() || sendingMessage}>
-            {sendingMessage ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <Text style={styles.sendText}>Gửi</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+
+        {/* Message input section - only show if status is not "hoanTat" */}
+        {supportData.status !== 'hoanTat' ? (
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.messageInput}
+              placeholder="Nhập tin nhắn để gửi cho Admin"
+              value={message}
+              onChangeText={setMessage}
+              multiline
+              maxLength={500}
+            />
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                !message.trim() && styles.disabledButton,
+              ]}
+              onPress={handleSendMessage}
+              disabled={!message.trim() || sendingMessage}>
+              {sendingMessage ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text style={styles.sendText}>Gửi</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.completedMessageContainer}>
+            <Text style={styles.completedMessageText}>
+              Yêu cầu hỗ trợ đã hoàn tất. Không thể gửi thêm tin nhắn.
+            </Text>
+          </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -609,6 +585,20 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: '#bdbdbd',
+  },
+  completedMessageContainer: {
+    padding: 16,
+    backgroundColor: '#e8f5e9',
+    borderTopWidth: 1,
+    borderTopColor: '#c8e6c9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  completedMessageText: {
+    fontSize: 14,
+    color: '#4caf50',
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });
 

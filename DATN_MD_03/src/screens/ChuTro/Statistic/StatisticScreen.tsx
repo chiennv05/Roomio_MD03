@@ -10,6 +10,7 @@ import {
   ImageBackground,
   StatusBar,
   Platform,
+  Image,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../../store';
@@ -71,6 +72,11 @@ const StatisticScreen = () => {
     navigation.navigate('ContractDetail', {contractId});
   };
 
+  // Thêm hàm xử lý quay lại
+  const handleGoBack = () => {
+    navigation.goBack();
+  };
+
   // Format money
   const formatMoney = (value: number) => {
     return value.toLocaleString('vi-VN');
@@ -104,6 +110,14 @@ const StatisticScreen = () => {
         translucent
         barStyle="dark-content"
       />
+
+      {/* Back Button */}
+      <TouchableOpacity
+        style={[styles.backButton, {marginTop: statusBarHeight + 10}]}
+        onPress={handleGoBack}>
+        <Image source={require('../../../assets/icons/icon_arrow_back.png')} />
+      </TouchableOpacity>
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -459,5 +473,14 @@ const styles = StyleSheet.create({
     color: Colors.textGray,
     textAlign: 'center',
     marginVertical: responsiveSpacing(20),
+  },
+  backButton: {
+    position: 'absolute',
+    top: 10,
+    left: 16,
+    zIndex: 10,
+    padding: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 20,
   },
 });
