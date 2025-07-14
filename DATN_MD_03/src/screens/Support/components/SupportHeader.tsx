@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     paddingTop: 25,
   },
   backButton: {
-    padding: 8,
+    padding: 10,
   },
   title: {
     fontSize: 20,

@@ -66,6 +66,19 @@ export const supportService = {
   // Delete a support request by ID
   deleteSupportRequest: async (id: string) => {
     return api.delete<{ success: boolean; message: string }>(`/support/${id}`);
+  },
+  
+  // Reply to a support request
+  replyToSupport: async (supportId: string, message: string) => {
+    return api.post<{ 
+      success: boolean; 
+      message: string; 
+      data: { 
+        message: string;
+        _id: string;
+        createdAt: string; 
+      } 
+    }>(`/support/${supportId}/reply`, { message });
   }
 };
 
