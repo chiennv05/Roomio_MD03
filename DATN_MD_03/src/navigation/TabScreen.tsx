@@ -34,6 +34,8 @@ import RoomDetail from '../screens/ChuTro/RoomDetail/RoomDetail';
 import UpdateRoom from '../screens/ChuTro/UpdateRoom/UpdateRoom';
 import UpdateContract from '../screens/ChuTro/Contract/UpdateContract';
 import AddContractNoNotification from '../screens/ChuTro/Contract/AddContractNoNotification';
+import ContractLessee from '../screens/NguoiThue/Contract/ContractLessee';
+import ContractDetailLesseeScreen from '../screens/NguoiThue/Contract/ContractDetailLesseeScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -164,6 +166,20 @@ export default function TabScreen() {
           <Stack.Screen
             name="AddContractNoNotification"
             component={AddContractNoNotification}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="ContractLessee"
+            component={ContractLessee}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="ContractDetailLessee"
+            component={ContractDetailLesseeScreen}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}

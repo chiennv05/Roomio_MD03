@@ -41,4 +41,7 @@ export type RootStackParamList = {
   AddContract: {notificationId: string};
   UpdateContract: {contract: Contract};
   AddContractNoNotification: undefined;
+  ContractLessee: undefined;
+  ContractDetailLessee: {contractId: string};
+
 };
