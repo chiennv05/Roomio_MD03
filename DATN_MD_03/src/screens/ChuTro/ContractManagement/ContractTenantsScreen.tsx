@@ -14,7 +14,7 @@ import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {useSelector, useDispatch} from 'react-redux';
 import {RootState, AppDispatch} from '../../../store';
-import {fetchContractTenants} from '../../../store/slices/contractSlice';
+import {fetchContractDetail} from '../../../store/slices/contractSlice';
 import {RootStackParamList} from '../../../types/route';
 import {Icons} from '../../../assets/icons';
 import {Colors} from '../../../theme/color';
@@ -40,12 +40,12 @@ const ContractTenantsScreen = () => {
 
   const dispatch = useDispatch<AppDispatch>();
   const token = useSelector((state: RootState) => state.auth.token);
-  const {contractTenants, contractTenantsLoading, contractTenantsError} =
+  const {selectedContract, selectedContractLoading, selectedContractError} =
     useSelector((state: RootState) => state.contract);
 
   useEffect(() => {
     if (token && contractId) {
-      dispatch(fetchContractTenants(contractId));
+      dispatch(fetchContractDetail(contractId));
     }
   }, [dispatch, token, contractId]);
 
@@ -85,19 +85,6 @@ const ContractTenantsScreen = () => {
     </View>
   );
 
-  const getCoTenantData = (coTenant: any) => {
-    // Nếu có _doc (từ MongoDB), lấy dữ liệu từ _doc
-    if (coTenant._doc) {
-      return coTenant._doc;
-    }
-    // Nếu có __parentArray (từ response API), lấy dữ liệu từ phần tử đầu tiên
-    if (coTenant.__parentArray && coTenant.__parentArray.length > 0) {
-      return coTenant.__parentArray[coTenant.__index];
-    }
-    // Nếu không có cả hai, sử dụng dữ liệu trực tiếp
-    return coTenant;
-  };
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
@@ -110,27 +97,27 @@ const ContractTenantsScreen = () => {
         <Text style={styles.headerTitle}>Danh sách người thuê</Text>
       </View>
 
-      {contractTenantsLoading ? (
+      {selectedContractLoading ? (
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Đang tải danh sách...</Text>
         </View>
-      ) : contractTenantsError ? (
+      ) : selectedContractError ? (
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{contractTenantsError}</Text>
+          <Text style={styles.errorText}>{selectedContractError}</Text>
         </View>
       ) : (
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-          {contractTenants && (
+          {selectedContract && selectedContract.contractInfo && (
             <>
               {/* Thông tin phòng */}
               <View style={styles.roomInfoCard}>
                 <View style={styles.roomInfo}>
                   <Text style={styles.roomNumber}>
-                    Phòng {contractTenants.room.roomNumber}
+                    Phòng {typeof selectedContract.roomId === 'object' ? selectedContract.roomId.roomNumber : ''}
                   </Text>
                   <View style={styles.occupancyInfo}>
                     <Text style={styles.occupancyText}>
-                      {contractTenants.tenants.tenantCount}/{contractTenants.tenants.maxOccupancy} người
+                      {selectedContract.contractInfo.tenantCount}/{selectedContract.contractInfo.maxOccupancy} người
                     </Text>
                   </View>
                 </View>
@@ -147,21 +134,21 @@ const ContractTenantsScreen = () => {
                     <Text style={styles.infoLabel}>Trạng thái:</Text>
                     <Text style={[
                       styles.infoValue,
-                      {color: contractTenants.contract.status === 'active' ? Colors.darkGreen : Colors.darkGray},
+                      {color: selectedContract.status === 'active' ? Colors.darkGreen : Colors.darkGray},
                     ]}>
-                      {contractTenants.contract.status === 'active' ? 'Đang hiệu lực' : 'Hết hạn'}
+                      {selectedContract.status === 'active' ? 'Đang hiệu lực' : 'Hết hạn'}
                     </Text>
                   </View>
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>Ngày bắt đầu:</Text>
                     <Text style={styles.infoValue}>
-                      {formatDate(contractTenants.contract.startDate)}
+                      {formatDate(selectedContract.contractInfo.startDate)}
                     </Text>
                   </View>
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>Ngày kết thúc:</Text>
                     <Text style={styles.infoValue}>
-                      {formatDate(contractTenants.contract.endDate)}
+                      {formatDate(selectedContract.contractInfo.endDate)}
                     </Text>
                   </View>
                 </View>
@@ -170,24 +157,25 @@ const ContractTenantsScreen = () => {
               {/* Danh sách người thuê */}
               <View style={styles.tenantsSection}>
                 {/* Người thuê chính */}
-                {renderTenantCard({
-                  ...contractTenants.tenants.mainTenant,
+                {selectedContract.contractInfo.tenantName && renderTenantCard({
+                  fullName: selectedContract.contractInfo.tenantName,
+                  email: selectedContract.contractInfo.tenantEmail,
+                  phone: selectedContract.contractInfo.tenantPhone,
                   isMainTenant: true
                 })}
 
                 {/* Người ở cùng */}
-                {contractTenants.tenants.coTenants && 
-                 contractTenants.tenants.coTenants.length > 0 && (
+                {selectedContract.contractInfo.coTenants && 
+                 selectedContract.contractInfo.coTenants.length > 0 && (
                   <>
                     <Text style={styles.sectionTitle}>
-                      Người ở cùng ({contractTenants.tenants.coTenants.length})
+                      Người ở cùng ({selectedContract.contractInfo.coTenants.length})
                     </Text>
-                    {contractTenants.tenants.coTenants.map((coTenant: any) => {
-                      const tenantData = getCoTenantData(coTenant);
+                    {selectedContract.contractInfo.coTenants.map((coTenant: any) => {
                       return renderTenantCard({
-                        fullName: tenantData.fullName,
-                        email: tenantData.email,
-                        phone: tenantData.phone
+                        fullName: coTenant.username || coTenant.fullName,
+                        email: coTenant.email,
+                        phone: coTenant.phone
                       });
                     })}
                   </>
