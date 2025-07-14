@@ -248,6 +248,14 @@ export const Icons = {
     ios: 'icon_ra_vao_van_tay',
     android: 'asset:/icons/icon_ra_vao_van_tay.png',
   }),
+  IconRaVaoVanTaySelected: Platform.select({
+    ios: 'icon_ra_vao_van_tay_selected',
+    android: 'asset:/icons/icon_ra_vao_van_tay_selected.png',
+  }),
+  IconRaVaoVanTayDefault: Platform.select({
+    ios: 'icon_ra_vao_van_tay_default',
+    android: 'asset:/icons/icon_ra_vao_van_tay.png',
+  }),
   IconWifiMienPhi: Platform.select({
     ios: 'icon_wifi_mien_phi',
     android: 'asset:/icons/icon_wifi_mien_phi.png',
@@ -515,9 +523,8 @@ export const Icons = {
   }),
   IconGacXepDefault: Platform.select({
     ios: 'icon_gac_xep_default',
-    android: 'asset:/icons/icon_gac_xep_default.png',
+    android: 'asset:/icons/icon_gac_xep.png',
   }),
-
   // Nội thất
   IconDieuHoaSelectd: Platform.select({
     ios: 'icon_dieu_hoa_seleted',

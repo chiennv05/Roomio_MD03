@@ -77,7 +77,7 @@ export const amenitiesOptions: OptionItem[] = [
     value: 'raVaoVanTay',
     label: 'Ra vào vân tay',
     category: 'rules',
-    iconBase: 'IconSecurity',
+    iconBase: 'IconRaVaoVanTay',
   },
   {
     value: 'wifiFree',
