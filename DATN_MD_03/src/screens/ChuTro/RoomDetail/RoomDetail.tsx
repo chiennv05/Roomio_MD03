@@ -26,7 +26,6 @@ export default function RoomDetail() {
     loading,
     error,
     handleNavigateToUpdate,
-    formatNumber,
     handleRetry,
     handleDeleteRoom, // Thêm function này
     navigation,
@@ -82,8 +81,6 @@ export default function RoomDetail() {
           <ImageCarousel images={selectedRoom.photos || []} />
           <View style={styles.content}>
             <RoomInfo
-              // name={}
-              name={selectedRoom.roomNumber}
               price={selectedRoom.rentPrice?.toLocaleString('vi-VN') || '0'}
               address={selectedRoom.location?.addressText || ''}
               roomCode={selectedRoom.roomNumber}

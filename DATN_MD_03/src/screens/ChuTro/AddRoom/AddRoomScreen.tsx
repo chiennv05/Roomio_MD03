@@ -16,6 +16,7 @@ import {ItemInput, UIHeader} from '../MyRoom/components';
 import {Icons} from '../../../assets/icons';
 import {
   moderateScale,
+  responsiveFont,
   responsiveSpacing,
   SCREEN,
   verticalScale,
@@ -348,7 +349,8 @@ export default function AddRoomScreen() {
   //modal add
   const handleSaveModal = (item: ItemSeviceOptions) => {
     if (!item) return;
-    console.log('Saving service item:', item);
+
+    console.log('item', item);
 
     const isTemplateKhac = item.value === 'khac';
     const isNew = isTemplateKhac || item.id === undefined || item.id === 3;
@@ -608,6 +610,28 @@ export default function AddRoomScreen() {
     setCustomServices([]);
   };
 
+  const handleCancel = () => {
+    Alert.alert(
+      'Xác nhận hủy',
+      'Bạn có chắc chắn muốn hủy tạo bài đăng không?',
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel',
+        },
+        {
+          text: 'Xác nhận',
+          style: 'destructive',
+          onPress: () => {
+            clearForm();
+            navigation.goBack();
+          },
+        },
+      ],
+      {cancelable: true},
+    );
+  };
+
   const onPressOnpenMap = () => {
     navigation.navigate('MapScreen', {
       isSelectMode: true,
@@ -707,9 +731,18 @@ export default function AddRoomScreen() {
             onChangeText={setAddressText}
             iconRight={Icons.IconMap}
             onPressIcon={onPressOnpenMap}
-            editable={true}
+            editable={!!coordinates}
             height={verticalScale(50)}
           />
+          {!coordinates ? (
+            <Text style={styles.helperText}>
+              * Vui lòng nhấn vào biểu tượng bản đồ để chọn vị trí trước
+            </Text>
+          ) : (
+            <Text style={styles.successText}>
+              Bạn có thể chỉnh sửa địa chỉ chi tiết
+            </Text>
+          )}
           <View style={styles.containerInputRow}>
             <ItemInput
               placeholder="Số người"
@@ -751,7 +784,9 @@ export default function AddRoomScreen() {
           />
           <View style={styles.containerImage}>
             {image.length === 0 ? (
-              <Text>Chưa có ảnh nào được chọn</Text>
+              <Text>
+                Chưa có ảnh nào được chọn . Nhấn vào biểu tượng thêm để chọn ảnh
+              </Text>
             ) : (
               <FlatList
                 data={image}
@@ -810,8 +845,8 @@ export default function AddRoomScreen() {
             <ItemButtonConfirm
               onPress={handleCreatePost}
               title="Tạo bài đăng"
-              icon={Icons.IconAdd}
-              onPressIcon={() => {}}
+              icon={Icons.IconDelete}
+              onPressIcon={handleCancel}
             />
           </View>
         </View>
@@ -868,5 +903,17 @@ const styles = StyleSheet.create({
   containerButton: {
     marginBottom: responsiveSpacing(50),
     marginTop: responsiveSpacing(20),
+  },
+  helperText: {
+    fontSize: responsiveFont(12),
+    color: 'gray',
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  successText: {
+    fontSize: responsiveFont(12),
+    color: 'green',
+    marginTop: 4,
+    marginBottom: 8,
   },
 });

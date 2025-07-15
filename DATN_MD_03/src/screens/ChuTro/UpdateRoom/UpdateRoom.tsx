@@ -391,21 +391,27 @@ export default function UpdateRoom() {
   };
 
   // Options handling
-  const handleClickItemOptionAmenities = useCallback((items: OptionItem) => {
-    setAmenities(prev =>
-      prev.includes(items.value)
-        ? prev.filter(i => i !== items.value)
-        : [...prev, items.value],
-    );
-  }, []);
+  const handleClickItemOptionAmenities = useCallback(
+    (items: OptionItem) => {
+      setAmenities(prev =>
+        prev.includes(items.value)
+          ? prev.filter(i => i !== items.value)
+          : [...prev, items.value],
+      );
+    },
+    [setAmenities],
+  );
 
-  const handleClickItemOptionFurniture = useCallback((items: OptionItem) => {
-    setFurniture(prev =>
-      prev.includes(items.value)
-        ? prev.filter(i => i !== items.value)
-        : [...prev, items.value],
-    );
-  }, []);
+  const handleClickItemOptionFurniture = useCallback(
+    (items: OptionItem) => {
+      setFurniture(prev =>
+        prev.includes(items.value)
+          ? prev.filter(i => i !== items.value)
+          : [...prev, items.value],
+      );
+    },
+    [setFurniture],
+  );
 
   const renderAmenityItem = useCallback(
     ({item}: {item: OptionItem}) => (

@@ -91,10 +91,4 @@ export const amenitiesOptions: OptionItem[] = [
     category: 'internet',
     iconBase: 'IconWifi',
   },
-  {
-    value: 'khac',
-    label: 'Khác',
-    category: 'others',
-    iconBase: 'IconKhac',
-  },
 ];

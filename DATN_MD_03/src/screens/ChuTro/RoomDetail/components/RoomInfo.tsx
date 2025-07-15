@@ -10,7 +10,6 @@ import {Fonts} from '../../../../theme/fonts';
 import {Colors} from '../../../../theme/color';
 
 interface RoomInfoProps {
-  name: string;
   price: string;
   address: string;
   roomCode: string;
@@ -21,7 +20,6 @@ interface RoomInfoProps {
 }
 
 const RoomInfo: React.FC<RoomInfoProps> = ({
-  name,
   price,
   address,
   roomCode,
