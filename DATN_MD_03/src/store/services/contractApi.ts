@@ -356,3 +356,21 @@ export const updateTenantsApi = async (
     };
   }
 };
+
+export const deleteContractApi = async (contractId: string) => {
+  try {
+    const response = await api.delete(`/contract/${contractId}/delete`);
+    if (!response.data || !response.data.success) {
+      throw new Error(
+        response.data?.message || 'Xóa hợp đồng không thành công',
+      );
+    }
+    return response.data;
+  } catch (error: any) {
+    console.error(`Error deleting contract ${contractId}:`, error);
+    throw {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+    };
+  }
+};

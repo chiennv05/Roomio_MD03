@@ -25,6 +25,7 @@ import {Icons} from '../../../assets/icons';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../../store';
 import {
+  deleteContract,
   extendContractThunk,
   fetchContractDetail,
   terminateContractThunk,
@@ -262,7 +263,7 @@ const ContractDetailScreen = () => {
                 onEdit={() => {}}
                 onExtend={() => {}}
                 onTerminate={() => {}}
-                onUpdateTenants={() => {}}
+                onDeleteContract={() => {}}
               />
             }
           />
@@ -289,7 +290,7 @@ const ContractDetailScreen = () => {
                 onEdit={() => {}}
                 onExtend={() => {}}
                 onTerminate={() => {}}
-                onUpdateTenants={() => {}}
+                onDeleteContract={() => {}}
               />
             }
           />
@@ -322,7 +323,7 @@ const ContractDetailScreen = () => {
                 onEdit={() => {}}
                 onExtend={() => {}}
                 onTerminate={() => {}}
-                onUpdateTenants={() => {}}
+                onDeleteContract={() => {}}
               />
             }
           />
@@ -352,17 +353,47 @@ const ContractDetailScreen = () => {
   };
 
   const contract = selectedContract;
-  console.log(selectedContract);
   const imageList = contract.signedContractImages || [];
-  const handleUpdateTenants = () => {
-    const currentUsernames =
-      contract.contractInfo.coTenants?.map(tenant => tenant.username) || [];
 
-    navigation.navigate('UpdateTenant', {
-      contractId: contract._id,
-      currentUsernames: currentUsernames,
-    });
+  const handleDeleteContract = async () => {
+    const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
+
+    if (!allowedStatuses.includes(contract?.status)) {
+      Alert.alert(
+        'Không thể xóa',
+        'Chỉ có thể xóa hợp đồng ở trạng thái nháp, chờ ký hoặc chờ duyệt.',
+      );
+      return;
+    }
+
+    Alert.alert('Xác nhận', 'Bạn có chắc chắn muốn xóa hợp đồng này không?', [
+      {
+        text: 'Hủy',
+        style: 'cancel',
+      },
+      {
+        text: 'Xóa',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await dispatch(deleteContract(contract._id)).unwrap();
+            Alert.alert('Thành công', 'Hợp đồng đã được xóa thành công', [
+              {
+                text: 'OK',
+                onPress: () => navigation.goBack(),
+              },
+            ]);
+          } catch (error: any) {
+            Alert.alert(
+              'Lỗi',
+              error?.message || 'Có lỗi xảy ra khi xóa hợp đồng',
+            );
+          }
+        },
+      },
+    ]);
   };
+
   const statusInfo = getContractStatusInfo(contract.status);
   const canUploadImages =
     contract.status === 'pending_signature' ||
@@ -384,7 +415,7 @@ const ContractDetailScreen = () => {
                 onEdit={handleGoUpdateContract}
                 onExtend={onExtendContract}
                 onTerminate={onTerminateContract}
-                onUpdateTenants={handleUpdateTenants}
+                onDeleteContract={handleDeleteContract}
               />
             }
             color={Colors.white}

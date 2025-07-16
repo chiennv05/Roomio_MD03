@@ -12,6 +12,7 @@ import {
   extendContract,
   terminateContract,
   updateTenantsApi,
+  deleteContractApi, // <-- import API deleteContract
 } from '../services/contractApi';
 import {
   Contract,
@@ -281,6 +282,25 @@ export const updateTenants = createAsyncThunk(
       };
     } catch (err: any) {
       return rejectWithValue(err.message || 'Không thể cập nhật người thuê');
+    }
+  },
+);
+
+// Thêm vào phần async thunks
+export const deleteContract = createAsyncThunk(
+  'contract/deleteContract',
+  async (contractId: string, {rejectWithValue}) => {
+    try {
+      const response = await deleteContractApi(contractId);
+      if (!response.success) {
+        return rejectWithValue(response.message || 'Không thể xóa hợp đồng');
+      }
+      return {
+        contractId,
+        ...response,
+      };
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Không thể xóa hợp đồng');
     }
   },
 );
@@ -585,6 +605,32 @@ const contractSlice = createSlice({
       .addCase(updateTenants.rejected, (state, action) => {
         state.selectedContractLoading = false;
         state.selectedContractError = action.payload as string;
+      })
+      // Xóa hợp đồng
+      .addCase(deleteContract.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteContract.fulfilled, (state, action) => {
+        state.loading = false;
+        const deletedContractId = action.payload.contractId;
+
+        // Xóa hợp đồng khỏi danh sách contracts
+        state.contracts = state.contracts.filter(
+          contract => contract._id !== deletedContractId,
+        );
+
+        // Nếu hợp đồng đang được chọn là hợp đồng bị xóa, clear selectedContract
+        if (
+          state.selectedContract &&
+          state.selectedContract._id === deletedContractId
+        ) {
+          state.selectedContract = null;
+        }
+      })
+      .addCase(deleteContract.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });

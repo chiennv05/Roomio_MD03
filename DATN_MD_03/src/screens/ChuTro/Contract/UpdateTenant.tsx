@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  TextInput,
   FlatList,
   Image,
 } from 'react-native';
@@ -14,7 +13,6 @@ import {Colors} from '../../../theme/color';
 import {ItemInput, UIHeader} from '../MyRoom/components';
 
 import {updateTenants} from '../../../store/slices/contractSlice';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import {RouteProp, useRoute, useNavigation} from '@react-navigation/native';
 import {useAppDispatch, useAppSelector} from '../../../hooks';
 import {Icons} from '../../../assets/icons';
