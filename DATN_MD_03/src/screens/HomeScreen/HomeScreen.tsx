@@ -388,7 +388,12 @@ const HomeScreen: React.FC = () => {
 
   // Empty component
   const ListEmptyComponent = useMemo(() => (
-    !loading ? (
+    loading ? (
+      <View style={styles.loadingContainer}>
+        <LoadingAnimation size="large" color={Colors.limeGreen} />
+        <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
+      </View>
+    ) : (
       <EmptySearchAnimation
         title={hasActiveFilters ? 'Không tìm thấy phòng phù hợp' : 'Không có phòng nào'}
         subtitle={hasActiveFilters 
@@ -396,17 +401,17 @@ const HomeScreen: React.FC = () => {
           : 'Hiện tại chưa có phòng nào được đăng'
         }
       />
-    ) : null
+    )
   ), [loading, hasActiveFilters]);
 
   // Footer component
   const ListFooterComponent = useMemo(() => (
-    loading ? (
+    loading && filteredRooms.length > 0 ? (
       <View style={styles.footer}>
         <LoadingAnimation size="medium" color={Colors.limeGreen} />
       </View>
     ) : null
-  ), [loading]);
+  ), [loading, filteredRooms.length]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -511,5 +516,17 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     zIndex: 1000,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 300,
+  },
+  loadingText: {
+    marginTop: responsiveSpacing(16),
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.gray,
   },
 });
