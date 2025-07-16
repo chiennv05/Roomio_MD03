@@ -59,4 +59,5 @@ export type RootStackParamList = {
   AddContractNoNotification: undefined;
   ContractLessee: undefined;
   ContractDetailLessee: {contractId: string};
+  UpdateTenant: {contractId: string; currentUsernames: string[]};
 };

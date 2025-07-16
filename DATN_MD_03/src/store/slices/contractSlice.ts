@@ -11,6 +11,7 @@ import {
   deleteSignedImage,
   extendContract,
   terminateContract,
+  updateTenantsApi,
 } from '../services/contractApi';
 import {
   Contract,
@@ -254,6 +255,32 @@ export const terminateContractThunk = createAsyncThunk<
       return response.contract;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Không thể chấm dứt hợp đồng');
+    }
+  },
+);
+
+// cập nhật danh sách người thuê
+export const updateTenants = createAsyncThunk(
+  'contract/updateTenants',
+  async (
+    {contractId, tenants}: {contractId: string; tenants: string[]},
+    {rejectWithValue},
+  ) => {
+    try {
+      const response = await updateTenantsApi(contractId, tenants);
+      if (!response.success) {
+        return rejectWithValue(
+          response.message || 'Không thể cập nhật người thuê',
+        );
+      }
+
+      // Trả về toàn bộ response để có thể sử dụng coTenants, tenantCount, etc.
+      return {
+        contractId,
+        ...response,
+      };
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Không thể cập nhật người thuê');
     }
   },
 );
@@ -518,6 +545,46 @@ const contractSlice = createSlice({
       })
       .addCase(terminateContractThunk.rejected, (state, action) => {
         state.error = action.payload as string;
+      })
+      .addCase(updateTenants.pending, state => {
+        state.selectedContractLoading = true;
+        state.selectedContractError = null;
+      })
+      .addCase(updateTenants.fulfilled, (state, action) => {
+        state.selectedContractLoading = false;
+        const {contractId, coTenants, tenantCount, status, needsResigning} =
+          action.payload;
+
+        // Cập nhật trong danh sách contracts
+        const contractIndex = state.contracts.findIndex(
+          contract => contract._id === contractId,
+        );
+        if (contractIndex !== -1) {
+          // Kiểm tra xem contract có contractInfo không
+          if (state.contracts[contractIndex].contractInfo) {
+            state.contracts[contractIndex].contractInfo.coTenants = coTenants;
+            state.contracts[contractIndex].contractInfo.tenantCount =
+              tenantCount;
+          }
+          state.contracts[contractIndex].status = status;
+        }
+
+        // Cập nhật selectedContract với null check
+        if (
+          state.selectedContract &&
+          state.selectedContract._id === contractId
+        ) {
+          // Kiểm tra xem selectedContract có contractInfo không
+          if (state.selectedContract.contractInfo) {
+            state.selectedContract.contractInfo.coTenants = coTenants;
+            state.selectedContract.contractInfo.tenantCount = tenantCount;
+          }
+          state.selectedContract.status = status;
+        }
+      })
+      .addCase(updateTenants.rejected, (state, action) => {
+        state.selectedContractLoading = false;
+        state.selectedContractError = action.payload as string;
       });
   },
 });

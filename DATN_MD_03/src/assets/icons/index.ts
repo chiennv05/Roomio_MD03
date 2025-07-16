@@ -671,4 +671,13 @@ export const Icons = {
     ios: 'icon_calendar',
     android: 'asset:/icons/icon_calendar.png',
   }),
+
+  IconTrashCan: Platform.select({
+    ios: 'icon_trash_can',
+    android: 'asset:/icons/icon_trash_can.png',
+  }),
+  IconMoreVer: Platform.select({
+    ios: 'icon_more_ver',
+    android: 'asset:/icons/icon_more_ver.png',
+  }),
 };

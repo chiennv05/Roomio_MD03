@@ -329,3 +329,30 @@ export const deleteSignedImage = async (
     };
   }
 };
+
+// cập nhật danh sách người thuê
+export const updateTenantsApi = async (
+  contractId: string,
+  usernames: string[],
+) => {
+  console.log(usernames, 'Usernames to update');
+  try {
+    const response = await api.put(`/contract/${contractId}/co-tenants`, {
+      usernames: usernames,
+      skipResigning: true,
+    });
+    console.log('res', response.data);
+    if (!response.data || !response.data.success) {
+      throw new Error(
+        response.data?.message || 'Cập nhật người thuê không thành công',
+      );
+    }
+    return response.data;
+  } catch (error: any) {
+    console.error(`Error updating tenants for contract ${contractId}:`, error);
+    throw {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+    };
+  }
+};
