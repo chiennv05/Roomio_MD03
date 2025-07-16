@@ -6,6 +6,10 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  View,
+  FlatList,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -14,7 +18,10 @@ import {Contract, CustomService} from '../../../types';
 import {Colors} from '../../../theme/color';
 import {useDispatch} from 'react-redux';
 import {AppDispatch} from '../../../store';
-import {updateContractFrom} from '../../../store/slices/contractSlice';
+import {
+  updateContractFrom,
+  updateTenants,
+} from '../../../store/slices/contractSlice';
 import ServiceItem from './components/ServiceItem';
 import {ItemInput, UIHeader} from '../MyRoom/components';
 import {Icons} from '../../../assets/icons';
@@ -22,20 +29,27 @@ import {
   moderateScale,
   responsiveFont,
   responsiveSpacing,
+  responsiveIcon,
+  SCREEN,
 } from '../../../utils/responsive';
+import {useAppSelector} from '../../../hooks';
 
 export default function UpdateContract() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute();
   const {contract} = route.params as {contract: Contract};
-  const customServiceRoom = contract.roomId.location.customServices || [];
+  const customServiceRoom = contract?.roomId?.location?.customServices || [];
   const dispatch = useDispatch<AppDispatch>();
-
+  const {selectedContractLoading} = useAppSelector(state => state.contract);
   const [rules, setRules] = useState(contract?.contractInfo?.rules || '');
   const [additionalTerms, setAdditionalTerms] = useState(
     contract?.contractInfo?.additionalTerms || '',
   );
   const [isUpdated, setIsUpdated] = useState(false);
+  const [usernames, setUsernames] = useState<string[]>(
+    contract?.contractInfo.coTenants?.map(tenant => tenant.username) || [],
+  );
+  const [newUsername, setNewUsername] = useState('');
 
   useEffect(() => {
     if (!contract || !contract.contractInfo) {
@@ -58,7 +72,6 @@ export default function UpdateContract() {
     if (changed) {
       return !changed._delete;
     }
-    console.log(contract.contractInfo.customServices);
 
     // nếu chưa thay đổi thì kiểm tra trong hợp đồng gốc
     return (
@@ -74,7 +87,6 @@ export default function UpdateContract() {
       const exists = prev.find(item => item.name === service.name);
 
       if (exists) {
-        // Nếu đã có dịch vụ này, thì toggle _delete (nếu là dịch vụ cũ), hoặc xóa khỏi danh sách (nếu là dịch vụ mới)
         if (!exists._id) {
           // Dịch vụ mới chưa lưu trên server, chỉ cần xoá khỏi danh sách
           return prev.filter(item => item.name !== service.name);
@@ -108,8 +120,57 @@ export default function UpdateContract() {
     });
   };
 
+  // Tenant management functions
+  const handleAddUsername = () => {
+    if (!newUsername.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập username');
+      return;
+    }
+
+    if (usernames.includes(newUsername.trim())) {
+      Alert.alert('Lỗi', 'Username này đã tồn tại trong danh sách');
+      return;
+    }
+
+    setUsernames([...usernames, newUsername.trim()]);
+    setNewUsername('');
+  };
+
+  const handleRemoveUsername = (username: string) => {
+    Alert.alert(
+      'Xác nhận xóa',
+      `Bạn có chắc chắn muốn xóa "${username}" khỏi danh sách?`,
+      [
+        {
+          text: 'Hủy',
+          style: 'cancel',
+        },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: () => {
+            setUsernames(usernames.filter(u => u !== username));
+          },
+        },
+      ],
+    );
+  };
+
+  const renderUsernameItem = ({item}: {item: string}) => (
+    <View style={styles.usernameItem}>
+      <Text style={styles.usernameText}>@{item}</Text>
+      <TouchableOpacity
+        style={styles.removeButton}
+        onPress={() => handleRemoveUsername(item)}>
+        <Image
+          source={{uri: Icons.IconDelete}}
+          style={[styles.styleIcon, {tintColor: 'red'}]}
+        />
+      </TouchableOpacity>
+    </View>
+  );
+
   const handleUpdate = async () => {
-    // Kiểm tra nếu contract hoặc contract.contractInfo không tồn tại
     if (!contract || !contract.contractInfo) {
       Alert.alert(
         'Lỗi',
@@ -118,75 +179,107 @@ export default function UpdateContract() {
       return;
     }
 
-    // Kiểm tra và đảm bảo customServices tồn tại
-    const original = contract.contractInfo.customServices || [];
+    try {
+      // 1. Cập nhật thông tin hợp đồng (dịch vụ, rules, additionalTerms)
+      const original = contract.contractInfo.customServices || [];
 
-    // Lấy các dịch vụ bị tắt trong danh sách gốc nhưng không còn bật nữa
-    const removed = original
-      .filter(
-        ori =>
-          !customServices.find(item => item.name === ori.name) &&
-          !isServiceEnabled(ori), // đảm bảo người dùng đã tắt nó
-      )
-      .map(item => ({
-        _id: item._id!,
-        name: item.name,
-        price: item.price,
-        priceType: item.priceType,
-        description: item.description || '',
-        _delete: true,
-      }));
+      const removed = original
+        .filter(
+          ori =>
+            !customServices.find(item => item.name === ori.name) &&
+            !isServiceEnabled(ori),
+        )
+        .map(item => ({
+          _id: item._id!,
+          name: item.name,
+          price: item.price,
+          priceType: item.priceType,
+          description: item.description || '',
+          _delete: true,
+        }));
 
-    const updatedList = [...customServices, ...removed];
+      const updatedList = [...customServices, ...removed];
 
-    const finalList = updatedList.map(service => {
-      // Cấu trúc cơ bản của một dịch vụ
-      const base = {
-        name: service.name,
-        price: service.price,
-        priceType: service.priceType,
-        description: service.description || '',
+      const finalList = updatedList.map(service => {
+        const base = {
+          name: service.name,
+          price: service.price,
+          priceType: service.priceType,
+          description: service.description || '',
+        };
+
+        if (service._id && service._delete) {
+          return {
+            _id: service._id,
+            ...base,
+            _delete: true,
+          };
+        } else if (service._id) {
+          return {
+            _id: service._id,
+            ...base,
+          };
+        } else {
+          return base;
+        }
+      });
+
+      const contractPayload = {
+        rules,
+        additionalTerms,
+        customServices: finalList,
       };
 
-      if (service._id && service._delete) {
-        return {
-          _id: service._id,
-          ...base,
-          _delete: true,
-        };
-      } else if (service._id) {
-        return {
-          _id: service._id,
-          ...base,
-        };
-      } else {
-        return base;
-      }
-    });
-
-    const payload = {
-      rules,
-      additionalTerms,
-      customServices: finalList,
-    };
-
-    console.log('payload gửi đi:', JSON.stringify(payload, null, 2));
-
-    try {
-      const resultAction = await dispatch(
-        updateContractFrom({contractId: contract._id, data: payload}),
+      console.log(
+        'Contract payload:',
+        JSON.stringify(contractPayload, null, 2),
       );
 
-      if (updateContractFrom.fulfilled.match(resultAction)) {
-        setIsUpdated(true);
-        Alert.alert('Thành công', 'Cập nhật hợp đồng thành công', [
-          {text: 'OK', onPress: () => navigation.goBack()},
-        ]);
-      } else {
+      const contractResult = await dispatch(
+        updateContractFrom({contractId: contract._id, data: contractPayload}),
+      );
+
+      if (!updateContractFrom.fulfilled.match(contractResult)) {
         const errorMessage =
-          (resultAction.payload as string) || 'Đã xảy ra lỗi';
+          (contractResult.payload as string) || 'Đã xảy ra lỗi';
         Alert.alert('Lỗi', `Không thể cập nhật hợp đồng: ${errorMessage}`);
+        return;
       }
+
+      // 2. Cập nhật danh sách người thuê nếu có thay đổi
+      const originalUsernames = (
+        contract?.contractInfo?.coTenants?.map(tenant => tenant.username) || []
+      )
+        .slice()
+        .sort();
+      const updatedUsernames = usernames.slice().sort();
+
+      const isTenantSame =
+        originalUsernames.length === updatedUsernames.length &&
+        originalUsernames.every(
+          (username, index) => username === updatedUsernames[index],
+        );
+
+      if (!isTenantSame) {
+        console.log('Updating tenants:', usernames);
+
+        const tenantResult = await dispatch(
+          updateTenants({
+            contractId: contract._id,
+            tenants: usernames,
+          }),
+        );
+
+        if (!updateTenants.fulfilled.match(tenantResult)) {
+          Alert.alert('Lỗi', tenantResult.payload as string);
+          return;
+        }
+      }
+
+      setIsUpdated(true);
+      Alert.alert('Thành công', 'Cập nhật hợp đồng thành công', [
+        {text: 'OK', onPress: () => navigation.goBack()},
+      ]);
     } catch (error: any) {
       console.error('Update error:', error);
       Alert.alert(
@@ -220,6 +313,43 @@ export default function UpdateContract() {
         iconLeft={Icons.IconArrowLeft}
         onPressLeft={handleCancelUpdate}
       />
+
+      {/* Tenant Management Section */}
+      <Text style={styles.label}>
+        Danh sách người thuê ({usernames.length})
+      </Text>
+
+      <View style={styles.inputSection}>
+        <ItemInput
+          value={newUsername}
+          onChangeText={setNewUsername}
+          placeholder="Nhập username..."
+          width={SCREEN.width * 0.7}
+          editable={!selectedContractLoading}
+        />
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={handleAddUsername}
+          disabled={selectedContractLoading}>
+          <Image source={{uri: Icons.IconAdd}} style={styles.styleIcon} />
+        </TouchableOpacity>
+      </View>
+
+      {usernames.length > 0 ? (
+        <FlatList
+          data={usernames}
+          keyExtractor={(item, index) => `${item}_${index}`}
+          renderItem={renderUsernameItem}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContainer}
+          scrollEnabled={false}
+        />
+      ) : (
+        <Text style={styles.noServicesText}>
+          Không có người ở cùng nào . Nhập usenamer người dùng để thêm
+        </Text>
+      )}
+
       <Text style={styles.label}>Nội quy</Text>
       <TextInput
         style={styles.input}
@@ -239,12 +369,14 @@ export default function UpdateContract() {
       />
 
       <Text style={styles.label}>Dịch vụ bổ sung</Text>
-      {customServiceRoom.length === 0 ? (
+      {!Array.isArray(customServiceRoom) ? (
+        <Text style={styles.noServicesText}>Dịch vụ không hợp lệ</Text>
+      ) : customServiceRoom.length === 0 ? (
         <Text style={styles.noServicesText}>Không có dịch vụ nào</Text>
       ) : (
         customServiceRoom.map(service => (
           <ServiceItem
-            key={service.name}
+            key={service?.name ?? Math.random().toString()} // fallback nếu name undefined
             service={service}
             enabled={isServiceEnabled(service)}
             onToggle={toggleService}
@@ -253,18 +385,25 @@ export default function UpdateContract() {
       )}
 
       <TouchableOpacity
-        style={[styles.button, isUpdated ? styles.buttonDisabled : {}]}
+        style={[
+          styles.button,
+          isUpdated || selectedContractLoading ? styles.buttonDisabled : {},
+        ]}
         onPress={handleUpdate}
-        disabled={isUpdated}>
-        <Text style={styles.buttonText}>
-          {isUpdated ? 'Đã cập nhật thành công' : 'Cập nhật hợp đồng'}
-        </Text>
+        disabled={isUpdated || selectedContractLoading}>
+        {selectedContractLoading ? (
+          <ActivityIndicator color={Colors.white} />
+        ) : (
+          <Text style={styles.buttonText}>
+            {isUpdated ? 'Đã cập nhật thành công' : 'Cập nhật hợp đồng'}
+          </Text>
+        )}
       </TouchableOpacity>
 
       <TouchableOpacity
         style={[styles.button]}
         onPress={handleCancelUpdate}
-        disabled={isUpdated}>
+        disabled={isUpdated || selectedContractLoading}>
         <Text style={styles.buttonText}>Hủy bỏ cập nhật</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -334,5 +473,52 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     backgroundColor: '#ccc',
     opacity: 0.7,
+  },
+  // Tenant management styles
+  inputSection: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  addButton: {
+    backgroundColor: Colors.limeGreen,
+    width: responsiveIcon(48),
+    height: responsiveIcon(48),
+    borderRadius: responsiveIcon(48) / 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: responsiveSpacing(10),
+  },
+  listContainer: {
+    paddingBottom: 10,
+  },
+  usernameItem: {
+    backgroundColor: Colors.white,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  usernameText: {
+    fontSize: 16,
+    color: Colors.primary,
+    fontWeight: '500',
+  },
+  removeButton: {
+    padding: 4,
+  },
+  styleIcon: {
+    width: responsiveIcon(24),
+    height: responsiveIcon(24),
   },
 });

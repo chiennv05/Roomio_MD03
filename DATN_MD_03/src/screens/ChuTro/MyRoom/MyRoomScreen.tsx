@@ -97,9 +97,12 @@ export default function MyRoomScreen() {
     });
   }, [rooms, selectedFilter, searchText]);
 
-  const handleClickItemRooms = useCallback((id: string) => {
-    navigation.navigate('DetailRoomLandlord', {id});
-  }, [navigation]);
+  const handleClickItemRooms = useCallback(
+    (id: string) => {
+      navigation.navigate('DetailRoomLandlord', {id});
+    },
+    [navigation],
+  );
 
   const handleGoback = () => {
     navigation.goBack();
@@ -120,8 +123,6 @@ export default function MyRoomScreen() {
           title="Phòng trọ của tôi"
           onPressLeft={handleGoback}
           iconLeft={Icons.IconArrowLeft}
-          iconRight={Icons.IconAdd}
-          onPressRight={handleAddRoom}
         />
 
         {/* Tìm kiếm */}
@@ -161,7 +162,9 @@ export default function MyRoomScreen() {
 
         {/* Danh sách phòng */}
         <View style={styles.containerListRooms}>
-          {loading && <LoadingAnimation size="medium" color={Colors.limeGreen} />}
+          {loading && (
+            <LoadingAnimation size="medium" color={Colors.limeGreen} />
+          )}
           <FlatList
             data={filteredRooms}
             horizontal={false}
@@ -178,6 +181,9 @@ export default function MyRoomScreen() {
             )}
           />
         </View>
+        <TouchableOpacity style={styles.buttonAddRoom} onPress={handleAddRoom}>
+          <Image source={{uri: Icons.IconAdd}} style={styles.styleIcon} />
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -221,6 +227,25 @@ const styles = StyleSheet.create({
   },
   containerListRooms: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonAddRoom: {
+    position: 'absolute',
+    bottom: responsiveSpacing(20),
+    right: responsiveSpacing(20),
+    width: responsiveIcon(44),
+    height: responsiveIcon(44),
+    backgroundColor: Colors.limeGreen,
+    borderRadius: responsiveIcon(44) / 2,
+    padding: responsiveSpacing(12),
+    shadowColor: Colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -15,11 +15,17 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
-import {scale, verticalScale, responsiveFont} from '../../../utils/responsive';
+import {
+  scale,
+  verticalScale,
+  responsiveFont,
+  SCREEN,
+} from '../../../utils/responsive';
 import {Icons} from '../../../assets/icons';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../../store';
 import {
+  deleteContract,
   extendContractThunk,
   fetchContractDetail,
   terminateContractThunk,
@@ -247,18 +253,21 @@ const ContractDetailScreen = () => {
   if (selectedContractLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <UIHeader
-          title="Chi tiết hợp đồng"
-          iconLeft={Icons.IconArrowLeft}
-          onPressLeft={handleGoBack}
-          iconRight={
-            <ContractMenu
-              onEdit={() => {}}
-              onExtend={() => {}}
-              onTerminate={() => {}}
-            />
-          }
-        />
+        <View style={styles.headerContainer}>
+          <UIHeader
+            title="Chi tiết hợp đồng"
+            iconLeft={Icons.IconArrowLeft}
+            onPressLeft={handleGoBack}
+            iconRight={
+              <ContractMenu
+                onEdit={() => {}}
+                onExtend={() => {}}
+                onTerminate={() => {}}
+                onDeleteContract={() => {}}
+              />
+            }
+          />
+        </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.darkGreen} />
           <Text style={styles.loadingText}>Đang tải thông tin hợp đồng...</Text>
@@ -271,18 +280,21 @@ const ContractDetailScreen = () => {
   if (selectedContractError) {
     return (
       <SafeAreaView style={styles.container}>
-        <UIHeader
-          title="Chi tiết hợp đồng"
-          iconLeft={Icons.IconArrowLeft}
-          onPressLeft={handleGoBack}
-          iconRight={
-            <ContractMenu
-              onEdit={() => {}}
-              onExtend={() => {}}
-              onTerminate={() => {}}
-            />
-          }
-        />
+        <View style={styles.headerContainer}>
+          <UIHeader
+            title="Chi tiết hợp đồng"
+            iconLeft={Icons.IconArrowLeft}
+            onPressLeft={handleGoBack}
+            iconRight={
+              <ContractMenu
+                onEdit={() => {}}
+                onExtend={() => {}}
+                onTerminate={() => {}}
+                onDeleteContract={() => {}}
+              />
+            }
+          />
+        </View>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>
             Có lỗi xảy ra: {selectedContractError}. Vui lòng thử lại.
@@ -301,18 +313,21 @@ const ContractDetailScreen = () => {
   if (!selectedContract) {
     return (
       <SafeAreaView style={styles.container}>
-        <UIHeader
-          title="Chi tiết hợp đồng"
-          iconLeft={Icons.IconArrowLeft}
-          onPressLeft={handleGoBack}
-          iconRight={
-            <ContractMenu
-              onEdit={() => {}}
-              onExtend={() => {}}
-              onTerminate={() => {}}
-            />
-          }
-        />
+        <View style={styles.headerContainer}>
+          <UIHeader
+            title="Chi tiết hợp đồng"
+            iconLeft={Icons.IconArrowLeft}
+            onPressLeft={handleGoBack}
+            iconRight={
+              <ContractMenu
+                onEdit={() => {}}
+                onExtend={() => {}}
+                onTerminate={() => {}}
+                onDeleteContract={() => {}}
+              />
+            }
+          />
+        </View>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>
             Không tìm thấy thông tin hợp đồng
@@ -339,6 +354,46 @@ const ContractDetailScreen = () => {
 
   const contract = selectedContract;
   const imageList = contract.signedContractImages || [];
+
+  const handleDeleteContract = async () => {
+    const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
+
+    if (!allowedStatuses.includes(contract?.status)) {
+      Alert.alert(
+        'Không thể xóa',
+        'Chỉ có thể xóa hợp đồng ở trạng thái nháp, chờ ký hoặc chờ duyệt.',
+      );
+      return;
+    }
+
+    Alert.alert('Xác nhận', 'Bạn có chắc chắn muốn xóa hợp đồng này không?', [
+      {
+        text: 'Hủy',
+        style: 'cancel',
+      },
+      {
+        text: 'Xóa',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await dispatch(deleteContract(contract._id)).unwrap();
+            Alert.alert('Thành công', 'Hợp đồng đã được xóa thành công', [
+              {
+                text: 'OK',
+                onPress: () => navigation.goBack(),
+              },
+            ]);
+          } catch (error: any) {
+            Alert.alert(
+              'Lỗi',
+              error?.message || 'Có lỗi xảy ra khi xóa hợp đồng',
+            );
+          }
+        },
+      },
+    ]);
+  };
+
   const statusInfo = getContractStatusInfo(contract.status);
   const canUploadImages =
     contract.status === 'pending_signature' ||
@@ -346,22 +401,27 @@ const ContractDetailScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <UIHeader
-        title="Chi tiết hợp đồng"
-        iconLeft={Icons.IconArrowLeft}
-        onPressLeft={handleGoBack}
-        iconRight={
-          <ContractMenu
-            onEdit={handleGoUpdateContract}
-            onExtend={onExtendContract}
-            onTerminate={onTerminateContract}
-          />
-        }
-      />
-
       <ScrollView
         style={styles.scrollView}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollViewContent}>
+        <View style={styles.headerContainer}>
+          <UIHeader
+            title="Chi tiết hợp đồng"
+            iconLeft={Icons.IconArrowLeft}
+            onPressLeft={handleGoBack}
+            iconRight={
+              <ContractMenu
+                onEdit={handleGoUpdateContract}
+                onExtend={onExtendContract}
+                onTerminate={onTerminateContract}
+                onDeleteContract={handleDeleteContract}
+              />
+            }
+            color={Colors.white}
+          />
+        </View>
+
         {/* Trạng thái hợp đồng */}
         <View style={styles.statusContainer}>
           <Text style={styles.sectionTitle}>Trạng thái hợp đồng</Text>
@@ -537,7 +597,7 @@ const ContractDetailScreen = () => {
             <View style={styles.section}>
               <ItemTitle
                 title="Ảnh hợp đồng đã ký"
-                icon={Icons.IconAdd}
+                icon={Icons.IconTrashCan}
                 onPress={handleDeleteAllImage}
               />
               <FlatList
@@ -646,10 +706,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
-    alignItems: 'center',
   },
   scrollView: {
     flex: 1,
+    backgroundColor: Colors.backgroud,
+  },
+  scrollViewContent: {
+    paddingBottom: verticalScale(20),
+    alignItems: 'center',
   },
   statusContainer: {
     flexDirection: 'row',
@@ -658,13 +722,23 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     paddingHorizontal: scale(16),
     paddingVertical: verticalScale(12),
-    marginTop: verticalScale(8),
+    marginBottom: verticalScale(8),
+    width: SCREEN.width,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.white,
+    marginBottom: verticalScale(8),
+    width: SCREEN.width,
   },
   section: {
     backgroundColor: Colors.white,
-    marginTop: verticalScale(8),
     paddingHorizontal: scale(16),
     paddingVertical: verticalScale(12),
+    width: SCREEN.width,
+    marginBottom: verticalScale(12),
   },
   sectionTitle: {
     fontFamily: Fonts.Roboto_Bold,
@@ -746,6 +820,7 @@ const styles = StyleSheet.create({
     paddingVertical: verticalScale(12),
     borderRadius: 8,
     alignItems: 'center',
+    width: SCREEN.width * 0.8,
   },
   disabledButton: {
     backgroundColor: Colors.gray,

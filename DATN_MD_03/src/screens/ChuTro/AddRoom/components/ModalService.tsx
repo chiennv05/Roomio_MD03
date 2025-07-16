@@ -78,6 +78,30 @@ export default function ModalService({
       Alert.alert('Lỗi', 'Tên dịch vụ không được để trống');
       return;
     }
+    if (trimmedName.length > 50) {
+      Alert.alert('Lỗi', 'Tên dịch vụ không được quá 50 ký tự');
+      return;
+    }
+
+    if (price === '' || price <= 0) {
+      Alert.alert('Lỗi', 'Giá dịch vụ phải lớn hơn 0');
+      return;
+    }
+
+    if (!['perRoom', 'perPerson', 'perUsage'].includes(priceType)) {
+      Alert.alert('Lỗi', 'Loại tính phí không hợp lệ');
+      return;
+    }
+    if (item.label === 'Dịch vụ khác') {
+      if (!description.trim()) {
+        Alert.alert('Lỗi', 'Mô tả không được để trống');
+        return;
+      }
+      if (description.length > 200) {
+        Alert.alert('Lỗi', 'Mô tả không được vượt quá 200 ký tự');
+        return;
+      }
+    }
 
     const newValue = isNew
       ? trimmedName.toLowerCase().replace(/\s+/g, '-')
@@ -88,7 +112,7 @@ export default function ModalService({
       id: item.id ?? -1,
       value: newValue,
       label: trimmedName,
-      price: price === '' ? 0 : price,
+      price: price ?? 0,
       priceType: priceType as 'perUsage' | 'perPerson' | 'perRoom',
       description: description || '',
       category: item.category ?? 'optional',
@@ -100,27 +124,10 @@ export default function ModalService({
     handleCancel();
   };
 
-  // *** THÊM: Function xử lý xóa ***
   const handleDeleteBtn = () => {
     if (!item || !handleDelete) return;
 
-    Alert.alert(
-      'Xác nhận xóa',
-      `Bạn có chắc chắn muốn xóa dịch vụ "${item.label}" không?`,
-      [
-        {
-          text: 'Hủy',
-          style: 'cancel',
-        },
-        {
-          text: 'Xóa',
-          style: 'destructive',
-          onPress: () => {
-            handleDelete(item);
-          },
-        },
-      ],
-    );
+    handleDelete(item);
   };
 
   return (
@@ -185,13 +192,6 @@ export default function ModalService({
           </View>
 
           {/* *** THÊM: Nút xóa (hiện khi có thể xóa) *** */}
-          {canDelete && (
-            <TouchableOpacity
-              style={styles.deleteBtn}
-              onPress={handleDeleteBtn}>
-              <Text style={styles.deleteText}>Xóa dịch vụ</Text>
-            </TouchableOpacity>
-          )}
 
           <View style={styles.buttonGroup}>
             <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel}>
@@ -200,6 +200,13 @@ export default function ModalService({
             <TouchableOpacity style={styles.saveBtn} onPress={handleSaveBtn}>
               <Text style={styles.saveText}>{isSaved ? 'Sửa' : 'Lưu'}</Text>
             </TouchableOpacity>
+            {canDelete && (
+              <TouchableOpacity
+                style={styles.deleteBtn}
+                onPress={handleDeleteBtn}>
+                <Text style={styles.deleteText}>Xóa dịch vụ</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </View>
@@ -256,10 +263,8 @@ const styles = StyleSheet.create({
   },
   // *** THÊM: Style cho nút xóa ***
   deleteBtn: {
-    marginTop: 16,
-    marginBottom: 8,
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 10,
     backgroundColor: '#ff4444',
     borderRadius: 8,
     alignSelf: 'center',
