@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   FlatList,
   Alert,
+  StatusBar,
 } from 'react-native';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -401,6 +402,7 @@ const ContractDetailScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -424,7 +426,10 @@ const ContractDetailScreen = () => {
 
         {/* Trạng thái hợp đồng */}
         <View style={styles.statusContainer}>
-          <Text style={styles.sectionTitle}>Trạng thái hợp đồng</Text>
+          <View>
+            <Text style={styles.textContract}>Mã hợp đồng</Text>
+            <Text style={styles.textCodeContract}>{contract._id}</Text>
+          </View>
           <View
             style={[styles.statusBadge, {backgroundColor: statusInfo.color}]}>
             <Text style={styles.statusText}>{statusInfo.label}</Text>
@@ -721,7 +726,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: Colors.white,
     paddingHorizontal: scale(16),
-    paddingVertical: verticalScale(12),
+    paddingTop: verticalScale(12),
     marginBottom: verticalScale(8),
     width: SCREEN.width,
   },
@@ -730,8 +735,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.white,
-    marginBottom: verticalScale(8),
     width: SCREEN.width,
+    paddingBottom: verticalScale(10),
   },
   section: {
     backgroundColor: Colors.white,
@@ -744,7 +749,8 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(16),
     color: Colors.black,
-    marginBottom: verticalScale(8),
+    marginBottom: verticalScale(10),
+    fontWeight: '700',
   },
   infoRow: {
     flexDirection: 'row',
@@ -891,6 +897,18 @@ const styles = StyleSheet.create({
   },
   bottomSpace: {
     height: verticalScale(20),
+  },
+  textContract: {
+    fontFamily: Fonts.Roboto_Regular,
+    fontSize: responsiveFont(16),
+    color: Colors.black,
+    fontWeight: '700',
+  },
+  textCodeContract: {
+    fontFamily: Fonts.Roboto_Regular,
+    fontSize: responsiveFont(16),
+    color: Colors.black,
+    marginVertical: verticalScale(10),
   },
 });
 

@@ -53,6 +53,8 @@ import ModalService from './components/ModalService';
 import {validateRoomForm} from './utils/validateFromData';
 import LocationModal from './components/LocationModal';
 import {SelectedAddress} from '../../../types/Address';
+import {useCustomAlert} from '../../../hooks/useCustomAlrert';
+import CustomAlert from '../../../components/CustomAlertProps';
 
 type AddRoomNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -60,6 +62,9 @@ export default function AddRoomScreen() {
   const navigation = useNavigation<AddRoomNavigationProp>();
   const route = useRoute();
   const dispatch = useDispatch<AppDispatch>();
+  const {alertConfig, visible, showSuccess, showError, showConfirm, hideAlert} =
+    useCustomAlert();
+
   const [roomNumber, setRoomNumber] = useState('');
   const [area, setArea] = useState<number | ''>();
   const [addressText, setAddressText] = useState('');
@@ -129,27 +134,26 @@ export default function AddRoomScreen() {
       setVisibleImage(true);
       const result = await uploadRoomPhotos(images);
       console.log('Kết quả upload:', result);
-      // Kiểm tra kết quả trả về có đúng định dạng không
+
       if (!result || !result.data || !result.data.photos) {
         console.error('Kết quả API không đúng định dạng mong đợi:', result);
-        Alert.alert('Lỗi', 'Không thể tải ảnh lên, vui lòng thử lại sau');
+        showError('Không thể tải ảnh lên, vui lòng thử lại sau', 'Lỗi');
         return;
       }
+
       const uploaded = result.data.photos as ImageUploadResult[];
       console.log('Uploaded photos:', uploaded);
 
-      // Cập nhật state
       setImage(prev => {
         const newImages = [...prev, ...uploaded];
         console.log('New images state:', newImages);
-        // Cập nhật imageArr sau khi cập nhật image
         const formattedPhotos = formatPhotoUrls(newImages);
         setImageArr(formattedPhotos);
         return newImages;
       });
     } catch (e) {
       console.error('Lỗi upload:', e);
-      Alert.alert('Lỗi', 'Không thể tải ảnh lên: ' + (e as Error).message);
+      showError('Không thể tải ảnh lên: ' + (e as Error).message, 'Lỗi');
     } finally {
       setVisibleImage(false);
       setIsUploading(false);
@@ -157,36 +161,25 @@ export default function AddRoomScreen() {
   };
 
   const onDeleteImage = (fileName: string) => {
-    Alert.alert(
-      'Xác nhận xoá',
+    showConfirm(
       'Bạn có chắc chắn muốn xoá ảnh này không?',
-      [
-        {
-          text: 'Huỷ',
-          style: 'cancel',
-        },
-        {
-          text: 'Xoá',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteRoomPhoto(fileName);
+      async () => {
+        try {
+          await deleteRoomPhoto(fileName);
 
-              setImage(prev => prev.filter(img => img.fileName !== fileName));
+          setImage(prev => prev.filter(img => img.fileName !== fileName));
 
-              setImageArr(prev =>
-                prev.filter(img => {
-                  const lastSegment = img.split('/').pop(); // lấy phần fileName cuối
-                  return lastSegment !== fileName;
-                }),
-              );
-            } catch (error) {
-              console.log('Xoá ảnh thất bại');
-            }
-          },
-        },
-      ],
-      {cancelable: true},
+          setImageArr(prev =>
+            prev.filter(img => {
+              const lastSegment = img.split('/').pop();
+              return lastSegment !== fileName;
+            }),
+          );
+        } catch (error) {
+          showError('Xoá ảnh thất bại', 'Lỗi');
+        }
+      },
+      'Xác nhận xoá',
     );
   };
 
@@ -194,101 +187,113 @@ export default function AddRoomScreen() {
   const pickImages = () => {
     const remainingSlots = 15 - image.length;
     if (remainingSlots <= 0) {
-      Alert.alert('Thông báo', 'Bạn đã chọn tối đa 15 ảnh.');
+      showError('Bạn đã chọn tối đa 15 ảnh.', 'Thông báo');
       return;
     }
 
-    Alert.alert('Chọn ảnh', 'Bạn muốn chọn ảnh từ đâu?', [
-      {
-        text: 'Máy ảnh',
-        onPress: () => {
-          if (image.length >= 15) {
-            Alert.alert('Thông báo', 'Bạn đã chọn tối đa 15 ảnh.');
-            return;
-          }
-          ImagePicker.openCamera({
-            width: 1000,
-            height: 1000,
-            cropping: true,
-            includeBase64: false,
-            includeExif: false,
-          })
-            .then(image => {
-              if (!image.path || !image.mime) {
-                Alert.alert('Lỗi', 'Không thể lấy thông tin ảnh');
-                return;
-              }
-              const imageFile: ImageFile = {
-                path: image.path,
-                mime: image.mime,
-                filename:
-                  image.path.split('/').pop() || `camera_${Date.now()}.jpg`,
-              };
-              onUpload([imageFile]);
+    showConfirm(
+      'Bạn muốn chọn ảnh từ đâu?',
+      () => {}, // onConfirm để trống vì sẽ dùng customButtons
+      'Chọn ảnh',
+      [
+        {
+          text: 'Máy ảnh',
+          onPress: () => {
+            if (image.length >= 15) {
+              showError('Bạn đã chọn tối đa 15 ảnh.', 'Thông báo');
+              return;
+            }
+            ImagePicker.openCamera({
+              width: 1000,
+              height: 1000,
+              cropping: true,
+              includeBase64: false,
+              includeExif: false,
             })
-            .catch(e => {
-              if (e.code !== 'E_PICKER_CANCELLED') {
-                Alert.alert(
-                  'Thông báo',
-                  'Không thể truy cập máy ảnh, vui lòng kiểm tra quyền truy cập',
-                );
-              }
-            });
-        },
-      },
-      {
-        text: 'Thư viện',
-        onPress: () => {
-          ImagePicker.openPicker({
-            multiple: true,
-            maxFiles: Math.min(15, remainingSlots), // chỉ cho chọn tối đa 3 ảnh/lần và không vượt quá 15 ảnh
-            mediaType: 'photo',
-            includeBase64: false,
-            includeExif: false,
-          })
-            .then(images => {
-              if (!Array.isArray(images)) {
-                images = [images];
-              }
-
-              if (images.length > remainingSlots) {
-                Alert.alert(
-                  'Thông báo',
-                  `Bạn chỉ có thể chọn thêm tối đa ${remainingSlots} ảnh.`,
-                );
-                return;
-              }
-
-              const imageFiles: ImageFile[] = images.map(img => {
-                if (!img.path || !img.mime) {
-                  throw new Error('Ảnh không hợp lệ');
+              .then(imageResult => {
+                if (!imageResult.path || !imageResult.mime) {
+                  showError('Không thể lấy thông tin ảnh', 'Lỗi');
+                  return;
                 }
-                return {
-                  path: img.path,
-                  mime: img.mime,
+                const imageFile: ImageFile = {
+                  path: imageResult.path,
+                  mime: imageResult.mime,
                   filename:
-                    img.path.split('/').pop() || `gallery_${Date.now()}.jpg`,
+                    imageResult.path.split('/').pop() ||
+                    `camera_${Date.now()}.jpg`,
                 };
+                onUpload([imageFile]);
+              })
+              .catch(e => {
+                if (e.code !== 'E_PICKER_CANCELLED') {
+                  showError(
+                    'Không thể truy cập máy ảnh, vui lòng kiểm tra quyền truy cập',
+                    'Thông báo',
+                  );
+                }
               });
-
-              if (imageFiles.length > 0) {
-                onUpload(imageFiles);
-              } else {
-                Alert.alert('Thông báo', 'Không có ảnh nào được chọn');
-              }
-            })
-            .catch(e => {
-              if (e.code !== 'E_PICKER_CANCELLED') {
-                Alert.alert(
-                  'Thông báo',
-                  'Không thể truy cập thư viện, vui lòng kiểm tra quyền truy cập',
-                );
-              }
-            });
+          },
+          style: 'default',
         },
-      },
-      {text: 'Hủy', style: 'cancel'},
-    ]);
+        {
+          text: 'Thư viện',
+          onPress: () => {
+            ImagePicker.openPicker({
+              multiple: true,
+              maxFiles: Math.min(15, remainingSlots),
+              mediaType: 'photo',
+              includeBase64: false,
+              includeExif: false,
+            })
+              .then(images => {
+                if (!Array.isArray(images)) {
+                  images = [images];
+                }
+
+                if (images.length > remainingSlots) {
+                  showError(
+                    `Bạn chỉ có thể chọn thêm tối đa ${remainingSlots} ảnh.`,
+                    'Thông báo',
+                  );
+                  return;
+                }
+
+                const imageFiles: ImageFile[] = images.map(img => {
+                  if (!img.path || !img.mime) {
+                    throw new Error('Ảnh không hợp lệ');
+                  }
+                  return {
+                    path: img.path,
+                    mime: img.mime,
+                    filename:
+                      img.path.split('/').pop() || `gallery_${Date.now()}.jpg`,
+                  };
+                });
+
+                if (imageFiles.length > 0) {
+                  onUpload(imageFiles);
+                } else {
+                  showError('Không có ảnh nào được chọn', 'Thông báo');
+                }
+              })
+              .catch(e => {
+                if (e.code !== 'E_PICKER_CANCELLED') {
+                  showError(
+                    'Không thể truy cập thư viện, vui lòng kiểm tra quyền truy cập',
+                    'Thông báo',
+                  );
+                }
+              });
+          },
+          style: 'default',
+        },
+        {
+          text: 'Hủy',
+          onPress: () => {},
+          style: 'cancel',
+        },
+      ],
+    );
   };
 
   const onclickItemImage = (filename: string) => {
@@ -426,85 +431,63 @@ export default function AddRoomScreen() {
   const handleDeleteService = (item: ItemSeviceOptions) => {
     if (!item) return;
 
-    Alert.alert(
-      'Xác nhận xóa',
+    showConfirm(
       `Bạn có chắc chắn muốn xóa dịch vụ "${item.label}" không?`,
-      [
-        {
-          text: 'Hủy',
-          style: 'cancel',
-        },
-        {
-          text: 'Xóa',
-          style: 'destructive',
-          onPress: () => {
-            try {
-              // Kiểm tra loại dịch vụ và xử lý tương ứng
-              if (item.category === 'required') {
-                // Đối với dịch vụ bắt buộc (điện, nước)
-                if (item.value === 'electricity') {
-                  // Reset giá điện về 0
-                  setServicePrices(prev => ({
-                    ...prev,
-                    electricity: 0,
-                  }));
-                  setServicePriceConfig(prev => ({
-                    ...prev,
-                    electricity: 'perUsage',
-                  }));
-                } else if (item.value === 'water') {
-                  // Reset giá nước về 0
-                  setServicePrices(prev => ({
-                    ...prev,
-                    water: 0,
-                  }));
-                  setServicePriceConfig(prev => ({
-                    ...prev,
-                    water: 'perUsage',
-                  }));
-                }
-
-                // Reset lại item trong serviceOptionList về trạng thái ban đầu
-                setServiceOptionList(prev =>
-                  prev.map(i => {
-                    if (i.id === item.id) {
-                      return {
-                        ...i,
-                        price: undefined,
-                        priceType: undefined,
-                        description: undefined,
-                        status: false, // Đặt về trạng thái chưa cấu hình
-                      };
-                    }
-                    return i;
-                  }),
-                );
-              } else {
-                // Đối với dịch vụ tùy chọn
-                // Xóa khỏi serviceOptionList
-                setServiceOptionList(prev =>
-                  prev.filter(i => i.id !== item.id),
-                );
-
-                // Xóa khỏi customServices
-                setCustomServices(prev =>
-                  prev.filter(service => service.name !== item.label),
-                );
-              }
-
-              // Đóng modal và reset item edit
-              setModalVisibleService(false);
-              setItemServiceEdit(undefined);
-
-              console.log(`Đã xóa dịch vụ: ${item.label}`);
-            } catch (error) {
-              console.error('Lỗi khi xóa dịch vụ:', error);
-              Alert.alert('Lỗi', 'Không thể xóa dịch vụ. Vui lòng thử lại.');
+      () => {
+        try {
+          if (item.category === 'required') {
+            if (item.value === 'electricity') {
+              setServicePrices(prev => ({
+                ...prev,
+                electricity: 0,
+              }));
+              setServicePriceConfig(prev => ({
+                ...prev,
+                electricity: 'perUsage',
+              }));
+            } else if (item.value === 'water') {
+              setServicePrices(prev => ({
+                ...prev,
+                water: 0,
+              }));
+              setServicePriceConfig(prev => ({
+                ...prev,
+                water: 'perUsage',
+              }));
             }
-          },
-        },
-      ],
-      {cancelable: true},
+
+            setServiceOptionList(prev =>
+              prev.map(i => {
+                if (i.id === item.id) {
+                  return {
+                    ...i,
+                    price: undefined,
+                    priceType: undefined,
+                    description: undefined,
+                    status: false,
+                  };
+                }
+                return i;
+              }),
+            );
+          } else {
+            setServiceOptionList(prev => prev.filter(i => i.id !== item.id));
+
+            setCustomServices(prev =>
+              prev.filter(service => service.name !== item.label),
+            );
+          }
+
+          setModalVisibleService(false);
+          setItemServiceEdit(undefined);
+
+          console.log(`Đã xóa dịch vụ: ${item.label}`);
+        } catch (error) {
+          console.error('Lỗi khi xóa dịch vụ:', error);
+          showError('Không thể xóa dịch vụ. Vui lòng thử lại.', 'Lỗi');
+        }
+      },
+      'Xác nhận xóa',
     );
   };
   const handleCancelModal = () => {
@@ -529,16 +512,17 @@ export default function AddRoomScreen() {
     });
 
     if (!result.valid) {
-      Alert.alert('Lỗi', result.message);
+      showError(result.message, 'Lỗi');
       return;
     }
 
     if (!coordinates) {
-      Alert.alert('Thiếu tọa độ', 'Vui lòng chọn vị trí trên bản đồ.');
+      showError('Vui lòng chọn vị trí trên bản đồ.', 'Thiếu tọa độ');
       return;
     }
+
     const finalServicePrices = {
-      electricity: servicePrices.electricity || 0, // Đảm bảo không null/undefined
+      electricity: servicePrices.electricity || 0,
       water: servicePrices.water || 0,
     };
 
@@ -563,7 +547,7 @@ export default function AddRoomScreen() {
           type: 'Point',
           coordinates: coordinates,
         },
-        servicePrices: finalServicePrices, // Sử dụng finalServicePrices
+        servicePrices: finalServicePrices,
         servicePriceConfig: servicePriceConfig,
       },
       customServices: customServices,
@@ -576,7 +560,7 @@ export default function AddRoomScreen() {
     try {
       const res = await dispatch(createLandlordRoom(room));
       if (createLandlordRoom.fulfilled.match(res)) {
-        Alert.alert('Thành công', 'Tạo phòng trọ thành công!');
+        showSuccess('Tạo phòng trọ thành công!', 'Thành công');
         clearForm();
         navigation.goBack();
       } else if (createLandlordRoom.rejected.match(res)) {
@@ -586,10 +570,10 @@ export default function AddRoomScreen() {
           'message' in res.payload
             ? (res.payload as any).message
             : 'Có lỗi xảy ra';
-        Alert.alert('Thất bại', message);
+        showError(message, 'Thất bại');
       }
     } catch (err) {
-      Alert.alert('Lỗi', 'Không thể kết nối đến máy chủ');
+      showError('Không thể kết nối đến máy chủ', 'Lỗi');
     }
   };
   const clearForm = () => {
@@ -611,24 +595,13 @@ export default function AddRoomScreen() {
   };
 
   const handleCancel = () => {
-    Alert.alert(
-      'Xác nhận hủy',
+    showConfirm(
       'Bạn có chắc chắn muốn hủy tạo bài đăng không?',
-      [
-        {
-          text: 'Hủy',
-          style: 'cancel',
-        },
-        {
-          text: 'Xác nhận',
-          style: 'destructive',
-          onPress: () => {
-            clearForm();
-            navigation.goBack();
-          },
-        },
-      ],
-      {cancelable: true},
+      () => {
+        clearForm();
+        navigation.goBack();
+      },
+      'Xác nhận hủy',
     );
   };
 
@@ -868,6 +841,14 @@ export default function AddRoomScreen() {
         visible={visibleLocationModal}
         onClose={onClose}
         onSelect={handleSelectLocation}
+      />
+      <CustomAlert
+        visible={visible}
+        title={alertConfig?.title}
+        message={alertConfig?.message || ''}
+        type={alertConfig?.type}
+        buttons={alertConfig?.buttons}
+        onClose={hideAlert}
       />
     </SafeAreaView>
   );

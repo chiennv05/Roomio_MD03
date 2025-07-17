@@ -1,5 +1,8 @@
 import React from 'react';
 import {View, Text, StyleSheet} from 'react-native';
+import {Colors} from '../../../../theme/color';
+import {responsiveFont, responsiveSpacing} from '../../../../utils/responsive';
+import {Fonts} from '../../../../theme/fonts';
 
 interface InfoRowProps {
   label: string;
@@ -9,7 +12,7 @@ interface InfoRowProps {
 const InfoRow: React.FC<InfoRowProps> = ({label, value}) => {
   return (
     <View style={styles.infoRow}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.label}>{label}: </Text>
       <Text style={styles.value}>{value}</Text>
     </View>
   );
@@ -18,16 +21,21 @@ const InfoRow: React.FC<InfoRowProps> = ({label, value}) => {
 const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: responsiveSpacing(10),
   },
   label: {
-    fontWeight: 'bold',
-    width: 100,
-    color: '#333',
+    fontWeight: '400',
+    color: Colors.gray60,
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Regular,
+    width: responsiveSpacing(140), // Adjust width as needed
   },
   value: {
     flex: 1,
-    color: '#555',
+    color: Colors.black,
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Regular,
+    fontWeight: '600',
   },
 });
 
