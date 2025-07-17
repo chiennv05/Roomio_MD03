@@ -1,14 +1,8 @@
-import React, {useState} from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  Image,
-  GestureResponderEvent,
-} from 'react-native';
+import React from 'react';
+import {StyleSheet, TouchableOpacity, Image} from 'react-native';
 import {scale} from '../../../../utils/responsive';
 import {Colors} from '../../../../theme/color';
+import {Icons} from '../../../../assets/icons';
 
 interface ItemImageProps {
   imageUrl: string;
@@ -23,49 +17,28 @@ const ItemImage: React.FC<ItemImageProps> = ({
   onViewImage,
   onDelete,
 }) => {
-  const [showOptions, setShowOptions] = useState(false);
-
-  const handleLongPress = (e: GestureResponderEvent) => {
-    setShowOptions(true);
-  };
-
-  const handleCancel = () => {
-    setShowOptions(false);
-  };
-
   const handleDelete = () => {
     const fileName = imageUrl.split('/').pop();
-    setShowOptions(false);
     onDelete(fileName || '');
   };
 
   return (
-    <View style={styles.container} key={`signed-image-${index}`}>
-      <TouchableOpacity
-        style={styles.imageWrapper}
-        activeOpacity={0.8}
-        onPress={() => onViewImage(index)}
-        onLongPress={handleLongPress}>
+    <TouchableOpacity
+      onPress={() => onViewImage(index)}
+      style={styles.container}
+      key={`signed-image-${index}`}>
+      <Image
+        source={{uri: imageUrl}}
+        style={styles.contractImage}
+        resizeMode="cover"
+      />
+      <TouchableOpacity style={styles.button} onPress={handleDelete}>
         <Image
-          source={{uri: imageUrl}}
-          style={styles.contractImage}
-          resizeMode="cover"
+          source={{uri: Icons.IconDelete}}
+          style={styles.stylesIconDelete}
         />
-
-        {showOptions && (
-          <View style={styles.overlay}>
-            <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.button} onPress={handleDelete}>
-                <Text style={styles.buttonText}>Xóa</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.button} onPress={handleCancel}>
-                <Text style={styles.buttonText}>Hủy</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -74,6 +47,8 @@ export default React.memo(ItemImage);
 const styles = StyleSheet.create({
   container: {
     marginRight: scale(10),
+    width: scale(200),
+    height: scale(280),
   },
   imageWrapper: {
     position: 'relative',
@@ -85,29 +60,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.lightGray,
   },
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: scale(200),
-    height: scale(280),
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-  },
   button: {
-    backgroundColor: Colors.white,
-    paddingVertical: scale(8),
-    paddingHorizontal: scale(16),
-    borderRadius: 4,
-    marginHorizontal: scale(8),
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: Colors.red,
+    padding: scale(5),
+    borderRadius: 20,
   },
-  buttonText: {
-    color: Colors.red, // hoặc bất kỳ màu nào bạn muốn
-    fontWeight: 'bold',
+  stylesIconDelete: {
+    width: scale(12),
+    height: scale(12),
+    tintColor: Colors.white,
   },
 });

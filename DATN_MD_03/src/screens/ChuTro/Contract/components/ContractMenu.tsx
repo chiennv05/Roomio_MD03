@@ -8,6 +8,8 @@ import {
   MenuTrigger,
 } from 'react-native-popup-menu';
 import {Icons} from '../../../../assets/icons';
+import {responsiveIcon} from '../../../../utils/responsive';
+import {Colors} from '../../../../theme/color';
 
 interface Props {
   onEdit: () => void;
@@ -24,7 +26,7 @@ const ContractMenu: React.FC<Props> = ({
 }) => {
   return (
     <Menu>
-      <MenuTrigger>
+      <MenuTrigger style={styles.containerMenu}>
         <Image source={{uri: Icons.IconMoreVer}} style={styles.menuTrigger} />
       </MenuTrigger>
       <MenuOptions customStyles={menuOptionsStyles}>
@@ -59,8 +61,16 @@ const ContractMenu: React.FC<Props> = ({
 
 const styles = StyleSheet.create({
   menuTrigger: {
-    width: 24,
-    height: 24,
+    width: responsiveIcon(24),
+    height: responsiveIcon(24),
+  },
+  containerMenu: {
+    width: responsiveIcon(36),
+    height: responsiveIcon(36),
+    borderRadius: responsiveIcon(36) / 2,
+    backgroundColor: Colors.backgroud,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   optionRow: {
     flexDirection: 'row',

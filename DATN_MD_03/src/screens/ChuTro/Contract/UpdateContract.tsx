@@ -33,6 +33,7 @@ import {
   SCREEN,
 } from '../../../utils/responsive';
 import {useAppSelector} from '../../../hooks';
+import {Fonts} from '../../../theme/fonts';
 
 export default function UpdateContract() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -324,7 +325,7 @@ export default function UpdateContract() {
           value={newUsername}
           onChangeText={setNewUsername}
           placeholder="Nhập username..."
-          width={SCREEN.width * 0.7}
+          width={SCREEN.width * 0.8}
           editable={!selectedContractLoading}
         />
         <TouchableOpacity
@@ -401,7 +402,7 @@ export default function UpdateContract() {
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.button]}
+        style={[styles.button, {marginTop: responsiveSpacing(10)}]}
         onPress={handleCancelUpdate}
         disabled={isUpdated || selectedContractLoading}>
         <Text style={styles.buttonText}>Hủy bỏ cập nhật</Text>
@@ -414,10 +415,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
-    padding: 16,
   },
   containerScroll: {
     paddingBottom: responsiveSpacing(50),
+    alignItems: 'center',
   },
   title: {
     fontSize: responsiveFont(16),
@@ -429,8 +430,9 @@ const styles = StyleSheet.create({
   label: {
     fontSize: responsiveFont(16),
     fontWeight: 'bold',
-    marginTop: 20,
+    marginTop: responsiveSpacing(20),
     color: Colors.black,
+    width: SCREEN.width * 0.9,
   },
   input: {
     borderWidth: 1,
@@ -438,6 +440,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 12,
     marginTop: 8,
+    width: SCREEN.width * 0.9,
   },
   serviceItem: {
     flexDirection: 'row',
@@ -460,15 +463,18 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   button: {
-    marginTop: 30,
+    marginTop: responsiveSpacing(30),
     backgroundColor: Colors.limeGreen,
-    padding: 16,
-    borderRadius: 10,
+    padding: responsiveSpacing(12),
+    borderRadius: responsiveSpacing(36),
     alignItems: 'center',
+    width: SCREEN.width * 0.8,
   },
   buttonText: {
     color: Colors.black,
     fontWeight: 'bold',
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Bold,
   },
   buttonDisabled: {
     backgroundColor: '#ccc',
@@ -492,6 +498,8 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingBottom: 10,
+
+    width: SCREEN.width * 0.9,
   },
   usernameItem: {
     backgroundColor: Colors.white,
