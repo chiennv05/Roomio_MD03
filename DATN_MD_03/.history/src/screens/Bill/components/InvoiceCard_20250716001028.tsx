@@ -389,8 +389,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop: 2, // Reduced from 5
-        paddingTop: 6, // Reduced from 10
+        marginTop: 5,
+        paddingTop: 10,
         borderTopWidth: 1,
         borderTopColor: Colors.lightGray,
     },

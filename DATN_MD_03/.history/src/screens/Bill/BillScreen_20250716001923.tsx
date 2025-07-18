@@ -427,7 +427,7 @@ const BillScreen = () => {
                 useNativeDriver: true
             }).start();
         });
-    }, [openDropdown, statusAnimRef, roomAnimRef, tenantAnimRef, sortAnimRef, contentAnimation]);
+    }, [openDropdown]);
     
     // Theo dõi khi user role hoặc trạng thái co-tenant thay đổi để reset dropdown
     useEffect(() => {

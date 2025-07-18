@@ -427,7 +427,7 @@ const BillScreen = () => {
                 useNativeDriver: true
             }).start();
         });
-    }, [openDropdown, statusAnimRef, roomAnimRef, tenantAnimRef, sortAnimRef, contentAnimation]);
+    }, [openDropdown]);
     
     // Theo dõi khi user role hoặc trạng thái co-tenant thay đổi để reset dropdown
     useEffect(() => {
@@ -505,10 +505,11 @@ const BillScreen = () => {
                                     styles.dropdownIcon,
                                     {
                                         transform: [{
-                                            rotate: getAnimationForDropdown(tab.id).interpolate({
-                                                inputRange: [0, 1],
-                                                outputRange: ['0deg', '180deg']
-                                            })
+                                            rotate: openDropdown === tab.id ? 
+                                                dropdownAnimation.interpolate({
+                                                    inputRange: [0, 1],
+                                                    outputRange: ['0deg', '180deg']
+                                                }) : '0deg'
                                         }]
                                     }
                                 ]}
@@ -909,11 +910,11 @@ const BillScreen = () => {
             <Animated.View style={[
                 styles.dropdownContentWrapper,
                 {
-                    maxHeight: contentAnimation.interpolate({
+                    maxHeight: dropdownAnimation.interpolate({
                         inputRange: [0, 1],
                         outputRange: [0, 300]
                     }),
-                    opacity: contentAnimation,
+                    opacity: dropdownAnimation,
                     overflow: 'hidden'
                 }
             ]}>

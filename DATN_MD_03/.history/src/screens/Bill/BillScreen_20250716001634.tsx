@@ -384,50 +384,18 @@ const BillScreen = () => {
     // State để theo dõi dropdown nào đang mở
     const [openDropdown, setOpenDropdown] = useState<FilterType | null>(null);
     
-    // Create animation values for each dropdown type
-    const statusAnimRef = useRef(new Animated.Value(0)).current;
-    const roomAnimRef = useRef(new Animated.Value(0)).current;
-    const tenantAnimRef = useRef(new Animated.Value(0)).current;
-    const sortAnimRef = useRef(new Animated.Value(0)).current;
-    
-    // Get animation reference for a specific dropdown
-    const getAnimationForDropdown = (dropdownType: FilterType | null): Animated.Value => {
-        switch (dropdownType) {
-            case 'status': return statusAnimRef;
-            case 'room': return roomAnimRef;
-            case 'tenant': return tenantAnimRef;
-            case 'sort': return sortAnimRef;
-            default: return new Animated.Value(0);
-        }
-    };
-    
-    // Animation for content dropdown
-    const [contentAnimation] = useState(new Animated.Value(0));
+    // Animation value for dropdown
+    const [dropdownAnimation] = useState(new Animated.Value(0));
     
     // Animate dropdown open/close
     useEffect(() => {
-        // Animate content area
-        Animated.timing(contentAnimation, {
+        Animated.timing(dropdownAnimation, {
             toValue: openDropdown ? 1 : 0,
             duration: 200,
             easing: Easing.ease,
             useNativeDriver: false
         }).start();
-        
-        // Get all dropdown types
-        const allDropdowns: FilterType[] = ['status', 'room', 'tenant', 'sort'];
-        
-        // Animate each arrow
-        allDropdowns.forEach(dropdownType => {
-            const anim = getAnimationForDropdown(dropdownType);
-            Animated.timing(anim, {
-                toValue: openDropdown === dropdownType ? 1 : 0,
-                duration: 200,
-                easing: Easing.ease,
-                useNativeDriver: true
-            }).start();
-        });
-    }, [openDropdown, statusAnimRef, roomAnimRef, tenantAnimRef, sortAnimRef, contentAnimation]);
+    }, [openDropdown]);
     
     // Theo dõi khi user role hoặc trạng thái co-tenant thay đổi để reset dropdown
     useEffect(() => {
@@ -505,10 +473,11 @@ const BillScreen = () => {
                                     styles.dropdownIcon,
                                     {
                                         transform: [{
-                                            rotate: getAnimationForDropdown(tab.id).interpolate({
-                                                inputRange: [0, 1],
-                                                outputRange: ['0deg', '180deg']
-                                            })
+                                            rotate: openDropdown === tab.id ? 
+                                                dropdownAnimation.interpolate({
+                                                    inputRange: [0, 1],
+                                                    outputRange: ['0deg', '180deg']
+                                                }) : '0deg'
                                         }]
                                     }
                                 ]}
@@ -909,11 +878,11 @@ const BillScreen = () => {
             <Animated.View style={[
                 styles.dropdownContentWrapper,
                 {
-                    maxHeight: contentAnimation.interpolate({
+                    maxHeight: dropdownAnimation.interpolate({
                         inputRange: [0, 1],
                         outputRange: [0, 300]
                     }),
-                    opacity: contentAnimation,
+                    opacity: dropdownAnimation,
                     overflow: 'hidden'
                 }
             ]}>

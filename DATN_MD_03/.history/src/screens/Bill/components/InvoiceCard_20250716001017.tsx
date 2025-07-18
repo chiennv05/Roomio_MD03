@@ -363,17 +363,17 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
     content: {
-        marginBottom: 6, // Reduced from 10
+        marginBottom: 10,
     },
     invoiceNumber: {
         fontSize: 14,
         color: Colors.limeGreen,
-        marginBottom: 6, // Reduced from 10
+        marginBottom: 10,
         fontWeight: '500',
     },
     row: {
         flexDirection: 'row',
-        marginBottom: 3, // Reduced from 6
+        marginBottom: 6,
     },
     label: {
         fontSize: 14,
@@ -389,8 +389,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginTop: 2, // Reduced from 5
-        paddingTop: 6, // Reduced from 10
+        marginTop: 5,
+        paddingTop: 10,
         borderTopWidth: 1,
         borderTopColor: Colors.lightGray,
     },

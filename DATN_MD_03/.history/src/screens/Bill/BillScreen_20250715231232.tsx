@@ -13,8 +13,6 @@ import {
     Image,
     Alert,
     Platform,
-    Animated,
-    Easing,
 } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
 import { fetchInvoices, fetchRoommateInvoices } from '../../store/slices/billSlice';
@@ -300,16 +298,10 @@ const BillScreen = () => {
                 loadInvoices(1, false);
             }
             
-            // Reset room and tenant filters if user is tenant or co-tenant
-            if (user?.role === 'nguoiThue' || isUserCoTenant) {
-                setSelectedRoom(undefined);
-                setSelectedTenant(undefined);
-            }
-            
             return () => {
                 isMounted.current = false;
             };
-        }, [token, loadInvoices, checkUserInCoTenants, user?.role, isUserCoTenant])
+        }, [token, loadInvoices, checkUserInCoTenants])
     );
 
     // Thêm lại useEffect cho các thay đổi về bộ lọc
@@ -384,85 +376,17 @@ const BillScreen = () => {
     // State để theo dõi dropdown nào đang mở
     const [openDropdown, setOpenDropdown] = useState<FilterType | null>(null);
     
-    // Create animation values for each dropdown type
-    const statusAnimRef = useRef(new Animated.Value(0)).current;
-    const roomAnimRef = useRef(new Animated.Value(0)).current;
-    const tenantAnimRef = useRef(new Animated.Value(0)).current;
-    const sortAnimRef = useRef(new Animated.Value(0)).current;
-    
-    // Get animation reference for a specific dropdown
-    const getAnimationForDropdown = (dropdownType: FilterType | null): Animated.Value => {
-        switch (dropdownType) {
-            case 'status': return statusAnimRef;
-            case 'room': return roomAnimRef;
-            case 'tenant': return tenantAnimRef;
-            case 'sort': return sortAnimRef;
-            default: return new Animated.Value(0);
-        }
-    };
-    
-    // Animation for content dropdown
-    const [contentAnimation] = useState(new Animated.Value(0));
-    
-    // Animate dropdown open/close
-    useEffect(() => {
-        // Animate content area
-        Animated.timing(contentAnimation, {
-            toValue: openDropdown ? 1 : 0,
-            duration: 200,
-            easing: Easing.ease,
-            useNativeDriver: false
-        }).start();
-        
-        // Get all dropdown types
-        const allDropdowns: FilterType[] = ['status', 'room', 'tenant', 'sort'];
-        
-        // Animate each arrow
-        allDropdowns.forEach(dropdownType => {
-            const anim = getAnimationForDropdown(dropdownType);
-            Animated.timing(anim, {
-                toValue: openDropdown === dropdownType ? 1 : 0,
-                duration: 200,
-                easing: Easing.ease,
-                useNativeDriver: true
-            }).start();
-        });
-    }, [openDropdown, statusAnimRef, roomAnimRef, tenantAnimRef, sortAnimRef, contentAnimation]);
-    
-    // Theo dõi khi user role hoặc trạng thái co-tenant thay đổi để reset dropdown
-    useEffect(() => {
-        // Nếu người dùng là tenant hoặc co-tenant và dropdown đang mở là room hoặc tenant, đóng nó lại
-        if ((user?.role === 'nguoiThue' || isUserCoTenant) && 
-            (openDropdown === 'room' || openDropdown === 'tenant')) {
-            setOpenDropdown(null);
-        }
-    }, [user?.role, isUserCoTenant, openDropdown]);
-    
     // Render các dropdown bộ lọc
     const renderFilterTabs = () => {
-        // Kiểm tra nếu người dùng là người thuê hoặc người ở cùng
-        const isTenantOrCoTenant = user?.role === 'nguoiThue' || isUserCoTenant;
-
-        // Lọc tab dựa trên vai trò người dùng
-        let tabs: { id: FilterType; label: string }[] = [
+        const tabs: { id: FilterType; label: string }[] = [
             { id: 'status', label: 'Trạng thái' },
+            { id: 'room', label: 'Phòng' },
+            { id: 'tenant', label: 'Người thuê' },
             { id: 'sort', label: 'Sắp xếp' },
         ];
 
-        // Thêm tab Phòng và Người thuê chỉ khi người dùng là chủ trọ
-        if (!isTenantOrCoTenant) {
-            tabs.splice(1, 0, 
-                { id: 'room', label: 'Phòng' },
-                { id: 'tenant', label: 'Người thuê' }
-            );
-        }
-
         return (
-            <ScrollView 
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.dropdownsScrollContainer}
-                style={styles.dropdownsContainer}>
+            <View style={styles.dropdownsContainer}>
                 {tabs.map(tab => (
                     <View key={tab.id} style={styles.dropdownWrapper}>
                         <TouchableOpacity
@@ -499,34 +423,23 @@ const BillScreen = () => {
                                         sortOrder === 'lowest' ? 'Giá thấp nhất' : ''}`
                                 }
                             </Text>
-                            <Animated.Image
+                            <Image
                                 source={require('../../assets/icons/icon_arrow_down.png')}
                                 style={[
                                     styles.dropdownIcon,
-                                    {
-                                        transform: [{
-                                            rotate: getAnimationForDropdown(tab.id).interpolate({
-                                                inputRange: [0, 1],
-                                                outputRange: ['0deg', '180deg']
-                                            })
-                                        }]
-                                    }
+                                    openDropdown === tab.id ? styles.dropdownIconRotated : {}
                                 ]}
                             />
                         </TouchableOpacity>
                     </View>
                 ))}
-            </ScrollView>
+            </View>
         );
     };
 
     // Render các bộ lọc dựa trên dropdown đang mở
     const renderActiveFilterContent = () => {
-        // Always render something to avoid layout jumps, but we'll control visibility with animation
-        if (!openDropdown) {
-            // Return an empty placeholder when no dropdown is selected
-            return <View style={{height: 0}} />;
-        }
+        if (!openDropdown) return null;
         
         switch (openDropdown) {
             case 'status':
@@ -538,7 +451,7 @@ const BillScreen = () => {
             case 'sort':
                 return renderSortOrderFilter();
             default:
-                return <View style={{height: 0}} />;
+                return null;
         }
     };
 
@@ -906,21 +819,13 @@ const BillScreen = () => {
             </View>
 
             {/* Nội dung bộ lọc dựa trên dropdown đang mở */}
-            <Animated.View style={[
-                styles.dropdownContentWrapper,
-                {
-                    maxHeight: contentAnimation.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0, 300]
-                    }),
-                    opacity: contentAnimation,
-                    overflow: 'hidden'
-                }
-            ]}>
-                <View style={styles.activeFilterWrapper}>
-                    {renderActiveFilterContent()}
-                </View>
-            </Animated.View>
+            <View style={styles.dropdownContentWrapper}>
+                {openDropdown && (
+                    <View style={styles.activeFilterWrapper}>
+                        {renderActiveFilterContent()}
+                    </View>
+                )}
+            </View>
 
             {loading && !refreshing && (
                 <ActivityIndicator
@@ -1016,12 +921,12 @@ const styles = StyleSheet.create({
         marginTop: 10
     },
     headerContainer: {
-        paddingTop: 15, // Reduced from 20
+        paddingTop: 20,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingVertical: 10, // Reduced from 12
+        paddingVertical: 12,
         backgroundColor: Colors.white,
         borderBottomWidth: 1,
         borderBottomColor: Colors.lightGray,
@@ -1070,10 +975,10 @@ const styles = StyleSheet.create({
         marginVertical: 20,
     },
     filterTabsWrapper: {
-        marginBottom: 2, // Reduced from 4
+        marginBottom: 4,
     },
     activeFilterWrapper: {
-        marginBottom: 4, // Reduced from 8
+        marginBottom: 8,
     },
     tabContainer: {
         paddingLeft: 16,
@@ -1135,8 +1040,7 @@ const styles = StyleSheet.create({
     noFilterText: {
         color: Colors.mediumGray,
         fontStyle: 'italic',
-        padding: 16,
-        textAlign: 'center',
+        padding: 8,
     },
     emptyContainer: {
         padding: 20,
@@ -1204,8 +1108,7 @@ const styles = StyleSheet.create({
         marginTop: -2,
     },
     flatListContent: {
-        paddingBottom: 80, // Space for FAB
-        paddingTop: 0, // Ensure no extra padding at top
+        paddingBottom: 80, // Increased from 20 to 80 to accommodate FAB
     },
     templateButton: {
         fontSize: 14,
@@ -1219,19 +1122,19 @@ const styles = StyleSheet.create({
     },
     // Dropdown styles
     dropdownsContainer: {
-        paddingVertical: 8,
-    },
-    dropdownsScrollContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
         paddingHorizontal: 16,
+        marginVertical: 15,
+        flexWrap: 'wrap',
     },
     dropdownWrapper: {
-        marginRight: 10,
-        minWidth: 140,
-        maxWidth: 200,
+        width: '47%',
+        marginBottom: 12,
     },
     dropdownButton: {
         backgroundColor: Colors.white,
-        paddingVertical: 8, // Reduced from 12
+        paddingVertical: 12,
         paddingHorizontal: 14,
         borderRadius: 10,
         flexDirection: 'row',
@@ -1239,7 +1142,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderWidth: 1,
         borderColor: '#E0E0E0',
-        minHeight: 40, // Reduced from 48
+        minHeight: 48,
         ...Platform.select({
             ios: {
                 shadowColor: 'rgba(0,0,0,0.1)',
@@ -1277,10 +1180,11 @@ const styles = StyleSheet.create({
     dropdownOptionsContainer: {
         backgroundColor: Colors.white,
         borderRadius: 10,
-        marginTop: 4,
-        padding: 4,
+        marginHorizontal: 16,
+        marginTop: 8,
+        padding: 6,
         borderWidth: 0,
-        maxHeight: 230,
+        maxHeight: 250,
         ...Platform.select({
             ios: {
                 shadowColor: 'rgba(0,0,0,0.2)',
@@ -1294,7 +1198,7 @@ const styles = StyleSheet.create({
         }),
     },
     dropdownOption: {
-        paddingVertical: 10, // Reduced from 14
+        paddingVertical: 14,
         paddingHorizontal: 18,
         borderBottomWidth: 1,
         borderBottomColor: '#F2F2F2',
@@ -1320,8 +1224,7 @@ const styles = StyleSheet.create({
         tintColor: Colors.primaryGreen,
     },
     dropdownContentWrapper: {
-        marginHorizontal: 16,
-        zIndex: 100,
+        minHeight: 52,
     },
 });
 
