@@ -21,6 +21,7 @@ interface SupportRequestModalProps {
     name?: string;
     address?: string;
     ownerName?: string;
+    roomCode?: string;
   };
 }
 
@@ -56,14 +57,12 @@ const SupportRequestModal = forwardRef<BottomSheet, SupportRequestModalProps>(({
       const title = selectedOptionData?.title || 'Báo cáo phòng';
 
       // Tạo content với thông tin phòng
-      let content = `Tôi muốn báo cáo phòng với vấn đề: ${title}\n\n`;
+      let content = '';
       
-      if (roomInfo) {
-        content += `Thông tin phòng:\n`;
-        if (roomInfo.name) content += `- Tên phòng: ${roomInfo.name}\n`;
-        if (roomInfo.address) content += `- Địa chỉ: ${roomInfo.address}\n`;
-        if (roomInfo.ownerName) content += `- Chủ trọ: ${roomInfo.ownerName}\n`;
-        if (roomId) content += `- Mã phòng: ${roomId}\n`;
+      if (roomInfo || roomId) {
+        if (roomInfo?.roomCode) content += `Số Phòng: ${roomInfo.roomCode}\n`;
+        if (roomInfo?.address) content += `Địa chỉ: ${roomInfo.address}\n`;
+        if (roomInfo?.ownerName) content += `Chủ Trọ: ${roomInfo.ownerName}`;
       }
 
       // Gọi API tạo support request

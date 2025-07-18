@@ -3,6 +3,7 @@ import {Contract} from './Contract';
 export interface CoTenant {
   _id: string;
   username: string;
+  fullName: string;
   email: string;
   phone: string;
   status: string;

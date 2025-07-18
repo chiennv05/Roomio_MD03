@@ -486,6 +486,7 @@ const DetailRoomScreen: React.FC = () => {
               name: roomDetailData?.name,
               address: roomDetailData?.address,
               ownerName: roomDetailData?.ownerName,
+              roomCode: roomDetailData?.roomCode,
             }}
           />
 
