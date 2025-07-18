@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
+import TooltipBubble from './TooltipBubble';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {Colors} from '../../../../theme/color';
@@ -27,6 +28,7 @@ type NavigationProp = StackNavigationProp<RootStackParamList, 'TenantDetail'>;
 
 const TenantItem: React.FC<TenantItemProps> = ({item}) => {
   const navigation = useNavigation<NavigationProp>();
+  const [selectedTenant, setSelectedTenant] = useState<string | null>(null);
   
   const roomNumber = item.room?.roomNumber || 'N/A';
   const tenantCount = item.tenantCount || 1;
@@ -55,6 +57,10 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
     });
   };
 
+  const handleAvatarPress = (tenantName: string) => {
+    setSelectedTenant(prevName => prevName === tenantName ? null : tenantName);
+  };
+
   const getInitials = (fullName: string) => {
     return fullName
       .split(' ')
@@ -68,18 +74,25 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
     return (
       <View style={styles.avatarContainer}>
         {allTenants.map((tenant, index) => (
-          <View
+          <TouchableOpacity
             key={`${tenant._id}-${index}`}
             style={[
               styles.avatarWrapper,
               {marginLeft: index > 0 ? responsiveSpacing(-15) : 0},
-            ]}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {getInitials(tenant.fullName)}
-              </Text>
+            ]}
+            onPress={() => handleAvatarPress(tenant.fullName)}>
+            <View style={styles.avatarItemContainer}>
+              <TooltipBubble 
+                text={tenant.fullName}
+                visible={selectedTenant === tenant.fullName}
+              />
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {getInitials(tenant.fullName)}
+                </Text>
+              </View>
             </View>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
     );
@@ -236,6 +249,9 @@ const styles = StyleSheet.create({
   avatarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  avatarItemContainer: {
+    position: 'relative',
   },
   avatarWrapper: {
     borderRadius: responsiveSpacing(25),
