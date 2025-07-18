@@ -24,6 +24,8 @@ import {CreateContractPayload} from '../../../types';
 import {useDispatch} from 'react-redux';
 import {AppDispatch} from '../../../store';
 import {createContractFromNotificationThunk} from '../../../store/slices/contractSlice';
+import CustomAlertModal from '../../../components/CustomAlertModal';
+import { useCustomAlert } from '../../../hooks/useCustomAlrert';
 
 export default function AddContract() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -31,6 +33,16 @@ export default function AddContract() {
   const {notificationId} = route.params as {notificationId: string};
   console.log(notificationId);
   const dispatch = useDispatch<AppDispatch>();
+
+  const {
+    alertConfig,
+    visible: alertVisible,
+    showAlert,
+    hideAlert,
+    showSuccess,
+    showError,
+    showConfirm,
+  } = useCustomAlert();
 
   // State variables
   const [contractTerm, setContractTerm] = useState<number>(12);
@@ -78,7 +90,7 @@ export default function AddContract() {
     const validation = validateContractForm(formData);
 
     if (!validation.isValid) {
-      Alert.alert('Lỗi xác thực', validation.errors.join('\n'));
+      showError(validation.errors.join('\n'), 'Lỗi xác thực', true);
       return;
     }
 
@@ -96,11 +108,11 @@ export default function AddContract() {
     dispatch(createContractFromNotificationThunk(contractData))
       .unwrap()
       .then(() => {
-        Alert.alert('Thành công', 'Hợp đồng đã được tạo!');
+        showSuccess('Hợp đồng đã được tạo!', 'Thành công', true);
         navigation.navigate('ContractManagement'); // Đặt đúng tên màn danh sách
       })
       .catch((error: string) => {
-        Alert.alert('Lỗi', error || 'Không thể tạo hợp đồng');
+        showError(error || 'Không thể tạo hợp đồng', 'Lỗi', true);
       });
   };
 
@@ -193,6 +205,16 @@ export default function AddContract() {
         onConfirm={handleStartDateConfirm}
         onCancel={() => setOpenStartDatePicker(false)}
       />
+      {alertConfig && (
+        <CustomAlertModal
+          visible={alertVisible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          onClose={hideAlert}
+          type={alertConfig.type}
+          buttons={alertConfig.buttons}
+        />
+      )}
     </ScrollView>
   );
 }

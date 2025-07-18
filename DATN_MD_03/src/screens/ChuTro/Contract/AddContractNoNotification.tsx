@@ -22,9 +22,11 @@ import {
   validateContractFormNoNotification,
 } from './utils/validateFromNoNotification';
 import {createNewContractThunk} from '../../../store/slices/contractSlice';
+import CustomAlertModal from '../../../components/CustomAlertModal';
+import { useCustomAlert } from '../../../hooks/useCustomAlrert';
 
 export default function AddContractNoNotification() {
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>(); 
 
   const dispatch = useDispatch<AppDispatch>();
 
@@ -70,6 +72,16 @@ export default function AddContractNoNotification() {
     setOpenStartDatePicker(false);
   };
 
+  const {
+    alertConfig,
+    visible: alertVisible,
+    showAlert,
+    hideAlert,
+    showSuccess,
+    showError,
+    showConfirm,
+  } = useCustomAlert();
+
   const handleAddContract = () => {
     const cleanedRules = cleanString(rules);
     const cleanedAdditionalTerms = cleanString(additionalTerms);
@@ -87,7 +99,7 @@ export default function AddContractNoNotification() {
     const validation = validateContractFormNoNotification(formData);
 
     if (!validation.isValid) {
-      Alert.alert('Lỗi xác thực', validation.errors.join('\n'));
+      showError(validation.errors.join('\n'), 'Lỗi xác thực');
       return;
     }
 
@@ -106,12 +118,12 @@ export default function AddContractNoNotification() {
     dispatch(createNewContractThunk(contractData))
       .unwrap()
       .then(() => {
-        Alert.alert('Thành công', 'Hợp đồng đã được tạo!');
+        showSuccess('Hợp đồng đã được tạo!', 'Thành công');
         clearForm();
         navigation.navigate('ContractManagement');
       })
       .catch((error: string) => {
-        Alert.alert('Lỗi', error || 'Không thể tạo hợp đồng');
+        showError(error || 'Không thể tạo hợp đồng', 'Lỗi');
       });
   };
 
@@ -130,10 +142,15 @@ export default function AddContractNoNotification() {
   };
 
   const handleClearFormWithConfirm = () => {
-    Alert.alert('Xác nhận', 'Bạn có chắc muốn xóa toàn bộ dữ liệu đã nhập?', [
-      {text: 'Hủy', style: 'cancel'},
-      {text: 'Đồng ý', onPress: clearForm},
-    ]);
+    showConfirm(
+      'Bạn có chắc muốn xóa toàn bộ dữ liệu đã nhập?',
+      clearForm,
+      'Xác nhận',
+      [
+        { text: 'Hủy', onPress: hideAlert, style: 'cancel' },
+        { text: 'Đồng ý', onPress: clearForm, style: 'destructive' },
+      ]
+    );
   };
 
   return (
@@ -228,6 +245,16 @@ export default function AddContractNoNotification() {
           onClose={() => setModalSearchRoomVisible(false)}
         />
       </View>
+      {alertConfig && (
+        <CustomAlertModal
+          visible={alertVisible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          onClose={hideAlert}
+          type={alertConfig.type}
+          buttons={alertConfig.buttons}
+        />
+      )}
     </ScrollView>
   );
 }

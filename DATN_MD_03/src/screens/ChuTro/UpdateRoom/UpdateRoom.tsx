@@ -39,7 +39,8 @@ import ModalLoading from '../AddRoom/components/ModalLoading';
 import ModalService from '../AddRoom/components/ModalService';
 import LocationModal from '../AddRoom/components/LocationModal';
 import {CustomService} from '../../../types';
-
+import {useCustomAlert} from '../../../hooks/useCustomAlrert';
+import CustomAlertModal from '../../../components/CustomAlertModal';
 import {SelectedAddress} from '../../../types/Address';
 import ImagePicker from 'react-native-image-crop-picker';
 import {
@@ -63,6 +64,18 @@ export default function UpdateRoom() {
   const {item} = route.params;
   const dispatch = useDispatch<AppDispatch>();
   console.log('item room', item);
+  
+  // Initialize custom alert hook with proper destructuring
+  const { 
+    alertConfig, 
+    visible, 
+    showAlert, 
+    hideAlert, 
+    showSuccess, 
+    showError, 
+    showConfirm 
+  } = useCustomAlert();
+  
   // Sử dụng hook useRoomData để quản lý state
   const {
     roomNumber,
@@ -136,7 +149,7 @@ export default function UpdateRoom() {
       const result = await uploadRoomPhotos(images);
 
       if (!result || !result.data || !result.data.photos) {
-        Alert.alert('Lỗi', 'Không thể tải ảnh lên, vui lòng thử lại sau');
+        showError('Không thể tải ảnh lên, vui lòng thử lại sau', 'Lỗi');
         return;
       }
 
@@ -149,7 +162,7 @@ export default function UpdateRoom() {
         return newImages;
       });
     } catch (e) {
-      Alert.alert('Lỗi', 'Không thể tải ảnh lên: ' + (e as Error).message);
+      showError('Không thể tải ảnh lên: ' + (e as Error).message, 'Lỗi');
     } finally {
       setVisibleImage(false);
       setIsUploading(false);
@@ -157,106 +170,123 @@ export default function UpdateRoom() {
   };
 
   const onDeleteImage = (fileName: string) => {
-    Alert.alert(
-      'Xác nhận xoá',
+    showConfirm(
       'Bạn có chắc chắn muốn xoá ảnh này không?',
-      [
-        {
-          text: 'Huỷ',
-          style: 'cancel',
-        },
-        {
-          text: 'Xoá',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteRoomPhoto(fileName);
-              setImage(prev => prev.filter(img => img.fileName !== fileName));
-              setImageArr(prev =>
-                prev.filter(img => {
-                  const lastSegment = img.split('/').pop();
-                  return lastSegment !== fileName;
-                }),
-              );
-            } catch (error) {
-              console.log('Xoá ảnh thất bại');
-            }
-          },
-        },
-      ],
-      {cancelable: true},
+      async () => {
+        try {
+          await deleteRoomPhoto(fileName);
+          setImage(prev => prev.filter(img => img.fileName !== fileName));
+          setImageArr(prev =>
+            prev.filter(img => {
+              const lastSegment = img.split('/').pop();
+              return lastSegment !== fileName;
+            }),
+          );
+        } catch (error) {
+          console.log('Xoá ảnh thất bại');
+        }
+      },
+      'Xác nhận xoá'
     );
   };
 
   const pickImages = () => {
     const remainingSlots = 15 - image.length;
     if (remainingSlots <= 0) {
-      Alert.alert('Thông báo', 'Bạn đã chọn tối đa 15 ảnh.');
+      showAlert({
+        title: 'Thông báo',
+        message: 'Bạn đã chọn tối đa 15 ảnh.',
+        type: 'info',
+        buttons: [{text: 'OK', onPress: hideAlert}],
+      });
       return;
     }
 
-    Alert.alert('Chọn ảnh', 'Bạn muốn chọn ảnh từ đâu?', [
-      {
-        text: 'Máy ảnh',
-        onPress: () => {
-          ImagePicker.openCamera({
-            width: 1000,
-            height: 1000,
-            cropping: true,
-            includeBase64: false,
-            includeExif: false,
-          })
-            .then(image => {
-              const imageFile: ImageFile = {
-                path: image.path,
-                mime: image.mime,
-                filename:
-                  image.path.split('/').pop() || `camera_${Date.now()}.jpg`,
-              };
-              onUpload([imageFile]);
-            })
-            .catch(e => {
-              if (e.code !== 'E_PICKER_CANCELLED') {
-                Alert.alert('Thông báo', 'Không thể truy cập máy ảnh');
-              }
+    const cameraAction = () => {
+      ImagePicker.openCamera({
+        width: 1200,
+        height: 800,
+        cropping: true,
+        multiple: false,
+        mediaType: 'photo',
+      })
+        .then((image: any) => {
+          if (Array.isArray(image)) {
+            const imageFiles: ImageFile[] = image.map((img: any) => ({
+              path: img.path,
+              mime: img.mime || 'image/jpeg',
+              filename: img.path.split('/').pop() || `camera_${Date.now()}.jpg`,
+            }));
+            onUpload(imageFiles);
+          } else {
+            const imageFile: ImageFile = {
+              path: image.path,
+              mime: image.mime || 'image/jpeg',
+              filename: image.path.split('/').pop() || `camera_${Date.now()}.jpg`,
+            };
+            onUpload([imageFile]);
+          }
+        })
+        .catch(e => {
+          if (e.code !== 'E_PICKER_CANCELLED') {
+            showAlert({
+              title: 'Thông báo',
+              message: 'Không thể truy cập máy ảnh',
+              type: 'error',
+              buttons: [{text: 'OK', onPress: hideAlert}],
             });
-        },
-      },
-      {
-        text: 'Thư viện',
-        onPress: () => {
-          ImagePicker.openPicker({
-            multiple: true,
-            maxFiles: Math.min(15, remainingSlots),
-            mediaType: 'photo',
-            includeBase64: false,
-            includeExif: false,
-          })
-            .then(images => {
-              if (!Array.isArray(images)) {
-                images = [images];
-              }
+          }
+        });
+    };
 
-              const imageFiles: ImageFile[] = images.map(img => ({
-                path: img.path,
-                mime: img.mime,
-                filename:
-                  img.path.split('/').pop() || `gallery_${Date.now()}.jpg`,
-              }));
-
-              if (imageFiles.length > 0) {
-                onUpload(imageFiles);
-              }
-            })
-            .catch(e => {
-              if (e.code !== 'E_PICKER_CANCELLED') {
-                Alert.alert('Thông báo', 'Không thể truy cập thư viện');
-              }
+    const galleryAction = () => {
+      ImagePicker.openPicker({
+        width: 1200,
+        height: 800,
+        cropping: true,
+        multiple: true,
+        maxFiles: remainingSlots,
+        mediaType: 'photo',
+      })
+        .then((result: any) => {
+          if (Array.isArray(result)) {
+            const imageFiles: ImageFile[] = result.map((img: any) => ({
+              path: img.path,
+              mime: img.mime || 'image/jpeg',
+              filename: img.path.split('/').pop() || `gallery_${Date.now()}.jpg`,
+            }));
+            onUpload(imageFiles);
+          } else {
+            const imageFile: ImageFile = {
+              path: result.path,
+              mime: result.mime || 'image/jpeg',
+              filename: result.path.split('/').pop() || `gallery_${Date.now()}.jpg`,
+            };
+            onUpload([imageFile]);
+          }
+        })
+        .catch(e => {
+          if (e.code !== 'E_PICKER_CANCELLED') {
+            showAlert({
+              title: 'Thông báo',
+              message: 'Không thể truy cập thư viện',
+              type: 'error',
+              buttons: [{text: 'OK', onPress: hideAlert}],
             });
-        },
-      },
-      {text: 'Hủy', style: 'cancel'},
-    ]);
+          }
+        });
+    };
+
+    showAlert({
+      title: 'Chọn ảnh',
+      message: 'Bạn muốn chọn ảnh từ đâu?',
+      type: 'info',
+      buttons: [
+        {text: 'Máy ảnh', onPress: cameraAction},
+        {text: 'Thư viện', onPress: galleryAction},
+        {text: 'Hủy', onPress: hideAlert, style: 'cancel'},
+      ],
+    });
   };
 
   const onclickItemImage = (filename: string) => {
@@ -359,34 +389,14 @@ export default function UpdateRoom() {
   const handleDeleteService = (item: ItemSeviceOptions) => {
     if (!item) return;
 
-    Alert.alert(
-      'Xác nhận xóa',
+    showConfirm(
       `Bạn có chắc chắn muốn xóa dịch vụ "${item.label}" không?`,
-      [
-        {
-          text: 'Hủy',
-          style: 'cancel',
-        },
-        {
-          text: 'Xóa',
-          style: 'destructive',
-          onPress: () => {
-            // Xóa khỏi serviceOptionList
-            setServiceOptionList(prev => prev.filter(i => i.id !== item.id));
-
-            // Xóa khỏi customServices nếu là dịch vụ tùy chọn
-            if (item.category === 'optional') {
-              setCustomServices(prev =>
-                prev.filter(i => i.name !== item.label),
-              );
-            }
-
-            // Đóng modal
-            setModalVisibleService(false);
-            setItemServiceEdit(undefined);
-          },
-        },
-      ],
+      () => {
+        setServiceOptionList(prev =>
+          prev.filter(service => service.value !== item.value),
+        );
+      },
+      'Xác nhận xóa'
     );
   };
 
@@ -472,6 +482,7 @@ export default function UpdateRoom() {
 
   // Update room handler
   const handleUpdateRoom = async () => {
+    // Validation
     const result = validateRoomForm({
       roomNumber,
       area,
@@ -487,14 +498,14 @@ export default function UpdateRoom() {
       description,
       rentPrice,
     });
-
+    
     if (!result.valid) {
-      Alert.alert('Lỗi', result.message);
+      showError(result.message, 'Lỗi');
       return;
     }
 
     if (!coordinates) {
-      Alert.alert('Thiếu tọa độ', 'Vui lòng chọn vị trí trên bản đồ.');
+      showError('Vui lòng chọn vị trí trên bản đồ.', 'Thiếu tọa độ');
       return;
     }
 
@@ -538,24 +549,32 @@ export default function UpdateRoom() {
     console.log('Updated room object:', JSON.stringify(updatedRoom, null, 2));
 
     try {
+      // Ensure we have a valid roomId
+      if (!item._id) {
+        showError('Không tìm thấy ID phòng trọ', 'Lỗi');
+        return;
+      }
+      
       const res = await dispatch(
-        updateLandlordRoom({roomId: item._id || '', room: updatedRoom}),
+        updateLandlordRoom({
+          roomId: item._id as string, 
+          room: updatedRoom
+        })
       );
 
       if (updateLandlordRoom.fulfilled.match(res)) {
-        Alert.alert('Thành công', 'Cập nhật phòng trọ thành công!');
+        showSuccess('Cập nhật phòng trọ thành công!', 'Thành công');
         navigation.goBack();
       } else if (updateLandlordRoom.rejected.match(res)) {
-        console.log('Update failed, payload:', res.payload);
         const message =
-          typeof res.payload === 'string'
+          res.payload && typeof res.payload === 'string'
             ? res.payload
             : 'Có lỗi xảy ra khi cập nhật phòng';
-        Alert.alert('Thất bại', message);
+        showError(message, 'Thất bại');
       }
     } catch (err) {
       console.error('Update room catch error:', err);
-      Alert.alert('Lỗi', 'Không thể kết nối đến máy chủ');
+      showError('Không thể kết nối đến máy chủ', 'Lỗi');
     }
   };
 
@@ -780,6 +799,16 @@ export default function UpdateRoom() {
         visible={visibleLocationModal}
         onClose={onClose}
         onSelect={handleSelectLocation}
+      />
+
+      {/* Custom Alert Modal */}
+      <CustomAlertModal
+        visible={visible}
+        title={alertConfig?.title || 'Thông báo'}
+        message={alertConfig?.message || ''}
+        type={alertConfig?.type || 'info'}
+        onClose={hideAlert}
+        buttons={alertConfig?.buttons}
       />
     </SafeAreaView>
   );
