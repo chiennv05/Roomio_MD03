@@ -1,262 +1,304 @@
-import React from 'react';
-import {View, Text, StyleSheet, Image, TouchableOpacity} from 'react-native';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+} from 'react-native';
+import TooltipBubble from './TooltipBubble';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
-import {RootStackParamList} from '../../../../types/route';
 import {Colors} from '../../../../theme/color';
 import {Fonts} from '../../../../theme/fonts';
-import {scale, responsiveFont} from '../../../../utils/responsive';
-import {formatDate} from '../../../../utils/formatDate';
+import {
+  responsiveFont,
+  responsiveSpacing,
+} from '../../../../utils/responsive';
+import {Tenant} from '../../../../types/Tenant';
 import {Icons} from '../../../../assets/icons';
+import {RootStackParamList} from '../../../../types/route';
 import {getImageUrl} from '../../../../configs';
 
-type TenantItemNavigationProp = StackNavigationProp<RootStackParamList, 'TenantDetail'>;
-
 interface TenantItemProps {
-  item: any;
+  item: Tenant;
 }
 
+type NavigationProp = StackNavigationProp<RootStackParamList, 'TenantDetail'>;
+
 const TenantItem: React.FC<TenantItemProps> = ({item}) => {
-  const navigation = useNavigation<TenantItemNavigationProp>();
+  const navigation = useNavigation<NavigationProp>();
+  const [selectedTenant, setSelectedTenant] = useState<string | null>(null);
+  
+  const roomNumber = item.room?.roomNumber || 'N/A';
+  const tenantCount = item.tenantCount || 1;
+  const price = item.monthlyRent ? item.monthlyRent.toLocaleString('vi-VN') : '0';
+  const roomPhoto = item.room?.photo ? getImageUrl(item.room.photo) : null;
+  
+  // Create tenant list with main tenant first, then coTenants (excluding duplicate main tenant)
+  const coTenantsFiltered = (item.coTenants || []).filter(coTenant => coTenant._id !== item._id);
+  
+  const allTenants = [
+    {
+      _id: item._id,
+      fullName: item.fullName,
+      isMainTenant: true,
+    },
+    ...coTenantsFiltered.map(coTenant => ({
+      _id: coTenant._id,
+      fullName: coTenant.fullName,
+      isMainTenant: false,
+    }))
+  ];
 
-  const handlePress = () => {
-    navigation.navigate('TenantDetail', {tenantId: item._id});
+  const handleViewDetail = () => {
+    navigation.navigate('TenantDetail', {
+      tenantId: item._id
+    });
   };
 
-  // Chỉ hiển thị các hợp đồng có trạng thái active
-  if (item.contractStatus !== 'active') {
-    return null;
-  }
-
-  // Tính thời gian còn lại của hợp đồng
-  const calculateRemainingMonths = () => {
-    const endDate = new Date(item.contractEndDate);
-    const today = new Date();
-    
-    // Tính số tháng giữa hai ngày
-    let months = (endDate.getFullYear() - today.getFullYear()) * 12;
-    months += endDate.getMonth() - today.getMonth();
-    
-    // Nếu ngày hiện tại đã qua ngày tương ứng trong tháng kết thúc, giảm đi 1
-    if (today.getDate() > endDate.getDate()) {
-      months--;
-    }
-    
-    return months > 0 ? months : 0;
+  const handleAvatarPress = (tenantName: string) => {
+    setSelectedTenant(prevName => prevName === tenantName ? null : tenantName);
   };
 
-  const remainingMonths = calculateRemainingMonths();
-  const hasCotenant = item.coTenants && item.coTenants.length > 0;
+  const getInitials = (fullName: string) => {
+    return fullName
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
+  };
 
-  return (
-    <TouchableOpacity 
-      style={[styles.container, {borderLeftColor: Colors.darkGreen, borderLeftWidth: scale(4)}]} 
-      onPress={handlePress}
-    >
-      {/* Thông tin phòng */}
-      <View style={styles.roomInfo}>
-        <View style={styles.roomImageContainer}>
-          {item.room?.photo ? (
-            <Image
-              source={{uri: getImageUrl(item.room.photo)}}
-              style={styles.roomImage}
-              defaultSource={{uri: Icons.IconHome}}
-            />
-          ) : (
-            <Image source={{uri: Icons.IconHome}} style={styles.roomImage} />
-          )}
-        </View>
-        <View style={styles.roomDetails}>
-          <Text style={styles.roomNumber}>{item.room?.roomNumber}</Text>
-          <Text style={styles.rentInfo}>
-            {item.monthlyRent?.toLocaleString('vi-VN')} đ/tháng
-          </Text>
-        </View>
-        <View style={[styles.badgeContainer, {backgroundColor: Colors.darkGreen}]}>
-          <Text style={styles.badgeText}>Đang hiệu lực</Text>
-        </View>
-      </View>
-
-      {/* Người đại diện thuê */}
-      <View style={[
-        styles.tenantInfo, 
-        hasCotenant ? {borderBottomWidth: 1, borderBottomColor: Colors.lightGray} : null
-      ]}>
-        <View style={[styles.avatarContainer, {backgroundColor: Colors.darkGreen}]}>
-          <Text style={styles.avatarText}>
-            {item.fullName.charAt(0).toUpperCase()}
-          </Text>
-        </View>
-        <View style={styles.tenantDetails}>
-          <Text style={styles.tenantName}>{item.fullName}</Text>
-          <Text style={[styles.tenantLabel, {color: Colors.darkGreen}]}>Người đại diện thuê</Text>
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, {color: Colors.darkGreen}]}>SĐT:</Text>
-            <Text style={styles.infoValue}>{item.phone}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, {color: Colors.darkGreen}]}>Thời hạn:</Text>
-            <Text style={styles.infoValue}>
-              {formatDate(item.contractStartDate)} - {formatDate(item.contractEndDate)}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, {color: Colors.darkGreen}]}>Trạng thái:</Text>
-            <Text style={styles.infoValue}>Còn {remainingMonths} tháng</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Người ở cùng */}
-      {hasCotenant && (
-        <View style={styles.coTenantsContainer}>
-          {item.coTenants.map((coTenant: any) => (
-            <View key={coTenant._id} style={styles.coTenantRow}>
-              <View style={[styles.avatarContainer, styles.smallAvatar, {backgroundColor: Colors.darkGreen}]}>
-                <Text style={styles.smallAvatarText}>
-                  {coTenant.fullName.charAt(0).toUpperCase()}
+  const renderTenantAvatars = () => {
+    return (
+      <View style={styles.avatarContainer}>
+        {allTenants.map((tenant, index) => (
+          <TouchableOpacity
+            key={`${tenant._id}-${index}`}
+            style={[
+              styles.avatarWrapper,
+              {marginLeft: index > 0 ? responsiveSpacing(-15) : 0},
+            ]}
+            onPress={() => handleAvatarPress(tenant.fullName)}>
+            <View style={styles.avatarItemContainer}>
+              <TooltipBubble 
+                text={tenant.fullName}
+                visible={selectedTenant === tenant.fullName}
+              />
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>
+                  {getInitials(tenant.fullName)}
                 </Text>
               </View>
-              <View style={styles.coTenantDetails}>
-                <Text style={styles.coTenantName}>{coTenant.fullName}</Text>
-                <Text style={[styles.tenantLabel, {color: Colors.darkGreen}]}>Người ở cùng</Text>
-                <View style={styles.infoRow}>
-                  <Text style={[styles.infoLabel, {color: Colors.darkGreen}]}>SĐT:</Text>
-                  <Text style={styles.infoValue}>{coTenant.phone}</Text>
-                </View>
-              </View>
             </View>
-          ))}
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {/* Header Section with Room Photo and Basic Info */}
+      <View style={styles.headerSection}>
+        {/* Room Photo */}
+        <View style={styles.roomImageContainer}>
+          {roomPhoto ? (
+            <Image source={{uri: roomPhoto}} style={styles.roomImage} />
+          ) : (
+            <View style={styles.noImageContainer}>
+              <Image source={{uri: Icons.IconRoom}} style={styles.noImageIcon} />
+            </View>
+          )}
         </View>
-      )}
-    </TouchableOpacity>
+
+        {/* Room Basic Info */}
+        <View style={styles.roomBasicInfo}>
+          <View style={styles.roomNumberContainer}>
+            <Image source={{uri: Icons.IconRoom}} style={styles.infoIcon} />
+            <Text style={styles.roomNumber}>{roomNumber}</Text>
+          </View>
+          
+          <View style={styles.infoRow}>
+            <Image source={{uri: Icons.IconPersonDefaut}} style={styles.infoIcon} />
+            <Text style={styles.infoText}>Số người: {tenantCount}</Text>
+          </View>
+          
+          <View style={styles.infoRow}>
+            <Image source={{uri: Icons.IconMoney}} style={styles.infoIcon} />
+            <Text style={styles.priceText}>{price}VNĐ/tháng</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Tenant Avatars Section */}
+      <View style={styles.tenantSection}>
+        <View style={styles.tenantHeader}>
+          <Image source={{uri: Icons.IconPersonDefaut}} style={styles.sectionIcon} />
+          <Text style={styles.sectionTitle}>Danh sách người thuê</Text>
+        </View>
+        {renderTenantAvatars()}
+      </View>
+
+      {/* Action Button */}
+      <TouchableOpacity style={styles.actionButton} onPress={handleViewDetail}>
+        <Text style={styles.actionButtonText}>Xem chi tiết</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.white,
-    borderRadius: scale(12),
-    marginBottom: scale(12),
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
+    borderRadius: responsiveSpacing(16),
+    padding: responsiveSpacing(16),
+    marginBottom: responsiveSpacing(16),
+    elevation: 3,
+    shadowColor: Colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
     shadowRadius: 4,
-    overflow: 'hidden',
   },
-  roomInfo: {
+  headerSection: {
     flexDirection: 'row',
-    padding: scale(12),
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.lightGray,
-    alignItems: 'center',
+    marginBottom: responsiveSpacing(16),
   },
   roomImageContainer: {
-    width: scale(60),
-    height: scale(60),
-    borderRadius: scale(8),
+    width: responsiveSpacing(100),
+    height: responsiveSpacing(80),
+    borderRadius: responsiveSpacing(12),
     overflow: 'hidden',
-    marginRight: scale(12),
+    marginRight: responsiveSpacing(12),
   },
   roomImage: {
     width: '100%',
     height: '100%',
   },
-  roomDetails: {
-    flex: 1,
-  },
-  roomNumber: {
-    fontSize: responsiveFont(16),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.darkGreen,
-    marginBottom: scale(4),
-  },
-  rentInfo: {
-    fontSize: responsiveFont(14),
-    color: Colors.black,
-    marginBottom: scale(4),
-  },
-  badgeContainer: {
-    paddingHorizontal: scale(12),
-    paddingVertical: scale(4),
-    borderRadius: scale(20),
-  },
-  badgeText: {
-    color: Colors.white,
-    fontSize: responsiveFont(12),
-    fontFamily: Fonts.Roboto_Bold,
-  },
-  tenantInfo: {
-    flexDirection: 'row',
-    padding: scale(12),
-  },
-  avatarContainer: {
-    width: scale(40),
-    height: scale(40),
-    borderRadius: scale(20),
+  noImageContainer: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: Colors.lightGreenBackground,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: scale(12),
   },
-  avatarText: {
-    fontSize: responsiveFont(18),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.white,
+  noImageIcon: {
+    width: responsiveSpacing(32),
+    height: responsiveSpacing(32),
+    tintColor: Colors.darkGreen,
   },
-  tenantDetails: {
+  roomBasicInfo: {
     flex: 1,
+    justifyContent: 'space-between',
+    paddingVertical: responsiveSpacing(4),
   },
-  tenantName: {
-    fontSize: responsiveFont(16),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.black,
-    marginBottom: scale(2),
-  },
-  tenantLabel: {
-    fontSize: responsiveFont(12),
-    marginBottom: scale(6),
+  roomNumberContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: responsiveSpacing(8),
   },
   infoRow: {
     flexDirection: 'row',
-    marginTop: scale(2),
+    alignItems: 'center',
+    marginBottom: responsiveSpacing(6),
   },
-  infoLabel: {
-    fontSize: responsiveFont(12),
+  infoIcon: {
+    width: responsiveSpacing(16),
+    height: responsiveSpacing(16),
+    marginRight: responsiveSpacing(8),
+    tintColor: Colors.darkGreen,
+  },
+  roomNumber: {
+    fontSize: responsiveFont(20),
     fontFamily: Fonts.Roboto_Bold,
-    width: scale(65),
-  },
-  infoValue: {
-    fontSize: responsiveFont(12),
     color: Colors.black,
-    flex: 1,
   },
-  coTenantsContainer: {
-    padding: scale(12),
-    paddingTop: scale(6),
-  },
-  coTenantRow: {
-    flexDirection: 'row',
-    marginTop: scale(6),
-  },
-  smallAvatar: {
-    width: scale(32),
-    height: scale(32),
-    borderRadius: scale(16),
-  },
-  smallAvatarText: {
+  infoText: {
     fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
+  },
+  priceText: {
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.darkGreen,
+  },
+  tenantSection: {
+    marginBottom: responsiveSpacing(16),
+  },
+  tenantHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: responsiveSpacing(12),
+  },
+  sectionIcon: {
+    width: responsiveSpacing(18),
+    height: responsiveSpacing(18),
+    marginRight: responsiveSpacing(8),
+    tintColor: Colors.textGray,
+  },
+  sectionTitle: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.textGray,
+  },
+  avatarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarItemContainer: {
+    position: 'relative',
+  },
+  avatarWrapper: {
+    borderRadius: responsiveSpacing(25),
+    borderWidth: 2,
+    borderColor: Colors.white,
+    elevation: 2,
+    shadowColor: Colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    backgroundColor: Colors.white,
+  },
+  avatar: {
+    width: responsiveSpacing(50),
+    height: responsiveSpacing(50),
+    borderRadius: responsiveSpacing(25),
+    backgroundColor: Colors.darkGreen,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.white,
   },
-  coTenantDetails: {
-    flex: 1,
+  actionButton: {
+    backgroundColor: Colors.darkGreen,
+    borderRadius: responsiveSpacing(12),
+    paddingVertical: responsiveSpacing(14),
+    paddingHorizontal: responsiveSpacing(20),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  coTenantName: {
-    fontSize: responsiveFont(14),
+  buttonIcon: {
+    width: responsiveSpacing(18),
+    height: responsiveSpacing(18),
+    marginRight: responsiveSpacing(8),
+    tintColor: Colors.white,
+  },
+  actionButtonText: {
+    fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.black,
-    marginBottom: scale(2),
+    color: Colors.white,
   },
 });
 

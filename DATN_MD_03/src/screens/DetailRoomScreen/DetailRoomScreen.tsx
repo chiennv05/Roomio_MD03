@@ -479,7 +479,16 @@ const DetailRoomScreen: React.FC = () => {
           )}
 
           {/* Support Request Modal */}
-          <SupportRequestModal ref={supportModalRef} />
+          <SupportRequestModal 
+            ref={supportModalRef} 
+            roomId={roomId}
+            roomInfo={{
+              name: roomDetailData?.name,
+              address: roomDetailData?.address,
+              ownerName: roomDetailData?.ownerName,
+              roomCode: roomDetailData?.roomCode,
+            }}
+          />
 
           {/* Booking Schedule Modal */}
           <BookingScheduleModal
@@ -513,6 +522,7 @@ const DetailRoomScreen: React.FC = () => {
     );
   }, [
     roomDetailData,
+    roomId,
     handleGoBack,
     handleFavoritePress,
     handleSharePress,

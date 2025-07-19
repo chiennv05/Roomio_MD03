@@ -2,78 +2,80 @@ import React from 'react';
 import {
   View,
   TextInput,
-  TouchableOpacity,
-  Text,
   StyleSheet,
-  ViewStyle,
+  TouchableOpacity,
+  Image,
 } from 'react-native';
 import {Colors} from '../../../../theme/color';
 import {Fonts} from '../../../../theme/fonts';
-import {responsiveFont, scale, verticalScale} from '../../../../utils/responsive';
+import {
+  responsiveFont,
+  responsiveSpacing,
+} from '../../../../utils/responsive';
+import {Icons} from '../../../../assets/icons';
 
 interface SearchBarProps {
-  placeholder?: string;
+  placeholder: string;
   value: string;
   onChangeText: (text: string) => void;
   onSubmit: () => void;
-  buttonText?: string;
-  containerStyle?: ViewStyle;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
-  placeholder = 'Tìm kiếm...',
+  placeholder,
   value,
   onChangeText,
   onSubmit,
-  buttonText = 'Tìm',
-  containerStyle,
 }) => {
   return (
-    <View style={[styles.container, containerStyle]}>
-      <TextInput
-        style={styles.input}
-        placeholder={placeholder}
-        value={value}
-        onChangeText={onChangeText}
-        onSubmitEditing={onSubmit}
-      />
-      <TouchableOpacity style={styles.button} onPress={onSubmit}>
-        <Text style={styles.buttonText}>{buttonText}</Text>
-      </TouchableOpacity>
+    <View style={styles.container}>
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.textInput}
+          placeholder={placeholder}
+          placeholderTextColor="#9F9F9F"
+          value={value}
+          onChangeText={onChangeText}
+          onSubmitEditing={onSubmit}
+        />
+        <TouchableOpacity style={styles.searchButton} onPress={onSubmit}>
+          <Image source={{uri: Icons.IconSearch}} style={styles.searchIcon} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    paddingHorizontal: responsiveSpacing(20),
+    paddingVertical: responsiveSpacing(16),
+    backgroundColor: Colors.backgroud,
+  },
+  searchContainer: {
     flexDirection: 'row',
-    paddingHorizontal: scale(16),
-    paddingVertical: verticalScale(10),
-    backgroundColor: Colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.lightGray,
-  },
-  input: {
-    flex: 1,
-    height: verticalScale(40),
-    backgroundColor: Colors.lightGray,
-    borderRadius: 8,
-    paddingHorizontal: scale(12),
-    fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(14),
-  },
-  button: {
-    marginLeft: scale(10),
-    backgroundColor: Colors.darkGreen,
-    justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 8,
-    paddingHorizontal: scale(15),
+    backgroundColor: Colors.white,
+    borderRadius: responsiveSpacing(50),
+    borderWidth: 1,
+    borderColor: '#CCCCCC',
+    paddingHorizontal: responsiveSpacing(21),
+    height: responsiveSpacing(44),
   },
-  buttonText: {
-    color: Colors.white,
-    fontFamily: Fonts.Roboto_Bold,
+  textInput: {
+    flex: 1,
     fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.black,
+    paddingVertical: 0,
+  },
+  searchButton: {
+    marginLeft: responsiveSpacing(8),
+  },
+  searchIcon: {
+    width: responsiveSpacing(24),
+    height: responsiveSpacing(24),
+    tintColor: Colors.black,
   },
 });
 
