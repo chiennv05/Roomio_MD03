@@ -2328,7 +2328,6 @@ const styles = StyleSheet.create({
     retryText: {
         color: Colors.white,
         fontWeight: 'bold',
-        marginTop: 10,
     },
     headerContainer: {
         marginTop: 10,

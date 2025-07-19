@@ -17,7 +17,7 @@ import {
     Easing,
 } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
-import { fetchInvoices, fetchRoommateInvoices } from '../../store/slices/billSlice';
+import { fetchInvoices, fetchRoommateInvoices, checkUserCoTenant } from '../../store/slices/billSlice';
 import { Invoice } from '../../types/Bill';
 import { Colors } from '../../theme/color';
 import { useNavigation, CommonActions, useFocusEffect } from '@react-navigation/native';
@@ -27,7 +27,7 @@ import { RootStackParamList } from '../../types/route';
 import { Icons } from '../../assets/icons';
 import { InvoiceCard, ContractSelectionModal, InvoiceCreationModal } from './components';
 import { Contract } from '../../types/Contract';
-import { deleteInvoice, checkUserIsCoTenant } from '../../store/services/billService';
+import { deleteInvoice } from '../../store/services/billService';
 import { api } from '../../api/api';
 
 // Kiểu dữ liệu cho các bộ lọc
@@ -40,9 +40,15 @@ const BillScreen = () => {
     const dispatch = useAppDispatch();
     const navigation = useNavigation<BillScreenNavigationProp>();
     const { user, token } = useAppSelector(state => state.auth);
-    const { invoices, loading, error, pagination } = useAppSelector(
-        state => state.bill,
-    );
+    const { 
+        invoices, 
+        loading, 
+        error, 
+        pagination,
+        isCoTenant: isUserCoTenantFromRedux,
+        coTenantLoading 
+    } = useAppSelector(state => state.bill);
+    
     const [refreshing, setRefreshing] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState<string | undefined>(
         undefined,
@@ -55,7 +61,13 @@ const BillScreen = () => {
     const isLandlord = user?.role === 'chuTro';
     
     // State để theo dõi xem người dùng có phải là người ở cùng không
+    // Sử dụng giá trị từ Redux state
     const [isUserCoTenant, setIsUserCoTenant] = useState(false);
+    
+    // Đồng bộ state local với Redux khi giá trị Redux thay đổi
+    useEffect(() => {
+        setIsUserCoTenant(isUserCoTenantFromRedux);
+    }, [isUserCoTenantFromRedux]);
 
     // Thêm state cho bộ lọc mới
     const [activeFilter, setActiveFilter] = useState<FilterType>('status');
@@ -221,23 +233,10 @@ const BillScreen = () => {
     useEffect(() => {
         // Log danh sách hóa đơn khi có thay đổi
         if (localInvoices.length > 0) {
-            // Chi tiết hơn về các hóa đơn
-            console.log('Tổng số hóa đơn sau khi lọc:', localInvoices.length);
-            console.log('Số hóa đơn người ở cùng:', localInvoices.filter(inv => inv.isRoommate === true).length);
-            console.log('Số hóa đơn thường:', localInvoices.filter(inv => inv.isRoommate !== true).length);
-            
-            // Kiểm tra các thuộc tính chính của hóa đơn đầu tiên
-            if (localInvoices[0]) {
-                const firstInvoice = localInvoices[0];
-                console.log('Thông tin hóa đơn đầu tiên:', {
-                    id: firstInvoice._id || firstInvoice.id,
-                    isRoommate: firstInvoice.isRoommate,
-                    contractId: typeof firstInvoice.contractId === 'object' ? 'Object' : firstInvoice.contractId,
-                    status: firstInvoice.status
-                });
-            }
-        } else {
-            console.log('Không có hóa đơn nào được hiển thị');
+            // Chỉ hiển thị số lượng hóa đơn, không in chi tiết để tránh log quá nhiều
+            console.log('Tổng số hóa đơn:', localInvoices.length);
+            console.log('Số hóa đơn người ở cùng:', localInvoices.filter(inv => inv.isRoommate).length);
+            console.log('Số hóa đơn thường:', localInvoices.filter(inv => !inv.isRoommate).length);
         }
     }, [localInvoices]);
 
@@ -281,38 +280,40 @@ const BillScreen = () => {
         // Chỉ áp dụng cho người thuê, không phải chủ trọ
         if (!token || isLandlord || !user?._id) {
             setIsUserCoTenant(false);
-            console.log('User is not eligible for co-tenant check (landlord or missing token/ID)');
             return;
         }
 
         try {
-            console.log('Checking if user is a co-tenant...');
-            // Gọi hàm kiểm tra từ billService
-            const result = await checkUserIsCoTenant(token);
+            // Gọi thunk action từ Redux
+            const result = await dispatch(checkUserCoTenant());
             
-            if (result && result.success) {
-                console.log('User coTenant check result:', result.isCoTenant);
-                console.log('Co-tenant contracts found:', result.contracts ? result.contracts.length : 0);
-                
-                // Cập nhật state
-                setIsUserCoTenant(result.isCoTenant);
-                
-                // Nếu người dùng không phải là người ở cùng trong bất kỳ hợp đồng nào
-                if (!result.isCoTenant) {
-                    // Hiển thị thông báo
-                    console.log('User is not a co-tenant in any contract');
-                    Alert.alert(
-                        'Thông báo',
-                        'Bạn không phải là người ở cùng trong bất kỳ hợp đồng nào. Bạn sẽ chỉ thấy hóa đơn của chính mình.',
-                        [{ text: 'OK', onPress: () => console.log('OK Pressed') }]
-                    );
+            if (result.meta.requestStatus === 'fulfilled' && result.payload) {
+                // Type guard để kiểm tra cấu trúc của payload
+                if (typeof result.payload === 'object' && 'isCoTenant' in result.payload) {
+                    console.log('User coTenant check result:', result.payload.isCoTenant);
+                    
+                    // Cập nhật state
+                    setIsUserCoTenant(!!result.payload.isCoTenant);
+                    
+                    // Nếu người dùng không phải là người ở cùng trong bất kỳ hợp đồng nào
+                    if (!result.payload.isCoTenant) {
+                        // Hiển thị thông báo
+                        Alert.alert(
+                            'Thông báo',
+                            'Bạn không phải là người ở cùng trong bất kỳ hợp đồng nào. Bạn sẽ chỉ thấy hóa đơn của chính mình.',
+                            [{ text: 'OK', onPress: () => console.log('OK Pressed') }]
+                        );
+                    }
+                } else {
+                    // Nếu payload không có cấu trúc đúng
+                    setIsUserCoTenant(false);
                 }
             }
         } catch (error) {
             console.error('Error checking coTenant status:', error);
             setIsUserCoTenant(false);
         }
-    }, [token, isLandlord, user?._id]);
+    }, [dispatch, token, isLandlord, user?._id]);
 
     // Sử dụng useFocusEffect để kiểm tra khi màn hình được focus
     useFocusEffect(
@@ -324,7 +325,6 @@ const BillScreen = () => {
             
             // Tải dữ liệu hóa đơn
             if (token) {
-                console.log('Loading invoices with current state - isUserCoTenant:', isUserCoTenant);
                 loadInvoices(1, false);
             }
             
@@ -506,7 +506,7 @@ const BillScreen = () => {
                                     handleFilterTypeChange(tab.id);
                                 }
                             }}>
-                            <Text style={styles.dropdownButtonText} numberOfLines={1} ellipsizeMode="tail">
+                            <Text style={styles.dropdownButtonText}>
                             {tab.label}
                                 {tab.id === 'status' && selectedStatus && 
                                     `: ${selectedStatus === 'draft' ? 'Nháp' : 
@@ -918,13 +918,10 @@ const BillScreen = () => {
                         style={styles.backIcon}
                     />
                 </TouchableOpacity>
-                <Text style={styles.headerText}>Hóa đơn thu chi</Text>
+                <Text style={styles.headerText}>Hóa đơn của bạn</Text>
                 {isLandlord ? (
-                    <TouchableOpacity 
-                        style={styles.templateButton} 
-                        onPress={navigateToTemplates}
-                    >
-                        <Text style={styles.templateButtonText}>Mẫu</Text>
+                    <TouchableOpacity onPress={navigateToTemplates}>
+                        <Text style={styles.templateButton}>Mẫu</Text>
                     </TouchableOpacity>
                 ) : (
                     <View style={styles.placeholderView} />
@@ -1047,39 +1044,44 @@ const styles = StyleSheet.create({
         marginTop: 10
     },
     headerContainer: {
-        marginTop: 10,
+        paddingTop: 15, // Reduced from 20
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingVertical: 16,
-        backgroundColor: Colors.backgroud,
-        position: 'relative',
+        paddingVertical: 10, // Reduced from 12
+        backgroundColor: Colors.white,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.lightGray,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.1,
+                shadowRadius: 2,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
     },
     backButton: {
-        width: 36,
-        height: 36,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: Colors.white,
-        borderRadius: 18,
-        position: 'absolute',
-        left: 16,
-        zIndex: 1,
+        padding: 5,
     },
     backIcon: {
-        width: 20,
-        height: 20,
+        width: 24,
+        height: 24,
         resizeMode: 'contain',
     },
     headerText: {
         fontSize: 18,
-        fontWeight: '700',
-        color: Colors.black,
+        fontWeight: 'bold',
+        color: Colors.dearkOlive,
         textAlign: 'center',
+        flex: 1,
     },
     placeholderView: {
-        width: 36,
+        width: 24,
     },
     centered: {
         flex: 1,
@@ -1234,63 +1236,65 @@ const styles = StyleSheet.create({
         paddingTop: 0, // Ensure no extra padding at top
     },
     templateButton: {
-        position: 'absolute',
-        right: 16,
-        zIndex: 1,
-    },
-    templateButtonText: {
+        fontSize: 14,
+        fontWeight: 'bold',
         color: Colors.primaryGreen,
-        fontSize: 16,
-        fontWeight: '600',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 15,
+        borderWidth: 1,
+        borderColor: Colors.primaryGreen,
     },
     // Dropdown styles
     dropdownsContainer: {
         paddingVertical: 8,
-        backgroundColor: Colors.white,
-        marginHorizontal: 0,
-        marginTop: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#EEEEEE',
     },
     dropdownsScrollContainer: {
-        paddingHorizontal: 8,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+        paddingHorizontal: 16,
     },
     dropdownWrapper: {
-        flex: 1,
-        paddingHorizontal: 4,
-        minWidth: SCREEN.width / 3.5,
+        marginRight: 10,
+        minWidth: 140,
+        maxWidth: 200,
     },
     dropdownButton: {
         backgroundColor: Colors.white,
-        paddingVertical: 6,
-        paddingHorizontal: 8,
-        borderRadius: 4,
+        paddingVertical: 8, // Reduced from 12
+        paddingHorizontal: 14,
+        borderRadius: 10,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        borderWidth: 0.5,
+        borderWidth: 1,
         borderColor: '#E0E0E0',
-        minHeight: 34,
-        shadowColor: 'rgba(0,0,0,0.05)',
-        shadowOffset: { width: 0, height: 1 },
-        shadowRadius: 1,
-        elevation: 1,
+        minHeight: 40, // Reduced from 48
+        ...Platform.select({
+            ios: {
+                shadowColor: 'rgba(0,0,0,0.1)',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.22,
+                shadowRadius: 2.22,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
     },
     activeDropdownButton: {
         borderColor: Colors.primaryGreen,
+        borderWidth: 2,
+        backgroundColor: 'rgba(139, 195, 74, 0.05)',
     },
     dropdownButtonText: {
         color: Colors.dearkOlive,
         fontWeight: '500',
-        fontSize: 13,
+        fontSize: 14,
         flex: 1,
-        marginRight: 4,
+        marginRight: 8,
     },
     dropdownIcon: {
-        width: 10,
-        height: 10,
+        width: 14,
+        height: 14,
         resizeMode: 'contain',
         tintColor: Colors.dearkOlive,
     },

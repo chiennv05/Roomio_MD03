@@ -293,7 +293,16 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress, onEdit, onD
                         </Text>
                     </View>
 
-                    
+                    <View style={styles.row}>
+                        <Text style={styles.label}>Trạng thái:</Text>
+                        <Text
+                            style={[styles.value, { 
+                                color: getStatusColor(invoice.status),
+                                fontWeight: '600' 
+                            }]}>
+                            {getStatusText(invoice.status)}
+                        </Text>
+                    </View>
                 </View>
 
                 <View style={styles.footer}>

@@ -283,7 +283,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Colors.backgroud,
-        marginTop: 10,
     },
     header: {
         marginTop: 10,

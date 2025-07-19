@@ -51,7 +51,7 @@ const getNestedValue = (obj: any, path: string, defaultValue: any = undefined) =
 const getStatusColor = (status: string) => {
     switch (status) {
         case 'paid':
-            return Colors.primaryGreen; // Xanh lá đậm
+            return '#28A745'; // Xanh lá đậm
         case 'pending':
             return '#17A2B8'; // Xanh dương
         case 'pending_confirmation': 
@@ -229,16 +229,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress, onEdit, onD
                     <View
                         style={[
                             styles.statusBadge,
-                            { 
-                                backgroundColor: getStatusColor(invoice.status) + '20',
-                                borderWidth: 1,
-                                borderColor: getStatusColor(invoice.status)
-                            },
+                            { backgroundColor: getStatusColor(invoice.status) },
                         ]}>
-                        <Text style={[
-                            styles.statusText, 
-                            { color: getStatusColor(invoice.status) }
-                        ]}>{getStatusText(invoice.status)}</Text>
+                        <Text style={styles.statusText}>{getStatusText(invoice.status)}</Text>
                     </View>
                 </View>
 
@@ -293,7 +286,13 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress, onEdit, onD
                         </Text>
                     </View>
 
-                    
+                    <View style={styles.row}>
+                        <Text style={styles.label}>Trạng thái:</Text>
+                        <Text
+                            style={[styles.value, { color: getStatusColor(invoice.status) }]}>
+                            {getStatusText(invoice.status)}
+                        </Text>
+                    </View>
                 </View>
 
                 <View style={styles.footer}>
@@ -363,8 +362,9 @@ const styles = StyleSheet.create({
         borderRadius: 4,
     },
     statusText: {
+        color: Colors.white,
         fontSize: 12,
-        fontWeight: '700',
+        fontWeight: '500',
     },
     content: {
         marginBottom: 6, // Reduced from 10

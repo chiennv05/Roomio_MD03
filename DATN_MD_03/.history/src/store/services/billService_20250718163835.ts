@@ -1062,8 +1062,8 @@ export const applyInvoiceTemplate = async (
 // Kiểm tra xem người dùng có trong danh sách coTenants không
 export const checkUserIsCoTenant = async (token: string) => {
     try {
-        // Gọi API mới để lấy danh sách hóa đơn người ở cùng
-        const response = await api.get('/billing/roommate/invoices', {
+        // Gọi API để kiểm tra xem người dùng có trong danh sách coTenants không
+        const response = await api.get('/contract/check-cotenant', {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -1073,100 +1073,53 @@ export const checkUserIsCoTenant = async (token: string) => {
             throw new Error(response.message || 'Có lỗi xảy ra khi kiểm tra trạng thái người ở cùng');
         }
 
-        // Lấy dữ liệu người dùng hiện tại từ profile endpoint
-        const userResponse = await api.get('/user/profile', {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-
-        if ('isError' in userResponse) {
-            throw new Error(userResponse.message || 'Không thể lấy thông tin người dùng');
-        }
-
-        // Dữ liệu người dùng nằm trong data.user theo cấu trúc mới
-        const currentUserId = userResponse.data.data?.user?._id;
-        
-        if (!currentUserId) {
-            throw new Error('Không thể xác định ID người dùng hiện tại');
-        }
-
-        // Kiểm tra nếu người dùng có trong danh sách coTenants của bất kỳ hợp đồng nào
-        const invoices = response.data.invoices || [];
-        let isCoTenant = false;
-        let coTenantContracts = [];
-
-        for (const invoice of invoices) {
-            // Kiểm tra nếu invoice có contractId và contractId.contractInfo.coTenants
-            if (invoice.contractId && 
-                invoice.contractId.contractInfo && 
-                invoice.contractId.contractInfo.coTenants && 
-                Array.isArray(invoice.contractId.contractInfo.coTenants)) {
-                
-                // Kiểm tra xem userId hiện tại có trong danh sách coTenants không
-                const isUserCoTenant = invoice.contractId.contractInfo.coTenants.some(
-                    (coTenant: { userId: string }) => coTenant.userId === currentUserId
-                );
-                
-                if (isUserCoTenant) {
-                    isCoTenant = true;
-                    // Thêm thông tin hợp đồng vào danh sách hợp đồng người dùng là người ở cùng
-                    if (coTenantContracts.findIndex(c => c._id === invoice.contractId._id) === -1) {
-                        coTenantContracts.push(invoice.contractId);
-                    }
-                }
-            }
-        }
-        
-        console.log(`User ${currentUserId} isCoTenant: ${isCoTenant}`);
-        
         return {
-            success: true,
-            isCoTenant,
-            contracts: coTenantContracts
+            success: response.data.success,
+            isCoTenant: response.data.isCoTenant,
+            contracts: response.data.contracts || []
         };
     } catch (error: any) {
         console.error('Error checking coTenant status:', error.message);
         
         // Nếu API endpoint chưa tồn tại, trả về một kết quả giả lập dựa trên dữ liệu hiện có
         // Đây là một giải pháp tạm thời cho đến khi API được triển khai
-        // try {
-        //     // Thử gọi API lấy danh sách hợp đồng
-        //     const contractsResponse = await api.get('/contract/my-contracts', {
-        //         headers: {
-        //             Authorization: `Bearer ${token}`,
-        //         },
-        //     });
+        try {
+            // Thử gọi API lấy danh sách hợp đồng
+            const contractsResponse = await api.get('/contract/my-contracts', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
             
-        //     if ('isError' in contractsResponse) {
-        //         throw new Error(contractsResponse.message);
-        //     }
+            if ('isError' in contractsResponse) {
+                throw new Error(contractsResponse.message);
+            }
             
-        //     // Kiểm tra xem người dùng có trong danh sách coTenants của bất kỳ hợp đồng nào không
-        //     const contracts = contractsResponse.data.data?.contracts || [];
-        //     let isCoTenant = false;
+            // Kiểm tra xem người dùng có trong danh sách coTenants của bất kỳ hợp đồng nào không
+            const contracts = contractsResponse.data.data?.contracts || [];
+            let isCoTenant = false;
             
-        //     for (const contract of contracts) {
-        //         if (contract.contractInfo && contract.contractInfo.coTenants && 
-        //             Array.isArray(contract.contractInfo.coTenants) && 
-        //             contract.contractInfo.coTenants.length > 0) {
-        //             isCoTenant = true;
-        //             break;
-        //         }
-        //     }
+            for (const contract of contracts) {
+                if (contract.contractInfo && contract.contractInfo.coTenants && 
+                    Array.isArray(contract.contractInfo.coTenants) && 
+                    contract.contractInfo.coTenants.length > 0) {
+                    isCoTenant = true;
+                    break;
+                }
+            }
             
-        //     return {
-        //         success: true,
-        //         isCoTenant,
-        //         contracts
-        //     };
-        // } catch (fallbackError: any) {
-        //     console.error('Error in fallback coTenant check:', fallbackError.message);
-        //     return {
-        //         success: false,
-        //         isCoTenant: false,
-        //         contracts: []
-        //     };
-        // }
+            return {
+                success: true,
+                isCoTenant,
+                contracts
+            };
+        } catch (fallbackError: any) {
+            console.error('Error in fallback coTenant check:', fallbackError.message);
+            return {
+                success: false,
+                isCoTenant: false,
+                contracts: []
+            };
+        }
     }
 }; 

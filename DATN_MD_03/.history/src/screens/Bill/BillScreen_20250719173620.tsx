@@ -506,7 +506,7 @@ const BillScreen = () => {
                                     handleFilterTypeChange(tab.id);
                                 }
                             }}>
-                            <Text style={styles.dropdownButtonText} numberOfLines={1} ellipsizeMode="tail">
+                            <Text style={styles.dropdownButtonText}>
                             {tab.label}
                                 {tab.id === 'status' && selectedStatus && 
                                     `: ${selectedStatus === 'draft' ? 'Nháp' : 
@@ -1249,8 +1249,6 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.white,
         marginHorizontal: 0,
         marginTop: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#EEEEEE',
     },
     dropdownsScrollContainer: {
         paddingHorizontal: 8,
@@ -1260,37 +1258,46 @@ const styles = StyleSheet.create({
     dropdownWrapper: {
         flex: 1,
         paddingHorizontal: 4,
-        minWidth: SCREEN.width / 3.5,
+        maxWidth: SCREEN.width / 3 - 8,
     },
     dropdownButton: {
         backgroundColor: Colors.white,
-        paddingVertical: 6,
-        paddingHorizontal: 8,
-        borderRadius: 4,
+        paddingVertical: 8, // Reduced from 12
+        paddingHorizontal: 14,
+        borderRadius: 10,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        borderWidth: 0.5,
+        borderWidth: 1,
         borderColor: '#E0E0E0',
-        minHeight: 34,
-        shadowColor: 'rgba(0,0,0,0.05)',
-        shadowOffset: { width: 0, height: 1 },
-        shadowRadius: 1,
-        elevation: 1,
+        minHeight: 40, // Reduced from 48
+        ...Platform.select({
+            ios: {
+                shadowColor: 'rgba(0,0,0,0.1)',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.22,
+                shadowRadius: 2.22,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
     },
     activeDropdownButton: {
         borderColor: Colors.primaryGreen,
+        borderWidth: 2,
+        backgroundColor: 'rgba(139, 195, 74, 0.05)',
     },
     dropdownButtonText: {
         color: Colors.dearkOlive,
         fontWeight: '500',
-        fontSize: 13,
+        fontSize: 14,
         flex: 1,
-        marginRight: 4,
+        marginRight: 8,
     },
     dropdownIcon: {
-        width: 10,
-        height: 10,
+        width: 14,
+        height: 14,
         resizeMode: 'contain',
         tintColor: Colors.dearkOlive,
     },

@@ -51,7 +51,7 @@ const getNestedValue = (obj: any, path: string, defaultValue: any = undefined) =
 const getStatusColor = (status: string) => {
     switch (status) {
         case 'paid':
-            return Colors.primaryGreen; // Xanh lá đậm
+            return '#BAFD00'; // Xanh lá đậm
         case 'pending':
             return '#17A2B8'; // Xanh dương
         case 'pending_confirmation': 
@@ -293,7 +293,16 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress, onEdit, onD
                         </Text>
                     </View>
 
-                    
+                    <View style={styles.row}>
+                        <Text style={styles.label}>Trạng thái:</Text>
+                        <Text
+                            style={[styles.value, { 
+                                color: getStatusColor(invoice.status),
+                                fontWeight: '600' 
+                            }]}>
+                            {getStatusText(invoice.status)}
+                        </Text>
+                    </View>
                 </View>
 
                 <View style={styles.footer}>

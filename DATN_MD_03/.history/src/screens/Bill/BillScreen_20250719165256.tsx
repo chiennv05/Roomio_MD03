@@ -17,7 +17,7 @@ import {
     Easing,
 } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
-import { fetchInvoices, fetchRoommateInvoices } from '../../store/slices/billSlice';
+import { fetchInvoices, fetchRoommateInvoices, checkUserCoTenant } from '../../store/slices/billSlice';
 import { Invoice } from '../../types/Bill';
 import { Colors } from '../../theme/color';
 import { useNavigation, CommonActions, useFocusEffect } from '@react-navigation/native';
@@ -27,7 +27,7 @@ import { RootStackParamList } from '../../types/route';
 import { Icons } from '../../assets/icons';
 import { InvoiceCard, ContractSelectionModal, InvoiceCreationModal } from './components';
 import { Contract } from '../../types/Contract';
-import { deleteInvoice, checkUserIsCoTenant } from '../../store/services/billService';
+import { deleteInvoice } from '../../store/services/billService';
 import { api } from '../../api/api';
 
 // Kiểu dữ liệu cho các bộ lọc
@@ -40,9 +40,15 @@ const BillScreen = () => {
     const dispatch = useAppDispatch();
     const navigation = useNavigation<BillScreenNavigationProp>();
     const { user, token } = useAppSelector(state => state.auth);
-    const { invoices, loading, error, pagination } = useAppSelector(
-        state => state.bill,
-    );
+    const { 
+        invoices, 
+        loading, 
+        error, 
+        pagination,
+        isCoTenant: isUserCoTenantFromRedux,
+        coTenantLoading 
+    } = useAppSelector(state => state.bill);
+    
     const [refreshing, setRefreshing] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState<string | undefined>(
         undefined,
@@ -55,7 +61,13 @@ const BillScreen = () => {
     const isLandlord = user?.role === 'chuTro';
     
     // State để theo dõi xem người dùng có phải là người ở cùng không
+    // Sử dụng giá trị từ Redux state
     const [isUserCoTenant, setIsUserCoTenant] = useState(false);
+    
+    // Đồng bộ state local với Redux khi giá trị Redux thay đổi
+    useEffect(() => {
+        setIsUserCoTenant(isUserCoTenantFromRedux);
+    }, [isUserCoTenantFromRedux]);
 
     // Thêm state cho bộ lọc mới
     const [activeFilter, setActiveFilter] = useState<FilterType>('status');
@@ -132,6 +144,9 @@ const BillScreen = () => {
         return Array.from(tenantsMap.values());
     }, [invoices]);
 
+    // Thêm state để theo dõi kiểu hóa đơn đang xem (thông thường hoặc người ở cùng)
+    const [viewingRoommateInvoices, setViewingRoommateInvoices] = useState(false);
+
     // Cập nhật localInvoices khi có thay đổi về bộ lọc
     useEffect(() => {
         if (invoices.length > 0) {
@@ -140,9 +155,14 @@ const BillScreen = () => {
 
             // Xác định các hóa đơn cần hiển thị dựa vào vai trò và trạng thái người ở cùng
             if (user?.role === 'nguoiThue' && isUserCoTenant) {
-                // Nếu là người ở cùng, chỉ hiển thị hóa đơn của người ở cùng
-                filteredInvoices = filteredInvoices.filter(invoice => invoice.isRoommate === true);
-                console.log('Filtering to show only roommate invoices. Count:', filteredInvoices.length);
+                if (viewingRoommateInvoices) {
+                    // Nếu đang xem hóa đơn người ở cùng, chỉ hiển thị hóa đơn có isRoommate = true
+                    filteredInvoices = filteredInvoices.filter(invoice => invoice.isRoommate === true);
+                } else {
+                    // Nếu đang xem hóa đơn thông thường, chỉ hiển thị hóa đơn không có isRoommate hoặc isRoommate = false
+                    filteredInvoices = filteredInvoices.filter(invoice => !invoice.isRoommate);
+                }
+                console.log(`Filtering to show ${viewingRoommateInvoices ? 'roommate' : 'regular'} invoices. Count:`, filteredInvoices.length);
             }
             
             // Ẩn hóa đơn có trạng thái nháp nếu không phải là chủ trọ
@@ -216,103 +236,63 @@ const BillScreen = () => {
         } else {
             setLocalInvoices([]);
         }
-    }, [invoices, selectedStatus, selectedRoom, selectedTenant, sortOrder, isLandlord, user?.role, isUserCoTenant]);
+    }, [invoices, selectedStatus, selectedRoom, selectedTenant, sortOrder, isLandlord, user?.role, isUserCoTenant, viewingRoommateInvoices]);
 
     useEffect(() => {
         // Log danh sách hóa đơn khi có thay đổi
         if (localInvoices.length > 0) {
-            // Chi tiết hơn về các hóa đơn
-            console.log('Tổng số hóa đơn sau khi lọc:', localInvoices.length);
-            console.log('Số hóa đơn người ở cùng:', localInvoices.filter(inv => inv.isRoommate === true).length);
-            console.log('Số hóa đơn thường:', localInvoices.filter(inv => inv.isRoommate !== true).length);
-            
-            // Kiểm tra các thuộc tính chính của hóa đơn đầu tiên
-            if (localInvoices[0]) {
-                const firstInvoice = localInvoices[0];
-                console.log('Thông tin hóa đơn đầu tiên:', {
-                    id: firstInvoice._id || firstInvoice.id,
-                    isRoommate: firstInvoice.isRoommate,
-                    contractId: typeof firstInvoice.contractId === 'object' ? 'Object' : firstInvoice.contractId,
-                    status: firstInvoice.status
-                });
-            }
-        } else {
-            console.log('Không có hóa đơn nào được hiển thị');
+            // Chỉ hiển thị số lượng hóa đơn, không in chi tiết để tránh log quá nhiều
+            console.log('Tổng số hóa đơn:', localInvoices.length);
+            console.log('Số hóa đơn người ở cùng:', localInvoices.filter(inv => inv.isRoommate).length);
+            console.log('Số hóa đơn thường:', localInvoices.filter(inv => !inv.isRoommate).length);
         }
     }, [localInvoices]);
 
     // Hàm để tải dữ liệu hóa đơn
     const loadInvoices = useCallback((page = 1, shouldRefresh = false) => {
         if (token) {
-            // Nếu người dùng là người thuê và là người ở cùng, CHỈ lấy hóa đơn người ở cùng
-            if (user?.role === 'nguoiThue' && isUserCoTenant) {
-                console.log('User is co-tenant. Only fetching roommate invoices for tenant user:', user?._id);
+            // Nếu người dùng là người thuê và là người ở cùng và đang xem hóa đơn người ở cùng
+            if (user?.role === 'nguoiThue' && isUserCoTenant && viewingRoommateInvoices) {
+                console.log('Fetching roommate invoices for co-tenant user:', user?._id);
                 
                 // Đảm bảo user._id tồn tại trước khi gọi API
                 if (user?._id) {
                     dispatch(fetchRoommateInvoices({
                         token,
-                        page, // Sử dụng page được truyền vào để hỗ trợ phân trang
+                        page,
                         limit: 10,
                         status: selectedStatus,
-                        userId: user._id, // Truyền ID người dùng hiện tại
                     }));
                 }
             } else {
-                // Đối với chủ trọ hoặc người thuê không phải người ở cùng, lấy hóa đơn thông thường
+                // Đối với chủ trọ hoặc người thuê không phải người ở cùng hoặc người ở cùng đang xem hóa đơn thông thường
                 dispatch(fetchInvoices({
                     token,
                     page,
                     limit: 10,
                     status: selectedStatus,
                 }));
-                
-                // Nếu là người thuê thường (không phải người ở cùng), không cần lấy hóa đơn người ở cùng
-                // Nếu là chủ trọ, vẫn lấy hóa đơn thông thường
             }
         } else {
             // Hiển thị thông báo lỗi nếu không có token
             Alert.alert('Lỗi', 'Bạn cần đăng nhập để xem hóa đơn');
         }
-    }, [dispatch, token, selectedStatus, user?.role, user?._id, isUserCoTenant]);
+    }, [dispatch, token, selectedStatus, user?.role, user?._id, isUserCoTenant, viewingRoommateInvoices]);
 
     // Kiểm tra xem người dùng có trong danh sách coTenants không
     const checkUserInCoTenants = useCallback(async () => {
         // Chỉ áp dụng cho người thuê, không phải chủ trọ
         if (!token || isLandlord || !user?._id) {
-            setIsUserCoTenant(false);
-            console.log('User is not eligible for co-tenant check (landlord or missing token/ID)');
             return;
         }
 
         try {
-            console.log('Checking if user is a co-tenant...');
-            // Gọi hàm kiểm tra từ billService
-            const result = await checkUserIsCoTenant(token);
-            
-            if (result && result.success) {
-                console.log('User coTenant check result:', result.isCoTenant);
-                console.log('Co-tenant contracts found:', result.contracts ? result.contracts.length : 0);
-                
-                // Cập nhật state
-                setIsUserCoTenant(result.isCoTenant);
-                
-                // Nếu người dùng không phải là người ở cùng trong bất kỳ hợp đồng nào
-                if (!result.isCoTenant) {
-                    // Hiển thị thông báo
-                    console.log('User is not a co-tenant in any contract');
-                    Alert.alert(
-                        'Thông báo',
-                        'Bạn không phải là người ở cùng trong bất kỳ hợp đồng nào. Bạn sẽ chỉ thấy hóa đơn của chính mình.',
-                        [{ text: 'OK', onPress: () => console.log('OK Pressed') }]
-                    );
-                }
-            }
+            // Gọi thunk action từ Redux - state sẽ được cập nhật tự động
+            await dispatch(checkUserCoTenant());
         } catch (error) {
             console.error('Error checking coTenant status:', error);
-            setIsUserCoTenant(false);
         }
-    }, [token, isLandlord, user?._id]);
+    }, [dispatch, token, isLandlord, user?._id]);
 
     // Sử dụng useFocusEffect để kiểm tra khi màn hình được focus
     useFocusEffect(
@@ -324,7 +304,6 @@ const BillScreen = () => {
             
             // Tải dữ liệu hóa đơn
             if (token) {
-                console.log('Loading invoices with current state - isUserCoTenant:', isUserCoTenant);
                 loadInvoices(1, false);
             }
             
@@ -506,7 +485,7 @@ const BillScreen = () => {
                                     handleFilterTypeChange(tab.id);
                                 }
                             }}>
-                            <Text style={styles.dropdownButtonText} numberOfLines={1} ellipsizeMode="tail">
+                            <Text style={styles.dropdownButtonText}>
                             {tab.label}
                                 {tab.id === 'status' && selectedStatus && 
                                     `: ${selectedStatus === 'draft' ? 'Nháp' : 
@@ -899,6 +878,13 @@ const BillScreen = () => {
         navigation.navigate('InvoiceTemplates');
     };
 
+    // Xử lý chuyển đổi giữa hóa đơn thông thường và hóa đơn người ở cùng
+    const toggleInvoiceType = useCallback(() => {
+        setViewingRoommateInvoices(prev => !prev);
+        // Tải lại dữ liệu khi chuyển đổi
+        loadInvoices(1, true);
+    }, [loadInvoices]);
+
     if (!user) {
         return (
             <SafeAreaView style={styles.container}>
@@ -918,15 +904,26 @@ const BillScreen = () => {
                         style={styles.backIcon}
                     />
                 </TouchableOpacity>
-                <Text style={styles.headerText}>Hóa đơn thu chi</Text>
-                {isLandlord ? (
+                <Text style={styles.headerText}>Hóa đơn của bạn</Text>
+                
+                {isUserCoTenant && user?.role === 'nguoiThue' ? (
+                    // Toggle button for co-tenant users
                     <TouchableOpacity 
-                        style={styles.templateButton} 
-                        onPress={navigateToTemplates}
+                        style={styles.toggleButton} 
+                        onPress={toggleInvoiceType}
+                        activeOpacity={0.7}
                     >
-                        <Text style={styles.templateButtonText}>Mẫu</Text>
+                        <Text style={styles.toggleText}>
+                            {viewingRoommateInvoices ? 'Ở cùng' : 'Cá nhân'}
+                        </Text>
+                    </TouchableOpacity>
+                ) : isLandlord ? (
+                    // Template button for landlords
+                    <TouchableOpacity onPress={navigateToTemplates}>
+                        <Text style={styles.templateButton}>Mẫu</Text>
                     </TouchableOpacity>
                 ) : (
+                    // Empty view for others
                     <View style={styles.placeholderView} />
                 )}
             </View>
@@ -1047,39 +1044,44 @@ const styles = StyleSheet.create({
         marginTop: 10
     },
     headerContainer: {
-        marginTop: 10,
+        paddingTop: 15, // Reduced from 20
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingVertical: 16,
-        backgroundColor: Colors.backgroud,
-        position: 'relative',
+        paddingVertical: 10, // Reduced from 12
+        backgroundColor: Colors.white,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.lightGray,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.1,
+                shadowRadius: 2,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
     },
     backButton: {
-        width: 36,
-        height: 36,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: Colors.white,
-        borderRadius: 18,
-        position: 'absolute',
-        left: 16,
-        zIndex: 1,
+        padding: 5,
     },
     backIcon: {
-        width: 20,
-        height: 20,
+        width: 24,
+        height: 24,
         resizeMode: 'contain',
     },
     headerText: {
         fontSize: 18,
-        fontWeight: '700',
-        color: Colors.black,
+        fontWeight: 'bold',
+        color: Colors.dearkOlive,
         textAlign: 'center',
+        flex: 1,
     },
     placeholderView: {
-        width: 36,
+        width: 24,
     },
     centered: {
         flex: 1,
@@ -1234,63 +1236,65 @@ const styles = StyleSheet.create({
         paddingTop: 0, // Ensure no extra padding at top
     },
     templateButton: {
-        position: 'absolute',
-        right: 16,
-        zIndex: 1,
-    },
-    templateButtonText: {
+        fontSize: 14,
+        fontWeight: 'bold',
         color: Colors.primaryGreen,
-        fontSize: 16,
-        fontWeight: '600',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 15,
+        borderWidth: 1,
+        borderColor: Colors.primaryGreen,
     },
     // Dropdown styles
     dropdownsContainer: {
         paddingVertical: 8,
-        backgroundColor: Colors.white,
-        marginHorizontal: 0,
-        marginTop: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#EEEEEE',
     },
     dropdownsScrollContainer: {
-        paddingHorizontal: 8,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+        paddingHorizontal: 16,
     },
     dropdownWrapper: {
-        flex: 1,
-        paddingHorizontal: 4,
-        minWidth: SCREEN.width / 3.5,
+        marginRight: 10,
+        minWidth: 140,
+        maxWidth: 200,
     },
     dropdownButton: {
         backgroundColor: Colors.white,
-        paddingVertical: 6,
-        paddingHorizontal: 8,
-        borderRadius: 4,
+        paddingVertical: 8, // Reduced from 12
+        paddingHorizontal: 14,
+        borderRadius: 10,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        borderWidth: 0.5,
+        borderWidth: 1,
         borderColor: '#E0E0E0',
-        minHeight: 34,
-        shadowColor: 'rgba(0,0,0,0.05)',
-        shadowOffset: { width: 0, height: 1 },
-        shadowRadius: 1,
-        elevation: 1,
+        minHeight: 40, // Reduced from 48
+        ...Platform.select({
+            ios: {
+                shadowColor: 'rgba(0,0,0,0.1)',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.22,
+                shadowRadius: 2.22,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
     },
     activeDropdownButton: {
         borderColor: Colors.primaryGreen,
+        borderWidth: 2,
+        backgroundColor: 'rgba(139, 195, 74, 0.05)',
     },
     dropdownButtonText: {
         color: Colors.dearkOlive,
         fontWeight: '500',
-        fontSize: 13,
+        fontSize: 14,
         flex: 1,
-        marginRight: 4,
+        marginRight: 8,
     },
     dropdownIcon: {
-        width: 10,
-        height: 10,
+        width: 14,
+        height: 14,
         resizeMode: 'contain',
         tintColor: Colors.dearkOlive,
     },
@@ -1346,6 +1350,19 @@ const styles = StyleSheet.create({
     dropdownContentWrapper: {
         marginHorizontal: 16,
         zIndex: 100,
+    },
+    toggleButton: {
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 15,
+        borderWidth: 1,
+        borderColor: Colors.primaryGreen,
+        backgroundColor: 'rgba(139, 195, 74, 0.1)',
+    },
+    toggleText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: Colors.primaryGreen,
     },
 });
 

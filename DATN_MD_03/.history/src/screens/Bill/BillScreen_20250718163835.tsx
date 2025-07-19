@@ -53,9 +53,6 @@ const BillScreen = () => {
 
     // Kiểm tra xem người dùng có phải là chủ trọ không
     const isLandlord = user?.role === 'chuTro';
-    
-    // State để theo dõi xem người dùng có phải là người ở cùng không
-    const [isUserCoTenant, setIsUserCoTenant] = useState(false);
 
     // Thêm state cho bộ lọc mới
     const [activeFilter, setActiveFilter] = useState<FilterType>('status');
@@ -138,13 +135,6 @@ const BillScreen = () => {
             // Tạo bản sao của mảng invoices để không ảnh hưởng đến dữ liệu gốc
             let filteredInvoices = [...invoices];
 
-            // Xác định các hóa đơn cần hiển thị dựa vào vai trò và trạng thái người ở cùng
-            if (user?.role === 'nguoiThue' && isUserCoTenant) {
-                // Nếu là người ở cùng, chỉ hiển thị hóa đơn của người ở cùng
-                filteredInvoices = filteredInvoices.filter(invoice => invoice.isRoommate === true);
-                console.log('Filtering to show only roommate invoices. Count:', filteredInvoices.length);
-            }
-            
             // Ẩn hóa đơn có trạng thái nháp nếu không phải là chủ trọ
             if (!isLandlord) {
                 filteredInvoices = filteredInvoices.filter(invoice => invoice.status !== 'draft');
@@ -216,59 +206,46 @@ const BillScreen = () => {
         } else {
             setLocalInvoices([]);
         }
-    }, [invoices, selectedStatus, selectedRoom, selectedTenant, sortOrder, isLandlord, user?.role, isUserCoTenant]);
+    }, [invoices, selectedStatus, selectedRoom, selectedTenant, sortOrder, isLandlord]);
 
     useEffect(() => {
         // Log danh sách hóa đơn khi có thay đổi
         if (localInvoices.length > 0) {
-            // Chi tiết hơn về các hóa đơn
-            console.log('Tổng số hóa đơn sau khi lọc:', localInvoices.length);
-            console.log('Số hóa đơn người ở cùng:', localInvoices.filter(inv => inv.isRoommate === true).length);
-            console.log('Số hóa đơn thường:', localInvoices.filter(inv => inv.isRoommate !== true).length);
-            
-            // Kiểm tra các thuộc tính chính của hóa đơn đầu tiên
-            if (localInvoices[0]) {
-                const firstInvoice = localInvoices[0];
-                console.log('Thông tin hóa đơn đầu tiên:', {
-                    id: firstInvoice._id || firstInvoice.id,
-                    isRoommate: firstInvoice.isRoommate,
-                    contractId: typeof firstInvoice.contractId === 'object' ? 'Object' : firstInvoice.contractId,
-                    status: firstInvoice.status
-                });
-            }
-        } else {
-            console.log('Không có hóa đơn nào được hiển thị');
+            // Chỉ hiển thị số lượng hóa đơn, không in chi tiết để tránh log quá nhiều
+            console.log('Tổng số hóa đơn:', localInvoices.length);
+            console.log('Số hóa đơn người ở cùng:', localInvoices.filter(inv => inv.isRoommate).length);
+            console.log('Số hóa đơn thường:', localInvoices.filter(inv => !inv.isRoommate).length);
         }
     }, [localInvoices]);
+
+    // State để theo dõi xem người dùng có phải là người ở cùng không
+    const [isUserCoTenant, setIsUserCoTenant] = useState(false);
 
     // Hàm để tải dữ liệu hóa đơn
     const loadInvoices = useCallback((page = 1, shouldRefresh = false) => {
         if (token) {
-            // Nếu người dùng là người thuê và là người ở cùng, CHỈ lấy hóa đơn người ở cùng
+            // Gọi action để lấy danh sách hóa đơn
+            dispatch(fetchInvoices({
+                token,
+                page,
+                limit: 10,
+                status: selectedStatus,
+            }));
+            
+            // Nếu người dùng là người thuê và là người ở cùng, lấy hóa đơn người ở cùng
             if (user?.role === 'nguoiThue' && isUserCoTenant) {
-                console.log('User is co-tenant. Only fetching roommate invoices for tenant user:', user?._id);
+                console.log('Fetching roommate invoices for tenant user:', user?._id);
                 
                 // Đảm bảo user._id tồn tại trước khi gọi API
                 if (user?._id) {
                     dispatch(fetchRoommateInvoices({
                         token,
-                        page, // Sử dụng page được truyền vào để hỗ trợ phân trang
+                        page: 1, // Luôn bắt đầu từ trang đầu tiên cho hóa đơn người ở cùng
                         limit: 10,
                         status: selectedStatus,
                         userId: user._id, // Truyền ID người dùng hiện tại
                     }));
                 }
-            } else {
-                // Đối với chủ trọ hoặc người thuê không phải người ở cùng, lấy hóa đơn thông thường
-                dispatch(fetchInvoices({
-                    token,
-                    page,
-                    limit: 10,
-                    status: selectedStatus,
-                }));
-                
-                // Nếu là người thuê thường (không phải người ở cùng), không cần lấy hóa đơn người ở cùng
-                // Nếu là chủ trọ, vẫn lấy hóa đơn thông thường
             }
         } else {
             // Hiển thị thông báo lỗi nếu không có token
@@ -281,18 +258,15 @@ const BillScreen = () => {
         // Chỉ áp dụng cho người thuê, không phải chủ trọ
         if (!token || isLandlord || !user?._id) {
             setIsUserCoTenant(false);
-            console.log('User is not eligible for co-tenant check (landlord or missing token/ID)');
             return;
         }
 
         try {
-            console.log('Checking if user is a co-tenant...');
             // Gọi hàm kiểm tra từ billService
             const result = await checkUserIsCoTenant(token);
             
-            if (result && result.success) {
+            if (result.success) {
                 console.log('User coTenant check result:', result.isCoTenant);
-                console.log('Co-tenant contracts found:', result.contracts ? result.contracts.length : 0);
                 
                 // Cập nhật state
                 setIsUserCoTenant(result.isCoTenant);
@@ -300,7 +274,6 @@ const BillScreen = () => {
                 // Nếu người dùng không phải là người ở cùng trong bất kỳ hợp đồng nào
                 if (!result.isCoTenant) {
                     // Hiển thị thông báo
-                    console.log('User is not a co-tenant in any contract');
                     Alert.alert(
                         'Thông báo',
                         'Bạn không phải là người ở cùng trong bất kỳ hợp đồng nào. Bạn sẽ chỉ thấy hóa đơn của chính mình.',
@@ -324,7 +297,6 @@ const BillScreen = () => {
             
             // Tải dữ liệu hóa đơn
             if (token) {
-                console.log('Loading invoices with current state - isUserCoTenant:', isUserCoTenant);
                 loadInvoices(1, false);
             }
             
@@ -486,18 +458,18 @@ const BillScreen = () => {
         }
 
         return (
-            <ScrollView
+            <ScrollView 
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.dropdownsScrollContainer}
                 style={styles.dropdownsContainer}>
                 {tabs.map(tab => (
                     <View key={tab.id} style={styles.dropdownWrapper}>
-                    <TouchableOpacity
-                        style={[
+                        <TouchableOpacity
+                            style={[
                                 styles.dropdownButton,
                                 openDropdown === tab.id ? styles.activeDropdownButton : {}
-                        ]}
+                            ]}
                             onPress={() => {
                                 if (openDropdown === tab.id) {
                                     setOpenDropdown(null);
@@ -506,8 +478,8 @@ const BillScreen = () => {
                                     handleFilterTypeChange(tab.id);
                                 }
                             }}>
-                            <Text style={styles.dropdownButtonText} numberOfLines={1} ellipsizeMode="tail">
-                            {tab.label}
+                            <Text style={styles.dropdownButtonText}>
+                                {tab.label}
                                 {tab.id === 'status' && selectedStatus && 
                                     `: ${selectedStatus === 'draft' ? 'Nháp' : 
                                         selectedStatus === 'issued' ? 'Chưa thanh toán' : 
@@ -526,7 +498,7 @@ const BillScreen = () => {
                                         sortOrder === 'highest' ? 'Giá cao nhất' : 
                                         sortOrder === 'lowest' ? 'Giá thấp nhất' : ''}`
                                 }
-                        </Text>
+                            </Text>
                             <Animated.Image
                                 source={require('../../assets/icons/icon_arrow_down.png')}
                                 style={[
@@ -541,7 +513,7 @@ const BillScreen = () => {
                                     }
                                 ]}
                             />
-                    </TouchableOpacity>
+                        </TouchableOpacity>
                     </View>
                 ))}
             </ScrollView>
@@ -585,30 +557,30 @@ const BillScreen = () => {
                 {statuses.map((item, index) => {
                     const isSelected = selectedStatus === item.value || (index === 0 && !selectedStatus);
                     return (
-                    <TouchableOpacity
-                        key={`status-${index}`}
-                        style={[
+                        <TouchableOpacity
+                            key={`status-${index}`}
+                            style={[
                                 styles.dropdownOption,
                                 isSelected ? styles.dropdownOptionSelected : {},
-                        ]}
+                            ]}
                             onPress={() => {
                                 setSelectedStatus(item.value);
                                 setOpenDropdown(null);
                             }}>
-                        <Text
-                            style={[
+                            <Text
+                                style={[
                                     styles.dropdownOptionText,
                                     isSelected ? styles.dropdownOptionTextSelected : {},
-                            ]}>
-                            {item.label}
-                        </Text>
+                                ]}>
+                                {item.label}
+                            </Text>
                             {isSelected && (
                                 <Image
                                     source={require('../../assets/icons/icon_check.png')}
                                     style={styles.checkIcon}
                                 />
                             )}
-                    </TouchableOpacity>
+                        </TouchableOpacity>
                     );
                 })}
             </View>
@@ -652,32 +624,32 @@ const BillScreen = () => {
                 {uniqueRooms.map((room, index) => {
                     const isSelected = selectedRoom === room.id;
                     return (
-                    <TouchableOpacity
-                        key={`room-${index}`}
-                        style={[
+                        <TouchableOpacity
+                            key={`room-${index}`}
+                            style={[
                                 styles.dropdownOption,
                                 isSelected ? styles.dropdownOptionSelected : {},
-                        ]}
+                            ]}
                             onPress={() => {
                                 setSelectedRoom(room.id);
                                 setOpenDropdown(null);
                             }}>
-                        <Text
-                            style={[
+                            <Text
+                                style={[
                                     styles.dropdownOptionText,
                                     isSelected ? styles.dropdownOptionTextSelected : {},
-                            ]}
-                            numberOfLines={1}
-                            ellipsizeMode="tail">
-                            {room.name}
-                        </Text>
+                                ]}
+                                numberOfLines={1}
+                                ellipsizeMode="tail">
+                                {room.name}
+                            </Text>
                             {isSelected && (
                                 <Image
                                     source={require('../../assets/icons/icon_check.png')}
                                     style={styles.checkIcon}
                                 />
                             )}
-                    </TouchableOpacity>
+                        </TouchableOpacity>
                     );
                 })}
             </View>
@@ -721,32 +693,32 @@ const BillScreen = () => {
                 {uniqueTenants.map((tenant, index) => {
                     const isSelected = selectedTenant === tenant.id;
                     return (
-                    <TouchableOpacity
-                        key={`tenant-${index}`}
-                        style={[
+                        <TouchableOpacity
+                            key={`tenant-${index}`}
+                            style={[
                                 styles.dropdownOption,
                                 isSelected ? styles.dropdownOptionSelected : {},
-                        ]}
+                            ]}
                             onPress={() => {
                                 setSelectedTenant(tenant.id);
                                 setOpenDropdown(null);
                             }}>
-                        <Text
-                            style={[
+                            <Text
+                                style={[
                                     styles.dropdownOptionText,
                                     isSelected ? styles.dropdownOptionTextSelected : {},
-                            ]}
-                            numberOfLines={1}
-                            ellipsizeMode="tail">
-                            {tenant.name}
-                        </Text>
+                                ]}
+                                numberOfLines={1}
+                                ellipsizeMode="tail">
+                                {tenant.name}
+                            </Text>
                             {isSelected && (
                                 <Image
                                     source={require('../../assets/icons/icon_check.png')}
                                     style={styles.checkIcon}
                                 />
                             )}
-                    </TouchableOpacity>
+                        </TouchableOpacity>
                     );
                 })}
             </View>
@@ -766,30 +738,30 @@ const BillScreen = () => {
                 {sortOptions.map((item, index) => {
                     const isSelected = sortOrder === item.value;
                     return (
-                    <TouchableOpacity
-                        key={`sort-${index}`}
-                        style={[
+                        <TouchableOpacity
+                            key={`sort-${index}`}
+                            style={[
                                 styles.dropdownOption,
                                 isSelected ? styles.dropdownOptionSelected : {},
-                        ]}
+                            ]}
                             onPress={() => {
                                 setSortOrder(item.value as SortOrder);
                                 setOpenDropdown(null);
                             }}>
-                        <Text
-                            style={[
+                            <Text
+                                style={[
                                     styles.dropdownOptionText,
                                     isSelected ? styles.dropdownOptionTextSelected : {},
-                            ]}>
-                            {item.label}
-                        </Text>
+                                ]}>
+                                {item.label}
+                            </Text>
                             {isSelected && (
                                 <Image
                                     source={require('../../assets/icons/icon_check.png')}
                                     style={styles.checkIcon}
                                 />
                             )}
-                    </TouchableOpacity>
+                        </TouchableOpacity>
                     );
                 })}
             </View>
@@ -918,13 +890,10 @@ const BillScreen = () => {
                         style={styles.backIcon}
                     />
                 </TouchableOpacity>
-                <Text style={styles.headerText}>Hóa đơn thu chi</Text>
+                <Text style={styles.headerText}>Hóa đơn của bạn</Text>
                 {isLandlord ? (
-                    <TouchableOpacity 
-                        style={styles.templateButton} 
-                        onPress={navigateToTemplates}
-                    >
-                        <Text style={styles.templateButtonText}>Mẫu</Text>
+                    <TouchableOpacity onPress={navigateToTemplates}>
+                        <Text style={styles.templateButton}>Mẫu</Text>
                     </TouchableOpacity>
                 ) : (
                     <View style={styles.placeholderView} />
@@ -948,9 +917,9 @@ const BillScreen = () => {
                     overflow: 'hidden'
                 }
             ]}>
-            <View style={styles.activeFilterWrapper}>
-                {renderActiveFilterContent()}
-            </View>
+                <View style={styles.activeFilterWrapper}>
+                    {renderActiveFilterContent()}
+                </View>
             </Animated.View>
 
             {loading && !refreshing && (
@@ -1047,39 +1016,44 @@ const styles = StyleSheet.create({
         marginTop: 10
     },
     headerContainer: {
-        marginTop: 10,
+        paddingTop: 15, // Reduced from 20
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingVertical: 16,
-        backgroundColor: Colors.backgroud,
-        position: 'relative',
+        paddingVertical: 10, // Reduced from 12
+        backgroundColor: Colors.white,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.lightGray,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.1,
+                shadowRadius: 2,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
     },
     backButton: {
-        width: 36,
-        height: 36,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: Colors.white,
-        borderRadius: 18,
-        position: 'absolute',
-        left: 16,
-        zIndex: 1,
+        padding: 5,
     },
     backIcon: {
-        width: 20,
-        height: 20,
+        width: 24,
+        height: 24,
         resizeMode: 'contain',
     },
     headerText: {
         fontSize: 18,
-        fontWeight: '700',
-        color: Colors.black,
+        fontWeight: 'bold',
+        color: Colors.dearkOlive,
         textAlign: 'center',
+        flex: 1,
     },
     placeholderView: {
-        width: 36,
+        width: 24,
     },
     centered: {
         flex: 1,
@@ -1234,63 +1208,65 @@ const styles = StyleSheet.create({
         paddingTop: 0, // Ensure no extra padding at top
     },
     templateButton: {
-        position: 'absolute',
-        right: 16,
-        zIndex: 1,
-    },
-    templateButtonText: {
+        fontSize: 14,
+        fontWeight: 'bold',
         color: Colors.primaryGreen,
-        fontSize: 16,
-        fontWeight: '600',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 15,
+        borderWidth: 1,
+        borderColor: Colors.primaryGreen,
     },
     // Dropdown styles
     dropdownsContainer: {
         paddingVertical: 8,
-        backgroundColor: Colors.white,
-        marginHorizontal: 0,
-        marginTop: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#EEEEEE',
     },
     dropdownsScrollContainer: {
-        paddingHorizontal: 8,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+        paddingHorizontal: 16,
     },
     dropdownWrapper: {
-        flex: 1,
-        paddingHorizontal: 4,
-        minWidth: SCREEN.width / 3.5,
+        marginRight: 10,
+        minWidth: 140,
+        maxWidth: 200,
     },
     dropdownButton: {
         backgroundColor: Colors.white,
-        paddingVertical: 6,
-        paddingHorizontal: 8,
-        borderRadius: 4,
+        paddingVertical: 8, // Reduced from 12
+        paddingHorizontal: 14,
+        borderRadius: 10,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        borderWidth: 0.5,
+        borderWidth: 1,
         borderColor: '#E0E0E0',
-        minHeight: 34,
-        shadowColor: 'rgba(0,0,0,0.05)',
-        shadowOffset: { width: 0, height: 1 },
-        shadowRadius: 1,
-        elevation: 1,
+        minHeight: 40, // Reduced from 48
+        ...Platform.select({
+            ios: {
+                shadowColor: 'rgba(0,0,0,0.1)',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.22,
+                shadowRadius: 2.22,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
     },
     activeDropdownButton: {
         borderColor: Colors.primaryGreen,
+        borderWidth: 2,
+        backgroundColor: 'rgba(139, 195, 74, 0.05)',
     },
     dropdownButtonText: {
         color: Colors.dearkOlive,
         fontWeight: '500',
-        fontSize: 13,
+        fontSize: 14,
         flex: 1,
-        marginRight: 4,
+        marginRight: 8,
     },
     dropdownIcon: {
-        width: 10,
-        height: 10,
+        width: 14,
+        height: 14,
         resizeMode: 'contain',
         tintColor: Colors.dearkOlive,
     },

@@ -290,7 +290,7 @@ const BillScreen = () => {
             // Gọi hàm kiểm tra từ billService
             const result = await checkUserIsCoTenant(token);
             
-            if (result && result.success) {
+            if (result.success) {
                 console.log('User coTenant check result:', result.isCoTenant);
                 console.log('Co-tenant contracts found:', result.contracts ? result.contracts.length : 0);
                 
@@ -506,7 +506,7 @@ const BillScreen = () => {
                                     handleFilterTypeChange(tab.id);
                                 }
                             }}>
-                            <Text style={styles.dropdownButtonText} numberOfLines={1} ellipsizeMode="tail">
+                            <Text style={styles.dropdownButtonText}>
                             {tab.label}
                                 {tab.id === 'status' && selectedStatus && 
                                     `: ${selectedStatus === 'draft' ? 'Nháp' : 
@@ -918,13 +918,10 @@ const BillScreen = () => {
                         style={styles.backIcon}
                     />
                 </TouchableOpacity>
-                <Text style={styles.headerText}>Hóa đơn thu chi</Text>
+                <Text style={styles.headerText}>Hóa đơn của bạn</Text>
                 {isLandlord ? (
-                    <TouchableOpacity 
-                        style={styles.templateButton} 
-                        onPress={navigateToTemplates}
-                    >
-                        <Text style={styles.templateButtonText}>Mẫu</Text>
+                    <TouchableOpacity onPress={navigateToTemplates}>
+                        <Text style={styles.templateButton}>Mẫu</Text>
                     </TouchableOpacity>
                 ) : (
                     <View style={styles.placeholderView} />
@@ -1047,39 +1044,44 @@ const styles = StyleSheet.create({
         marginTop: 10
     },
     headerContainer: {
-        marginTop: 10,
+        paddingTop: 15, // Reduced from 20
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
         paddingHorizontal: 16,
-        paddingVertical: 16,
-        backgroundColor: Colors.backgroud,
-        position: 'relative',
+        paddingVertical: 10, // Reduced from 12
+        backgroundColor: Colors.white,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.lightGray,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.1,
+                shadowRadius: 2,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
     },
     backButton: {
-        width: 36,
-        height: 36,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: Colors.white,
-        borderRadius: 18,
-        position: 'absolute',
-        left: 16,
-        zIndex: 1,
+        padding: 5,
     },
     backIcon: {
-        width: 20,
-        height: 20,
+        width: 24,
+        height: 24,
         resizeMode: 'contain',
     },
     headerText: {
         fontSize: 18,
-        fontWeight: '700',
-        color: Colors.black,
+        fontWeight: 'bold',
+        color: Colors.dearkOlive,
         textAlign: 'center',
+        flex: 1,
     },
     placeholderView: {
-        width: 36,
+        width: 24,
     },
     centered: {
         flex: 1,
@@ -1234,63 +1236,65 @@ const styles = StyleSheet.create({
         paddingTop: 0, // Ensure no extra padding at top
     },
     templateButton: {
-        position: 'absolute',
-        right: 16,
-        zIndex: 1,
-    },
-    templateButtonText: {
+        fontSize: 14,
+        fontWeight: 'bold',
         color: Colors.primaryGreen,
-        fontSize: 16,
-        fontWeight: '600',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 15,
+        borderWidth: 1,
+        borderColor: Colors.primaryGreen,
     },
     // Dropdown styles
     dropdownsContainer: {
         paddingVertical: 8,
-        backgroundColor: Colors.white,
-        marginHorizontal: 0,
-        marginTop: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#EEEEEE',
     },
     dropdownsScrollContainer: {
-        paddingHorizontal: 8,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+        paddingHorizontal: 16,
     },
     dropdownWrapper: {
-        flex: 1,
-        paddingHorizontal: 4,
-        minWidth: SCREEN.width / 3.5,
+        marginRight: 10,
+        minWidth: 140,
+        maxWidth: 200,
     },
     dropdownButton: {
         backgroundColor: Colors.white,
-        paddingVertical: 6,
-        paddingHorizontal: 8,
-        borderRadius: 4,
+        paddingVertical: 8, // Reduced from 12
+        paddingHorizontal: 14,
+        borderRadius: 10,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        borderWidth: 0.5,
+        borderWidth: 1,
         borderColor: '#E0E0E0',
-        minHeight: 34,
-        shadowColor: 'rgba(0,0,0,0.05)',
-        shadowOffset: { width: 0, height: 1 },
-        shadowRadius: 1,
-        elevation: 1,
+        minHeight: 40, // Reduced from 48
+        ...Platform.select({
+            ios: {
+                shadowColor: 'rgba(0,0,0,0.1)',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.22,
+                shadowRadius: 2.22,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
     },
     activeDropdownButton: {
         borderColor: Colors.primaryGreen,
+        borderWidth: 2,
+        backgroundColor: 'rgba(139, 195, 74, 0.05)',
     },
     dropdownButtonText: {
         color: Colors.dearkOlive,
         fontWeight: '500',
-        fontSize: 13,
+        fontSize: 14,
         flex: 1,
-        marginRight: 4,
+        marginRight: 8,
     },
     dropdownIcon: {
-        width: 10,
-        height: 10,
+        width: 14,
+        height: 14,
         resizeMode: 'contain',
         tintColor: Colors.dearkOlive,
     },

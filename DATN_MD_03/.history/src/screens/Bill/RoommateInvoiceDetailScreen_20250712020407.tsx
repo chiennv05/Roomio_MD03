@@ -282,7 +282,18 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
             <Text style={[styles.value, { color: status.color }]}>{status.text}</Text>
           </View>
 
-          
+          {/* Ẩn phương thức thanh toán
+          {roommateInvoice.paymentMethod && (
+            <View style={styles.cardRow}>
+              <Text style={styles.label}>Phương thức:</Text>
+              <Text style={styles.value}>
+                {roommateInvoice.paymentMethod === 'cash' ? 'Tiền mặt' : 
+                 roommateInvoice.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 
+                 roommateInvoice.paymentMethod}
+              </Text>
+            </View>
+          )}
+          */}
           
           {roommateInvoice.status === 'paid' && roommateInvoice.paymentDate && (
             <View style={styles.cardRow}>
