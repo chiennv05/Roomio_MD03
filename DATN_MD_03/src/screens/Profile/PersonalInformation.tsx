@@ -9,7 +9,10 @@ import {
   ScrollView,
   StatusBar,
   Platform,
+  Image,
 } from 'react-native';
+import {launchImageLibrary} from 'react-native-image-picker';
+import BarcodeScanning from '@react-native-ml-kit/barcode-scanning';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useDispatch, useSelector} from 'react-redux';
 import {updateProfile} from '../../store/slices/authSlice';
@@ -50,16 +53,22 @@ export default function PersonalInformation() {
     user?.identityNumber || '',
   );
   const [address, setAddress] = useState(user?.address || '');
-  
+
   // Xử lý ngày sinh
-  const initialDate = user?.birthDate ? new Date(user.birthDate) : new Date(2000, 0, 1);
+  const initialDate = user?.birthDate
+    ? new Date(user.birthDate)
+    : new Date(2000, 0, 1);
   const [birthDate, setBirthDate] = useState<Date>(initialDate);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  
+
   const [errorFullName, setErrorFullName] = useState('');
   const [errorPhone, setErrorPhone] = useState('');
   const [errorIdentityNumber, setErrorIdentityNumber] = useState('');
   const [errorAddress, setErrorAddress] = useState('');
+
+  // Thêm state cho QR scanning
+  const [isScanning, setIsScanning] = useState(false);
+  const [scannedImage, setScannedImage] = useState(null);
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(Platform.OS === 'ios');
@@ -83,7 +92,7 @@ export default function PersonalInformation() {
     setErrorFullName(errFullName || '');
     setErrorPhone(errPhone || '');
     setErrorIdentityNumber(errIdentityNumber || '');
-    
+
     // Kiểm tra địa chỉ có trống không
     if (!address.trim()) {
       setErrorAddress('Địa chỉ không được để trống');
@@ -91,7 +100,7 @@ export default function PersonalInformation() {
     } else {
       setErrorAddress('');
     }
-    
+
     if (errFullName || errPhone || errIdentityNumber) {
       return;
     }
@@ -102,14 +111,14 @@ export default function PersonalInformation() {
     try {
       const success = await dispatch(
         updateProfile({
-          token, 
+          token,
           data: {
-            fullName, 
-            phone, 
+            fullName,
+            phone,
             identityNumber,
             address,
             birthDate: birthDate.toISOString(),
-          }
+          },
         }),
       ).unwrap();
       if (success) {
@@ -122,6 +131,77 @@ export default function PersonalInformation() {
     } catch (err) {
       console.log('Update profile error:', err);
       Alert.alert('Error', 'Failed to update profile!');
+    }
+  };
+
+  // Hàm quét CCCD
+  const handleScanCCCD = () => {
+    launchImageLibrary({mediaType: 'photo'}, async response => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorCode) {
+        Alert.alert('Lỗi', 'Không thể chọn ảnh. Vui lòng thử lại.');
+      } else if (response.assets && response.assets.length > 0) {
+        const uri = response.assets[0].uri;
+        setScannedImage({uri});
+        setIsScanning(true);
+
+        try {
+          const barcodes = await BarcodeScanning.scan(uri);
+
+          if (barcodes.length > 0) {
+            const rawData = barcodes[0].value;
+            parseCCCDData(rawData);
+          } else {
+            Alert.alert('Không tìm thấy QR', 'Không tìm thấy mã QR trong ảnh.');
+            setIsScanning(false);
+            setScannedImage(null);
+          }
+        } catch (error) {
+          console.error('QR detection failed:', error);
+          Alert.alert('Lỗi', 'Không thể giải mã QR từ ảnh này.');
+          setIsScanning(false);
+          setScannedImage(null);
+        }
+      }
+    });
+  };
+
+  // Hàm parse dữ liệu CCCD
+  const parseCCCDData = rawData => {
+    const infoArray = rawData.split('|');
+
+    if (infoArray.length >= 6) {
+      // Tự động điền thông tin từ CCCD
+      setIdentityNumber(infoArray[0] || '');
+      setFullName(infoArray[2] || '');
+      setAddress(infoArray[5] || '');
+
+      // Parse ngày sinh (format: ddMMyyyy)
+      const dobString = infoArray[3];
+      if (dobString && dobString.length === 8) {
+        const day = dobString.substring(0, 2);
+        const month = dobString.substring(2, 4);
+        const year = dobString.substring(4, 8);
+        const parsedDate = new Date(
+          parseInt(year),
+          parseInt(month) - 1,
+          parseInt(day),
+        );
+        setBirthDate(parsedDate);
+      }
+
+      // Clear errors
+      setErrorFullName('');
+      setErrorIdentityNumber('');
+      setErrorAddress('');
+
+      setIsScanning(false);
+      Alert.alert('Thành công', 'Đã tự động điền thông tin từ CCCD!');
+    } else {
+      Alert.alert('Lỗi', 'Mã QR không hợp lệ hoặc không đúng định dạng.');
+      setIsScanning(false);
+      setScannedImage(null);
     }
   };
 
@@ -140,6 +220,21 @@ export default function PersonalInformation() {
           <IteminIrmation />
 
           <View style={styles.formContainer}>
+            {/* Nút quét CCCD */}
+            <TouchableOpacity
+              style={styles.scanButton}
+              onPress={handleScanCCCD}>
+              <Text style={styles.scanButtonText}>Quét CCCD tự động</Text>
+            </TouchableOpacity>
+
+            {/* Hiển thị ảnh đã quét */}
+            {scannedImage && (
+              <View style={styles.scannedImageContainer}>
+                <Text style={styles.scannedImageText}>Ảnh CCCD đã quét:</Text>
+                <Image source={scannedImage} style={styles.scannedImage} />
+              </View>
+            )}
+
             <View style={styles.inputsContainer}>
               <TextInput
                 style={styles.input}
@@ -181,8 +276,7 @@ export default function PersonalInformation() {
               {errorIdentityNumber ? (
                 <Text style={styles.errorText}>{errorIdentityNumber}</Text>
               ) : null}
-              
-              {/* Trường nhập địa chỉ */}
+
               <TextInput
                 style={styles.input}
                 placeholder="Địa chỉ"
@@ -192,36 +286,26 @@ export default function PersonalInformation() {
                   setErrorAddress('');
                 }}
                 multiline={true}
-                numberOfLines={3}
               />
               {errorAddress ? (
                 <Text style={styles.errorText}>{errorAddress}</Text>
               ) : null}
-              
-              {/* Debug text để hiển thị thông tin address từ Redux */}
-              {__DEV__ && (
-                <Text style={{color: 'blue', marginBottom: 10}}>
-                  Debug - Address from Redux: {user?.address || 'Không có'}
-                </Text>
-              )}
-              
-              {/* Trường chọn ngày sinh */}
-              <TouchableOpacity 
-                style={styles.input} 
-                onPress={() => setShowDatePicker(true)}
-              >
+
+              <TouchableOpacity
+                style={styles.input}
+                onPress={() => setShowDatePicker(true)}>
                 <Text style={styles.dateText}>
                   {`Ngày sinh: ${formatDate(birthDate)}`}
                 </Text>
               </TouchableOpacity>
-              
+
               {showDatePicker && (
                 <DateTimePicker
                   value={birthDate}
                   mode="date"
                   display="default"
                   onChange={handleDateChange}
-                  maximumDate={new Date()} // Không cho chọn ngày trong tương lai
+                  maximumDate={new Date()}
                 />
               )}
             </View>
@@ -236,6 +320,7 @@ export default function PersonalInformation() {
   );
 }
 
+// Thêm styles mới
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -308,5 +393,45 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: responsiveFont(18),
     color: Colors.black,
+  },
+  scanButton: {
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#007AFF',
+    borderRadius: responsiveFont(12),
+    padding: responsiveSpacing(14),
+    marginBottom: responsiveSpacing(16),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  scanButtonText: {
+    fontWeight: 'bold',
+    fontSize: responsiveFont(16),
+    color: '#FFFFFF',
+  },
+  scannedImageContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: responsiveSpacing(16),
+  },
+  scannedImageText: {
+    fontSize: responsiveFont(14),
+    color: Colors.gray,
+    marginBottom: responsiveSpacing(8),
+  },
+  scannedImage: {
+    width: 150,
+    height: 100,
+    resizeMode: 'contain',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.gray,
   },
 });
