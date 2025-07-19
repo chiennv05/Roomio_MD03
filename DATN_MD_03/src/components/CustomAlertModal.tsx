@@ -27,6 +27,11 @@ interface CustomAlertModalProps {
   onClose: () => void;
   type?: 'error' | 'success' | 'warning' | 'info';
   buttonText?: string;
+  buttons?: Array<{
+    text: string;
+    onPress: () => void;
+    style?: 'default' | 'cancel' | 'destructive';
+  }>;
 }
 
 const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
@@ -36,6 +41,7 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
   onClose,
   type = 'info',
   buttonText = 'OK',
+  buttons,
 }) => {
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.3);
@@ -145,21 +151,32 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
                 <Text style={styles.message}>{message}</Text>
               </View>
 
-              {/* Button */}
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.button,
-                    { 
-                      backgroundColor: typeStyles.iconColor,
-                      borderColor: typeStyles.borderColor 
-                    }
-                  ]}
-                  onPress={handleClose}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.buttonText}>{buttonText}</Text>
-                </TouchableOpacity>
+              {/* Buttons */}
+              <View style={[
+                styles.buttonContainer,
+                buttons && buttons.length === 2 && styles.buttonContainerRow
+              ]}>
+                {(buttons && buttons.length > 0
+                  ? buttons
+                  : [{ text: buttonText, onPress: handleClose }]
+                ).map((btn, idx) => (
+                  <TouchableOpacity
+                    key={idx}
+                    style={[
+                      styles.button,
+                      buttons && buttons.length === 2 && styles.buttonHalf,
+                      btn.style === 'cancel' && { backgroundColor: '#FFA502' },
+                      btn.style === 'destructive' && { backgroundColor: '#FF4757' },
+                      btn.style === 'default' && { backgroundColor: typeStyles.iconColor },
+                      !btn.style && { backgroundColor: typeStyles.iconColor },
+                      buttons && buttons.length !== 2 && { marginTop: idx > 0 ? 10 : 0 },
+                    ]}
+                    onPress={btn.onPress}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.buttonText}>{btn.text}</Text>
+                  </TouchableOpacity>
+                ))}
               </View>
             </TouchableOpacity>
           </Animated.View>
@@ -235,11 +252,19 @@ const styles = StyleSheet.create({
     paddingBottom: responsiveSpacing(24),
     paddingTop: responsiveSpacing(8),
   },
+  buttonContainerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   button: {
     paddingVertical: responsiveSpacing(14),
     borderRadius: responsiveSpacing(12),
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  buttonHalf: {
+    width: '48%',
+    marginTop: 0,
   },
   buttonText: {
     fontSize: responsiveFont(16),

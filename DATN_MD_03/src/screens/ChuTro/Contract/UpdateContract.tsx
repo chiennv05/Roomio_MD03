@@ -34,6 +34,8 @@ import {
 } from '../../../utils/responsive';
 import {useAppSelector} from '../../../hooks';
 import {Fonts} from '../../../theme/fonts';
+import { useCustomAlert } from '../../../hooks/useCustomAlrert';
+import CustomAlertModal from '../../../components/CustomAlertModal';
 
 export default function UpdateContract() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -54,9 +56,10 @@ export default function UpdateContract() {
 
   useEffect(() => {
     if (!contract || !contract.contractInfo) {
-      Alert.alert('Lỗi', 'Thông tin hợp đồng không đầy đủ', [
-        {text: 'OK', onPress: () => navigation.goBack()},
-      ]);
+      showError('Thông tin hợp đồng không đầy đủ', 'Lỗi', true);
+      setTimeout(() => {
+        navigation.goBack();
+      }, 1000);
     }
   }, [contract, navigation]);
 
@@ -124,12 +127,12 @@ export default function UpdateContract() {
   // Tenant management functions
   const handleAddUsername = () => {
     if (!newUsername.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập username');
+      showError('Vui lòng nhập username', 'Lỗi', true);
       return;
     }
 
     if (usernames.includes(newUsername.trim())) {
-      Alert.alert('Lỗi', 'Username này đã tồn tại trong danh sách');
+      showError('Username này đã tồn tại trong danh sách', 'Lỗi', true);
       return;
     }
 
@@ -138,22 +141,22 @@ export default function UpdateContract() {
   };
 
   const handleRemoveUsername = (username: string) => {
-    Alert.alert(
-      'Xác nhận xóa',
+    showConfirm(
       `Bạn có chắc chắn muốn xóa "${username}" khỏi danh sách?`,
+      () => {
+        setUsernames(usernames.filter(u => u !== username));
+      },
+      'Xác nhận xóa',
       [
-        {
-          text: 'Hủy',
-          style: 'cancel',
-        },
+        {text: 'Hủy', onPress: hideAlert, style: 'cancel'},
         {
           text: 'Xóa',
-          style: 'destructive',
           onPress: () => {
             setUsernames(usernames.filter(u => u !== username));
           },
+          style: 'destructive',
         },
-      ],
+      ]
     );
   };
 
@@ -173,9 +176,10 @@ export default function UpdateContract() {
 
   const handleUpdate = async () => {
     if (!contract || !contract.contractInfo) {
-      Alert.alert(
-        'Lỗi',
+      showError(
         'Thông tin hợp đồng không đầy đủ. Vui lòng quay lại và thử lại.',
+        'Lỗi',
+        true,
       );
       return;
     }
@@ -243,7 +247,7 @@ export default function UpdateContract() {
       if (!updateContractFrom.fulfilled.match(contractResult)) {
         const errorMessage =
           (contractResult.payload as string) || 'Đã xảy ra lỗi';
-        Alert.alert('Lỗi', `Không thể cập nhật hợp đồng: ${errorMessage}`);
+        showError(`Không thể cập nhật hợp đồng: ${errorMessage}`, 'Lỗi', true);
         return;
       }
 
@@ -272,38 +276,51 @@ export default function UpdateContract() {
         );
 
         if (!updateTenants.fulfilled.match(tenantResult)) {
-          Alert.alert('Lỗi', tenantResult.payload as string);
+          showError(tenantResult.payload as string, 'Lỗi', true);
           return;
         }
       }
 
       setIsUpdated(true);
-      Alert.alert('Thành công', 'Cập nhật hợp đồng thành công', [
-        {text: 'OK', onPress: () => navigation.goBack()},
-      ]);
+      showSuccess('Cập nhật hợp đồng thành công', 'Thành công', true);
+      setTimeout(() => {
+        navigation.goBack();
+      }, 1000);
     } catch (error: any) {
       console.error('Update error:', error);
-      Alert.alert(
-        'Lỗi',
+      showError(
         `Lỗi không xác định: ${error.message || 'Không có thông tin chi tiết'}`,
+        'Lỗi',
+        true,
       );
     }
   };
 
   const handleCancelUpdate = () => {
-    Alert.alert('Hủy cập nhật', 'Bạn có chắc chắn muốn hủy cập nhật?', [
-      {
-        text: 'Hủy',
-        onPress: () => {},
-      },
-      {
-        text: 'Xác nhận',
-        onPress: () => {
-          navigation.goBack();
+    showConfirm(
+      'Bạn có chắc chắn muốn hủy cập nhật?',
+      () => navigation.goBack(),
+      'Hủy cập nhật',
+      [
+        {text: 'Không', onPress: hideAlert, style: 'cancel'},
+        {
+          text: 'Có',
+          onPress: () => navigation.goBack(),
+          style: 'destructive',
         },
-      },
-    ]);
+      ]
+    );
   };
+
+  const {
+    alertConfig,
+    visible: alertVisible,
+    showAlert,
+    hideAlert,
+    showSuccess,
+    showError,
+    showConfirm,
+  } = useCustomAlert();
 
   return (
     <ScrollView
@@ -407,6 +424,16 @@ export default function UpdateContract() {
         disabled={isUpdated || selectedContractLoading}>
         <Text style={styles.buttonText}>Hủy bỏ cập nhật</Text>
       </TouchableOpacity>
+      {alertConfig && (
+        <CustomAlertModal
+          visible={alertVisible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          onClose={hideAlert}
+          type={alertConfig.type}
+          buttons={alertConfig.buttons}
+        />
+      )}
     </ScrollView>
   );
 }
