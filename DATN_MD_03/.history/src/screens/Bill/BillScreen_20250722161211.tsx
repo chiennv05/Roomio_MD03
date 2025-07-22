@@ -700,8 +700,8 @@ const BillScreen = () => {
         const statuses = [
             { label: 'Tất cả', value: undefined },
             ...(isLandlord ? [{ label: 'Nháp', value: 'draft' }] : []),
-            { label: 'Chưa thanh toán', value: 'issued' },
             { label: 'Chờ xác nhận', value: 'pending_confirmation' },
+            { label: 'Chưa thanh toán', value: 'issued' },
             { label: 'Đã thanh toán', value: 'paid' },
             { label: 'Quá hạn', value: 'overdue' },
         ];

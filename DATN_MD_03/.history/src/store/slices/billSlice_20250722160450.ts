@@ -526,7 +526,14 @@ const billSlice = createSlice({
             state.deleteTemplateLoading = false;
             state.deleteTemplateSuccess = false;
             state.deleteTemplateError = null;
-        }
+        },
+        // Thêm reducer mới để xóa danh sách hóa đơn khi đăng xuất
+        clearInvoices: (state) => {
+            state.invoices = [];
+            state.loading = false;
+            state.error = null;
+            state.pagination = initialState.pagination;
+        },
     },
     extraReducers: builder => {
         builder
@@ -930,7 +937,8 @@ export const {
     resetDeleteItemState,
     resetSaveTemplateState,
     resetTemplatesState,
-    resetDeleteTemplateState
+    resetDeleteTemplateState,
+    clearInvoices
 } = billSlice.actions;
 
 export default billSlice.reducer; 

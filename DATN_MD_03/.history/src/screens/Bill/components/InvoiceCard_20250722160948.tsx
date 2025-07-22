@@ -47,25 +47,25 @@ const getNestedValue = (obj: any, path: string, defaultValue: any = undefined) =
     }
 };
 
-// Map status to color
+// Cập nhật hàm getStatusColor với màu sắc rõ ràng và tương phản hơn
 const getStatusColor = (status: string) => {
     switch (status) {
         case 'paid':
-            return Colors.primaryGreen; // Xanh lá đậm
+            return '#00A389'; // Xanh lá đậm - Đã thanh toán
         case 'pending':
-            return '#17A2B8'; // Xanh dương
+            return '#0088CC'; // Xanh dương - Đang chờ
         case 'pending_confirmation': 
-            return '#007BFF'; // Xanh dương đậm (đã đổi từ vàng)
+            return '#FF9800'; // Cam - Chờ xác nhận
         case 'issued':
-            return '#FFC107'; // Vàng (đã đổi từ xanh dương đậm)
+            return '#3F51B5'; // Tím nhạt - Đã phát hành
         case 'overdue':
-            return '#DC3545'; // Đỏ
+            return '#E53935'; // Đỏ tươi - Quá hạn
         case 'draft':
-            return '#6C757D'; // Xám
+            return '#607D8B'; // Xám xanh - Nháp
         case 'canceled':
-            return '#343A40'; // Đen xám
+            return '#424242'; // Xám đen - Đã hủy
         default:
-            return Colors.mediumGray;
+            return '#9E9E9E'; // Xám mặc định
     }
 };
 
@@ -79,7 +79,7 @@ const getStatusText = (status: string) => {
         case 'pending_confirmation':
             return 'Chờ xác nhận';
         case 'issued':
-            return 'Chưa thanh toán';
+            return 'Đã phát hành';
         case 'draft':
             return 'Nháp';
         case 'canceled':
@@ -224,21 +224,19 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress, onEdit, onD
                 style={styles.container}
                 onPress={() => onPress(invoice)}
                 activeOpacity={0.8}>
+                {/* Cập nhật JSX cho header để cân đối hơn */}
                 <View style={styles.header}>
-                    <Text style={styles.invoiceTitle}>{getInvoiceTitle(invoice)}</Text>
+                    <View style={styles.headerLeft}>
+                        <Text style={styles.invoiceTitle}>{getInvoiceTitle(invoice)}</Text>
+                    </View>
                     <View
                         style={[
                             styles.statusBadge,
                             { 
-                                backgroundColor: getStatusColor(invoice.status) + '20',
-                                borderWidth: 1,
-                                borderColor: getStatusColor(invoice.status)
+                                backgroundColor: getStatusColor(invoice.status),
                             },
                         ]}>
-                        <Text style={[
-                            styles.statusText, 
-                            { color: getStatusColor(invoice.status) }
-                        ]}>{getStatusText(invoice.status)}</Text>
+                        <Text style={styles.statusText}>{getStatusText(invoice.status)}</Text>
                     </View>
                 </View>
 
@@ -354,21 +352,42 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 6, // Reduced from 10
     },
+    headerLeft: {
+        flex: 1,
+        marginRight: 10,
+    },
     invoiceTitle: {
         fontSize: 16,
         fontWeight: 'bold',
         color: Colors.dearkOlive,
-        flex: 1,
-        marginRight: 10,
     },
     statusBadge: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 4,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.15,
+        shadowRadius: 1,
+        elevation: 2,
+        minWidth: scale(90),
+        maxWidth: scale(110),
     },
     statusText: {
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: '700',
+        color: '#FFFFFF',
+        textAlign: 'center',
+        textTransform: 'uppercase',
+        letterSpacing: 0.3,
+        textShadowColor: 'rgba(0, 0, 0, 0.2)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 1,
     },
     content: {
         marginBottom: 6, // Reduced from 10

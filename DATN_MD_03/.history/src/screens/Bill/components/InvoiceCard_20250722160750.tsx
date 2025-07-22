@@ -55,9 +55,9 @@ const getStatusColor = (status: string) => {
         case 'pending':
             return '#17A2B8'; // Xanh dương
         case 'pending_confirmation': 
-            return '#007BFF'; // Xanh dương đậm (đã đổi từ vàng)
+            return '#FFC107'; // Vàng
         case 'issued':
-            return '#FFC107'; // Vàng (đã đổi từ xanh dương đậm)
+            return '#007BFF'; // Xanh dương đậm
         case 'overdue':
             return '#DC3545'; // Đỏ
         case 'draft':
@@ -79,7 +79,7 @@ const getStatusText = (status: string) => {
         case 'pending_confirmation':
             return 'Chờ xác nhận';
         case 'issued':
-            return 'Chưa thanh toán';
+            return 'Đã phát hành';
         case 'draft':
             return 'Nháp';
         case 'canceled':

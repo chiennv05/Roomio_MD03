@@ -43,13 +43,14 @@ const BillScreen = () => {
     const { invoices, loading, error, pagination } = useAppSelector(
         state => state.bill,
     );
-    // Thêm biến isMounted nếu chưa có
-    const isMounted = useRef<boolean>(true);
-    const [isRefreshing, setRefreshing] = useState<boolean>(false);
+    const [refreshing, setRefreshing] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState<string | undefined>(
         undefined,
     );
     
+    // Ref để theo dõi component mounted
+    const isMounted = useRef(true);
+
     // Kiểm tra xem người dùng có phải là chủ trọ không
     const isLandlord = user?.role === 'chuTro';
     
@@ -701,7 +702,6 @@ const BillScreen = () => {
             { label: 'Tất cả', value: undefined },
             ...(isLandlord ? [{ label: 'Nháp', value: 'draft' }] : []),
             { label: 'Chưa thanh toán', value: 'issued' },
-            { label: 'Chờ xác nhận', value: 'pending_confirmation' },
             { label: 'Đã thanh toán', value: 'paid' },
             { label: 'Quá hạn', value: 'overdue' },
         ];
@@ -1117,7 +1117,7 @@ const BillScreen = () => {
             </View>
             </Animated.View>
 
-            {loading && !isRefreshing && (
+            {loading && !refreshing && (
                 <ActivityIndicator
                     size="large"
                     color={Colors.primaryGreen}
@@ -1143,12 +1143,12 @@ const BillScreen = () => {
                 )}
                 contentContainerStyle={styles.flatListContent}
                 refreshControl={
-                    <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+                    <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
                 }
                 onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={
-                    loading && !isRefreshing ? (
+                    loading && !refreshing ? (
                         <ActivityIndicator
                             size="large"
                             color={Colors.primaryGreen}

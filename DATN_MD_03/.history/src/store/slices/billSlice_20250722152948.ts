@@ -169,7 +169,6 @@ export const fetchRoommateInvoices = createAsyncThunk(
         signal?: AbortSignal;
     }, { rejectWithValue }) => {
         try {
-            console.log('THUNK: fetchRoommateInvoices called with', { page, limit, status });
             const response = await getRoommateInvoices(token, page, limit, status, query, signal);
 
             if (!response.success) {
@@ -177,16 +176,10 @@ export const fetchRoommateInvoices = createAsyncThunk(
             }
 
             // Đánh dấu tất cả các hóa đơn là của người ở cùng
-            const invoicesWithRoommate = response.data.invoices?.map(invoice => {
-                // Đảm bảo rằng isRoommate được set là true
-                console.log('Marking invoice as roommate:', invoice._id || invoice.id);
-                return {
-                    ...invoice,
-                    isRoommate: true // Đánh dấu rõ ràng là hóa đơn người ở cùng
-                };
-            }) || [];
-            
-            console.log('THUNK: Processed', invoicesWithRoommate.length, 'roommate invoices');
+            const invoicesWithRoommate = response.data.invoices?.map(invoice => ({
+                ...invoice,
+                isRoommate: true // Đánh dấu là hóa đơn người ở cùng
+            })) || [];
 
             return {
                 invoices: invoicesWithRoommate,
