@@ -55,9 +55,9 @@ const getStatusColor = (status: string) => {
         case 'pending':
             return '#17A2B8'; // Xanh dương
         case 'pending_confirmation': 
-            return '#007BFF'; // Xanh dương đậm (đã đổi từ vàng)
+            return '#FFC107'; // Vàng
         case 'issued':
-            return '#FFC107'; // Vàng (đã đổi từ xanh dương đậm)
+            return '#007BFF'; // Xanh dương đậm
         case 'overdue':
             return '#DC3545'; // Đỏ
         case 'draft':
@@ -79,7 +79,7 @@ const getStatusText = (status: string) => {
         case 'pending_confirmation':
             return 'Chờ xác nhận';
         case 'issued':
-            return 'Chưa thanh toán';
+            return 'Đã phát hành';
         case 'draft':
             return 'Nháp';
         case 'canceled':
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: scale(40),
         right: scale(0),
-        backgroundColor: '#3B30B2', // Nền tím đậm
+        backgroundColor: '#7366FF30', // Tăng độ đậm của nền lên 30%
         paddingHorizontal: scale(8),
         paddingVertical: scale(3),
         borderTopLeftRadius: scale(15),
@@ -455,10 +455,10 @@ const styles = StyleSheet.create({
         borderLeftWidth: scale(1),
         borderTopWidth: scale(1),
         borderBottomWidth: scale(1),
-        borderColor: '#5247C9',
+        borderColor: '#7366FF',
         borderRightWidth: scale(3),
-        borderRightColor: '#5247C9',
-        shadowColor: '#000',
+        borderRightColor: '#7366FF',
+        shadowColor: '#7366FF',
         shadowOffset: {
             width: -1,
             height: 2,
@@ -474,20 +474,20 @@ const styles = StyleSheet.create({
     },
     roommateText: {
         fontSize: scale(11),
-        fontWeight: '700',
-        color: '#FFFFFF', // Chữ màu trắng
-        letterSpacing: 0.5,
+        fontWeight: '900', // Tăng độ đậm của chữ
+        color: '#5247C9', // Màu tím đậm hơn để tạo tương phản
+        letterSpacing: 0.3,
         textTransform: 'uppercase',
-        textShadowColor: 'rgba(0, 0, 0, 0.3)',
-        textShadowOffset: { width: 0, height: 1 },
-        textShadowRadius: 2,
+        textShadowColor: 'rgba(255, 255, 255, 0.5)', // Thêm viền sáng cho chữ
+        textShadowOffset: { width: 0, height: 0.5 },
+        textShadowRadius: 1,
     },
     roommateIcon: {
         width: scale(12),
         height: scale(12),
         marginRight: scale(4),
-        tintColor: '#FFFFFF', // Icon màu trắng
-        opacity: 1,
+        tintColor: '#5247C9', // Màu tím đậm hơn cho icon cũng vậy
+        opacity: 1, // Tăng độ đậm của icon lên 100%
     },
 });
 

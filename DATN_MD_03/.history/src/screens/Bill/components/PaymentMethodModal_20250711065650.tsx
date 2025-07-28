@@ -29,7 +29,7 @@ const PaymentMethodModal = ({
     const paymentMethods = [
         { id: 'cash', name: 'Tiền mặt' },
         { id: 'bank_transfer', name: 'Chuyển khoản' },
-        
+        { id: 'e_wallet', name: 'Ví điện tử' },
     ];
 
     return (
