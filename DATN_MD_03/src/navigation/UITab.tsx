@@ -3,10 +3,15 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import CustomTabar from './CustomTabar';
 import HomeScreen from '../screens/HomeScreen/HomeScreen';
-import SearchScreen from '../screens/SearchScreen/SearchScreen';
+// import SearchScreen from '../screens/SearchScreen/SearchScreen';
 import FavoriteScreen from '../screens/Favorite/FavoriteScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
+<<<<<<< HEAD
 
+=======
+// import NotificationScreen from '../screens/Notification/NotificationScreen';
+import FindMayScreen from '../screens/FindMapScreen/FindMayScreen';
+>>>>>>> origin/chien
 const Tab = createBottomTabNavigator();
 export default function UITab() {
   return (
@@ -23,11 +28,17 @@ export default function UITab() {
           tabBarLabel: 'Trang chủ',
         }}
       />
+<<<<<<< HEAD
       <Tab.Screen
         name="Search"
         component={SearchScreen}
+=======
+      <Tab.Screen 
+        name="Map" 
+        component={FindMayScreen}
+>>>>>>> origin/chien
         options={{
-          tabBarLabel: 'Tìm kiếm',
+          tabBarLabel: 'Map',
         }}
       />
       <Tab.Screen
@@ -37,8 +48,14 @@ export default function UITab() {
           tabBarLabel: 'Yêu thích',
         }}
       />
+<<<<<<< HEAD
       <Tab.Screen
         name="Profile"
+=======
+     
+      <Tab.Screen 
+        name="Profile" 
+>>>>>>> origin/chien
         component={ProfileScreen}
         options={{
           tabBarLabel: 'Cá nhân',

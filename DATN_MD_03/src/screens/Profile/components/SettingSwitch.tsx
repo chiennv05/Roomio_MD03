@@ -2,10 +2,11 @@ import React, {useState} from 'react';
 import {
   View,
   Text,
-  Switch,
   StyleSheet,
   ImageSourcePropType,
   Image,
+  Animated,
+  TouchableOpacity,
 } from 'react-native';
 import {
   SCREEN,
@@ -25,6 +26,7 @@ interface Props {
 
 export default function SettingSwitch({iconStat, label, initialValue}: Props) {
   const [isEnabled, setIsEnabled] = useState(initialValue);
+  const animatedValue = useState(new Animated.Value(initialValue ? 1 : 0))[0];
 
   const getImageSource = () => {
     if (!iconStat) return undefined;
@@ -34,18 +36,53 @@ export default function SettingSwitch({iconStat, label, initialValue}: Props) {
     return iconStat;
   };
 
+  const toggleSwitch = () => {
+    const newValue = !isEnabled;
+    setIsEnabled(newValue);
+    
+    // Smooth animation
+    Animated.timing(animatedValue, {
+      toValue: newValue ? 1 : 0,
+      duration: 500, // Animation duration (ms)
+      useNativeDriver: false,
+    }).start();
+  };
+
   return (
     <View style={styles.row}>
       <View style={{flexDirection: 'row', alignItems: 'center'}}>
         {iconStat && <Image source={getImageSource()} style={styles.icon} />}
         <Text style={styles.label}>{label}</Text>
       </View>
-      <Switch
-        value={isEnabled}
-        onValueChange={setIsEnabled}
-        trackColor={{false: Colors.gray, true: Colors.limeGreen}}
-        thumbColor={Colors.white}
-      />
+      <TouchableOpacity onPress={toggleSwitch} style={styles.switchContainer}>
+        <Animated.View 
+          style={[
+            styles.switchTrack,
+            {
+              backgroundColor: animatedValue.interpolate({
+                inputRange: [0, 1],
+                outputRange: [Colors.gray, Colors.limeGreen],
+              }),
+            },
+          ]}
+        >
+        <Animated.View
+            style={[
+              styles.switchThumb,
+              {
+                transform: [
+                  {
+                                      translateX: animatedValue.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [2, 23], // Di chuyển từ trái sang phải (phù hợp với width 53px)
+                  }),
+                  },
+                ],
+              },
+            ]}
+          />
+        </Animated.View>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -71,5 +108,30 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.black,
     fontWeight: '400',
+  },
+  switchContainer: {
+    padding: responsiveSpacing(4),
+  },
+  switchTrack: {
+    width: responsiveSpacing(53), 
+    height: responsiveSpacing(32), 
+    borderRadius: responsiveSpacing(16),
+    position: 'relative',
+    justifyContent: 'center',
+  },
+ 
+  switchThumb: {
+    position: 'absolute',
+    width: responsiveSpacing(28),  // Tăng kích thước thumb
+    height: responsiveSpacing(28),
+    borderRadius: responsiveSpacing(14),
+    backgroundColor: Colors.white,
+    shadowOffset: {
+      width: responsiveSpacing(0),
+      height: responsiveSpacing(2),
+    },
+    shadowOpacity: responsiveSpacing(0.2),
+    shadowRadius: responsiveSpacing(2),
+    elevation: responsiveSpacing(3),
   },
 });

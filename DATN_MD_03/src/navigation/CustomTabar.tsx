@@ -29,7 +29,6 @@ export default function CustomTabar({ state, navigation }: BottomTabBarProps) {
             target: route.key,
             canPreventDefault: true,
           });
-
           if (!isFocused && !event.defaultPrevented) {
             navigation.navigate(route.name);
           }
@@ -40,8 +39,8 @@ export default function CustomTabar({ state, navigation }: BottomTabBarProps) {
           case 'Home':
             IconSource = !isFocused ? Icons.IconHomeDefaut : Icons.IconHome;
             break;
-          case 'Search':
-            IconSource = !isFocused ? Icons.IconSearchDefaut : Icons.IconSearch;
+          case 'Map':
+            IconSource = !isFocused ? Icons.IconMapDefault : Icons.IconMap;
             break;
           case 'Favorite':
             IconSource = !isFocused ? Icons.IconHeartDefaut : Icons.IconHeart;

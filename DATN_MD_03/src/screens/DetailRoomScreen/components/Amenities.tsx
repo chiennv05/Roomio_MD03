@@ -103,19 +103,17 @@ const AmenityItem: React.FC<AmenityItemProps> = ({icon, label, itemWidth}) => {
     icon.includes('asset:') || icon.includes('.png') || icon.includes('icon_');
 
   return (
-    <View style={[styles.amenityItem, {width: itemWidth as any}]}>
-      <View style={styles.amenityIconContainer}>
-        {isImageIcon ? (
-          <Image
-            source={{uri: icon}}
-            style={styles.amenityImageIcon}
-            resizeMode="contain"
-          />
-        ) : (
-          <Text style={styles.amenityIcon}>{icon}</Text>
-        )}
-      </View>
-      <Text style={styles.amenityLabel} numberOfLines={2}>
+    <View style={[styles.amenityItemNoBg, {width: itemWidth as any}]}>
+      {isImageIcon ? (
+        <Image
+          source={{uri: icon}}
+          style={styles.amenityImageIconNoBg}
+          resizeMode="contain"
+        />
+      ) : (
+        <Text style={styles.amenityIconNoBg}>{icon}</Text>
+      )}
+      <Text style={styles.amenityLabelNoBg} numberOfLines={2}>
         {label}
       </Text>
     </View>
@@ -137,41 +135,37 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'flex-start',
     gap: responsiveSpacing(isSmallDevice ? 8 : 12),
+    backgroundColor: 'transparent',
   },
   separator: {
     height: 1,
     backgroundColor: Colors.divider,
     marginVertical: responsiveSpacing(20),
   },
-  amenityItem: {
+  amenityItemNoBg: {
     alignItems: 'center',
-    marginBottom: responsiveSpacing(isTablet ? 24 : 20),
+    marginBottom: responsiveSpacing(isTablet ? 16 : 12),
     paddingHorizontal: responsiveSpacing(4),
+    backgroundColor: 'transparent',
   },
-  amenityIconContainer: {
-    width: responsiveIcon(isTablet ? 56 : isSmallDevice ? 40 : 48),
-    height: responsiveIcon(isTablet ? 56 : isSmallDevice ? 40 : 48),
-    backgroundColor: Colors.lightGray,
-    borderRadius: responsiveIcon(isTablet ? 28 : isSmallDevice ? 20 : 24),
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: responsiveSpacing(8),
+  amenityIconNoBg: {
+    fontSize: responsiveFont(32),
+    color: Colors.darkGreen,
+    marginBottom: responsiveSpacing(4),
   },
-  amenityIcon: {
-    fontSize: responsiveFont(isTablet ? 28 : isSmallDevice ? 20 : 24),
+  amenityImageIconNoBg: {
+    width: responsiveIcon(32),
+    height: responsiveIcon(32),
+    marginBottom: responsiveSpacing(4),
   },
-  amenityImageIcon: {
-    width: responsiveIcon(24),
-    height: responsiveIcon(24),
-  },
-  amenityLabel: {
-    fontSize: responsiveFont(14),
+  amenityLabelNoBg: {
+    fontSize: responsiveFont(13),
     color: Colors.black,
-    fontWeight: '700',
+    fontWeight: 'bold',
     fontFamily: Fonts.Roboto_Regular,
     textAlign: 'center',
     lineHeight: responsiveFont(16),
-    minHeight: responsiveFont(32), // Đảm bảo height consistent
+    minHeight: responsiveFont(32),
   },
 });
 

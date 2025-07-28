@@ -97,7 +97,9 @@ const ItemRoom: React.FC<RoomCardProps> = ({item, onPress, index}) => {
         </View>
 
         <View style={styles.info}>
-          <Text style={styles.title}>{item.description}</Text>
+          <Text style={styles.title} numberOfLines={1}>
+            {item.description}
+          </Text>
 
           <View style={styles.detailContainer}>
             <Image source={{uri: Icons.IconLocationGray}} style={styles.icon} />
@@ -105,13 +107,24 @@ const ItemRoom: React.FC<RoomCardProps> = ({item, onPress, index}) => {
           </View>
           <View style={styles.detailContainer}>
             <Image source={{uri: Icons.IconLocationGray}} style={styles.icon} />
-            <Text style={styles.detail}>{item.location.addressText}</Text>
+            <Text
+              style={[styles.detail, {width: SCREEN.width * 0.8}]}
+              numberOfLines={1}
+              ellipsizeMode="tail">
+              {item.location.addressText}
+            </Text>
           </View>
-
-          <View style={styles.detailContainer}>
-            <Image source={{uri: Icons.IconUnion}} style={styles.icon} />
-            <Text style={styles.detail}>{item.area} m</Text>
-            <Text>30 view</Text>
+          <View style={styles.containerViewAndArea}>
+            <View style={styles.detailContainer}>
+              <Image source={{uri: Icons.IconUnion}} style={styles.icon} />
+              <Text style={styles.detail}>{item.area} m²</Text>
+            </View>
+            <View style={styles.detailContainer}>
+              <Image source={{uri: Icons.IconViewLight}} style={styles.icon} />
+              <Text style={styles.detail}>
+                {item.stats?.viewCount} Lượt xem
+              </Text>
+            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -199,20 +212,18 @@ const styles = StyleSheet.create({
     borderColor: Colors.limeGreen,
   },
   info: {
-    padding: responsiveSpacing(20),
+    padding: responsiveSpacing(10),
     backgroundColor: Colors.white,
   },
   title: {
     fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(18),
     color: Colors.black,
-    marginBottom: responsiveSpacing(14),
     lineHeight: responsiveFont(24),
   },
   detailContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: responsiveSpacing(10),
     paddingVertical: responsiveSpacing(3),
   },
   icon: {
@@ -243,5 +254,11 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(18),
     color: Colors.black,
     fontFamily: Fonts.Roboto_Regular,
+  },
+  containerViewAndArea: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: responsiveSpacing(5),
   },
 });

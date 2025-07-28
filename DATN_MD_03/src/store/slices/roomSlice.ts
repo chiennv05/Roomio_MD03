@@ -74,7 +74,15 @@ export const fetchRoomDetail = createAsyncThunk(
     try {
       const res = await getRoomDetail(roomId, token);
       if (!res?.success) throw new Error(res?.message);
-      return res.data;
+      
+      // Map API response to use isFavorited consistently
+      const roomWithFavorite = {
+        ...res.data.room,
+        isFavorited: res.data.isFavorited,
+        owner: res.data.owner,
+      };
+      
+      return roomWithFavorite;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Lấy chi tiết phòng thất bại');
     }
@@ -304,27 +312,30 @@ const roomSlice = createSlice({
       })
       .addCase(toggleFavorite.fulfilled, (state, action) => {
         state.toggleFavoriteLoading = false;
-        const {roomId} = action.payload;
+        const {roomId, data} = action.payload;
+        
+        // Get new favorite status from API response
+        const newFavoriteStatus = data?.isFavorited ?? !state.roomDetail?.isFavorited;
 
         // Update roomDetail if it matches
         if (state.roomDetail && state.roomDetail._id === roomId) {
           state.roomDetail = {
             ...state.roomDetail,
-            isFavorited: !state.roomDetail.isFavorited,
+            isFavorited: newFavoriteStatus,
           };
         }
 
         // Update rooms list
         state.rooms = state.rooms.map(room =>
           room._id === roomId
-            ? {...room, isFavorited: !room.isFavorited}
+            ? {...room, isFavorited: newFavoriteStatus}
             : room,
         );
 
         // Update relatedRooms
         state.relatedRooms = state.relatedRooms.map(room =>
           room._id === roomId
-            ? {...room, isFavorited: !room.isFavorited}
+            ? {...room, isFavorited: newFavoriteStatus}
             : room,
         );
       })

@@ -6,7 +6,6 @@ import {
   Text,
   TouchableOpacity,
   StatusBar,
-  Image,
   Alert,
 } from 'react-native';
 import {useRoute, RouteProp, useNavigation} from '@react-navigation/native';
@@ -24,7 +23,6 @@ import {Colors} from '../../theme/color';
 import {
   responsiveSpacing,
   responsiveFont,
-  responsiveIcon,
 } from '../../utils/responsive';
 import {RootStackParamList} from '../../types/route';
 import {Fonts} from '../../theme/fonts';
@@ -90,7 +88,6 @@ const DetailRoomScreen: React.FC = () => {
     relatedRoomsError,
     toggleFavoriteLoading,
   } = useSelector((state: RootState) => state.room);
-  console.log('roomid', roomId);
 
   // Lấy thông tin user để check role
   const {user} = useSelector((state: RootState) => state.auth);
@@ -105,8 +102,11 @@ const DetailRoomScreen: React.FC = () => {
       address: roomDetail.location?.addressText || 'Địa chỉ chưa cập nhật',
       roomCode: roomDetail.roomNumber || 'N/A',
       area: roomDetail.area || 0,
+      maxOccupancy: roomDetail.maxOccupancy || 1,
       photos: roomDetail.photos || [],
       servicePrices: roomDetail.location?.servicePrices || {},
+      servicePriceConfig: roomDetail.location?.servicePriceConfig || {},
+      customServices: roomDetail.location?.customServices || [],
       amenities: roomDetail.amenities || [],
       furniture: roomDetail.furniture || [],
       ownerName: roomDetail.owner?.fullName || 'Chủ trọ',
@@ -172,6 +172,7 @@ const DetailRoomScreen: React.FC = () => {
         setShowLoginPrompt(true);
         return;
       }
+      
       dispatch(
         toggleFavorite({
           roomId: roomId,
@@ -179,7 +180,7 @@ const DetailRoomScreen: React.FC = () => {
         }),
       );
     }
-  }, [user, roomId, dispatch, setShowLoginPrompt]);
+  }, [user, roomId, dispatch]);
 
   const handleSharePress = useCallback(() => {
     setShowShareModal(true);
@@ -228,6 +229,19 @@ const DetailRoomScreen: React.FC = () => {
       roomId,
     });
   }, [navigation, roomId]);
+
+  const handleMapPress = useCallback(() => {
+    if (roomDetail?.location?.coordinates?.coordinates) {
+      const [longitude, latitude] = roomDetail.location.coordinates.coordinates;
+      navigation.navigate('MapScreen', {
+        latitude,
+        longitude,
+        address: roomDetail.location.addressText,
+        roomDetail: roomDetail,
+        isSelectMode: false
+      });
+    }
+  }, [navigation, roomDetail]);
 
   const handleRoomPress = useCallback(
     (roomId: string) => {
@@ -404,15 +418,23 @@ const DetailRoomScreen: React.FC = () => {
             <ImageCarousel images={roomDetailData.photos} />
             <View style={styles.content}>
               <RoomInfo
-                name={roomDetailData.name}
+                // name={}
+                name = { ""}
                 price={roomDetailData.price}
                 address={roomDetailData.address}
                 roomCode={roomDetailData.roomCode}
                 area={roomDetailData.area}
+                maxOccupancy={roomDetailData.maxOccupancy}
+                deposit={1}
+                onMapPress={handleMapPress}
               />
 
               <View style={styles.divider} />
-              <ServiceFees servicePrices={roomDetailData.servicePrices} />
+              <ServiceFees 
+                servicePrices={roomDetailData.servicePrices}
+                servicePriceConfig={roomDetailData.servicePriceConfig}
+                customServices={roomDetailData.customServices}
+              />
 
               <View style={styles.divider} />
               <Amenities
@@ -428,22 +450,6 @@ const DetailRoomScreen: React.FC = () => {
 
               <View style={styles.divider} />
               <Description text={roomDetailData.description} />
-
-              <TouchableOpacity style={styles.termsButton}>
-                <View style={styles.termsIcon}>
-                  <Image
-                    source={{uri: Icons.IconDieuKhoan}}
-                    style={styles.termsIconImage}
-                  />
-                </View>
-                <Text style={styles.termsText}>
-                  Xem điều khoản và điều kiện
-                </Text>
-                <Image
-                  source={{uri: Icons.IconArrowRight}}
-                  style={styles.termsArrowRight}
-                />
-              </TouchableOpacity>
 
               <View style={styles.divider} />
 
@@ -532,6 +538,7 @@ const DetailRoomScreen: React.FC = () => {
     handleCloseAleartProfile,
     showModalProfile,
     messageProfile,
+    handleMapPress,
   ]);
 
   // Hiển thị lỗi
@@ -601,38 +608,6 @@ const styles = StyleSheet.create({
     color: Colors.textGray,
     textAlign: 'center',
   },
-  termsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.limeGreenLight,
-    paddingVertical: responsiveSpacing(16),
-    paddingHorizontal: responsiveSpacing(16),
-    borderRadius: 8,
-    marginVertical: responsiveSpacing(16),
-    borderWidth: 1,
-    borderColor: Colors.darkGreen,
-  },
-  termsIcon: {
-    width: responsiveIcon(24),
-    height: responsiveIcon(24),
-    marginRight: responsiveSpacing(12),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  termsIconText: {
-    fontSize: responsiveFont(14),
-  },
-  termsText: {
-    flex: 1,
-    color: Colors.darkGreen,
-    fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(14),
-  },
-  termsArrow: {
-    color: Colors.limeGreen,
-    fontSize: responsiveFont(18),
-    fontFamily: Fonts.Roboto_Bold,
-  },
   retryButton: {
     backgroundColor: Colors.limeGreen,
     padding: responsiveSpacing(16),
@@ -652,13 +627,5 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
     paddingHorizontal: responsiveSpacing(20),
-  },
-  termsIconImage: {
-    width: responsiveIcon(24),
-    height: responsiveIcon(24),
-  },
-  termsArrowRight: {
-    width: responsiveIcon(12),
-    height: responsiveIcon(24),
   },
 });

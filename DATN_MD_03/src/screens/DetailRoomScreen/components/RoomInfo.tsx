@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
-import { responsiveSpacing, responsiveFont } from '../../../utils/responsive';
+import { responsiveSpacing, responsiveFont, responsiveIcon } from '../../../utils/responsive';
 import { Icons } from '../../../assets/icons';
 
 interface RoomInfoProps {
@@ -10,7 +10,10 @@ interface RoomInfoProps {
   price: string;
   address: string;
   roomCode: string;
-  area: number; // Chỉ dùng area thực từ API
+  area: number;
+  maxOccupancy: number;
+  deposit?: number; // Số tháng đặt cọc, default = 1
+  onMapPress?: () => void; // Callback khi bấm vào icon map
 }
 
 const RoomInfo: React.FC<RoomInfoProps> = ({
@@ -19,12 +22,39 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
   address,
   roomCode,
   area,
+  maxOccupancy,
+  deposit = 1, // Default 1 tháng
+  onMapPress,
 }) => {
+  // Chuẩn bị data cho 3 cột
+  const infoItems = [
+    {
+      key: 'area',
+      icon: Icons.IconArea,
+      label: 'Diện tích',
+      value: area ? `${area}m²` : '',
+    },
+    {
+      key: 'maxOccupancy',
+      icon: Icons.IconSoNguoi,
+      label: 'Số người',
+      value: maxOccupancy || '',
+    },
+    {
+      key: 'deposit',
+      icon: Icons.IconTienCoc,
+      label: 'Đặt cọc',
+      value: deposit ? `${deposit} tháng` : '',
+    },
+  ];
+
   return (
     <View style={styles.container}>
-      {/* Title và Price */}
+      {/* Giá */}
+      <Text style={styles.priceText}>{price}đ/tháng</Text>
+
+      {/* Title */}
       <Text style={styles.title} numberOfLines={2}>{name}</Text>
-      <Text style={styles.priceText}>{price}/ tháng</Text>
 
       {/* Room Code */}
       <View style={styles.roomCodeContainer}>
@@ -48,21 +78,31 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
         <Text style={styles.address}>{address}</Text>
       </View>
 
-      {/* Thông tin - Chỉ hiển thị diện tích thực */}
+      {/* Map Button */}
+      {onMapPress && (
+        <TouchableOpacity 
+          style={styles.mapButtonNew}
+          onPress={onMapPress}
+          activeOpacity={0.7}
+        >
+          <Image 
+            source={{ uri: Icons.IconMap }}
+            style={styles.mapIconNew}
+          />
+          <Text style={styles.mapText}>Bấm vào đây để xem vị trí phòng</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Thông tin 3 cột ngang */}
       <Text style={styles.sectionTitle}>Thông tin</Text>
-      <View style={styles.infoContainer}>
-        <View style={styles.infoItem}>
-          <View style={styles.infoIcon}>
-            <Image 
-              source={{ uri: Icons.IconArea }}
-              style={styles.infoIconImage}
-            />
+      <View style={styles.infoRowNoBg}>
+        {infoItems.map(item => (
+          <View style={styles.infoCol} key={item.key}>
+            <Image source={{ uri: item.icon }} style={styles.infoIconImageNoBg} />
+            <Text style={styles.infoLabel}>{item.label}</Text>
+            <Text style={styles.infoValue}>{item.value}</Text>
           </View>
-          <View style={styles.infoContent}>
-            <Text style={styles.infoLabel}>Diện tích</Text>
-            <Text style={styles.infoValue}>{area}m²</Text>
-          </View>
-        </View>
+        ))}
       </View>
     </View>
   );
@@ -72,18 +112,18 @@ const styles = StyleSheet.create({
   container: {
     paddingVertical: responsiveSpacing(16),
   },
-  title: {
-    fontSize: responsiveFont(20),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.black,
-    marginBottom: responsiveSpacing(8),
-    lineHeight: responsiveFont(24),
-  },
   priceText: {
     fontSize: responsiveFont(24),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.darkGreen,
-    marginBottom: responsiveSpacing(16),
+    marginBottom: responsiveSpacing(8),
+  },
+  title: {
+    fontSize: responsiveFont(1),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+    lineHeight: responsiveFont(1),
+    marginBottom: responsiveSpacing(8),
   },
   roomCodeContainer: {
     flexDirection: 'row',
@@ -96,9 +136,6 @@ const styles = StyleSheet.create({
     marginRight: responsiveSpacing(8),
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  roomCodeIconText: {
-    fontSize: 16,
   },
   roomCodeIconImage: {
     width: 16,
@@ -113,7 +150,7 @@ const styles = StyleSheet.create({
   addressContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: responsiveSpacing(24),
+    marginBottom: responsiveSpacing(8),
   },
   addressIcon: {
     width: 20,
@@ -122,9 +159,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 2,
-  },
-  addressIconText: {
-    fontSize: 16,
   },
   addressIconImage: {
     width: 16,
@@ -138,51 +172,61 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Regular,
     lineHeight: responsiveFont(18),
   },
+  mapButtonNew: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.limeGreenLight,
+    padding: responsiveSpacing(12),
+    borderRadius: responsiveSpacing(8),
+    marginBottom: responsiveSpacing(16),
+  },
+  mapIconNew: {
+    width: responsiveIcon(24),
+    height: responsiveIcon(24),
+    tintColor: Colors.darkGreen,
+    marginRight: responsiveSpacing(8),
+  },
+  mapText: {
+    fontSize: responsiveFont(14),
+    color: Colors.darkGreen,
+    fontFamily: Fonts.Roboto_Bold,
+  },
   sectionTitle: {
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
     marginBottom: responsiveSpacing(16),
   },
-  infoContainer: {
-    backgroundColor: Colors.lightGray,
-    borderRadius: 12,
-    padding: responsiveSpacing(16),
-  },
-  infoItem: {
+  infoRowNoBg: {
     flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: responsiveSpacing(8),
+    marginTop: responsiveSpacing(4),
   },
-  infoIcon: {
-    width: 40,
-    height: 40,
-    backgroundColor: Colors.white,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: responsiveSpacing(12),
-  },
-  infoIconText: {
-    fontSize: 20,
-  },
-  infoIconImage: {
-    width: 20,
-    height: 20,
-    tintColor: Colors.darkGreen,
-  },
-  infoContent: {
+  infoCol: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoIconImageNoBg: {
+    width: 32,
+    height: 32,
+    tintColor: Colors.darkGreen,
+    marginBottom: responsiveSpacing(4),
   },
   infoLabel: {
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(13),
     color: Colors.textGray,
     fontFamily: Fonts.Roboto_Regular,
     marginBottom: responsiveSpacing(2),
+    textAlign: 'center',
   },
   infoValue: {
-    fontSize: responsiveFont(16),
+    fontSize: responsiveFont(17),
     color: Colors.black,
     fontFamily: Fonts.Roboto_Bold,
+    textAlign: 'center',
   },
 });
 

@@ -1,21 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Image,
   StyleSheet,
-  ScrollView,
   NativeScrollEvent,
   NativeSyntheticEvent,
   TouchableOpacity,
   Modal,
   Text,
+  Animated,
 } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  interpolate,
-  interpolateColor,
-} from 'react-native-reanimated';
+import LinearGradient from 'react-native-linear-gradient';
 import ImageViewer from 'react-native-image-zoom-viewer';
 import { responsiveSpacing, SCREEN } from '../../../utils/responsive';
 import { Colors } from '../../../theme/color';
@@ -29,94 +24,69 @@ interface ImageCarouselProps {
   images: string[];
 }
 
-interface AnimatedImageProps {
-  image: string;
-  index: number;
-  scrollX: Animated.SharedValue<number>;
-  onPress: (index: number) => void;
-}
-
-const AnimatedImage: React.FC<AnimatedImageProps> = ({ image, index, scrollX, onPress }) => {
-  const inputRange = [
-    (index - 1) * SCREEN_WIDTH,
-    index * SCREEN_WIDTH,
-    (index + 1) * SCREEN_WIDTH,
-  ];
-
-  const imageStyle = useAnimatedStyle(() => {
-    const scale = interpolate(
-      scrollX.value,
-      inputRange,
-      [0.8, 1, 0.8],
-      'clamp'
-    );
-
-    const opacity = interpolate(
-      scrollX.value,
-      inputRange,
-      [0.6, 1, 0.6],
-      'clamp'
-    );
-
-    return {
-      transform: [{ scale }],
-      opacity,
-    };
-  });
-
-  const overlayStyle = useAnimatedStyle(() => {
-    const backgroundColor = interpolateColor(
-      scrollX.value,
-      inputRange,
-      ['rgba(0,0,0,0.4)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.4)']
-    );
-
-    return {
-      backgroundColor,
-    };
-  });
-
-  return (
-    <TouchableOpacity 
-      style={styles.imageContainer}
-      onPress={() => onPress(index)}
-      activeOpacity={0.9}
-    >
-      <Animated.View style={[styles.imageWrapper, imageStyle]}>
-        <Image
-          source={{ uri: getImageUrl(image) }}
-          style={styles.image}
-          resizeMode="cover"
-        />
-      </Animated.View>
-      <Animated.View style={[styles.overlay, overlayStyle]} pointerEvents="none" />
-    </TouchableOpacity>
-  );
-};
-
 const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
   const [imageViewerIndex, setImageViewerIndex] = useState(0);
-  const scrollX = useSharedValue(0);
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollX = useRef(new Animated.Value(0)).current;
 
-  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const offsetX = event.nativeEvent.contentOffset.x;
-    scrollX.value = offsetX;
-    
-    const index = Math.round(offsetX / SCREEN_WIDTH);
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const slideSize = event.nativeEvent.layoutMeasurement.width;
+    const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
     setCurrentIndex(index);
-  };
+  }, []);
 
-  const handleImagePress = (index: number) => {
+  const handleImagePress = useCallback((index: number) => {
     setImageViewerIndex(index);
     setIsImageViewerVisible(true);
-  };
+  }, []);
 
-  const handleCloseImageViewer = () => {
+  const handleCloseImageViewer = useCallback(() => {
     setIsImageViewerVisible(false);
-  };
+  }, []);
+
+  const renderCarouselItem = useCallback(({item, index}: {item: string; index: number}) => {
+    const inputRange = [
+      (index - 1) * SCREEN_WIDTH,
+      index * SCREEN_WIDTH,
+      (index + 1) * SCREEN_WIDTH,
+    ];
+
+    const scale = scrollX.interpolate({
+      inputRange,
+      outputRange: [0.8, 1, 0.8],
+      extrapolate: 'clamp',
+    });
+
+    const opacity = scrollX.interpolate({
+      inputRange,
+      outputRange: [0.6, 1, 0.6],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <TouchableOpacity 
+        style={styles.imageContainer}
+        onPress={() => handleImagePress(index)}
+        activeOpacity={0.9}
+      >
+        <Animated.View style={[styles.animatedImageWrapper, { transform: [{ scale }], opacity }]}>
+          <Image
+            source={{ uri: getImageUrl(item) }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+          {/* Gradient overlay giống RoomCard */}
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.5)']}
+            style={styles.gradient}
+            start={{x: 0, y: 0}}
+            end={{x: 0, y: 1}}
+          />
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  }, [handleImagePress, scrollX]);
 
   // Chuyển đổi mảng images thành format phù hợp với ImageViewer
   const imageViewerData = images.map(image => ({
@@ -129,41 +99,43 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        ref={scrollViewRef}
+      <Animated.FlatList
+        data={images}
+        renderItem={renderCarouselItem}
+        keyExtractor={(item, index) => `detail-${index}-${item}`}
         horizontal
-        pagingEnabled
         showsHorizontalScrollIndicator={false}
-        onScroll={handleScroll}
+        pagingEnabled
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+          { 
+            useNativeDriver: false,
+            listener: handleScroll,
+          }
+        )}
         scrollEventThrottle={16}
         decelerationRate="fast"
-        snapToInterval={SCREEN_WIDTH}
-        snapToAlignment="center"
-        contentContainerStyle={styles.scrollContent}
-      >
-        {images.map((image, index) => (
-          <AnimatedImage
-            key={`${index}-${image}`}
-            image={image}
-            index={index}
-            scrollX={scrollX}
-            onPress={handleImagePress}
-          />
-        ))}
-      </ScrollView>
+        style={styles.carousel}
+      />
 
-      {/* Indicators */}
+      {/* Progress bars giống RoomCard */}
       {images.length > 1 && (
-        <View style={styles.indicatorContainer}>
-          {images.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.indicator,
-                currentIndex === index && styles.activeIndicator,
-              ]}
-            />
-          ))}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBars}>
+            {images.map((_, index) => (
+              <View 
+                key={index} 
+                style={[
+                  styles.progressBar,
+                  {
+                    backgroundColor: index === currentIndex 
+                      ? '#BAFD00' 
+                      : 'rgba(255, 255, 255, 0.4)'
+                  }
+                ]} 
+              />
+            ))}
+          </View>
         </View>
       )}
 
@@ -218,49 +190,44 @@ const styles = StyleSheet.create({
     height: CAROUSEL_HEIGHT,
     backgroundColor: Colors.white,
   },
-  scrollContent: {
-    alignItems: 'center',
+  carousel: {
+    flex: 1,
   },
   imageContainer: {
     width: SCREEN_WIDTH,
     height: CAROUSEL_HEIGHT,
     position: 'relative',
   },
-  imageWrapper: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   image: {
     width: SCREEN_WIDTH,
     height: CAROUSEL_HEIGHT,
   },
-  overlay: {
+  gradient: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
   },
-  indicatorContainer: {
+  progressContainer: {
     position: 'absolute',
     bottom: responsiveSpacing(20),
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
+    left: responsiveSpacing(40),
+    right: responsiveSpacing(40),
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  indicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(186, 253, 0, 0.5)',
-    marginHorizontal: 4,
+  progressBars: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: responsiveSpacing(4),
   },
-  activeIndicator: {
-    backgroundColor: Colors.limeGreen,
-    width: 24,
+  progressBar: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
   },
   zoomIndicatorContainer: {
     position: 'absolute',
@@ -306,6 +273,9 @@ const styles = StyleSheet.create({
     width: responsiveSpacing(20),
     height: responsiveSpacing(20),
     tintColor: Colors.white,
+  },
+  animatedImageWrapper: {
+    flex: 1,
   },
 });
 

@@ -24,9 +24,10 @@ import { Colors } from '../../theme/color';
 import { responsiveSpacing, responsiveFont } from '../../utils/responsive';
 import { RootStackParamList } from '../../types/route';
 import { Fonts } from '../../theme/fonts';
-import { validateRoomByFilters } from '../../utils/roomUtils';
+import { validateRoomByFilters, sortRoomsByScore } from '../../utils/roomUtils';
 import EmptySearchAnimation from '../../components/EmptySearchAnimation';
 import LoadingAnimation from '../../components/LoadingAnimation';
+import LoginPromptModal from '../../components/LoginPromptModal';
 
 // Type cho navigation
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DetailRoom'>;
@@ -56,6 +57,7 @@ const HomeScreen: React.FC = () => {
   const [selectedFurniture, setSelectedFurniture] = useState<string[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Toggle để kiểm soát client-side filtering (có thể tắt nếu backend đã fix)
   const useClientSideFiltering = true;
@@ -156,9 +158,12 @@ const HomeScreen: React.FC = () => {
   }, [navigation, fadeAnim, scaleAnim, overlayAnim]);
 
   const handleNotificationPress = useCallback(() => {
-    // TODO: Implement notification functionality
-    console.log('Notification pressed');
-  }, []);
+    if (!user) {
+      setShowLoginModal(true);
+    } else {
+      navigation.navigate('Notification');
+    }
+  }, [navigation, user]);
 
   const handleUserPress = useCallback(() => {
     // Navigate to login screen if user is guest
@@ -197,12 +202,12 @@ const HomeScreen: React.FC = () => {
   const filteredRooms = useMemo(() => {
     // Nếu tắt client-side filtering, trả về rooms từ API
     if (!useClientSideFiltering) {
-      return rooms;
+      return sortRoomsByScore(rooms);
     }
 
-    // Nếu không có filter nào, trả về tất cả
+    // Nếu không có filter nào, trả về tất cả đã sắp xếp
     if (hasNoFilters) {
-      return rooms;
+      return sortRoomsByScore(rooms);
     }
 
     const filtered = rooms.filter(room => {
@@ -218,12 +223,8 @@ const HomeScreen: React.FC = () => {
       return isValid;
     });
 
-    // Log tổng kết filter để debug
-    
-    // if (priceRange) console.log(`   🔍 Price range: ${priceRange.min.toLocaleString()} - ${priceRange.max.toLocaleString()}đ`);
-    // if (areaRange) console.log(`   🔍 Area range: ${areaRange.min} - ${areaRange.max}m²`);
-
-    return filtered;
+    // Sắp xếp kết quả theo điểm số
+    return sortRoomsByScore(filtered);
   }, [rooms, selectedAmenities, selectedFurniture, regionsToFilter, priceRange, areaRange, useClientSideFiltering, hasNoFilters]);
 
   // Build filters object - Memoized
@@ -469,6 +470,17 @@ const HomeScreen: React.FC = () => {
             }
           ]}
           pointerEvents="none"
+        />
+      )}
+
+      {showLoginModal && (
+        <LoginPromptModal
+          visible={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+          onLogin={() => {
+            setShowLoginModal(false);
+            (navigation as any).navigate('Login');
+          }}
         />
       )}
     </SafeAreaView>

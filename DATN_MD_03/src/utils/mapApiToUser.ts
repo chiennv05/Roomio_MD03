@@ -12,6 +12,7 @@ export const mapApiUserToUser = (
   phone: apiUser?.phone ?? '',
   birthDate: apiUser?.birthDate ?? '',
   identityNumber: apiUser?.identityNumber ?? '',
+  address: apiUser?.address ?? '',
   status: apiUser?.status ?? 'active',
   auth_token: apiUser?.auth_token?.token ?? tokenFromLogin ?? null,
   invalidTokens: apiUser?.invalidTokens ?? [],

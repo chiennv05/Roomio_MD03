@@ -11,46 +11,53 @@ export interface Coordinates {
 export interface ServicePrices {
   electricity?: number;
   water?: number;
-  cleaning?: number;
-  parking?: number;
-  internet?: number;
-  elevator?: number;
 }
 
 export interface ServicePriceConfig {
-  electricity?: string;
-  water?: string;
+  electricity?: 'perUsage' | 'perPerson' | 'perRoom';
+  water?: 'perUsage' | 'perPerson' | 'perRoom';
 }
 
 export interface CustomService {
+  _id?: string;
   name: string;
   price: number;
-  type: string;
+  priceType: 'perUsage' | 'perPerson' | 'perRoom';
   description?: string;
+  _delete?: boolean; // Used to mark for deletion
 }
 
 // ========== Location ==========
 export interface Location {
   _id?: string;
-  addressText?: string;
+  addressText: string;
   province: string;
   district: string;
   ward: string;
   street: string;
-  houseNo?: string;
+  houseNo: string;
   houseNumber?: string;
-  coordinates?: Coordinates;
-  servicePrices?: ServicePrices;
-  servicePriceConfig?: ServicePriceConfig;
+  coordinates: Coordinates;
+  servicePrices: ServicePrices;
+  servicePriceConfig: ServicePriceConfig;
   customServices?: CustomService[];
 }
 
 // ========== Owner & Stats ==========
+export interface OwnerStats {
+  totalRooms: number;
+  rentedRooms: number;
+  totalRevenue: number;
+  totalContracts: number;
+  lastActive: string;
+}
+
 export interface Owner {
-  _id: string;
-  username: string;
+  _id?: string;
+  username?: string;
   fullName: string;
   phone: string;
+  stats?: OwnerStats;
 }
 
 export interface Stats {
@@ -63,14 +70,16 @@ export interface Stats {
 
 // ========== Price History ==========
 export interface PriceHistory {
-  date: string;
+  _id?: string;
   price: number;
+  dateChanged: string;
+  reason: string;
 }
 
 // ========== Main Room Model ==========
 export interface Room {
   _id?: string;
-  ownerId: string;
+  ownerId?: string;
   approverId?: string;
   roomNumber: string;
   area: number;
@@ -81,6 +90,7 @@ export interface Room {
   description: string;
   photos: string[];
   location: Location;
+  customServices?: CustomService[];
   amenities: string[];
   furniture: string[];
   stats?: Stats;
@@ -92,6 +102,21 @@ export interface Room {
   canContact?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  __v?: number;
+}
+
+// ========== Detail Room Response Types ==========
+export interface DetailRoomData {
+  room: Room;
+  isFavorited: boolean;
+  similarRooms: Room[];
+  owner: Owner;
+}
+
+export interface DetailRoomResponse {
+  success: boolean;
+  message: string;
+  data: DetailRoomData;
 }
 
 // ========== API Room (Used for API List Responses) ==========

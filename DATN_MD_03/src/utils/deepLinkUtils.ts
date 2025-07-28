@@ -25,7 +25,7 @@ export const createShareContent = (content: ShareContent) => {
   return {
     title: 'Chia sẻ phòng trọ từ Roomio',
     message: `🏠 ${content.roomName}
-💰 ${content.roomPrice}/tháng  
+💰 ${content.roomPrice}đ/tháng  
 📍 ${content.roomAddress}
 
 Xem chi tiết phòng trọ tại:

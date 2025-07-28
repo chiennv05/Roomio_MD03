@@ -1,121 +1,77 @@
-// ====== Trạng thái hợp đồng ======
+import {CustomService} from './Room';
+
 export type ContractStatus =
-  | 'draft' // Bản nháp
-  | 'pending_signature' // Chờ ký
-  | 'pending_approval' // Chờ duyệt
-  | 'active' // Đang hiệu lực
-  | 'needs_resigning' // Cần ký lại
-  | 'expired' // Hết hạn
-  | 'terminated' // Đã chấm dứt
-  | 'rejected'; // Bị từ chối
+  | 'draft'
+  | 'pending_signature'
+  | 'pending_approval'
+  | 'active'
+  | 'needs_resigning'
+  | 'expired'
+  | 'terminated'
+  | 'rejected';
 
-// ====== Phí dịch vụ cơ bản ======
-export interface ServiceFees {
-  electricity: number; // Giá điện
-  water: number; // Giá nước
-}
-
-// ====== Cấu hình hiển thị phí dịch vụ ======
-export interface ServiceFeeConfig {
-  electricity: string; // Đơn vị hoặc mô tả phí điện
-  water: string; // Đơn vị hoặc mô tả phí nước
-}
-
-// ====== Dịch vụ tùy chỉnh thêm ======
-export interface CustomService {
-  name: string; // Tên dịch vụ
-  price: number; // Giá
-  type: string; // Loại dịch vụ (theo cách phân loại của bạn)
-  description?: string; // Mô tả thêm (tuỳ chọn)
-}
-
-// ====== Người ở ghép (đồng thuê) ======
 export interface CoTenant {
+  _id: string;
   userId: string;
   username: string;
-  fullName: string;
   phone: string;
   email: string;
-  birthDate: string;
+  birthDate: string | null;
   identityNumber: string;
   address: string;
 }
 
-// ====== Thông tin chi tiết hợp đồng ======
+export interface ServiceFees {
+  electricity: number;
+  water: number;
+}
+
+export interface ServiceFeeConfig {
+  electricity: string;
+  water: string;
+}
+
 export interface ContractInfo {
-  // --- Người thuê ---
+  serviceFees: ServiceFees;
+  serviceFeeConfig: ServiceFeeConfig;
   tenantName: string;
   tenantPhone: string;
   tenantIdentityNumber: string;
   tenantEmail: string;
   tenantBirthDate: string;
   tenantAddress: string;
-
-  // --- Chủ trọ ---
   landlordName: string;
   landlordPhone: string;
   landlordIdentityNumber: string;
   landlordBirthDate: string;
   landlordAddress: string;
-
-  // --- Thông tin phòng ---
-  propertyDocument: string; // Giấy tờ sở hữu
   roomNumber: string;
   roomAddress: string;
   roomArea: number;
   monthlyRent: number;
   deposit: number;
   maxOccupancy: number;
-
-  // --- Tiện nghi / Nội thất ---
-  furniture: string[]; // Nội thất
-  amenities: string[]; // Tiện nghi
-
-  // --- Thời hạn hợp đồng ---
+  furniture: string[];
+  amenities: string[];
   startDate: string;
   endDate: string;
-  contractTerm: string;
-
-  // --- Phí dịch vụ ---
-  serviceFees: ServiceFees;
+  contractTerm: number;
   customServices: CustomService[];
-
-  // --- Người thuê & ở ghép ---
   tenantCount: number;
   coTenants: CoTenant[];
-
-  // --- Cấu hình phí dịch vụ ---
-  serviceFeeConfig: ServiceFeeConfig;
-
-  // --- Quy định hợp đồng ---
   rules: string;
-  additionalTerms?: string; // Điều khoản bổ sung (nếu có)
+  additionalTerms: string;
 }
 
-// ====== Lịch sử chỉnh sửa hợp đồng ======
-export interface UpdateHistoryItem {
-  date: string; // Ngày chỉnh sửa
-  action: string; // Hành động (VD: cập nhật thông tin, ký hợp đồng,...)
-  performedBy: string; // Ai thực hiện
-  note?: string; // Ghi chú thêm (nếu có)
-}
-
-// ====== Lịch sử thay đổi trạng thái ======
-export interface StatusHistoryItem {
-  date: string; // Ngày thay đổi
-  status: ContractStatus; // Trạng thái sau khi thay đổi
-  note?: string; // Ghi chú (nếu có)
-}
-
-// ====== Thông tin duyệt hợp đồng ======
 export interface ContractApproval {
-  approved: boolean; // Đã duyệt hay chưa
-  approvedBy?: string; // Ai duyệt
-  approvedAt?: string; // Thời gian duyệt
-  note?: string; // Ghi chú
-  rejectionReason?: string; // Lý do từ chối (nếu có)
+  approved: boolean;
+  approvedBy: string;
+  approvedAt: string;
+  notes: string;
+  rejectionReason: string;
 }
 
+<<<<<<< HEAD
 // ====== Interface chính của Hợp đồng ======
 export interface Contract {
   _id?: string;
@@ -176,4 +132,107 @@ export interface Contract {
   createdAt?: string; // Ngày tạo
   updatedAt?: string; // Ngày cập nhật cuối
   sourceNotificationId?: string; // ID thông báo nguồn (nếu có)
+=======
+export interface StatusHistoryItem {
+  _id: string;
+  status: ContractStatus;
+  date: string;
+  note: string;
+>>>>>>> origin/chien
 }
+
+export interface RoomLocation {
+  coordinates: {
+    type: string;
+    coordinates: [number, number];
+  };
+  servicePrices: ServiceFees;
+  servicePriceConfig: ServiceFeeConfig;
+  addressText: string;
+  province: string;
+  district: string;
+  ward: string;
+  street: string;
+  houseNo: string;
+  customServices: CustomService[];
+  _id: string;
+}
+
+export interface Room {
+  _id: string;
+  roomNumber: string;
+  photos: string[];
+  location: RoomLocation;
+}
+
+export interface UserInfo {
+  _id: string;
+  username: string;
+  fullName: string;
+  phone: string;
+}
+
+export interface Contract {
+  _id: string;
+  contractInfo: ContractInfo;
+  approval: ContractApproval;
+  roomId: Room;
+  tenantId: UserInfo;
+  landlordId: UserInfo;
+  status: ContractStatus;
+  contractPdfUrl: string;
+  contractPdfUrlFilename: string;
+  signedContractImages: string[];
+  statusHistory: StatusHistoryItem[];
+  sourceNotificationId: string;
+  updateHistory: any[]; // Nếu có định dạng cụ thể, bạn có thể khai báo chi tiết hơn
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  previousStatus?: ContractStatus;
+}
+export type CreateContractPayload = {
+  notificationId: string;
+  contractTerm: number; // số tháng
+  startDate: string; // định dạng yyyy-MM-dd
+  rules: string;
+  additionalTerms: string;
+  coTenants?: string[]; // <-- optional
+};
+
+export interface ContractTenantResponse {
+  success: boolean;
+  message: string;
+  data: {
+    contract: {
+      _id: string;
+      status: string;
+      startDate: string;
+      endDate: string;
+    };
+    room: {
+      roomId: string;
+      roomNumber: string;
+      photo: string;
+    };
+    tenants: {
+      mainTenant: {
+        _id: string;
+        username: string;
+        email: string;
+        status: string;
+        fullName: string;
+        phone: string;
+      };
+      coTenants: CoTenant[];
+      tenantCount: number;
+      maxOccupancy: number;
+    };
+  };
+}
+
+export type UpdateContractPayload = {
+  rules: string;
+  additionalTerms: string;
+  customServices?: CustomService[];
+};

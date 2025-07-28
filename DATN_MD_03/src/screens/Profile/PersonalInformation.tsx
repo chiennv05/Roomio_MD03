@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   StyleSheet,
@@ -8,6 +8,7 @@ import {
   Text,
   ScrollView,
   StatusBar,
+  Platform,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useDispatch, useSelector} from 'react-redux';
@@ -24,6 +25,7 @@ import {
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../types/route';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function PersonalInformation() {
   const route =
@@ -35,15 +37,43 @@ export default function PersonalInformation() {
   const token = useSelector((state: any) => state.auth.token);
   const dispatch = useDispatch<AppDispatch>();
 
+  useEffect(() => {
+    // Debug: Log thông tin user để kiểm tra
+    console.log('User from Redux:', user);
+    console.log('User address:', user?.address);
+  }, [user]);
+
   // Chỉ lấy giá trị khởi tạo từ redux, không reset lại khi user đổi
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [identityNumber, setIdentityNumber] = useState(
     user?.identityNumber || '',
   );
+  const [address, setAddress] = useState(user?.address || '');
+  
+  // Xử lý ngày sinh
+  const initialDate = user?.birthDate ? new Date(user.birthDate) : new Date(2000, 0, 1);
+  const [birthDate, setBirthDate] = useState<Date>(initialDate);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  
   const [errorFullName, setErrorFullName] = useState('');
   const [errorPhone, setErrorPhone] = useState('');
   const [errorIdentityNumber, setErrorIdentityNumber] = useState('');
+  const [errorAddress, setErrorAddress] = useState('');
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setBirthDate(selectedDate);
+    }
+  };
+
+  const formatDate = (date: Date): string => {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
 
   const handleSave = async () => {
     // Validate
@@ -53,6 +83,15 @@ export default function PersonalInformation() {
     setErrorFullName(errFullName || '');
     setErrorPhone(errPhone || '');
     setErrorIdentityNumber(errIdentityNumber || '');
+    
+    // Kiểm tra địa chỉ có trống không
+    if (!address.trim()) {
+      setErrorAddress('Địa chỉ không được để trống');
+      return;
+    } else {
+      setErrorAddress('');
+    }
+    
     if (errFullName || errPhone || errIdentityNumber) {
       return;
     }
@@ -62,7 +101,16 @@ export default function PersonalInformation() {
     }
     try {
       const success = await dispatch(
-        updateProfile({token, data: {fullName, phone, identityNumber}}),
+        updateProfile({
+          token, 
+          data: {
+            fullName, 
+            phone, 
+            identityNumber,
+            address,
+            birthDate: birthDate.toISOString(),
+          }
+        }),
       ).unwrap();
       if (success) {
         if (redirectTo === 'DetailRoom' && roomId) {
@@ -95,7 +143,7 @@ export default function PersonalInformation() {
             <View style={styles.inputsContainer}>
               <TextInput
                 style={styles.input}
-                placeholder="Full Name"
+                placeholder="Họ và tên"
                 value={fullName}
                 onChangeText={text => {
                   setFullName(text);
@@ -108,7 +156,7 @@ export default function PersonalInformation() {
 
               <TextInput
                 style={styles.input}
-                placeholder="Phone"
+                placeholder="Số điện thoại"
                 value={phone}
                 onChangeText={text => {
                   setPhone(text);
@@ -122,7 +170,7 @@ export default function PersonalInformation() {
 
               <TextInput
                 style={styles.input}
-                placeholder="Identity Number"
+                placeholder="CMND/CCCD"
                 value={identityNumber}
                 onChangeText={text => {
                   setIdentityNumber(text);
@@ -133,6 +181,49 @@ export default function PersonalInformation() {
               {errorIdentityNumber ? (
                 <Text style={styles.errorText}>{errorIdentityNumber}</Text>
               ) : null}
+              
+              {/* Trường nhập địa chỉ */}
+              <TextInput
+                style={styles.input}
+                placeholder="Địa chỉ"
+                value={address}
+                onChangeText={text => {
+                  setAddress(text);
+                  setErrorAddress('');
+                }}
+                multiline={true}
+                numberOfLines={3}
+              />
+              {errorAddress ? (
+                <Text style={styles.errorText}>{errorAddress}</Text>
+              ) : null}
+              
+              {/* Debug text để hiển thị thông tin address từ Redux */}
+              {__DEV__ && (
+                <Text style={{color: 'blue', marginBottom: 10}}>
+                  Debug - Address from Redux: {user?.address || 'Không có'}
+                </Text>
+              )}
+              
+              {/* Trường chọn ngày sinh */}
+              <TouchableOpacity 
+                style={styles.input} 
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Text style={styles.dateText}>
+                  {`Ngày sinh: ${formatDate(birthDate)}`}
+                </Text>
+              </TouchableOpacity>
+              
+              {showDatePicker && (
+                <DateTimePicker
+                  value={birthDate}
+                  mode="date"
+                  display="default"
+                  onChange={handleDateChange}
+                  maximumDate={new Date()} // Không cho chọn ngày trong tương lai
+                />
+              )}
             </View>
 
             <TouchableOpacity style={styles.updateButton} onPress={handleSave}>
@@ -184,6 +275,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+  },
+  dateText: {
+    fontSize: responsiveFont(16),
+    color: '#333',
   },
   errorText: {
     color: 'red',

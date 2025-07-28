@@ -1,11 +1,4 @@
-import React, {
-  use,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
   View,
   FlatList,
@@ -14,6 +7,8 @@ import {
   TouchableOpacity,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -36,8 +31,12 @@ import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../../store';
 import {getLandlordRooms} from '../../../store/slices/landlordRoomsSlice';
 import {LoadingAnimation} from '../../../components';
+import {useNavigation} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {RootStackParamList} from '../../../types/route';
 
 export default function MyRoomScreen() {
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const dispatch = useDispatch<AppDispatch>();
   const {rooms, loading} = useSelector(
     (state: RootState) => state.landlordRooms,
@@ -59,6 +58,9 @@ export default function MyRoomScreen() {
   });
 
   useEffect(() => {
+    if (!user?.auth_token) {
+      return;
+    }
     dispatch(getLandlordRooms(user.auth_token));
   }, [dispatch, user?.auth_token]);
 
@@ -96,80 +98,101 @@ export default function MyRoomScreen() {
   }, [rooms, selectedFilter, searchText]);
 
   const handleClickItemRooms = useCallback((id: string) => {
-    console.log('clicked room id:', id);
-  }, []);
+    navigation.navigate('DetailRoomLandlord', {id});
+  }, [navigation]);
 
   const handleGoback = () => {
-    // logic điều hướng
+    navigation.goBack();
+  };
+  const handleAddRoom = () => {
+    navigation.navigate('AddRooom', {});
   };
 
   return (
-    <View style={styles.container}>
-      <UIHeader title="Phòng trọ của tôi" onPress={handleGoback} />
-
-      {/* Tìm kiếm */}
-      <View style={styles.conatinerSearch}>
-        <ItemInput
-          placeholder="Tìm bài viết đã đăng"
-          value={searchText}
-          onChangeText={setSearchText}
-          editable={true}
-          width={SCREEN.width * 0.8}
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor={Colors.backgroud}
+        translucent={true}
+      />
+      <View style={styles.container}>
+        <UIHeader
+          title="Phòng trọ của tôi"
+          onPressLeft={handleGoback}
+          iconLeft={Icons.IconArrowLeft}
+          iconRight={Icons.IconAdd}
+          onPressRight={handleAddRoom}
         />
-        <TouchableOpacity style={styles.styleButton}>
-          <Image
-            source={{uri: Icons.IconSeachBlack}}
-            style={styles.styleIcon}
+
+        {/* Tìm kiếm */}
+        <View style={styles.conatinerSearch}>
+          <ItemInput
+            placeholder="Tìm bài viết đã đăng"
+            value={searchText}
+            onChangeText={setSearchText}
+            editable={true}
+            width={SCREEN.width * 0.8}
           />
-        </TouchableOpacity>
-      </View>
-
-      {/* Filter - Animated */}
-      <Animated.View style={[styles.conatinerFilter, animatedFilterStyle]}>
-        <FlatList
-          keyExtractor={(_, index) => index.toString()}
-          horizontal={true}
-          showsHorizontalScrollIndicator={false}
-          data={ALL_ROOM_STATUSES}
-          renderItem={({item, index}) => (
-            <ItemFilter
-              item={item}
-              isSelected={item.value === selectedFilter}
-              onPress={handleClickFilter}
-              index={index}
+          <TouchableOpacity style={styles.styleButton}>
+            <Image
+              source={{uri: Icons.IconSeachBlack}}
+              style={styles.styleIcon}
             />
-          )}
-        />
-      </Animated.View>
+          </TouchableOpacity>
+        </View>
 
-      {/* Danh sách phòng */}
-      <View style={styles.containerListRooms}>
-        {loading && <LoadingAnimation size="medium" color={Colors.limeGreen} />}
-        <FlatList
-          data={filteredRooms}
-          horizontal={false}
-          showsVerticalScrollIndicator={false}
-          keyExtractor={(_, index) => index.toString()}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-          renderItem={({item, index}) => (
-            <ItemRoom
-              item={item}
-              onPress={handleClickItemRooms}
-              index={index}
-            />
-          )}
-        />
+        {/* Filter - Animated */}
+        <Animated.View style={[styles.conatinerFilter, animatedFilterStyle]}>
+          <FlatList
+            keyExtractor={(_, index) => index.toString()}
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            data={ALL_ROOM_STATUSES}
+            renderItem={({item, index}) => (
+              <ItemFilter
+                item={item}
+                isSelected={item.value === selectedFilter}
+                onPress={handleClickFilter}
+                index={index}
+              />
+            )}
+          />
+        </Animated.View>
+
+        {/* Danh sách phòng */}
+        <View style={styles.containerListRooms}>
+          {loading && <LoadingAnimation size="medium" color={Colors.limeGreen} />}
+          <FlatList
+            data={filteredRooms}
+            horizontal={false}
+            showsVerticalScrollIndicator={false}
+            keyExtractor={(_, index) => index.toString()}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            renderItem={({item, index}) => (
+              <ItemRoom
+                item={item}
+                onPress={handleClickItemRooms}
+                index={index}
+              />
+            )}
+          />
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: Colors.backgroud,
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.backgroud,
     alignItems: 'center',
+    paddingTop: StatusBar.currentHeight || 0,
   },
   conatinerSearch: {
     flexDirection: 'row',
@@ -198,5 +221,7 @@ const styles = StyleSheet.create({
   },
   containerListRooms: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

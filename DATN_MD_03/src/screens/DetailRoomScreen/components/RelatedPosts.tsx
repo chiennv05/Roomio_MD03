@@ -64,7 +64,7 @@ const RelatedPosts: React.FC<RelatedPostsProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Bài đăng liên quan</Text>
+      <Text style={styles.title}>Phòng liên quan</Text>
 
       {loading ? (
         <View style={styles.loadingContainer}>
