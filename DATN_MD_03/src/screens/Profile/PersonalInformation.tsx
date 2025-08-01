@@ -1,210 +1,47 @@
-import React, {useState, useEffect} from 'react';
-import {
-  View,
-  StyleSheet,
-  TextInput,
-  Alert,
-  TouchableOpacity,
-  Text,
-  ScrollView,
-  StatusBar,
-  Platform,
-  Image,
-} from 'react-native';
-import {launchImageLibrary} from 'react-native-image-picker';
-import BarcodeScanning from '@react-native-ml-kit/barcode-scanning';
+import React from 'react';
+import {View, StyleSheet, ScrollView, StatusBar, Alert} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {useDispatch, useSelector} from 'react-redux';
-import {updateProfile} from '../../store/slices/authSlice';
-import type {AppDispatch} from '../../store';
-import {responsiveFont, responsiveSpacing} from '../../utils/responsive';
+import {responsiveSpacing} from '../../utils/responsive';
 import {Colors} from '../../theme/color';
 import IteminIrmation from './components/IteminFormation';
-import {
-  validateFullName,
-  validatePhone,
-  validateIdentityNumber,
-} from '../../utils/validate';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../types/route';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import {formatDate} from '../../utils/formatUtils';
+import ItemButtonGreen from '../../components/ItemButtonGreen';
+import ItemInformational from './components/ItemInformational';
+import {useSelector} from 'react-redux';
+import {RootState} from '../../store';
 
 export default function PersonalInformation() {
   const route =
     useRoute<RouteProp<RootStackParamList, 'PersonalInformation'>>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-
+  // sử lý lại chỗ này
   const {redirectTo, roomId} = route.params || {};
-  const user = useSelector((state: any) => state.auth.user);
-  const token = useSelector((state: any) => state.auth.token);
-  const dispatch = useDispatch<AppDispatch>();
-
-  useEffect(() => {
-    // Debug: Log thông tin user để kiểm tra
-    console.log('User from Redux:', user);
-    console.log('User address:', user?.address);
-  }, [user]);
+  const user = useSelector((state: RootState) => state.auth.user);
 
   // Chỉ lấy giá trị khởi tạo từ redux, không reset lại khi user đổi
-  const [fullName, setFullName] = useState(user?.fullName || '');
-  const [phone, setPhone] = useState(user?.phone || '');
-  const [identityNumber, setIdentityNumber] = useState(
-    user?.identityNumber || '',
-  );
-  const [address, setAddress] = useState(user?.address || '');
+  const fullName = user?.fullName || '';
+  const phone = user?.phone || '';
+  const identityNumber = user?.identityNumber || '';
+  const address = user?.address || '';
+  const birthDate = user?.birthDate || '';
 
-  // Xử lý ngày sinh
-  const initialDate = user?.birthDate
-    ? new Date(user.birthDate)
-    : new Date(2000, 0, 1);
-  const [birthDate, setBirthDate] = useState<Date>(initialDate);
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const handleUpdateProfile = () => {
+    if (user?.identityNumber === '') {
+      Alert.alert('Thông báo', 'Vui lòng cung cấp số CMND/CCCD.');
 
-  const [errorFullName, setErrorFullName] = useState('');
-  const [errorPhone, setErrorPhone] = useState('');
-  const [errorIdentityNumber, setErrorIdentityNumber] = useState('');
-  const [errorAddress, setErrorAddress] = useState('');
-
-  // Thêm state cho QR scanning
-  const [isScanning, setIsScanning] = useState(false);
-  const [scannedImage, setScannedImage] = useState(null);
-
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios');
-    if (selectedDate) {
-      setBirthDate(selectedDate);
-    }
-  };
-
-  const formatDate = (date: Date): string => {
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
-  const handleSave = async () => {
-    // Validate
-    const errFullName = validateFullName(fullName);
-    const errPhone = validatePhone(phone);
-    const errIdentityNumber = validateIdentityNumber(identityNumber);
-    setErrorFullName(errFullName || '');
-    setErrorPhone(errPhone || '');
-    setErrorIdentityNumber(errIdentityNumber || '');
-
-    // Kiểm tra địa chỉ có trống không
-    if (!address.trim()) {
-      setErrorAddress('Địa chỉ không được để trống');
+      navigation.navigate('CCCDScanning', {
+        redirectTo: redirectTo || undefined,
+        roomId: roomId || undefined,
+      });
       return;
     } else {
-      setErrorAddress('');
-    }
-
-    if (errFullName || errPhone || errIdentityNumber) {
-      return;
-    }
-    if (!token) {
-      Alert.alert('Error', 'No token found!');
-      return;
-    }
-    try {
-      const success = await dispatch(
-        updateProfile({
-          token,
-          data: {
-            fullName,
-            phone,
-            identityNumber,
-            address,
-            birthDate: birthDate.toISOString(),
-          },
-        }),
-      ).unwrap();
-      if (success) {
-        if (redirectTo === 'DetailRoom' && roomId) {
-          navigation.replace('DetailRoom', {roomId});
-        } else {
-          Alert.alert('Thành công', 'Cập nhật thông tin thành công!');
-        }
-      }
-    } catch (err) {
-      console.log('Update profile error:', err);
-      Alert.alert('Error', 'Failed to update profile!');
+      navigation.navigate('CCCDResult', {});
     }
   };
-
-  // Hàm quét CCCD
-  const handleScanCCCD = () => {
-    launchImageLibrary({mediaType: 'photo'}, async response => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.errorCode) {
-        Alert.alert('Lỗi', 'Không thể chọn ảnh. Vui lòng thử lại.');
-      } else if (response.assets && response.assets.length > 0) {
-        const uri = response.assets[0].uri;
-        setScannedImage({uri});
-        setIsScanning(true);
-
-        try {
-          const barcodes = await BarcodeScanning.scan(uri);
-
-          if (barcodes.length > 0) {
-            const rawData = barcodes[0].value;
-            parseCCCDData(rawData);
-          } else {
-            Alert.alert('Không tìm thấy QR', 'Không tìm thấy mã QR trong ảnh.');
-            setIsScanning(false);
-            setScannedImage(null);
-          }
-        } catch (error) {
-          console.error('QR detection failed:', error);
-          Alert.alert('Lỗi', 'Không thể giải mã QR từ ảnh này.');
-          setIsScanning(false);
-          setScannedImage(null);
-        }
-      }
-    });
-  };
-
-  // Hàm parse dữ liệu CCCD
-  const parseCCCDData = rawData => {
-    const infoArray = rawData.split('|');
-
-    if (infoArray.length >= 6) {
-      // Tự động điền thông tin từ CCCD
-      setIdentityNumber(infoArray[0] || '');
-      setFullName(infoArray[2] || '');
-      setAddress(infoArray[5] || '');
-
-      // Parse ngày sinh (format: ddMMyyyy)
-      const dobString = infoArray[3];
-      if (dobString && dobString.length === 8) {
-        const day = dobString.substring(0, 2);
-        const month = dobString.substring(2, 4);
-        const year = dobString.substring(4, 8);
-        const parsedDate = new Date(
-          parseInt(year),
-          parseInt(month) - 1,
-          parseInt(day),
-        );
-        setBirthDate(parsedDate);
-      }
-
-      // Clear errors
-      setErrorFullName('');
-      setErrorIdentityNumber('');
-      setErrorAddress('');
-
-      setIsScanning(false);
-      Alert.alert('Thành công', 'Đã tự động điền thông tin từ CCCD!');
-    } else {
-      Alert.alert('Lỗi', 'Mã QR không hợp lệ hoặc không đúng định dạng.');
-      setIsScanning(false);
-      setScannedImage(null);
-    }
-  };
-
+  console.log('user', user);
   return (
     <>
       <StatusBar
@@ -220,99 +57,21 @@ export default function PersonalInformation() {
           <IteminIrmation />
 
           <View style={styles.formContainer}>
-            {/* Nút quét CCCD */}
-            <TouchableOpacity
-              style={styles.scanButton}
-              onPress={handleScanCCCD}>
-              <Text style={styles.scanButtonText}>Quét CCCD tự động</Text>
-            </TouchableOpacity>
-
-            {/* Hiển thị ảnh đã quét */}
-            {scannedImage && (
-              <View style={styles.scannedImageContainer}>
-                <Text style={styles.scannedImageText}>Ảnh CCCD đã quét:</Text>
-                <Image source={scannedImage} style={styles.scannedImage} />
-              </View>
-            )}
-
             <View style={styles.inputsContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Họ và tên"
-                value={fullName}
-                onChangeText={text => {
-                  setFullName(text);
-                  setErrorFullName('');
-                }}
+              <ItemInformational title="Họ và tên" value={fullName} />
+              <ItemInformational title="Số điện thoại" value={phone} />
+              <ItemInformational title="Số CMND/CCCD" value={identityNumber} />
+              <ItemInformational title="Địa chỉ" value={address} />
+              <ItemInformational
+                title="Ngày sinh"
+                value={formatDate(birthDate)}
               />
-              {errorFullName ? (
-                <Text style={styles.errorText}>{errorFullName}</Text>
-              ) : null}
-
-              <TextInput
-                style={styles.input}
-                placeholder="Số điện thoại"
-                value={phone}
-                onChangeText={text => {
-                  setPhone(text);
-                  setErrorPhone('');
-                }}
-                keyboardType="phone-pad"
-              />
-              {errorPhone ? (
-                <Text style={styles.errorText}>{errorPhone}</Text>
-              ) : null}
-
-              <TextInput
-                style={styles.input}
-                placeholder="CMND/CCCD"
-                value={identityNumber}
-                onChangeText={text => {
-                  setIdentityNumber(text);
-                  setErrorIdentityNumber('');
-                }}
-                keyboardType="number-pad"
-              />
-              {errorIdentityNumber ? (
-                <Text style={styles.errorText}>{errorIdentityNumber}</Text>
-              ) : null}
-
-              <TextInput
-                style={styles.input}
-                placeholder="Địa chỉ"
-                value={address}
-                onChangeText={text => {
-                  setAddress(text);
-                  setErrorAddress('');
-                }}
-                multiline={true}
-              />
-              {errorAddress ? (
-                <Text style={styles.errorText}>{errorAddress}</Text>
-              ) : null}
-
-              <TouchableOpacity
-                style={styles.input}
-                onPress={() => setShowDatePicker(true)}>
-                <Text style={styles.dateText}>
-                  {`Ngày sinh: ${formatDate(birthDate)}`}
-                </Text>
-              </TouchableOpacity>
-
-              {showDatePicker && (
-                <DateTimePicker
-                  value={birthDate}
-                  mode="date"
-                  display="default"
-                  onChange={handleDateChange}
-                  maximumDate={new Date()}
-                />
-              )}
             </View>
 
-            <TouchableOpacity style={styles.updateButton} onPress={handleSave}>
-              <Text style={styles.updateButtonText}>Cập nhật</Text>
-            </TouchableOpacity>
+            <ItemButtonGreen
+              title="Cập nhật thông tin"
+              onPress={handleUpdateProfile}
+            />
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -342,96 +101,5 @@ const styles = StyleSheet.create({
   },
   inputsContainer: {
     width: '100%',
-  },
-  input: {
-    width: '100%',
-    borderWidth: responsiveFont(1),
-    borderColor: Colors.gray,
-    borderRadius: responsiveFont(50),
-    padding: responsiveSpacing(14),
-    marginBottom: responsiveSpacing(16),
-    fontSize: responsiveFont(16),
-    backgroundColor: Colors.white,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  dateText: {
-    fontSize: responsiveFont(16),
-    color: '#333',
-  },
-  errorText: {
-    color: 'red',
-    marginBottom: responsiveSpacing(12),
-    alignSelf: 'flex-start',
-    fontSize: responsiveFont(12),
-    marginTop: responsiveSpacing(-8),
-  },
-  updateButton: {
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.limeGreen,
-    borderRadius: responsiveFont(50),
-    padding: responsiveSpacing(16),
-    marginTop: responsiveSpacing(16),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  updateButtonText: {
-    fontWeight: 'bold',
-    fontSize: responsiveFont(18),
-    color: Colors.black,
-  },
-  scanButton: {
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#007AFF',
-    borderRadius: responsiveFont(12),
-    padding: responsiveSpacing(14),
-    marginBottom: responsiveSpacing(16),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  scanButtonText: {
-    fontWeight: 'bold',
-    fontSize: responsiveFont(16),
-    color: '#FFFFFF',
-  },
-  scannedImageContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: responsiveSpacing(16),
-  },
-  scannedImageText: {
-    fontSize: responsiveFont(14),
-    color: Colors.gray,
-    marginBottom: responsiveSpacing(8),
-  },
-  scannedImage: {
-    width: 150,
-    height: 100,
-    resizeMode: 'contain',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.gray,
   },
 });
