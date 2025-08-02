@@ -6,7 +6,7 @@
  * Format ngày tháng từ chuỗi ISO sang dạng dd/mm/yyyy
  */
 export const formatDate = (dateString?: string): string => {
-  if (!dateString) return 'Không có';
+  if (!dateString) return '';
   try {
     const date = new Date(dateString);
     return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
@@ -18,7 +18,10 @@ export const formatDate = (dateString?: string): string => {
 /**
  * Format số tiền thành dạng có dấu chấm ngăn cách và đơn vị tiền tệ
  */
-export const formatMoney = (money?: number, suffix: string = '/tháng'): string => {
+export const formatMoney = (
+  money?: number,
+  suffix: string = '/tháng',
+): string => {
   if (money === undefined || money === null) return 'Không có';
   try {
     return money.toLocaleString('vi-VN') + 'đ' + suffix;
@@ -61,4 +64,4 @@ export const getPhotoUrl = (photoPath?: string, baseUrl?: string): string => {
 export const truncateText = (text: string, maxLength: number): string => {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength) + '...';
-}; 
+};

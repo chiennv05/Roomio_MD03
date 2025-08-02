@@ -20,10 +20,7 @@ import {
 } from '../../store/slices/roomSlice';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {Colors} from '../../theme/color';
-import {
-  responsiveSpacing,
-  responsiveFont,
-} from '../../utils/responsive';
+import {responsiveSpacing, responsiveFont} from '../../utils/responsive';
 import {RootStackParamList} from '../../types/route';
 import {Fonts} from '../../theme/fonts';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
@@ -137,7 +134,11 @@ const DetailRoomScreen: React.FC = () => {
 
   // Memoized navigation callbacks
   const handleGoBack = useCallback(() => {
-    navigation.goBack();
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.replace('UITab'); // hoặc navigation.navigate('Home')
+    }
   }, [navigation]);
 
   const showAlert = useCallback(
@@ -172,7 +173,7 @@ const DetailRoomScreen: React.FC = () => {
         setShowLoginPrompt(true);
         return;
       }
-      
+
       dispatch(
         toggleFavorite({
           roomId: roomId,
@@ -238,7 +239,7 @@ const DetailRoomScreen: React.FC = () => {
         longitude,
         address: roomDetail.location.addressText,
         roomDetail: roomDetail,
-        isSelectMode: false
+        isSelectMode: false,
       });
     }
   }, [navigation, roomDetail]);
@@ -354,9 +355,11 @@ const DetailRoomScreen: React.FC = () => {
         const response = await rentRequets(roomId, user?.auth_token, message);
         if (response.success) {
           Alert.alert('Thành công', response.message);
+          bookingModalRef.current?.close();
         } else {
           console.log(response.message);
           Alert.alert('Thất bại', 'Gửi yêu cầu thất bại');
+          bookingModalRef.current?.close();
         }
       } catch (error) {
         console.log('Erro', error);
@@ -419,7 +422,7 @@ const DetailRoomScreen: React.FC = () => {
             <View style={styles.content}>
               <RoomInfo
                 // name={}
-                name = { ""}
+                name={''}
                 price={roomDetailData.price}
                 address={roomDetailData.address}
                 roomCode={roomDetailData.roomCode}
@@ -430,7 +433,7 @@ const DetailRoomScreen: React.FC = () => {
               />
 
               <View style={styles.divider} />
-              <ServiceFees 
+              <ServiceFees
                 servicePrices={roomDetailData.servicePrices}
                 servicePriceConfig={roomDetailData.servicePriceConfig}
                 customServices={roomDetailData.customServices}
@@ -479,8 +482,8 @@ const DetailRoomScreen: React.FC = () => {
           )}
 
           {/* Support Request Modal */}
-          <SupportRequestModal 
-            ref={supportModalRef} 
+          <SupportRequestModal
+            ref={supportModalRef}
             roomId={roomId}
             roomInfo={{
               name: roomDetailData?.name,

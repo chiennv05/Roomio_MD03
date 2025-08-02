@@ -60,4 +60,11 @@ export type RootStackParamList = {
   ContractLessee: undefined;
   ContractDetailLessee: {contractId: string};
   UpdateTenant: {contractId: string; currentUsernames: string[]};
+  CCCDResult: {
+    rawData?: string;
+    imageUri?: string;
+    redirectTo?: string;
+    roomId?: string;
+  };
+  CCCDScanning: {redirectTo?: string; roomId?: string};
 };

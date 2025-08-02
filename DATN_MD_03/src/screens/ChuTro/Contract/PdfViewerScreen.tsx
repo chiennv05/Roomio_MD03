@@ -1,318 +1,273 @@
-import React, {useState, useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   StyleSheet,
-  ActivityIndicator,
-  TouchableOpacity,
+  SafeAreaView,
   Text,
-  Platform,
+  ActivityIndicator,
   Alert,
-  PermissionsAndroid,
+  Dimensions,
 } from 'react-native';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
 import Pdf from 'react-native-pdf';
-import {Icons} from '../../../assets/icons';
+
+import {RootStackParamList} from '../../../types/route';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
-import {
-  scale,
-  verticalScale,
-  responsiveFont,
-  SCREEN,
-} from '../../../utils/responsive';
-import RNFetchBlob from 'rn-fetch-blob';
+import {verticalScale, responsiveFont} from '../../../utils/responsive';
+import {Icons} from '../../../assets/icons';
+import {API_CONFIG} from '../../../configs';
+import {UIHeader} from '../MyRoom/components';
+import RNFS from 'react-native-fs';
+import {PermissionsAndroid, Platform, ToastAndroid} from 'react-native';
 import Share from 'react-native-share';
-import CustomAlertModal from '../../../components/CustomAlertModal';
-import {useCustomAlert} from '../../../hooks/useCustomAlrert';
+
+type PdfViewerRouteProp = RouteProp<RootStackParamList, 'PdfViewer'>;
+type PdfViewerNavigationProp = StackNavigationProp<RootStackParamList>;
 
 const PdfViewerScreen = () => {
-  const navigation = useNavigation();
-  const route = useRoute();
-  const {pdfUrl} = route.params as {pdfUrl: string};
+  const navigation = useNavigation<PdfViewerNavigationProp>();
+  const route = useRoute<PdfViewerRouteProp>();
+  const {pdfUrl} = route.params;
 
-  const [loading, setLoading] = useState(true);
-  const [pdfError, setPdfError] = useState<string | null>(null);
-  const [downloadProgress, setDownloadProgress] = useState(0);
-  const [isDownloading, setIsDownloading] = useState(false);
-
-  const {
-    alertConfig,
-    visible: alertVisible,
-    showAlert,
-    hideAlert,
-    showSuccess,
-    showError,
-    showConfirm,
-  } = useCustomAlert();
+  const [isLoading, setIsLoading] = useState(true);
+  const [pdfLink, setPdfLink] = useState<string | null>(null);
 
   const handleGoBack = () => {
     navigation.goBack();
   };
 
-  const handleLoadComplete = () => {
-    setLoading(false);
-  };
-
-  const handleError = (error: any) => {
-    console.error('PDF loading error:', error);
-    setPdfError(error.message || 'Không thể tải file PDF');
-    setLoading(false);
-  };
-
-  const checkPermission = async () => {
-    if (Platform.OS === 'ios') {
-      return true;
-    }
-
+  const getValidPdfUrl = async (
+    relativeUrl: string,
+  ): Promise<string | null> => {
     try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-        {
-          title: 'Quyền lưu trữ',
-          message: 'Ứng dụng cần quyền truy cập bộ nhớ để tải file PDF.',
-          buttonNeutral: 'Hỏi lại sau',
-          buttonNegative: 'Hủy',
-          buttonPositive: 'Đồng ý',
-        },
-      );
-      return granted === PermissionsAndroid.RESULTS.GRANTED;
-    } catch (err) {
-      console.warn(err);
-      return false;
+      const fullUrl = `${API_CONFIG.BASE_URL}${relativeUrl}`;
+      const response = await fetch(fullUrl, {method: 'HEAD'});
+
+      if (
+        response.ok &&
+        response.headers.get('Content-Type')?.includes('pdf')
+      ) {
+        return fullUrl;
+      }
+      return null;
+    } catch (error) {
+      return null;
     }
   };
 
-  const downloadPdf = async () => {
-    if (!pdfUrl) {
-      showError('Không có file PDF để tải xuống.', 'Lỗi', true);
-      return;
-    }
+  useEffect(() => {
+    const loadPdf = async () => {
+      setIsLoading(true);
+      const url = await getValidPdfUrl(pdfUrl);
+      if (url) {
+        setPdfLink(url);
+      } else {
+        Alert.alert('Lỗi', 'Không thể tải file PDF.');
+      }
+      setIsLoading(false);
+    };
+    loadPdf();
+  }, [pdfUrl]);
 
-    const hasPermission = await checkPermission();
-    if (!hasPermission) {
-      showError('Bạn cần cấp quyền truy cập bộ nhớ để tải file PDF.', 'Lỗi quyền truy cập', true);
-      return;
-    }
-
+  const handleDownloadPdf = async () => {
     try {
-      setIsDownloading(true);
-      showSuccess('Đang tải xuống PDF...', 'Thông báo', false);
+      // Check if we have a valid PDF URL
+      if (!pdfLink) {
+        Alert.alert('Lỗi', 'Không có file PDF để tải xuống.');
+        return;
+      }
 
-      // Tạo tên file dựa trên URL hoặc timestamp
-      const timestamp = new Date().getTime();
-      const fileName = `contract_${timestamp}.pdf`;
+      // Create a filename from the URL or use a default name
+      let filename = 'contract.pdf';
+      if (pdfLink.includes('/')) {
+        const parts = pdfLink.split('/');
+        const urlFilename = parts[parts.length - 1];
+        if (urlFilename && urlFilename.includes('.pdf')) {
+          filename = urlFilename;
+        }
+      }
 
-      // Thư mục lưu trữ
-      const {dirs} = RNFetchBlob.fs;
-      const dirPath =
-        Platform.OS === 'ios'
-          ? dirs.DocumentDir
-          : dirs.DownloadDir || dirs.DocumentDir;
+      // Handle permissions based on platform and Android version
+      if (Platform.OS === 'android') {
+        // Get Android version
+        const androidVersion = Platform.Version;
 
-      // Đường dẫn đầy đủ của file
-      const filePath = `${dirPath}/${fileName}`;
+        // For Android 10+ (API 29+), we don't need WRITE_EXTERNAL_STORAGE for app's download directory
+        if (androidVersion >= 29) {
+          // No permission needed, just continue with download
+          console.log(
+            'Android 10+, no explicit permission needed for app directory',
+          );
+        } else {
+          // For older Android versions, request permission
+          try {
+            const granted = await PermissionsAndroid.request(
+              PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+              {
+                title: 'Quyền truy cập bộ nhớ',
+                message: 'Ứng dụng cần quyền truy cập bộ nhớ để tải file PDF.',
+                buttonNeutral: 'Hỏi lại sau',
+                buttonNegative: 'Từ chối',
+                buttonPositive: 'Đồng ý',
+              },
+            );
 
-      // Tải xuống file
-      const res = await RNFetchBlob.config({
-        fileCache: true,
-        path: filePath,
-        addAndroidDownloads: {
-          useDownloadManager: true,
-          notification: true,
-          title: 'Hợp đồng PDF',
-          description: 'Đang tải xuống file PDF hợp đồng...',
-          mime: 'application/pdf',
-          mediaScannable: true,
-        },
-        progress: (received, total) => {
-          const progress = received / total;
-          setDownloadProgress(progress);
-        },
-      }).fetch('GET', pdfUrl);
+            if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+              Alert.alert(
+                'Thông báo',
+                'Bạn cần cấp quyền truy cập bộ nhớ để tải file PDF.',
+              );
+              return;
+            }
+          } catch (err) {
+            console.warn(err);
+            // Continue anyway - some devices may have issues with the permission API
+          }
+        }
+      }
 
-      setIsDownloading(false);
-      hideAlert(); // Ẩn thông báo "Đang tải xuống"
-
+      // Set download path based on platform
+      let downloadPath;
       if (Platform.OS === 'ios') {
-        // Chia sẻ file trên iOS
+        downloadPath = `${RNFS.DocumentDirectoryPath}/${filename}`;
+      } else {
+        // For Android, try to use Download directory directly
+        downloadPath = `${RNFS.DownloadDirectoryPath}/${filename}`;
+      }
+
+      console.log('Downloading to path:', downloadPath);
+
+      // Show download starting message
+      Alert.alert('Thông báo', 'Đang tải xuống PDF...');
+
+      // Download the file
+      const {promise} = RNFS.downloadFile({
+        fromUrl: pdfLink,
+        toFile: downloadPath,
+        background: true,
+        discretionary: true,
+        progress: res => {
+          const progress = (res.bytesWritten / res.contentLength) * 100;
+          console.log(`Download progress: ${progress.toFixed(2)}%`);
+        },
+      });
+
+      const result = await promise;
+
+      if (result.statusCode === 200) {
+        // Download successful
+        if (Platform.OS === 'android') {
+          ToastAndroid.show('Tải xuống thành công', ToastAndroid.LONG);
+        } else {
+          Alert.alert('Thành công', 'File PDF đã được tải xuống.');
+        }
+
+        // Optionally share the file
         const shareOptions = {
-          url: `file://${res.path()}`,
+          title: 'Chia sẻ file PDF',
+          message: 'Chia sẻ hợp đồng',
+          url: `file://${downloadPath}`,
           type: 'application/pdf',
         };
-        await Share.open(shareOptions);
+
+        try {
+          // Ask if user wants to open the file
+          Alert.alert(
+            'Thành công',
+            'File PDF đã được tải xuống. Bạn có muốn mở file không?',
+            [
+              {
+                text: 'Không',
+                style: 'cancel',
+              },
+              {
+                text: 'Mở file',
+                onPress: () => Share.open(shareOptions),
+              },
+            ],
+          );
+        } catch (shareError) {
+          console.error('Error sharing file:', shareError);
+        }
       } else {
-        // Hiển thị thông báo thành công trên Android
-        showSuccess('File PDF đã được tải xuống.', 'Thành công', true);
+        Alert.alert(
+          'Lỗi',
+          'Không thể tải xuống file PDF. Vui lòng thử lại sau.',
+        );
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Download error:', error);
-      setIsDownloading(false);
-      hideAlert(); // Ẩn thông báo "Đang tải xuống" nếu có lỗi
-      
-      showConfirm(
-        'Đã xảy ra lỗi khi tải xuống file PDF. Bạn có muốn thử lại không?',
-        () => downloadPdf(),
-        'Lỗi tải xuống',
-        [
-          {
-            text: 'Hủy',
-            onPress: hideAlert,
-            style: 'cancel',
-          },
-          {
-            text: 'Thử lại',
-            onPress: () => downloadPdf(),
-            style: 'default',
-          },
-        ]
-      );
+      Alert.alert('Lỗi', 'Đã xảy ra lỗi khi tải xuống file PDF.');
     }
   };
-
-  if (pdfError) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Không thể hiển thị PDF.</Text>
-        <Text style={styles.errorDetail}>{pdfError}</Text>
-        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-          <Text style={styles.backButtonText}>Quay lại</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={handleGoBack}>
-          <Text style={styles.backText}>Quay lại</Text>
-        </TouchableOpacity>
+    <SafeAreaView style={styles.container}>
+      <UIHeader
+        title="Xem hợp đồng PDF"
+        iconLeft={Icons.IconArrowLeft}
+        onPressLeft={handleGoBack}
+        iconRight={Icons.IconDownLoad}
+        onPressRight={handleDownloadPdf}
+      />
 
-        <TouchableOpacity
-          style={styles.downloadBtn}
-          onPress={downloadPdf}
-          disabled={isDownloading}>
-          <Text style={styles.downloadText}>
-            {isDownloading ? 'Đang tải...' : 'Tải xuống'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* PDF Viewer */}
       <View style={styles.pdfContainer}>
-        {loading && (
+        {isLoading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={Colors.darkGreen} />
             <Text style={styles.loadingText}>Đang tải PDF...</Text>
           </View>
         )}
 
-        <Pdf
-          source={{uri: pdfUrl}}
-          onLoadComplete={handleLoadComplete}
-          onError={handleError}
-          onPageChanged={(page, pageCount) => {
-            console.log(`${page}/${pageCount}`);
-          }}
-          style={styles.pdf}
-        />
+        {!isLoading && pdfLink && (
+          <Pdf
+            source={{uri: pdfLink, cache: true}}
+            style={styles.pdf}
+            onLoadComplete={() => setIsLoading(false)}
+            onError={() => {
+              Alert.alert('Lỗi', 'Không thể hiển thị PDF.');
+              setIsLoading(false);
+            }}
+            trustAllCerts={false}
+            enablePaging
+            enableAnnotationRendering
+          />
+        )}
       </View>
-
-      {alertConfig && (
-        <CustomAlertModal
-          visible={alertVisible}
-          title={alertConfig.title}
-          message={alertConfig.message}
-          onClose={hideAlert}
-          type={alertConfig.type}
-          buttons={alertConfig.buttons}
-        />
-      )}
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    backgroundColor: Colors.backgroud,
     alignItems: 'center',
-    paddingHorizontal: scale(16),
-    paddingVertical: verticalScale(12),
-    backgroundColor: Colors.darkGreen,
-  },
-  backBtn: {
-    padding: scale(8),
-  },
-  backText: {
-    color: Colors.white,
-    fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(16),
-  },
-  downloadBtn: {
-    padding: scale(8),
-  },
-  downloadText: {
-    color: Colors.white,
-    fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(16),
   },
   pdfContainer: {
     flex: 1,
     position: 'relative',
+    width: '100%',
   },
   pdf: {
     flex: 1,
-    width: SCREEN.width,
-    height: '100%',
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height - 60,
+    backgroundColor: Colors.white,
   },
   loadingContainer: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     zIndex: 1,
   },
   loadingText: {
-    marginTop: verticalScale(16),
-    fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(16),
-    color: Colors.textGray,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: scale(20),
-  },
-  errorText: {
-    fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(18),
-    color: Colors.red,
-    marginBottom: verticalScale(8),
-  },
-  errorDetail: {
+    marginTop: verticalScale(10),
     fontFamily: Fonts.Roboto_Regular,
     fontSize: responsiveFont(14),
     color: Colors.textGray,
-    textAlign: 'center',
-    marginBottom: verticalScale(24),
-  },
-  backButton: {
-    backgroundColor: Colors.darkGreen,
-    paddingHorizontal: scale(24),
-    paddingVertical: verticalScale(12),
-    borderRadius: 8,
-  },
-  backButtonText: {
-    color: Colors.white,
-    fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(16),
   },
 });
 

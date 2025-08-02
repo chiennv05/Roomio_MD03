@@ -38,4 +38,5 @@ export const Colors = {
   lightOrangeBackground: '#F8F4F0',
   rejectedBg: '#FCE4E4',
   limeGreenOpacityLight: 'rgba(186, 253, 0, 0.4)',
+  ashGray: '#9F9F9F',
 };

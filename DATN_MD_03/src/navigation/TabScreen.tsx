@@ -49,6 +49,8 @@ import AddContractNoNotification from '../screens/ChuTro/Contract/AddContractNoN
 import ContractLessee from '../screens/NguoiThue/Contract/ContractLessee';
 import ContractDetailLesseeScreen from '../screens/NguoiThue/Contract/ContractDetailLesseeScreen';
 import UpdateTenant from '../screens/ChuTro/Contract/UpdateTenant';
+import CCCDResult from '../screens/Profile/CCCDResult';
+import CCCDScanning from '../screens/Profile/CCCDScanning';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -265,6 +267,20 @@ export default function TabScreen() {
           <Stack.Screen
             name="UpdateTenant"
             component={UpdateTenant}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="CCCDResult"
+            component={CCCDResult}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="CCCDScanning"
+            component={CCCDScanning}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}
