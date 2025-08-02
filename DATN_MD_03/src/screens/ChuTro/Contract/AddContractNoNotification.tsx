@@ -1,4 +1,4 @@
-import {StyleSheet, ScrollView, Alert, View} from 'react-native';
+import {StyleSheet, ScrollView, View, Text} from 'react-native';
 import React, {useState} from 'react';
 import {Colors} from '../../../theme/color';
 import {ItemInput, UIHeader} from '../MyRoom/components';
@@ -16,17 +16,17 @@ import {useDispatch} from 'react-redux';
 import {AppDispatch} from '../../../store';
 
 import ModalSearchRoom from './components/ModalSearchRoom';
-import {responsiveSpacing} from '../../../utils/responsive';
+import {responsiveFont, responsiveSpacing} from '../../../utils/responsive';
 import {
   ContractFormDataNoNotification,
   validateContractFormNoNotification,
 } from './utils/validateFromNoNotification';
 import {createNewContractThunk} from '../../../store/slices/contractSlice';
 import CustomAlertModal from '../../../components/CustomAlertModal';
-import { useCustomAlert } from '../../../hooks/useCustomAlrert';
+import {useCustomAlert} from '../../../hooks/useCustomAlrert';
 
 export default function AddContractNoNotification() {
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>(); 
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   const dispatch = useDispatch<AppDispatch>();
 
@@ -37,8 +37,10 @@ export default function AddContractNoNotification() {
   const [tenantUsername, setTenantUsername] = useState<string>('');
   const [contractTerm, setContractTerm] = useState<number>(12);
   const [startDate, setStartDate] = useState('');
-  const [rules, setRules] = useState('');
-  const [additionalTerms, setAdditionalTerms] = useState('');
+  const [rules, setRules] = useState('Hạn thu tiền quá 5 ngày sẽ bị phạt');
+  const [additionalTerms, setAdditionalTerms] = useState(
+    'Không được phép sửa chữa phòng. Muốn sửa phòng phải được chủ trọ đồng ý',
+  );
   const [coTenants, setCoTenants] = useState<string>('');
   const [modalSearchRoomVisible, setModalSearchRoomVisible] = useState(false);
 
@@ -75,7 +77,6 @@ export default function AddContractNoNotification() {
   const {
     alertConfig,
     visible: alertVisible,
-    showAlert,
     hideAlert,
     showSuccess,
     showError,
@@ -147,9 +148,9 @@ export default function AddContractNoNotification() {
       clearForm,
       'Xác nhận',
       [
-        { text: 'Hủy', onPress: hideAlert, style: 'cancel' },
-        { text: 'Đồng ý', onPress: clearForm, style: 'destructive' },
-      ]
+        {text: 'Hủy', onPress: hideAlert, style: 'cancel'},
+        {text: 'Đồng ý', onPress: clearForm, style: 'destructive'},
+      ],
     );
   };
 
@@ -166,7 +167,6 @@ export default function AddContractNoNotification() {
           value={tenantUsername}
           onChangeText={setTenantUsername}
           editable={true}
-          borderRadius={10}
         />
         {/* Contract Term Input with DatePicker */}
         <ItemInput
@@ -174,7 +174,6 @@ export default function AddContractNoNotification() {
           value={roomName}
           onChangeText={() => {}}
           editable={false} // Không cho phép chỉnh sửa trực tiếp
-          borderRadius={10}
           onPress={handleSearchRoom} // Mở modal tìm kiếm phòng
         />
         <ItemInput
@@ -182,7 +181,6 @@ export default function AddContractNoNotification() {
           value={contractTerm.toString()}
           onChangeText={text => setContractTerm(Number(text))}
           editable={true}
-          borderRadius={10}
           keyboardType="numeric"
         />
         {/* Start Date Input with DatePicker */}
@@ -191,7 +189,6 @@ export default function AddContractNoNotification() {
           value={startDate || ''}
           onChangeText={() => {}} // Empty function since it's not editable
           editable={false}
-          borderRadius={10}
           onPress={() => setOpenStartDatePicker(true)}
         />
         <ItemInput
@@ -202,6 +199,9 @@ export default function AddContractNoNotification() {
           borderRadius={10}
           height={100} // Increased height for multiline
         />
+        <Text style={styles.helperText}>
+          Bạn có thể chỉnh sửa nội dung điều khoản nội quy nếu cần.
+        </Text>
         <ItemInput
           placeholder="Điều khoản bổ sung"
           value={additionalTerms}
@@ -210,14 +210,19 @@ export default function AddContractNoNotification() {
           borderRadius={10}
           height={responsiveSpacing(100)} // Increased height for multiline
         />
+
+        <Text style={styles.helperText}>
+          Bạn có thể thay đổi điều khoản bổ sung theo thỏa thuận riêng.
+        </Text>
         <ItemInput
           placeholder="Người cùng thuê (cách nhau bằng dấu phẩy)"
           value={coTenants}
           onChangeText={setCoTenants} // Đơn giản hơn
           editable={true}
-          borderRadius={10}
         />
-
+        <Text style={styles.helperText}>
+          Nếu không có người cùng thuê, bạn có thể để trống.
+        </Text>
         <View style={styles.conatinerButton}>
           <ItemButtonConfirm
             title="Tạo hợp đồng"
@@ -270,5 +275,11 @@ const styles = StyleSheet.create({
   },
   conatinerButton: {
     marginTop: 16,
+  },
+  helperText: {
+    fontSize: responsiveFont(15),
+    color: Colors.gray60, // màu xám nhẹ
+    marginBottom: responsiveSpacing(10),
+    marginLeft: 4,
   },
 });

@@ -7,7 +7,6 @@ import {store} from './src/store';
 
 import TabScreen from './src/navigation/TabScreen';
 import {MenuProvider} from 'react-native-popup-menu';
-import CCCDQRScanner from './src/screens/CCCD/CCCDScreen';
 
 export default function App() {
   return (

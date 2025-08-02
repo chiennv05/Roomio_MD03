@@ -8,7 +8,6 @@ import {
   ScrollView,
   ActivityIndicator,
   FlatList,
-  Alert,
   StatusBar,
 } from 'react-native';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
@@ -43,7 +42,7 @@ import ItemImage from './components/ItemImage';
 import {useContractImageActions} from '../AddRoom/hooks/useContractImageActions';
 import ContractMenu from './components/ContractMenu';
 import ModalConfirmContract from './components/ModalConfirmContract';
-import { useCustomAlert } from '../../../hooks/useCustomAlrert';
+import {useCustomAlert} from '../../../hooks/useCustomAlrert';
 import CustomAlertModal from '../../../components/CustomAlertModal';
 // Format tiền tệ
 const formatCurrency = (amount: number) => {
@@ -99,7 +98,6 @@ const ContractDetailScreen = () => {
   const {
     alertConfig,
     visible: alertVisible,
-    showAlert,
     hideAlert,
     showSuccess,
     showError,
@@ -110,11 +108,19 @@ const ContractDetailScreen = () => {
   const onViewPDF = () => {
     if (selectedContract) {
       if (selectedContract.status === 'terminated') {
-        showError('Hợp đồng đã bị chấm dứt, không thể xem PDF.', 'Thông báo', true);
+        showError(
+          'Hợp đồng đã bị chấm dứt, không thể xem PDF.',
+          'Thông báo',
+          true,
+        );
         return;
       }
       if (selectedContract.status === 'rejected') {
-        showError('Hợp đồng đã bị từ chối, không thể xem PDF.', 'Thông báo', true);
+        showError(
+          'Hợp đồng đã bị từ chối, không thể xem PDF.',
+          'Thông báo',
+          true,
+        );
         return;
       }
       handleViewPDF(
@@ -125,8 +131,8 @@ const ContractDetailScreen = () => {
         setGeneratingPDF,
         {
           showSuccess: (msg, title) => showSuccess(msg, title, true),
-          showError: (msg, title) => showError(msg, title, true)
-        }
+          showError: (msg, title) => showError(msg, title, true),
+        },
       );
     }
   };
@@ -135,7 +141,7 @@ const ContractDetailScreen = () => {
     handlePickImages(selectedContract, contractId, dispatch, {
       showSuccess,
       showError,
-      showConfirm
+      showConfirm,
     });
   };
 
@@ -149,7 +155,11 @@ const ContractDetailScreen = () => {
     const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
 
     if (!allowedStatuses.includes(selectedContract.status)) {
-      showError('Chỉ có thể xóa ảnh hợp đồng ở trạng thái Nháp, Chờ ký hoặc Chờ duyệt.', 'Không thể xóa ảnh', true);
+      showError(
+        'Chỉ có thể xóa ảnh hợp đồng ở trạng thái Nháp, Chờ ký hoặc Chờ duyệt.',
+        'Không thể xóa ảnh',
+        true,
+      );
       return;
     }
 
@@ -168,7 +178,7 @@ const ContractDetailScreen = () => {
           onPress: () => onDeleteAllImages(),
           style: 'destructive',
         },
-      ]
+      ],
     );
   };
   const onDeleteOneImage = (fileName: string) => {
@@ -177,7 +187,11 @@ const ContractDetailScreen = () => {
     const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
 
     if (!allowedStatuses.includes(selectedContract.status)) {
-      showError('Chỉ có thể xóa ảnh hợp đồng ở trạng thái Nháp, Chờ ký hoặc Chờ duyệt.', 'Không thể xóa ảnh', true);
+      showError(
+        'Chỉ có thể xóa ảnh hợp đồng ở trạng thái Nháp, Chờ ký hoặc Chờ duyệt.',
+        'Không thể xóa ảnh',
+        true,
+      );
       return;
     }
 
@@ -199,7 +213,7 @@ const ContractDetailScreen = () => {
           onPress: () => onDeleteImage(fileName),
           style: 'destructive',
         },
-      ]
+      ],
     );
   };
 
@@ -207,7 +221,10 @@ const ContractDetailScreen = () => {
   const onExtendContract = () => {
     if (!selectedContract) return;
     if (selectedContract.status !== 'pending_signature') {
-      showError('Chỉ có thể gia hạn hợp đồng ở trạng thái Chờ ký.', 'Không thể gia hạn');
+      showError(
+        'Chỉ có thể gia hạn hợp đồng ở trạng thái Chờ ký.',
+        'Không thể gia hạn',
+      );
       return;
     }
     setAction('extend');
@@ -222,19 +239,31 @@ const ContractDetailScreen = () => {
       return;
     }
     if (selectedContract.status === 'draft') {
-      showError('Hợp đồng ở trạng thái Nháp không thể chấm dứt.', 'Không thể chấm dứt');
+      showError(
+        'Hợp đồng ở trạng thái Nháp không thể chấm dứt.',
+        'Không thể chấm dứt',
+      );
       return;
     }
     if (selectedContract.status === 'pending_signature') {
-      showError('Hợp đồng ở trạng thái Chờ ký không thể chấm dứt.', 'Không thể chấm dứt');
+      showError(
+        'Hợp đồng ở trạng thái Chờ ký không thể chấm dứt.',
+        'Không thể chấm dứt',
+      );
       return;
     }
     if (selectedContract.status === 'pending_approval') {
-      showError('Hợp đồng ở trạng thái Chờ duyệt không thể chấm dứt.', 'Không thể chấm dứt');
+      showError(
+        'Hợp đồng ở trạng thái Chờ duyệt không thể chấm dứt.',
+        'Không thể chấm dứt',
+      );
       return;
     }
     if (selectedContract.status === 'rejected') {
-      showError('Hợp đồng đã bị từ chối không thể chấm dứt.', 'Không thể chấm dứt');
+      showError(
+        'Hợp đồng đã bị từ chối không thể chấm dứt.',
+        'Không thể chấm dứt',
+      );
       return;
     }
 
@@ -380,7 +409,10 @@ const ContractDetailScreen = () => {
         contract: selectedContract,
       });
     } else {
-      showError('Chỉ có thể chỉnh sửa hợp đồng ở trạng thái Nháp, Chờ ký hoặc Chờ duyệt.', 'Không thể chỉnh sửa');
+      showError(
+        'Chỉ có thể chỉnh sửa hợp đồng ở trạng thái Nháp, Chờ ký hoặc Chờ duyệt.',
+        'Không thể chỉnh sửa',
+      );
     }
   };
 
@@ -390,7 +422,11 @@ const ContractDetailScreen = () => {
   const handleDeleteContract = async () => {
     const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
     if (!allowedStatuses.includes(contract?.status)) {
-      showError('Chỉ có thể xóa hợp đồng ở trạng thái nháp, chờ ký hoặc chờ duyệt.', 'Không thể xóa', true);
+      showError(
+        'Chỉ có thể xóa hợp đồng ở trạng thái nháp, chờ ký hoặc chờ duyệt.',
+        'Không thể xóa',
+        true,
+      );
       return;
     }
     // Hiện dialog xác nhận với 2 nút cho mọi trạng thái hợp lệ
@@ -402,7 +438,11 @@ const ContractDetailScreen = () => {
           showSuccess('Hợp đồng đã được xóa thành công', 'Thành công', true);
           navigation.goBack();
         } catch (error: any) {
-          showError(error?.message || 'Có lỗi xảy ra khi xóa hợp đồng', 'Lỗi', true);
+          showError(
+            error?.message || 'Có lỗi xảy ra khi xóa hợp đồng',
+            'Lỗi',
+            true,
+          );
         }
       },
       'Xác nhận',
@@ -417,15 +457,23 @@ const ContractDetailScreen = () => {
           onPress: async () => {
             try {
               await dispatch(deleteContract(contract._id)).unwrap();
-              showSuccess('Hợp đồng đã được xóa thành công', 'Thành công', true);
+              showSuccess(
+                'Hợp đồng đã được xóa thành công',
+                'Thành công',
+                true,
+              );
               navigation.goBack();
             } catch (error: any) {
-              showError(error?.message || 'Có lỗi xảy ra khi xóa hợp đồng', 'Lỗi', true);
+              showError(
+                error?.message || 'Có lỗi xảy ra khi xóa hợp đồng',
+                'Lỗi',
+                true,
+              );
             }
           },
           style: 'destructive',
         },
-      ]
+      ],
     );
   };
 
