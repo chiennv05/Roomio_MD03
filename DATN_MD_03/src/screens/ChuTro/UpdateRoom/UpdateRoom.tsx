@@ -65,7 +65,7 @@ export default function UpdateRoom() {
   const dispatch = useDispatch<AppDispatch>();
   console.log('item room', item);
   
-  // Initialize custom alert hook with proper destructuring
+
   const { 
     alertConfig, 
     visible, 
