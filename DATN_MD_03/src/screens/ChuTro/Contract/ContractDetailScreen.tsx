@@ -83,7 +83,7 @@ const ContractDetailScreen = () => {
     selectedContractError,
     uploadingImages,
   } = useSelector((state: RootState) => state.contract);
-
+  console.log('contract', selectedContract);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [isVisibleImage, setIsVisibleImage] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -313,6 +313,14 @@ const ContractDetailScreen = () => {
     }
   };
 
+  const handleUpdateTenant = () => {
+    if (!selectedContract) return;
+    navigation.navigate('UpdateTenant', {
+      contractId: selectedContract._id,
+      existingTenants: selectedContract.contractInfo.coTenants || [],
+    });
+  };
+
   // Hiển thị màn hình loading
   if (selectedContractLoading) {
     return (
@@ -328,6 +336,7 @@ const ContractDetailScreen = () => {
                 onExtend={() => {}}
                 onTerminate={() => {}}
                 onDeleteContract={() => {}}
+                onUpdateTenant={() => {}}
               />
             }
           />
@@ -355,6 +364,7 @@ const ContractDetailScreen = () => {
                 onExtend={() => {}}
                 onTerminate={() => {}}
                 onDeleteContract={() => {}}
+                onUpdateTenant={() => {}}
               />
             }
           />
@@ -388,6 +398,7 @@ const ContractDetailScreen = () => {
                 onExtend={() => {}}
                 onTerminate={() => {}}
                 onDeleteContract={() => {}}
+                onUpdateTenant={() => {}}
               />
             }
           />
@@ -500,6 +511,7 @@ const ContractDetailScreen = () => {
                 onExtend={onExtendContract}
                 onTerminate={onTerminateContract}
                 onDeleteContract={handleDeleteContract}
+                onUpdateTenant={handleUpdateTenant}
               />
             }
             color={Colors.white}

@@ -16,6 +16,7 @@ interface Props {
   onExtend: () => void;
   onTerminate: () => void;
   onDeleteContract: () => void;
+  onUpdateTenant: () => void; // Uncomment if needed
 }
 
 const ContractMenu: React.FC<Props> = ({
@@ -23,6 +24,7 @@ const ContractMenu: React.FC<Props> = ({
   onExtend,
   onTerminate,
   onDeleteContract,
+  onUpdateTenant, // Uncomment if needed
 }) => {
   return (
     <Menu>
@@ -33,6 +35,11 @@ const ContractMenu: React.FC<Props> = ({
         <MenuOption onSelect={onEdit}>
           <View style={styles.optionRow}>
             <Text style={styles.optionText}>Sửa hợp đồng</Text>
+          </View>
+        </MenuOption>
+        <MenuOption onSelect={onUpdateTenant}>
+          <View style={styles.optionRow}>
+            <Text style={styles.optionText}>Cập nhật người ở cùng</Text>
           </View>
         </MenuOption>
 
