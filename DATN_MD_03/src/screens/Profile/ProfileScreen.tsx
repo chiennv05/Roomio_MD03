@@ -193,7 +193,7 @@ export default function ProfileScreen() {
           {isLandlord && (
             <>
               <SettingItem
-                iconStat={Icons.IconListTenants}
+                iconStat={Icons.IconPersonDefault}
                 label="Danh sách người thuê"
                 iconEnd={Icons.IconNext}
                 onPress={handleTenantListPress}
