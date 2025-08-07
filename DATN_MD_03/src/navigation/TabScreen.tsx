@@ -54,7 +54,6 @@ import CCCDScanning from '../screens/Profile/CCCDScanning';
 import RoomStatisticScreen from '../screens/ChuTro/Statistic/RoomStatisticScreen';
 import RevenueStatisticScreen from '../screens/ChuTro/Statistic/RevenueStatisticScreen';
 import ContractStatisticScreen from '../screens/ChuTro/Statistic/ContractStatisticScreen';
-import NotificationTestScreen from '../screens/Notification/NotificationTestScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -285,13 +284,6 @@ export default function TabScreen() {
           <Stack.Screen
             name="ContractStatisticScreen"
             component={ContractStatisticScreen}
-            options={{
-              ...TransitionPresets.SlideFromRightIOS,
-            }}
-          />
-          <Stack.Screen
-            name="NotificationTestScreen"
-            component={NotificationTestScreen}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}

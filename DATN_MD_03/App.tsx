@@ -7,18 +7,15 @@ import {store} from './src/store';
 
 import TabScreen from './src/navigation/TabScreen';
 import {MenuProvider} from 'react-native-popup-menu';
-import NotificationProvider from './src/providers/NotificationProvider';
 
 export default function App() {
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView style={{flex: 1}}>
         <Provider store={store}>
-          <NotificationProvider>
-            <MenuProvider>
-              <TabScreen />
-            </MenuProvider>
-          </NotificationProvider>
+          <MenuProvider>
+            <TabScreen />
+          </MenuProvider>
         </Provider>
       </GestureHandlerRootView>
     </SafeAreaProvider>
