@@ -51,6 +51,10 @@ import ContractDetailLesseeScreen from '../screens/NguoiThue/Contract/ContractDe
 import UpdateTenant from '../screens/ChuTro/Contract/UpdateTenant';
 import CCCDResult from '../screens/Profile/CCCDResult';
 import CCCDScanning from '../screens/Profile/CCCDScanning';
+import RoomStatisticScreen from '../screens/ChuTro/Statistic/RoomStatisticScreen';
+import RevenueStatisticScreen from '../screens/ChuTro/Statistic/RevenueStatisticScreen';
+import ContractStatisticScreen from '../screens/ChuTro/Statistic/ContractStatisticScreen';
+import NotificationTestScreen from '../screens/Notification/NotificationTestScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -264,6 +268,34 @@ export default function TabScreen() {
             }}
           />
           <Stack.Screen name="StatisticScreen" component={StatisticScreen} />
+          <Stack.Screen
+            name="RoomStatisticScreen"
+            component={RoomStatisticScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="RevenueStatisticScreen"
+            component={RevenueStatisticScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="ContractStatisticScreen"
+            component={ContractStatisticScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="NotificationTestScreen"
+            component={NotificationTestScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
           <Stack.Screen
             name="UpdateTenant"
             component={UpdateTenant}
