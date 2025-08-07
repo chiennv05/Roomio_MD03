@@ -83,7 +83,6 @@ const ContractDetailScreen = () => {
     selectedContractError,
     uploadingImages,
   } = useSelector((state: RootState) => state.contract);
-  console.log('contract', selectedContract);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [isVisibleImage, setIsVisibleImage] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -142,6 +141,7 @@ const ContractDetailScreen = () => {
       showSuccess,
       showError,
       showConfirm,
+      hideAlert,
     });
   };
 
@@ -175,7 +175,10 @@ const ContractDetailScreen = () => {
         },
         {
           text: 'XÓA',
-          onPress: () => onDeleteAllImages(),
+          onPress: () => {
+            hideAlert();
+            onDeleteAllImages();
+          },
           style: 'destructive',
         },
       ],
@@ -195,11 +198,8 @@ const ContractDetailScreen = () => {
       return;
     }
 
-    // Lấy tên file ngắn gọn để hiển thị
-    const shortFileName = fileName.split('/').pop() || fileName;
-
     showConfirm(
-      `Bạn có chắc chắn muốn xóa ảnh "${shortFileName}" không?`,
+      'Bạn có chắc chắn muốn xóa ảnh này không?',
       () => onDeleteImage(fileName),
       'Xác nhận',
       [
@@ -210,7 +210,10 @@ const ContractDetailScreen = () => {
         },
         {
           text: 'XÓA',
-          onPress: () => onDeleteImage(fileName),
+          onPress: () => {
+            hideAlert();
+            onDeleteImage(fileName);
+          },
           style: 'destructive',
         },
       ],
@@ -220,7 +223,10 @@ const ContractDetailScreen = () => {
   // gia hạn hợp đồng
   const onExtendContract = () => {
     if (!selectedContract) return;
-    if (selectedContract.status !== 'pending_signature') {
+    if (
+      selectedContract.status !== 'pending_signature' &&
+      selectedContract.status !== 'active'
+    ) {
       showError(
         'Chỉ có thể gia hạn hợp đồng ở trạng thái Chờ ký.',
         'Không thể gia hạn',
@@ -525,7 +531,10 @@ const ContractDetailScreen = () => {
             <Text style={styles.textCodeContract}>{contract._id}</Text>
           </View>
           <View
-            style={[styles.statusBadge, {backgroundColor: statusInfo.color}]}>
+            style={[
+              styles.statusBadge,
+              {backgroundColor: statusInfo.backgroudStatus},
+            ]}>
             <Text style={styles.statusText}>{statusInfo.label}</Text>
           </View>
         </View>
@@ -731,9 +740,13 @@ const ContractDetailScreen = () => {
                     <View
                       style={[
                         styles.historyStatus,
-                        {backgroundColor: statusInfo.color},
+                        {backgroundColor: statusInfo.backgroudStatus},
                       ]}>
-                      <Text style={styles.historyStatusText}>
+                      <Text
+                        style={[
+                          styles.historyStatusText,
+                          {color: Colors.white},
+                        ]}>
                         {statusInfo.label}
                       </Text>
                     </View>

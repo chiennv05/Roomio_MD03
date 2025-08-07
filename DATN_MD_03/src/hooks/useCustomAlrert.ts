@@ -16,17 +16,17 @@ interface AlertConfig {
 export const useCustomAlert = () => {
   const [alertConfig, setAlertConfig] = useState<AlertConfig | null>(null);
   const [visible, setVisible] = useState(false);
-  
+
   // Thêm useEffect để xử lý tự động ẩn alert
   useEffect(() => {
     let timeoutId: NodeJS.Timeout | null = null;
-    
+
     if (visible && alertConfig?.autoHide) {
       timeoutId = setTimeout(() => {
         hideAlert();
       }, alertConfig.autoHideTimeout || 2000);
     }
-    
+
     return () => {
       if (timeoutId) {
         clearTimeout(timeoutId);
@@ -44,7 +44,11 @@ export const useCustomAlert = () => {
     setAlertConfig(null);
   };
 
-  const showSuccess = (message: string, title?: string, autoHide: boolean = true) => {
+  const showSuccess = (
+    message: string,
+    title?: string,
+    autoHide: boolean = true,
+  ) => {
     showAlert({
       title,
       message,
@@ -55,12 +59,15 @@ export const useCustomAlert = () => {
     });
   };
 
-  const showError = (message: string, title?: string, autoHide: boolean = true) => {
+  const showError = (
+    message: string,
+    title?: string,
+    autoHide: boolean = true,
+  ) => {
     showAlert({
       title,
       message,
       type: 'error',
-      buttons: [{text: 'OK', onPress: hideAlert}],
       autoHide,
       autoHideTimeout: 2000,
     });

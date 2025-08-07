@@ -1,23 +1,20 @@
-import {Alert} from 'react-native';
 import {useAppDispatch} from '../../../../hooks';
 import {
   deleteAllSignedImages,
   deleteSignedImageThunk,
 } from '../../../../store/slices/contractSlice';
-import { useCustomAlert } from '../../../../hooks/useCustomAlrert';
+import {useCustomAlert} from '../../../../hooks/useCustomAlrert';
 
 export function useContractImageActions(contractId: string) {
   const dispatch = useAppDispatch();
-  const { showSuccess, showError } = useCustomAlert();
+  const {showSuccess, showError} = useCustomAlert();
 
   /**
    * Xóa tất cả ảnh hợp đồng đã ký
    */
   const onDeleteAllImages = async () => {
     try {
-      const result = await dispatch(
-        deleteAllSignedImages(contractId),
-      ).unwrap();
+      const result = await dispatch(deleteAllSignedImages(contractId)).unwrap();
       showSuccess(result.message, 'Thành công', true);
     } catch (err: any) {
       showError(err || 'Xóa tất cả ảnh thất bại', 'Lỗi', true);
@@ -33,7 +30,11 @@ export function useContractImageActions(contractId: string) {
       const result = await dispatch(
         deleteSignedImageThunk({contractId, fileName}),
       ).unwrap();
-      showSuccess(result.message || 'Xóa ảnh hợp đồng đã ký thành công', 'Thành công', true);
+      showSuccess(
+        result.message || 'Xóa ảnh hợp đồng đã ký thành công',
+        'Thành công',
+        true,
+      );
     } catch (err: any) {
       showError(err || `Xóa ảnh "${fileName}" thất bại`, 'Lỗi', true);
     }

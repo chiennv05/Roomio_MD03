@@ -20,7 +20,7 @@ export const handleViewPDF = async (
   customAlert?: {
     showError: (message: string, title?: string) => void;
     showSuccess: (message: string, title?: string) => void;
-  }
+  },
 ) => {
   if (contract.status === 'draft') {
     try {
@@ -32,7 +32,10 @@ export const handleViewPDF = async (
         navigation.navigate('PdfViewer', {pdfUrl: response.data.viewPdfUrl});
       } else {
         if (customAlert) {
-          customAlert.showError('Không thể tạo file PDF hợp đồng.', 'Thông báo');
+          customAlert.showError(
+            'Không thể tạo file PDF hợp đồng.',
+            'Thông báo',
+          );
         } else {
           Alert.alert('Thông báo', 'Không thể tạo file PDF hợp đồng.');
         }
@@ -40,7 +43,10 @@ export const handleViewPDF = async (
     } catch (error: any) {
       console.error('Error generating PDF:', error);
       if (customAlert) {
-        customAlert.showError(error?.message || 'Đã xảy ra lỗi khi tạo file PDF hợp đồng.', 'Lỗi');
+        customAlert.showError(
+          error?.message || 'Đã xảy ra lỗi khi tạo file PDF hợp đồng.',
+          'Lỗi',
+        );
       } else {
         Alert.alert(
           'Lỗi',
@@ -53,6 +59,10 @@ export const handleViewPDF = async (
   } else {
     if (contract.contractPdfUrl) {
       navigation.navigate('PdfViewer', {pdfUrl: contract.contractPdfUrl});
+    } else if (contract.contractPdfUrlFilename) {
+      navigation.navigate('PdfViewer', {
+        pdfUrl: contract.contractPdfUrlFilename,
+      });
     } else {
       if (customAlert) {
         customAlert.showError('Hợp đồng chưa có file PDF.', 'Thông báo');
@@ -71,7 +81,8 @@ export const handleCameraUpload = async (
   customAlert?: {
     showError: (message: string, title?: string) => void;
     showSuccess: (message: string, title?: string) => void;
-  }
+    hideAlert: () => void;
+  },
 ) => {
   try {
     const image = await ImagePicker.openCamera({
@@ -125,7 +136,8 @@ export const handleGalleryUpload = async (
   customAlert?: {
     showError: (message: string, title?: string) => void;
     showSuccess: (message: string, title?: string) => void;
-  }
+    hideAlert: () => void;
+  },
 ) => {
   try {
     const selectedImages = await ImagePicker.openPicker({
@@ -148,7 +160,6 @@ export const handleGalleryUpload = async (
 
     await uploadImages(contractId, imageFiles, dispatch, append, customAlert);
   } catch (e: any) {
-    console.error('Gallery error:', e);
     if (e.code !== 'E_PICKER_CANCELLED') {
       if (customAlert) {
         customAlert.showError('Không thể truy cập thư viện', 'Lỗi');
@@ -168,8 +179,10 @@ const uploadImages = async (
   customAlert?: {
     showError: (message: string, title?: string, autoHide?: boolean) => void;
     showSuccess: (message: string, title?: string, autoHide?: boolean) => void;
-  }
+    hideAlert: () => void;
+  },
 ) => {
+  customAlert?.hideAlert();
   try {
     const result = await dispatch(
       uploadContractImages({
@@ -184,7 +197,7 @@ const uploadImages = async (
         result.message ||
           'Upload ảnh hợp đồng thành công. Hợp đồng đang chờ admin phê duyệt.',
         'Thành công',
-        true
+        true,
       );
     } else {
       Alert.alert(
@@ -221,7 +234,8 @@ export const handlePickImages = (
         style?: 'default' | 'cancel' | 'destructive';
       }>,
     ) => void;
-  }
+    hideAlert: () => void;
+  },
 ) => {
   if (
     !selectedContract ||
@@ -229,9 +243,15 @@ export const handlePickImages = (
       selectedContract.status !== 'pending_approval')
   ) {
     if (customAlert) {
-      customAlert.showError('Chỉ có thể upload ảnh khi hợp đồng đang chờ ký', 'Thông báo');
+      customAlert.showError(
+        'Chỉ có thể upload ảnh khi hợp đồng đang chờ ký',
+        'Thông báo',
+      );
     } else {
-      Alert.alert('Thông báo', 'Chỉ có thể upload ảnh khi hợp đồng đang chờ ký');
+      Alert.alert(
+        'Thông báo',
+        'Chỉ có thể upload ảnh khi hợp đồng đang chờ ký',
+      );
     }
     return;
   }
@@ -253,20 +273,22 @@ export const handlePickImages = (
       [
         {
           text: 'Thêm ảnh',
-          onPress: () => handleGalleryUpload(contractId, dispatch, true, customAlert),
+          onPress: () =>
+            handleGalleryUpload(contractId, dispatch, true, customAlert),
           style: 'default',
         },
         {
           text: 'Thay thế toàn bộ ảnh',
-          onPress: () => handleGalleryUpload(contractId, dispatch, false, customAlert),
+          onPress: () =>
+            handleGalleryUpload(contractId, dispatch, false, customAlert),
           style: 'destructive',
         },
         {
           text: 'Hủy',
-          onPress: () => {},
+          onPress: customAlert.hideAlert,
           style: 'cancel',
         },
-      ]
+      ],
     );
   } else {
     Alert.alert(

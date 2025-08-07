@@ -54,7 +54,7 @@ import {validateRoomForm} from './utils/validateFromData';
 import LocationModal from './components/LocationModal';
 import {SelectedAddress} from '../../../types/Address';
 import {useCustomAlert} from '../../../hooks/useCustomAlrert';
-import CustomAlert from '../../../components/CustomAlertProps';
+import {CustomAlertModal} from '../../../components';
 
 type AddRoomNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -62,8 +62,14 @@ export default function AddRoomScreen() {
   const navigation = useNavigation<AddRoomNavigationProp>();
   const route = useRoute();
   const dispatch = useDispatch<AppDispatch>();
-  const {alertConfig, visible, showSuccess, showError, showConfirm, hideAlert} =
-    useCustomAlert();
+  const {
+    alertConfig,
+    visible: alertVisible,
+    showSuccess,
+    showError,
+    showConfirm,
+    hideAlert,
+  } = useCustomAlert();
 
   const [roomNumber, setRoomNumber] = useState('');
   const [area, setArea] = useState<number | ''>();
@@ -175,6 +181,7 @@ export default function AddRoomScreen() {
               return lastSegment !== fileName;
             }),
           );
+          hideAlert();
         } catch (error) {
           showError('Xoá ảnh thất bại', 'Lỗi');
         }
@@ -222,6 +229,7 @@ export default function AddRoomScreen() {
                     imageResult.path.split('/').pop() ||
                     `camera_${Date.now()}.jpg`,
                 };
+                hideAlert();
                 onUpload([imageFile]);
               })
               .catch(e => {
@@ -271,6 +279,7 @@ export default function AddRoomScreen() {
                 });
 
                 if (imageFiles.length > 0) {
+                  hideAlert();
                   onUpload(imageFiles);
                 } else {
                   showError('Không có ảnh nào được chọn', 'Thông báo');
@@ -289,7 +298,7 @@ export default function AddRoomScreen() {
         },
         {
           text: 'Hủy',
-          onPress: () => {},
+          onPress: hideAlert,
           style: 'cancel',
         },
       ],
@@ -512,7 +521,7 @@ export default function AddRoomScreen() {
     });
 
     if (!result.valid) {
-      showError(result.message, 'Lỗi');
+      showError(result.message || 'Vui lòng điền đầy đủ thông tin', 'Lỗi');
       return;
     }
 
@@ -842,14 +851,16 @@ export default function AddRoomScreen() {
         onClose={onClose}
         onSelect={handleSelectLocation}
       />
-      <CustomAlert
-        visible={visible}
-        title={alertConfig?.title}
-        message={alertConfig?.message || ''}
-        type={alertConfig?.type}
-        buttons={alertConfig?.buttons}
-        onClose={hideAlert}
-      />
+      {alertConfig && (
+        <CustomAlertModal
+          visible={alertVisible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          onClose={hideAlert}
+          type={alertConfig.type}
+          buttons={alertConfig.buttons}
+        />
+      )}
     </SafeAreaView>
   );
 }
