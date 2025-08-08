@@ -683,10 +683,7 @@ export const Icons = {
     ios: 'icon_more_ver',
     android: 'asset:/icons/icon_more_ver.png',
   }),
-  IconBroken: Platform.select({
-    ios: 'icon_broken',
-    android: 'asset:/icons/icon_broken.png',
-  }),
+
   IconArrowRightGreen: Platform.select({
     ios: 'icon_arrow_right_green',
     android: 'asset:/icons/icon_arrow_right_green.png',

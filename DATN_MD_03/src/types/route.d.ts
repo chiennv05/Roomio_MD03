@@ -63,6 +63,9 @@ export type RootStackParamList = {
   UpdateContract: {contract: Contract};
 
   StatisticScreen: undefined;
+  RoomStatisticScreen: undefined;
+  RevenueStatisticScreen: undefined;
+  ContractStatisticScreen: undefined;
   OTPVerification: {email: string};
   ResetPassWord: {email: string; resetToken: string};
   PersonalInformation: {redirectTo?: string; roomId?: string};
