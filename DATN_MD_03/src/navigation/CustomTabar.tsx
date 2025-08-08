@@ -6,18 +6,18 @@ import {
   View,
 } from 'react-native';
 import React from 'react';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { Icons } from '../assets/icons';
+import {BottomTabBarProps} from '@react-navigation/bottom-tabs';
+import {Icons} from '../assets/icons';
 import {
   responsiveFont,
   responsiveIcon,
   SCREEN,
   verticalScale,
 } from '../utils/responsive';
-import { Images } from '../assets/images';
-import { Colors } from '../theme/color';
+import {Images} from '../assets/images';
+import {Colors} from '../theme/color';
 
-export default function CustomTabar({ state, navigation }: BottomTabBarProps) {
+export default function CustomTabar({state, navigation}: BottomTabBarProps) {
   return (
     <View style={styles.container}>
       {state.routes.map((route, index) => {
@@ -58,11 +58,11 @@ export default function CustomTabar({ state, navigation }: BottomTabBarProps) {
             <TouchableOpacity
               key={route.key}
               accessibilityRole="button"
-              accessibilityState={isFocused ? { selected: true } : {}}
+              accessibilityState={isFocused ? {selected: true} : {}}
               onPress={onPress}
               activeOpacity={0.8}
               style={styles.tab}>
-              <Image source={{ uri: IconSource }} style={styles.icon} />
+              <Image source={{uri: IconSource}} style={styles.icon} />
             </TouchableOpacity>
           );
         }
@@ -70,8 +70,8 @@ export default function CustomTabar({ state, navigation }: BottomTabBarProps) {
           <View style={styles.tab} key={route.key}>
             <ImageBackground
               style={styles.imageBackgoud}
-              source={{ uri: Images.ImageBackgroundButton }}>
-              <Image source={{ uri: IconSource }} style={styles.icon} />
+              source={{uri: Images.ImageBackgroundButton}}>
+              <Image source={{uri: IconSource}} style={styles.icon} />
             </ImageBackground>
           </View>
         );
@@ -89,6 +89,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: verticalScale(10),
   },
   tab: {
     flex: 1,

@@ -64,7 +64,9 @@ export const reverseGeocoding = async (
         },
       },
     );
+
     const data = await response.json();
+    console.log(data);
     return data.display_name || 'Không rõ địa chỉ';
   } catch (error) {
     console.error('Lỗi reverse geocoding:', error);

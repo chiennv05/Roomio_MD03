@@ -30,7 +30,6 @@ const PdfViewerScreen = () => {
   const navigation = useNavigation<PdfViewerNavigationProp>();
   const route = useRoute<PdfViewerRouteProp>();
   const {pdfUrl} = route.params;
-  console.log('PDF URL:', pdfUrl);
 
   const [isLoading, setIsLoading] = useState(true);
   const [pdfLink, setPdfLink] = useState<string | null>(null);
@@ -144,7 +143,7 @@ const PdfViewerScreen = () => {
       Alert.alert('Thông báo', 'Đang tải xuống PDF...');
 
       // Download the file
-      const {jobId, promise} = RNFS.downloadFile({
+      const {promise} = RNFS.downloadFile({
         fromUrl: pdfLink,
         toFile: downloadPath,
         background: true,

@@ -13,7 +13,7 @@ import {Fonts} from '../../../../theme/fonts';
 interface HeaderProps {
   title: string;
   iconLeft?: string;
-  iconRight?: string;
+  iconRight?: string | React.ReactNode;
   onPressLeft?: () => void;
   onPressRight?: () => void;
   color?: string;
@@ -43,11 +43,14 @@ const UIHeader = ({
         <Text style={styles.textTitle}>{title}</Text>
       </View>
       <View style={styles.containerLeftAndRight}>
-        {iconRight && (
-          <TouchableOpacity style={styles.styleButton} onPress={onPressRight}>
-            <Image source={{uri: iconRight}} style={styles.styleIconRight} />
-          </TouchableOpacity>
-        )}
+        {iconRight &&
+          (typeof iconRight === 'string' ? (
+            <TouchableOpacity style={styles.styleButton} onPress={onPressRight}>
+              <Image source={{uri: iconRight}} style={styles.styleIconRight} />
+            </TouchableOpacity>
+          ) : (
+            iconRight // ✅ nếu là component thì render luôn
+          ))}
       </View>
     </View>
   );

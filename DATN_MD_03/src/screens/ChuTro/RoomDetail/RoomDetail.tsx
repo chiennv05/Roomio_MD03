@@ -3,19 +3,13 @@ import React from 'react';
 import {useRoute} from '@react-navigation/native';
 import {Colors} from '../../../theme/color';
 import {useRoomDetail} from './hooks';
-import {
-  Header,
-  ImageSlider,
-  InfoSection,
-  AddressSection,
-  DescriptionSection,
-  AmenitiesSection,
-  FurnitureSection,
-  ServiceSection,
-  PriceHistorySection,
-  LoadingState,
-  ErrorState,
-} from './components';
+import {ErrorState, LoadingState, RoomInfo} from './components';
+import HeaderItem from './components/HeaderItem';
+import ImageCarousel from '../../DetailRoomScreen/components/ImageCarousel';
+import {responsiveSpacing} from '../../../utils/responsive';
+import ServiceFees from '../../DetailRoomScreen/components/ServiceFees';
+import Amenities from '../../DetailRoomScreen/components/Amenities';
+import Description from '../../DetailRoomScreen/components/Description';
 
 type RoomDetailRouteProp = {
   params: {
@@ -32,8 +26,8 @@ export default function RoomDetail() {
     loading,
     error,
     handleNavigateToUpdate,
-    formatNumber,
     handleRetry,
+    handleDeleteRoom, // Thêm function này
     navigation,
   } = useRoomDetail(roomId);
 
@@ -62,6 +56,9 @@ export default function RoomDetail() {
       </View>
     );
   }
+  if (!selectedRoom) {
+    return null; // Hoặc có thể hiển thị một thông báo nào đó
+  }
 
   return (
     <View style={styles.safeArea}>
@@ -72,19 +69,48 @@ export default function RoomDetail() {
       />
       <View style={styles.container}>
         <View style={styles.statusBarBackground} />
-        <Header onGoBack={() => navigation.goBack()} onEdit={handleNavigateToUpdate} />
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          <ImageSlider photos={selectedRoom.photos || []} />
-          <InfoSection room={selectedRoom} formatNumber={formatNumber} />
-          <AddressSection addressText={selectedRoom.location?.addressText} />
-          <DescriptionSection description={selectedRoom.description} />
-          <AmenitiesSection amenities={selectedRoom.amenities} />
-          <FurnitureSection furniture={selectedRoom.furniture} />
-          <ServiceSection room={selectedRoom} formatNumber={formatNumber} />
-          <PriceHistorySection
-            priceHistory={selectedRoom.priceHistory}
-            formatNumber={formatNumber}
+
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}>
+          <HeaderItem
+            onGoBack={() => navigation.goBack()}
+            onUpdate={handleNavigateToUpdate}
+            onDelete={handleDeleteRoom} // Thêm prop này
           />
+          <ImageCarousel images={selectedRoom.photos || []} />
+          <View style={styles.content}>
+            <RoomInfo
+              price={selectedRoom.rentPrice?.toLocaleString('vi-VN') || '0'}
+              address={selectedRoom.location?.addressText || ''}
+              roomCode={selectedRoom.roomNumber}
+              area={selectedRoom.area}
+              maxOccupancy={selectedRoom.maxOccupancy}
+              deposit={1}
+            />
+
+            <View style={styles.divider} />
+            <ServiceFees
+              servicePrices={selectedRoom.location?.servicePrices || []}
+              servicePriceConfig={
+                selectedRoom.location?.servicePriceConfig || {}
+              }
+              customServices={selectedRoom.customServices}
+            />
+
+            <View style={styles.divider} />
+            <Amenities
+              amenities={selectedRoom.amenities || []}
+              furniture={selectedRoom.furniture || []}
+            />
+
+            <View style={styles.divider} />
+
+            <View style={styles.divider} />
+            <Description text={selectedRoom.description} />
+
+            <View style={styles.divider} />
+          </View>
         </ScrollView>
       </View>
     </View>
@@ -111,5 +137,15 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  content: {
+    padding: responsiveSpacing(16),
+    paddingTop: responsiveSpacing(6),
+    paddingBottom: responsiveSpacing(100), // Thêm padding để tránh bị che bởi button
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.divider,
+    marginVertical: responsiveSpacing(8),
   },
 });

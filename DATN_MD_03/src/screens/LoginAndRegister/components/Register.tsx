@@ -1,4 +1,4 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {StyleSheet, Text, View} from 'react-native';
 import React, {useCallback, useState} from 'react';
 import {responsiveFont, scale, SCREEN} from '../../../utils/responsive';
 import ItemRadioButton from './ItemRadioButton';
@@ -6,12 +6,10 @@ import ItemInput from './ItemInput';
 import {Fonts} from '../../../theme/fonts';
 import {Colors} from '../../../theme/color';
 import ItemButtonConfirm from './ItemButtonConfirm';
-import DatePicker from 'react-native-date-picker';
 import {validateUserInputFirstError} from '../../../utils/validate';
 import {useDispatch} from 'react-redux';
 import {registerUser} from '../../../store/slices/authSlice';
 import {AppDispatch} from '../../../store';
-import {formatDate} from '../../../utils/formatDate';
 import {Icons} from '../../../assets/icons';
 const roleOptions = [
   {label: 'Người thuê', value: 'nguoiThue'},
@@ -29,14 +27,7 @@ export default function Register({setModal}: ModalProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [birthDay, setBirtDay] = useState('');
-  const today = new Date();
-  const maxDate = new Date();
-  maxDate.setFullYear(today.getFullYear() - 18);
-  const minDate = new Date();
-  minDate.setFullYear(today.getFullYear() - 100);
-  const [date, setDate] = useState(maxDate);
-  const [openDatePicker, setOpenDatePicker] = useState(false);
+
   const handleRoleChange = (value: string) => {
     setSelectedRole(value);
   };
@@ -46,21 +37,17 @@ export default function Register({setModal}: ModalProps) {
       email,
       password,
       confirmPassword,
-      birthDay: birthDay,
     });
     if (error) {
       setModal(Icons.IconError, error);
       return;
     }
 
-    const formatDated = formatDate(birthDay);
-
     const newUser = {
       username: usename,
       email,
       password,
       confirmPassword,
-      birthDate: formatDated,
       role: selectedRole,
     };
 
@@ -72,7 +59,6 @@ export default function Register({setModal}: ModalProps) {
       setEmail('');
       setPassword('');
       setConfirmPassword('');
-      setBirtDay('');
       setSelectedRole('nguoiThue');
     } catch (err: any) {
       setModal(Icons.IconError, err);
@@ -84,7 +70,6 @@ export default function Register({setModal}: ModalProps) {
     setEmail('');
     setPassword('');
     setConfirmPassword('');
-    setBirtDay('');
     setSelectedRole('nguoiThue');
   }, []);
 
@@ -130,47 +115,12 @@ export default function Register({setModal}: ModalProps) {
         isPass={true}
         editable={true}
       />
-      <TouchableOpacity onPress={() => setOpenDatePicker(true)}>
-        <ItemInput
-          value={birthDay}
-          onChangeText={setBirtDay}
-          placeholder={'Nhập ngày sinh'}
-          isPass={false}
-          editable={false}
-        />
-      </TouchableOpacity>
       <Text style={styles.textCondition}>
         Bằng việc nhấn vào xác nhận, bạn đồng ý với
         <Text style={styles.textConditionGreen}> điều khoản và điều kiện </Text>
         của Romio
       </Text>
 
-      <DatePicker
-        modal
-        open={openDatePicker}
-        date={date}
-        title="Chọn ngày sinh"
-        mode="date"
-        locale="vi"
-        maximumDate={maxDate}
-        minimumDate={minDate}
-        onConfirm={selectedDate => {
-          console.log('🟢 onConfirm called');
-          console.log('🟢 selectedDate:', selectedDate);
-
-          if (selectedDate instanceof Date && !isNaN(selectedDate.getTime())) {
-            setDate(selectedDate);
-            setBirtDay(selectedDate.toLocaleDateString('vi-VN'));
-          } else {
-            console.warn(' selectedDate is null or invalid');
-          }
-
-          setOpenDatePicker(false);
-        }}
-        onCancel={() => {
-          setOpenDatePicker(false);
-        }}
-      />
       <ItemButtonConfirm
         onPress={handleRegister}
         title="Đăng ký"

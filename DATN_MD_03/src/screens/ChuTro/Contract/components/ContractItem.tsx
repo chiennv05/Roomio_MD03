@@ -8,6 +8,7 @@ import {
   responsiveFont,
   verticalScale,
   SCREEN,
+  responsiveSpacing,
 } from '../../../../utils/responsive';
 import {Contract} from '../../../../types';
 
@@ -17,37 +18,83 @@ export const getContractStatusInfo = (status: string) => {
     case 'draft':
       return {
         label: 'Bản nháp',
-        color: Colors.gray60,
+        color: Colors.white,
+        backgroudColor: Colors.gray,
+        backgroudStatus: Colors.mediumGray,
+        textColor: Colors.dearkOlive,
+        textColorLabel: Colors.darkGray,
       };
     case 'pending_signature':
       return {
         label: 'Chờ ký',
-        color: Colors.darkGreen,
+        color: Colors.white,
+        backgroudColor: Colors.gray,
+        backgroudStatus: Colors.mediumGray,
+        textColor: Colors.dearkOlive,
+        textColorLabel: Colors.darkGray,
       };
     case 'pending_approval':
       return {
         label: 'Chờ phê duyệt',
-        color: Colors.darkGreen,
+        color: Colors.white,
+        backgroudColor: Colors.gray,
+        backgroudStatus: Colors.mediumGray,
+        textColor: Colors.dearkOlive,
+        textColorLabel: Colors.darkGray,
       };
     case 'active':
       return {
-        label: 'Đang hoạt động',
-        color: Colors.primaryGreen,
+        label: 'Đang hiệu lực',
+        color: Colors.black,
+        backgroudColor: Colors.white,
+        backgroudStatus: Colors.limeGreen,
+        textColor: Colors.dearkOlive,
+        textColorLabel: Colors.darkGray,
       };
     case 'expired':
       return {
         label: 'Hết hạn',
-        color: Colors.red,
+        color: Colors.white,
+        backgroudColor: Colors.textGray,
+        backgroudStatus: Colors.lightRed,
+        textColor: Colors.dearkOlive,
+        textColorLabel: Colors.darkGray,
       };
     case 'terminated':
       return {
         label: 'Đã chấm dứt',
-        color: Colors.red,
+        color: Colors.white,
+        backgroudColor: Colors.textGray,
+        backgroudStatus: Colors.lightRed,
+        textColor: Colors.dearkOlive,
+        textColorLabel: Colors.darkGray,
+      };
+    case 'needs_resigning':
+      return {
+        label: 'Cần ký lại',
+        color: Colors.white,
+        backgroudColor: Colors.gray,
+        backgroudStatus: Colors.mediumGray,
+        textColor: Colors.dearkOlive,
+        textColorLabel: Colors.darkGray,
+      };
+    case 'rejected':
+      return {
+        label: 'Bị từ chối',
+        color: Colors.white,
+        backgroudColor: Colors.textGray,
+        backgroudStatus: Colors.lightRed,
+        textColor: Colors.dearkOlive,
+        textColorLabel: Colors.darkGray,
       };
     default:
       return {
         label: 'Không xác định',
-        color: Colors.gray60,
+        color: Colors.white,
+        backgroudColor: Colors.gray,
+        backgroudStatus: Colors.mediumGray,
+        textColor: Colors.dearkOlive,
+        textColorLabel: Colors.darkGray,
       };
   }
 };
@@ -73,46 +120,65 @@ const ContractItem = ({contract, onPress}: ContractItemProps) => {
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, {backgroundColor: Colors.white}]}
       onPress={() => onPress(contract._id)}>
       <View style={styles.contentContainer}>
         <View style={styles.header}>
-          <Text style={styles.roomNumber}>
+          <Text style={[styles.roomNumber, {color: statusInfo.textColor}]}>
             {contract.contractInfo.roomNumber}
           </Text>
           <View
-            style={[styles.statusBadge, {backgroundColor: statusInfo.color}]}>
-            <Text style={styles.statusText}>{statusInfo.label}</Text>
+            style={[
+              styles.statusBadge,
+              {
+                backgroundColor: statusInfo.backgroudStatus,
+              },
+            ]}>
+            <Text style={[styles.statusText, {color: statusInfo.color}]}>
+              {statusInfo.label}
+            </Text>
           </View>
         </View>
 
-        <Text style={styles.address} numberOfLines={1}>
+        <Text
+          style={[styles.address, {color: statusInfo.textColor}]}
+          numberOfLines={1}>
           {contract.contractInfo.roomAddress}
         </Text>
 
         <View style={styles.infoRow}>
-          <Text style={styles.label}>Người thuê:</Text>
-          <Text style={styles.value}>{contract.contractInfo.tenantName}</Text>
+          <Text style={[styles.label, {color: statusInfo.textColorLabel}]}>
+            Người thuê:
+          </Text>
+          <Text style={[styles.value, {color: statusInfo.textColor}]}>
+            {contract.contractInfo.tenantName}
+          </Text>
         </View>
 
         <View style={styles.infoRow}>
-          <Text style={styles.label}>Thời hạn:</Text>
-          <Text style={styles.value}>
+          <Text style={[styles.label, {color: statusInfo.textColorLabel}]}>
+            Thời hạn:
+          </Text>
+          <Text style={[styles.value, {color: statusInfo.textColor}]}>
             {contract.contractInfo.contractTerm} tháng
           </Text>
         </View>
 
         <View style={styles.infoRow}>
-          <Text style={styles.label}>Từ ngày:</Text>
-          <Text style={styles.value}>
+          <Text style={[styles.label, {color: statusInfo.textColorLabel}]}>
+            Từ ngày:
+          </Text>
+          <Text style={[styles.value, {color: statusInfo.textColor}]}>
             {formatDate(contract.contractInfo.startDate)} -{' '}
             {formatDate(contract.contractInfo.endDate)}
           </Text>
         </View>
 
         <View style={styles.infoRow}>
-          <Text style={styles.label}>Tiền thuê:</Text>
-          <Text style={styles.value}>
+          <Text style={[styles.label, {color: statusInfo.textColorLabel}]}>
+            Tiền thuê:
+          </Text>
+          <Text style={[styles.value, {color: statusInfo.textColor}]}>
             {contract.contractInfo.monthlyRent.toLocaleString('vi-VN')} đ/tháng
           </Text>
         </View>
@@ -127,7 +193,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
 
     backgroundColor: Colors.white,
-    borderRadius: 10,
+    borderRadius: responsiveSpacing(24),
     marginBottom: verticalScale(12),
     shadowColor: Colors.black,
     shadowOffset: {
@@ -141,50 +207,52 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 4,
-    padding: scale(12),
+    padding: scale(16),
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: verticalScale(4),
+    marginBottom: verticalScale(16),
   },
   roomNumber: {
     fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(16),
+    fontSize: responsiveFont(24),
     color: Colors.black,
   },
   statusBadge: {
-    paddingHorizontal: scale(8),
-    paddingVertical: verticalScale(2),
-    borderRadius: 12,
+    borderRadius: 999,
   },
   statusText: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(16),
     color: Colors.white,
+    paddingVertical: responsiveSpacing(6),
+    paddingHorizontal: responsiveSpacing(24),
   },
   address: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(14),
+    fontSize: responsiveFont(16),
     color: Colors.gray60,
-    marginBottom: verticalScale(8),
+    fontWeight: 'bold',
+    marginBottom: verticalScale(12),
   },
   infoRow: {
     flexDirection: 'row',
-    marginBottom: verticalScale(2),
+    marginBottom: verticalScale(4),
   },
   label: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(13),
+    fontSize: responsiveFont(16),
     color: Colors.textGray,
-    width: scale(85),
+    width: scale(100),
   },
   value: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(13),
+    fontSize: responsiveFont(16),
     color: Colors.black,
     flex: 1,
+    fontWeight: '400',
   },
 });
 

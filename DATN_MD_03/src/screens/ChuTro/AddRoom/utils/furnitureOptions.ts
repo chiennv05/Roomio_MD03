@@ -85,10 +85,4 @@ export const furnitureOptions: OptionItem[] = [
     category: 'household',
     iconBase: 'IconBlanket',
   },
-  {
-    value: 'khac',
-    label: 'Khác',
-    category: 'others',
-    iconBase: 'IconKhac',
-  },
 ];

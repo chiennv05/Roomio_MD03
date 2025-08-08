@@ -3,6 +3,7 @@ import React from 'react';
 import {Room} from '../../../../types';
 import {API_CONFIG} from '../../../../configs';
 import {responsiveSpacing, SCREEN} from '../../../../utils/responsive';
+import {Colors} from '../../../../theme/color';
 
 interface ItemRoomSearchProps {
   room: Room;
@@ -35,9 +36,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    backgroundColor: Colors.backgroud,
     width: SCREEN.width * 0.9,
+    marginVertical: responsiveSpacing(5),
+    borderRadius: responsiveSpacing(20),
   },
   styleImage: {
     width: 100,

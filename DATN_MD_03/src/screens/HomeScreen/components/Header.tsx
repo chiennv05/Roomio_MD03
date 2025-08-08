@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   StatusBar,
+  TextInput,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store';
@@ -19,15 +20,19 @@ import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
 
 interface HeaderProps {
-  onSearchPress?: () => void;
   onNotificationPress?: () => void;
   onUserPress?: () => void;
+  searchValue?: string;
+  onChangeSearchText?: (text: string) => void;
+  onSearchSubmit?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
-  onSearchPress, 
   onNotificationPress,
-  onUserPress 
+  onUserPress,
+  searchValue = '',
+  onChangeSearchText,
+  onSearchSubmit
 }) => {
   // Get user info from Redux store
   const { user } = useSelector((state: RootState) => state.auth);
@@ -74,20 +79,20 @@ const Header: React.FC<HeaderProps> = ({
             />
           </TouchableOpacity>
         </View>
-        
+        {/* Thay thế searchRow bằng TextInput */}
         <View style={styles.searchRow}>
-          <TouchableOpacity 
-            style={styles.searchInputContainer}
-            onPress={onSearchPress}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.searchPlaceholder}>
-              Tìm kiếm trọ dễ dàng...
-            </Text>
-          </TouchableOpacity>
+          <TextInput
+            value={searchValue}
+            onChangeText={onChangeSearchText}
+            placeholder="Tìm kiếm trọ dễ dàng..."
+            placeholderTextColor="#999"
+            style={styles.searchInput}
+            returnKeyType="search"
+            onSubmitEditing={onSearchSubmit}
+          />
           <TouchableOpacity 
             style={styles.searchButton}
-            onPress={onSearchPress}
+            onPress={onSearchSubmit}
           >
             <Image 
               source={{ uri: Icons.IconSearch }}
@@ -189,7 +194,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  searchInputContainer: {
+  searchInput: {
     flex: 1,
     backgroundColor: Colors.white,
     borderRadius: responsiveIcon(25),
@@ -204,7 +209,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
-    justifyContent: 'center',
+    fontSize: responsiveFont(14),
+    color: Colors.black,
+    fontFamily: Fonts.Roboto_Regular,
   },
   searchPlaceholder: {
     fontSize: responsiveFont(14),

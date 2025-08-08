@@ -6,6 +6,8 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
+  TouchableOpacity,
+  Image,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
@@ -18,6 +20,7 @@ import {
   responsiveFont,
   responsiveSpacing,
   SCREEN,
+  responsiveIcon,
 } from '../../../utils/responsive';
 import {AppDispatch, RootState} from '../../../store';
 import {fetchMyContracts} from '../../../store/slices/contractSlice';
@@ -106,8 +109,6 @@ const ContractManagement = () => {
         title="Quản lý hợp đồng"
         iconLeft={Icons.IconArrowLeft}
         onPressLeft={handleGoBack}
-        iconRight={Icons.IconAdd}
-        onPressRight={handleGoAddContract}
       />
 
       <View style={styles.conatinerFilter}>
@@ -167,6 +168,11 @@ const ContractManagement = () => {
           </>
         )}
       </View>
+      <TouchableOpacity
+        style={styles.buttonAddRoom}
+        onPress={handleGoAddContract}>
+        <Image source={{uri: Icons.IconAdd}} style={styles.styleIcon} />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -180,7 +186,7 @@ const styles = StyleSheet.create({
   conatinerFilter: {
     width: SCREEN.width,
     justifyContent: 'center',
-    marginVertical: responsiveSpacing(10),
+    marginVertical: responsiveSpacing(20),
   },
 
   loadingContainer: {
@@ -219,6 +225,29 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  buttonAddRoom: {
+    position: 'absolute',
+    bottom: responsiveSpacing(20),
+    right: responsiveSpacing(20),
+    width: responsiveIcon(44),
+    height: responsiveIcon(44),
+    backgroundColor: Colors.limeGreen,
+    borderRadius: responsiveIcon(44) / 2,
+    padding: responsiveSpacing(12),
+    shadowColor: Colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  styleIcon: {
+    width: responsiveIcon(24),
+    height: responsiveIcon(24),
   },
 });
 

@@ -10,6 +10,7 @@ import {
 import {Icons} from '../../../../assets/icons';
 import {Colors} from '../../../../theme/color';
 import {ImageUploadResult} from '../../../../types/ImageUploadResult';
+import {API_CONFIG} from '../../../../configs';
 
 const WIGHT_IMAGE = SCREEN.width * 0.28;
 interface ItemImageProps {
@@ -19,13 +20,21 @@ interface ItemImageProps {
 }
 
 const ItemImage = ({item, onDeleteImage, onClickItem}: ItemImageProps) => {
+  const formatImageUrl = (url: string): string => {
+    if (url.startsWith('http')) {
+      return url;
+    }
+    return `${API_CONFIG.BASE_URL}${url}`;
+  };
+  const imageUrl = formatImageUrl(item.url);
+
   return (
     <TouchableOpacity
       style={styles.container}
-      onPress={() => onClickItem(item.url)}>
+      onPress={() => onClickItem(imageUrl)}>
       <Image
         source={{
-          uri: item.url,
+          uri: imageUrl,
         }}
         style={styles.styleImage}
       />

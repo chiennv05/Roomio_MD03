@@ -23,6 +23,7 @@ const WIGHT_IMAGE = SCREEN.width * 0.28;
 const ItemService = ({status = false, item, onPress}: ServiceProps) => {
   const iconKey = `${item.iconBase}${status ? 'Selected' : 'Default'}`;
   const icon = Icons[iconKey as keyof typeof Icons];
+  console.log(item);
 
   const getPriceUnit = (item: ItemSeviceOptions): string => {
     const unitMap: Record<string, Record<string, string>> = {

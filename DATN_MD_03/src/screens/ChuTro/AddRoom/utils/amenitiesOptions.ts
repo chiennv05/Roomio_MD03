@@ -77,7 +77,7 @@ export const amenitiesOptions: OptionItem[] = [
     value: 'raVaoVanTay',
     label: 'Ra vào vân tay',
     category: 'rules',
-    iconBase: 'IconSecurity',
+    iconBase: 'IconRaVaoVanTay',
   },
   {
     value: 'wifiFree',
@@ -90,11 +90,5 @@ export const amenitiesOptions: OptionItem[] = [
     label: 'Wifi trả phí',
     category: 'internet',
     iconBase: 'IconWifi',
-  },
-  {
-    value: 'khac',
-    label: 'Khác',
-    category: 'others',
-    iconBase: 'IconKhac',
   },
 ];

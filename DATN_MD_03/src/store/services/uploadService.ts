@@ -11,14 +11,14 @@ export const uploadRoomPhotos = async (images: ImageFile[]) => {
   const formData = new FormData();
 
   console.log('Chuẩn bị upload', images.length, 'ảnh:', images);
-  
+
   images.forEach((img, index) => {
     const fileName = img.filename || `photo_${Date.now()}_${index}.jpg`;
 
     console.log(`Đang xử lý ảnh ${index}:`, {
       path: img.path,
       mime: img.mime,
-      fileName: fileName
+      fileName: fileName,
     });
 
     formData.append('photos', {

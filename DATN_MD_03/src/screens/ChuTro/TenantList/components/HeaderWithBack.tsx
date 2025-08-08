@@ -2,86 +2,88 @@ import React from 'react';
 import {
   View,
   Text,
+  StyleSheet,
   TouchableOpacity,
   Image,
-  StyleSheet,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
-import {Icons} from '../../../../assets/icons';
 import {Colors} from '../../../../theme/color';
 import {Fonts} from '../../../../theme/fonts';
-import {responsiveFont, scale, verticalScale} from '../../../../utils/responsive';
+import {
+  responsiveFont,
+  responsiveSpacing,
+} from '../../../../utils/responsive';
+import {Icons} from '../../../../assets/icons';
 
 interface HeaderWithBackProps {
   title: string;
-  onBackPress?: () => void;
-  rightComponent?: React.ReactNode;
+  backgroundColor?: string;
 }
 
-const HeaderWithBack: React.FC<HeaderWithBackProps> = ({
-  title,
-  onBackPress,
-  rightComponent,
-}) => {
+const HeaderWithBack: React.FC<HeaderWithBackProps> = ({title, backgroundColor = Colors.backgroud}) => {
   const navigation = useNavigation();
 
-  const handleGoBack = () => {
-    if (onBackPress) {
-      onBackPress();
-    } else {
-      navigation.goBack();
-    }
+  const handleBack = () => {
+    navigation.goBack();
   };
 
   return (
-    <View style={styles.header}>
-      <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-        <Image 
-          source={{uri: Icons.IconOut}}
-          style={styles.backIcon}
-          resizeMode="contain"
-        />
+    <View style={[styles.container, {backgroundColor}]}>
+      <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+        <View style={styles.backButtonCircle}>
+          <Image source={{uri: Icons.IconArrowLeft}} style={styles.backIcon} />
+        </View>
       </TouchableOpacity>
-      
-      <Text style={styles.headerTitle}>{title}</Text>
-      
-      {rightComponent ? (
-        rightComponent
-      ) : (
-        <View style={styles.rightPlaceholder} />
-      )}
+      <Text style={styles.title}>{title}</Text>
+      <View style={styles.placeholder} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  header: {
+  container: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: scale(16),
-    paddingVertical: verticalScale(10),
-    backgroundColor: Colors.white,
-    elevation: 2,
-  },
-  headerTitle: {
-    fontSize: responsiveFont(18),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.black,
+    paddingHorizontal: responsiveSpacing(20),
+    paddingTop: responsiveSpacing(16),
+    paddingBottom: responsiveSpacing(8),
   },
   backButton: {
-    padding: scale(8),
-    borderRadius: 20,
+    width: responsiveSpacing(36),
+    height: responsiveSpacing(36),
+  },
+  backButtonCircle: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: Colors.white,
+    borderRadius: responsiveSpacing(18),
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 1,
+    shadowColor: Colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   backIcon: {
-    width: scale(20),
-    height: scale(20),
-   
+    width: responsiveSpacing(12),
+    height: responsiveSpacing(24),
+    tintColor: Colors.black,
   },
-  rightPlaceholder: {
-    width: scale(24),
+  title: {
+    fontSize: responsiveFont(20),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+    textAlign: 'center',
+    flex: 1,
+  },
+  placeholder: {
+    width: responsiveSpacing(36),
+    height: responsiveSpacing(36),
   },
 });
 

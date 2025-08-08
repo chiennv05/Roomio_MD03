@@ -228,9 +228,11 @@ export const updateContract = async (
 };
 
 // Chấm dứt hợp đồng
-export const terminateContract = async (contractId: string) => {
+export const terminateContract = async (contractId: string, reason: string) => {
   try {
-    const response = await api.patch(`/contract/${contractId}/terminate`);
+    const response = await api.patch(`/contract/${contractId}/terminate`, {
+      reason,
+    });
     return response.data;
   } catch (error: any) {
     console.error(`Error terminating contract ${contractId}:`, error);
@@ -321,6 +323,51 @@ export const deleteSignedImage = async (
       `Error deleting signed image "${fileName}" for contract ${contractId}:`,
       error,
     );
+    throw {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+    };
+  }
+};
+
+// cập nhật danh sách người thuê
+export const updateTenantsApi = async (
+  contractId: string,
+  usernames: string[],
+) => {
+  console.log(usernames, 'Usernames to update');
+  try {
+    const response = await api.put(`/contract/${contractId}/co-tenants`, {
+      usernames: usernames,
+      skipResigning: true,
+    });
+    console.log('res', response.data);
+    if (!response.data || !response.data.success) {
+      throw new Error(
+        response.data?.message || 'Cập nhật người thuê không thành công',
+      );
+    }
+    return response.data;
+  } catch (error: any) {
+    console.error(`Error updating tenants for contract ${contractId}:`, error);
+    throw {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+    };
+  }
+};
+
+export const deleteContractApi = async (contractId: string) => {
+  try {
+    const response = await api.delete(`/contract/${contractId}/delete`);
+    if (!response.data || !response.data.success) {
+      throw new Error(
+        response.data?.message || 'Xóa hợp đồng không thành công',
+      );
+    }
+    return response.data;
+  } catch (error: any) {
+    console.error(`Error deleting contract ${contractId}:`, error);
     throw {
       message: error.response?.data?.message || error.message,
       status: error.response?.status,
