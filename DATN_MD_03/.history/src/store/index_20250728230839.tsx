@@ -6,7 +6,7 @@ import notificationReducer from './slices/notificationSlice';
 import tenantReducer from './slices/tenantSlice';
 import landlordRoomsReducer from './slices/landlordRoomsSlice';
 // <<<<<<< HEAD
-import billReducer from './slices/billSlice';
+// import billReducer from './slices/billSlice';
 // =======
 import contractReducer from './slices/contractSlice';
 // >>>>>>> origin/chien
@@ -20,7 +20,7 @@ export const store = configureStore({
     tenant: tenantReducer,
     landlordRooms: landlordRoomsReducer,
     // <<<<<<< HEAD
-    bill: billReducer,
+    //     bill: billReducer,
     // =======
     contract: contractReducer,
     // >>>>>>> origin/chien

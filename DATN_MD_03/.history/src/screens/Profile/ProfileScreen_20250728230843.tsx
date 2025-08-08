@@ -113,23 +113,22 @@ export default function ProfileScreen() {
   };
 
   // <<<<<<< HEAD
-  const handleNavigateToBill = () => {
-    if (!checkToken(token)) {
-      Alert.alert(
-        'Thông báo',
-        'Bạn cần đăng nhập để sử dụng chức năng này',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('Login', {}),
-          },
-        ],
-        { cancelable: false },
-      );
-      return;
-    }
-    navigation.navigate('Bill');
-  }
+  //   const handleNavigateToBill = () => {
+  //     if (!checkToken(token)) {
+  //       Alert.alert(
+  //         'Thông báo',
+  //         'Bạn cần đăng nhập để sử dụng chức năng này',
+  //         [
+  //           {
+  //             text: 'OK',
+  //             onPress: () => navigation.navigate('Login', {}),
+  //           },
+  //         ],
+  //         { cancelable: false },
+  //       );
+  //       return;
+  //     }
+  //     navigation.navigate('Bill');
   // =======
   // Hàm xử lý khi nhấn vào "Danh sách người thuê"
   const handleTenantListPress = () => {
@@ -216,13 +215,17 @@ export default function ProfileScreen() {
             iconStat={Icons.IconPaper}
             label="Hóa đơn thu chi"
             iconEnd={Icons.IconNext}
-            onPress={handleNavigateToBill}
           />
           {/* >>>>>>> origin/chien */}
 
           {/* Chỉ hiển thị các tùy chọn cho chủ trọ nếu user có role là chuTro */}
           {isLandlord && (
             <>
+              <SettingItem
+                iconStat={Icons.IconRomManagement}
+                label="Quản lý phòng trọ"
+                iconEnd={Icons.IconNext}
+              />
               <SettingItem
                 iconStat={Icons.IconListTenants}
                 label="Danh sách người thuê"

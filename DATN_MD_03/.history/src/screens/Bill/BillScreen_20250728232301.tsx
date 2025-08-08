@@ -38,7 +38,7 @@ type BillScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Bill'>;
 
 const BillScreen = () => {
     console.log('=== BillScreen component mounted ===');
-
+    
     const dispatch = useAppDispatch();
     const navigation = useNavigation<BillScreenNavigationProp>();
     const { user, token } = useAppSelector(state => state.auth);
@@ -51,10 +51,10 @@ const BillScreen = () => {
     const [selectedStatus, setSelectedStatus] = useState<string | undefined>(
         undefined,
     );
-
+    
     // Kiểm tra xem người dùng có phải là chủ trọ không
     const isLandlord = user?.role === 'chuTro';
-
+    
     // State để theo dõi xem người dùng có phải là người ở cùng không
     const [isUserCoTenant, setIsUserCoTenant] = useState(false);
 
@@ -137,25 +137,25 @@ const BillScreen = () => {
     useEffect(() => {
         // Tạo bản sao của mảng invoices để không ảnh hưởng đến dữ liệu gốc
         let allInvoices = [...invoices];
-
+        
         console.log('Processing invoices:', allInvoices.length, 'roommate status:', isUserCoTenant);
-
+        
         // Kiểm tra từng hóa đơn xem có phải người ở cùng không
         let roommateInvoices = allInvoices.filter(invoice => invoice.isRoommate === true);
         let regularInvoices = allInvoices.filter(invoice => invoice.isRoommate !== true);
-
+        
         console.log('Initial invoice counts:');
         console.log('- Roommate invoices:', roommateInvoices.length);
         console.log('- Regular invoices:', regularInvoices.length);
         console.log('- Unknown status:', allInvoices.length - roommateInvoices.length - regularInvoices.length);
-
+        
         // Nếu người dùng không phải người ở cùng, ẩn tất cả hóa đơn người ở cùng
         if (isUserCoTenant === false) {
             console.log('User is not co-tenant, filtering out roommate invoices');
             allInvoices = allInvoices.filter(invoice => invoice.isRoommate !== true);
             console.log('After filtering: remaining invoices:', allInvoices.length);
         }
-
+        
         // Ẩn hóa đơn có trạng thái nháp nếu không phải là chủ trọ
         if (!isLandlord) {
             const countBefore = allInvoices.length;
@@ -235,16 +235,16 @@ const BillScreen = () => {
         // Cập nhật danh sách hóa đơn
         setLocalInvoices(allInvoices);
         console.log('Final invoice count:', allInvoices.length);
-
+        
         // Kiểm tra lại trạng thái của các hóa đơn cuối cùng
         roommateInvoices = allInvoices.filter(invoice => invoice.isRoommate === true);
         regularInvoices = allInvoices.filter(invoice => invoice.isRoommate !== true);
-
+        
         console.log('Final invoice breakdown:');
         console.log('- Roommate invoices:', roommateInvoices.length);
         console.log('- Regular invoices:', regularInvoices.length);
         console.log('- Unknown status:', allInvoices.length - roommateInvoices.length - regularInvoices.length);
-
+        
     }, [invoices, selectedStatus, selectedRoom, selectedTenant, sortOrder, isLandlord, user?.role, isUserCoTenant]);
 
     useEffect(() => {
@@ -254,7 +254,7 @@ const BillScreen = () => {
             console.log('Tổng số hóa đơn sau khi lọc:', localInvoices.length);
             console.log('Số hóa đơn người ở cùng:', localInvoices.filter(inv => inv.isRoommate === true).length);
             console.log('Số hóa đơn thường:', localInvoices.filter(inv => inv.isRoommate !== true).length);
-
+            
             // Kiểm tra các thuộc tính chính của hóa đơn đầu tiên
             if (localInvoices[0]) {
                 const firstInvoice = localInvoices[0];
@@ -276,7 +276,7 @@ const BillScreen = () => {
             // Tạo một biến để theo dõi component đã unmount chưa
             const isMounted = { current: true };
             console.log('=== FOCUS EFFECT STARTED ===');
-
+            
             // Nếu không có token hoặc đang logout, không gọi API
             if (!token) {
                 console.log('No token available, skipping API calls');
@@ -289,11 +289,11 @@ const BillScreen = () => {
             // Kiểm tra role trước khi quyết định gọi API
             if (isLandlord) {
                 console.log('User is landlord, fetching regular invoices only');
-                dispatch(fetchInvoices({
-                    token,
-                    page: 1,
-                    limit: 10,
-                    status: selectedStatus || undefined
+                dispatch(fetchInvoices({ 
+                    token, 
+                    page: 1, 
+                    limit: 10, 
+                    status: selectedStatus || undefined 
                 }));
                 return () => {
                     isMounted.current = false;
@@ -304,75 +304,75 @@ const BillScreen = () => {
             // Chỉ gọi API check người ở cùng nếu là người thuê và có token
             if (user?.role === 'nguoiThue') {
                 console.log('User is tenant, checking co-tenant status');
-
+                
                 // Sử dụng một biến để theo dõi API nào đang được gọi
                 let isCheckingCoTenant = true;
-
+                
                 const checkAndLoadData = async () => {
                     try {
                         if (!isMounted.current) return;
-
+                        
                         console.log('Checking if user is co-tenant...');
                         const result = await checkUserIsCoTenant(token);
-
+                        
                         // Nếu component unmounted trong quá trình gọi API, dừng lại
                         if (!isMounted.current) return;
-
+                        
                         console.log('Co-tenant check result:', JSON.stringify(result, null, 2));
                         const isCoTenant = result.success && result.isCoTenant;
                         setIsUserCoTenant(isCoTenant);
-
+                        
                         console.log('Loading invoices based on co-tenant status:', isCoTenant);
-
+                        
                         // Sử dụng AbortController để có thể hủy request nếu cần
                         const controller = new AbortController();
-
+                        
                         if (isCoTenant) {
-                            dispatch(fetchRoommateInvoices({
-                                token,
-                                page: 1,
-                                limit: 10,
+                            dispatch(fetchRoommateInvoices({ 
+                                token, 
+                                page: 1, 
+                                limit: 10, 
                                 status: selectedStatus || undefined,
                                 signal: controller.signal
                             }));
                         } else {
-                            dispatch(fetchInvoices({
-                                token,
-                                page: 1,
-                                limit: 10,
+                            dispatch(fetchInvoices({ 
+                                token, 
+                                page: 1, 
+                                limit: 10, 
                                 status: selectedStatus || undefined,
                                 signal: controller.signal
                             }));
                         }
-
+                        
                         isCheckingCoTenant = false;
-
+                        
                     } catch (error) {
                         console.error('Error in checkAndLoadData:', error);
-
+                        
                         // Nếu có lỗi, vẫn đảm bảo gọi API lấy hóa đơn thông thường
                         if (isMounted.current) {
                             setIsUserCoTenant(false);
-                            dispatch(fetchInvoices({
-                                token,
-                                page: 1,
-                                limit: 10,
-                                status: selectedStatus || undefined
+                            dispatch(fetchInvoices({ 
+                                token, 
+                                page: 1, 
+                                limit: 10, 
+                                status: selectedStatus || undefined 
                             }));
                         }
-
+                        
                         isCheckingCoTenant = false;
                     }
                 };
-
+                
                 // Gọi hàm check ngay lập tức
                 checkAndLoadData();
-
+                
                 // Cleanup function
                 return () => {
                     isMounted.current = false;
                     console.log('=== FOCUS EFFECT CLEANUP (tenant) ===');
-
+                    
                     // Nếu đang trong quá trình check co-tenant, log để debug
                     if (isCheckingCoTenant) {
                         console.log('WARNING: Component unmounted while checking co-tenant status');
@@ -424,56 +424,56 @@ const BillScreen = () => {
             console.log('No token available for refresh');
             return;
         }
-
+        
         console.log('Starting refresh with token available');
         setRefreshing(true);
-
+        
         const refreshData = async () => {
             try {
                 // Nếu là chủ trọ, chỉ cần lấy hóa đơn thông thường
                 if (isLandlord) {
                     console.log('Refreshing as landlord, fetching regular invoices');
-                    await dispatch(fetchInvoices({
-                        token,
-                        page: 1,
-                        limit: 10,
-                        status: selectedStatus || undefined
+                    await dispatch(fetchInvoices({ 
+                        token, 
+                        page: 1, 
+                        limit: 10, 
+                        status: selectedStatus || undefined 
                     })).unwrap();
                     setRefreshing(false);
                     return;
                 }
-
+                
                 // Kiểm tra lại trạng thái người ở cùng
                 if (user?.role === 'nguoiThue') {
                     console.log('Refreshing as tenant, checking co-tenant status');
                     const result = await checkUserIsCoTenant(token);
                     const isCoTenant = result.success && result.isCoTenant;
-
+                    
                     console.log('Refresh co-tenant check result:', isCoTenant);
                     setIsUserCoTenant(isCoTenant);
-
+                    
                     if (isCoTenant) {
-                        await dispatch(fetchRoommateInvoices({
-                            token,
-                            page: 1,
-                            limit: 10,
-                            status: selectedStatus || undefined
+                        await dispatch(fetchRoommateInvoices({ 
+                            token, 
+                            page: 1, 
+                            limit: 10, 
+                            status: selectedStatus || undefined 
                         })).unwrap();
                     } else {
-                        await dispatch(fetchInvoices({
-                            token,
-                            page: 1,
-                            limit: 10,
-                            status: selectedStatus || undefined
+                        await dispatch(fetchInvoices({ 
+                            token, 
+                            page: 1, 
+                            limit: 10, 
+                            status: selectedStatus || undefined 
                         })).unwrap();
                     }
                 } else {
                     console.log('Refreshing with unknown role, fetching regular invoices');
-                    await dispatch(fetchInvoices({
-                        token,
-                        page: 1,
-                        limit: 10,
-                        status: selectedStatus || undefined
+                    await dispatch(fetchInvoices({ 
+                        token, 
+                        page: 1, 
+                        limit: 10, 
+                        status: selectedStatus || undefined 
                     })).unwrap();
                 }
             } catch (error) {
@@ -482,7 +482,7 @@ const BillScreen = () => {
                 setRefreshing(false);
             }
         };
-
+        
         refreshData();
     }, [dispatch, token, selectedStatus, isLandlord, user?.role, isUserCoTenant]);
 
@@ -538,13 +538,13 @@ const BillScreen = () => {
 
     // State để theo dõi dropdown nào đang mở
     const [openDropdown, setOpenDropdown] = useState<FilterType | null>(null);
-
+    
     // Create animation values for each dropdown type
     const statusAnimRef = useRef(new Animated.Value(0)).current;
     const roomAnimRef = useRef(new Animated.Value(0)).current;
     const tenantAnimRef = useRef(new Animated.Value(0)).current;
     const sortAnimRef = useRef(new Animated.Value(0)).current;
-
+    
     // Get animation reference for a specific dropdown
     const getAnimationForDropdown = (dropdownType: FilterType | null): Animated.Value => {
         switch (dropdownType) {
@@ -555,10 +555,10 @@ const BillScreen = () => {
             default: return new Animated.Value(0);
         }
     };
-
+    
     // Animation for content dropdown
     const [contentAnimation] = useState(new Animated.Value(0));
-
+    
     // Animate dropdown open/close
     useEffect(() => {
         // Animate content area
@@ -568,10 +568,10 @@ const BillScreen = () => {
             easing: Easing.ease,
             useNativeDriver: false
         }).start();
-
+        
         // Get all dropdown types
         const allDropdowns: FilterType[] = ['status', 'room', 'tenant', 'sort'];
-
+        
         // Animate each arrow
         allDropdowns.forEach(dropdownType => {
             const anim = getAnimationForDropdown(dropdownType);
@@ -583,16 +583,16 @@ const BillScreen = () => {
             }).start();
         });
     }, [openDropdown, statusAnimRef, roomAnimRef, tenantAnimRef, sortAnimRef, contentAnimation]);
-
+    
     // Theo dõi khi user role hoặc trạng thái co-tenant thay đổi để reset dropdown
     useEffect(() => {
         // Nếu người dùng là tenant hoặc co-tenant và dropdown đang mở là room hoặc tenant, đóng nó lại
-        if ((user?.role === 'nguoiThue' || isUserCoTenant) &&
+        if ((user?.role === 'nguoiThue' || isUserCoTenant) && 
             (openDropdown === 'room' || openDropdown === 'tenant')) {
             setOpenDropdown(null);
         }
     }, [user?.role, isUserCoTenant, openDropdown]);
-
+    
     // Render các dropdown bộ lọc
     const renderFilterTabs = () => {
         // Kiểm tra nếu người dùng là người thuê hoặc người ở cùng
@@ -606,7 +606,7 @@ const BillScreen = () => {
 
         // Thêm tab Phòng và Người thuê chỉ khi người dùng là chủ trọ
         if (!isTenantOrCoTenant) {
-            tabs.splice(1, 0,
+            tabs.splice(1, 0, 
                 { id: 'room', label: 'Phòng' },
                 { id: 'tenant', label: 'Người thuê' }
             );
@@ -620,11 +620,11 @@ const BillScreen = () => {
                 style={styles.dropdownsContainer}>
                 {tabs.map(tab => (
                     <View key={tab.id} style={styles.dropdownWrapper}>
-                        <TouchableOpacity
-                            style={[
+                    <TouchableOpacity
+                        style={[
                                 styles.dropdownButton,
                                 openDropdown === tab.id ? styles.activeDropdownButton : {}
-                            ]}
+                        ]}
                             onPress={() => {
                                 if (openDropdown === tab.id) {
                                     setOpenDropdown(null);
@@ -634,26 +634,26 @@ const BillScreen = () => {
                                 }
                             }}>
                             <Text style={styles.dropdownButtonText} numberOfLines={1} ellipsizeMode="tail">
-                                {tab.label}
-                                {tab.id === 'status' && selectedStatus &&
-                                    `: ${selectedStatus === 'draft' ? 'Nháp' :
-                                        selectedStatus === 'issued' ? 'Chưa thanh toán' :
-                                            selectedStatus === 'paid' ? 'Đã thanh toán' :
-                                                selectedStatus === 'overdue' ? 'Quá hạn' : ''}`
+                            {tab.label}
+                                {tab.id === 'status' && selectedStatus && 
+                                    `: ${selectedStatus === 'draft' ? 'Nháp' : 
+                                        selectedStatus === 'issued' ? 'Chưa thanh toán' : 
+                                        selectedStatus === 'paid' ? 'Đã thanh toán' :
+                                        selectedStatus === 'overdue' ? 'Quá hạn' : ''}`
                                 }
-                                {tab.id === 'room' && selectedRoom &&
+                                {tab.id === 'room' && selectedRoom && 
                                     `: ${uniqueRooms.find(r => r.id === selectedRoom)?.name || ''}`
                                 }
-                                {tab.id === 'tenant' && selectedTenant &&
+                                {tab.id === 'tenant' && selectedTenant && 
                                     `: ${uniqueTenants.find(t => t.id === selectedTenant)?.name || ''}`
                                 }
-                                {tab.id === 'sort' &&
-                                    `: ${sortOrder === 'newest' ? 'Mới nhất' :
-                                        sortOrder === 'oldest' ? 'Cũ nhất' :
-                                            sortOrder === 'highest' ? 'Giá cao nhất' :
-                                                sortOrder === 'lowest' ? 'Giá thấp nhất' : ''}`
+                                {tab.id === 'sort' && 
+                                    `: ${sortOrder === 'newest' ? 'Mới nhất' : 
+                                        sortOrder === 'oldest' ? 'Cũ nhất' : 
+                                        sortOrder === 'highest' ? 'Giá cao nhất' : 
+                                        sortOrder === 'lowest' ? 'Giá thấp nhất' : ''}`
                                 }
-                            </Text>
+                        </Text>
                             <Animated.Image
                                 source={require('../../assets/icons/icon_arrow_down.png')}
                                 style={[
@@ -668,7 +668,7 @@ const BillScreen = () => {
                                     }
                                 ]}
                             />
-                        </TouchableOpacity>
+                    </TouchableOpacity>
                     </View>
                 ))}
             </ScrollView>
@@ -680,9 +680,9 @@ const BillScreen = () => {
         // Always render something to avoid layout jumps, but we'll control visibility with animation
         if (!openDropdown) {
             // Return an empty placeholder when no dropdown is selected
-            return <View style={{ height: 0 }} />;
+            return <View style={{height: 0}} />;
         }
-
+        
         switch (openDropdown) {
             case 'status':
                 return renderStatusFilter();
@@ -693,7 +693,7 @@ const BillScreen = () => {
             case 'sort':
                 return renderSortOrderFilter();
             default:
-                return <View style={{ height: 0 }} />;
+                return <View style={{height: 0}} />;
         }
     };
 
@@ -713,30 +713,30 @@ const BillScreen = () => {
                 {statuses.map((item, index) => {
                     const isSelected = selectedStatus === item.value || (index === 0 && !selectedStatus);
                     return (
-                        <TouchableOpacity
-                            key={`status-${index}`}
-                            style={[
+                    <TouchableOpacity
+                        key={`status-${index}`}
+                        style={[
                                 styles.dropdownOption,
                                 isSelected ? styles.dropdownOptionSelected : {},
-                            ]}
+                        ]}
                             onPress={() => {
                                 setSelectedStatus(item.value);
                                 setOpenDropdown(null);
                             }}>
-                            <Text
-                                style={[
+                        <Text
+                            style={[
                                     styles.dropdownOptionText,
                                     isSelected ? styles.dropdownOptionTextSelected : {},
-                                ]}>
-                                {item.label}
-                            </Text>
+                            ]}>
+                            {item.label}
+                        </Text>
                             {isSelected && (
                                 <Image
                                     source={require('../../assets/icons/icon_check.png')}
                                     style={styles.checkIcon}
                                 />
                             )}
-                        </TouchableOpacity>
+                    </TouchableOpacity>
                     );
                 })}
             </View>
@@ -780,32 +780,32 @@ const BillScreen = () => {
                 {uniqueRooms.map((room, index) => {
                     const isSelected = selectedRoom === room.id;
                     return (
-                        <TouchableOpacity
-                            key={`room-${index}`}
-                            style={[
+                    <TouchableOpacity
+                        key={`room-${index}`}
+                        style={[
                                 styles.dropdownOption,
                                 isSelected ? styles.dropdownOptionSelected : {},
-                            ]}
+                        ]}
                             onPress={() => {
                                 setSelectedRoom(room.id);
                                 setOpenDropdown(null);
                             }}>
-                            <Text
-                                style={[
+                        <Text
+                            style={[
                                     styles.dropdownOptionText,
                                     isSelected ? styles.dropdownOptionTextSelected : {},
-                                ]}
-                                numberOfLines={1}
-                                ellipsizeMode="tail">
-                                {room.name}
-                            </Text>
+                            ]}
+                            numberOfLines={1}
+                            ellipsizeMode="tail">
+                            {room.name}
+                        </Text>
                             {isSelected && (
                                 <Image
                                     source={require('../../assets/icons/icon_check.png')}
                                     style={styles.checkIcon}
                                 />
                             )}
-                        </TouchableOpacity>
+                    </TouchableOpacity>
                     );
                 })}
             </View>
@@ -849,32 +849,32 @@ const BillScreen = () => {
                 {uniqueTenants.map((tenant, index) => {
                     const isSelected = selectedTenant === tenant.id;
                     return (
-                        <TouchableOpacity
-                            key={`tenant-${index}`}
-                            style={[
+                    <TouchableOpacity
+                        key={`tenant-${index}`}
+                        style={[
                                 styles.dropdownOption,
                                 isSelected ? styles.dropdownOptionSelected : {},
-                            ]}
+                        ]}
                             onPress={() => {
                                 setSelectedTenant(tenant.id);
                                 setOpenDropdown(null);
                             }}>
-                            <Text
-                                style={[
+                        <Text
+                            style={[
                                     styles.dropdownOptionText,
                                     isSelected ? styles.dropdownOptionTextSelected : {},
-                                ]}
-                                numberOfLines={1}
-                                ellipsizeMode="tail">
-                                {tenant.name}
-                            </Text>
+                            ]}
+                            numberOfLines={1}
+                            ellipsizeMode="tail">
+                            {tenant.name}
+                        </Text>
                             {isSelected && (
                                 <Image
                                     source={require('../../assets/icons/icon_check.png')}
                                     style={styles.checkIcon}
                                 />
                             )}
-                        </TouchableOpacity>
+                    </TouchableOpacity>
                     );
                 })}
             </View>
@@ -894,30 +894,30 @@ const BillScreen = () => {
                 {sortOptions.map((item, index) => {
                     const isSelected = sortOrder === item.value;
                     return (
-                        <TouchableOpacity
-                            key={`sort-${index}`}
-                            style={[
+                    <TouchableOpacity
+                        key={`sort-${index}`}
+                        style={[
                                 styles.dropdownOption,
                                 isSelected ? styles.dropdownOptionSelected : {},
-                            ]}
+                        ]}
                             onPress={() => {
                                 setSortOrder(item.value as SortOrder);
                                 setOpenDropdown(null);
                             }}>
-                            <Text
-                                style={[
+                        <Text
+                            style={[
                                     styles.dropdownOptionText,
                                     isSelected ? styles.dropdownOptionTextSelected : {},
-                                ]}>
-                                {item.label}
-                            </Text>
+                            ]}>
+                            {item.label}
+                        </Text>
                             {isSelected && (
                                 <Image
                                     source={require('../../assets/icons/icon_check.png')}
                                     style={styles.checkIcon}
                                 />
                             )}
-                        </TouchableOpacity>
+                    </TouchableOpacity>
                     );
                 })}
             </View>
@@ -1084,8 +1084,8 @@ const BillScreen = () => {
                     {isUserCoTenant ? 'Hóa đơn người ở cùng' : 'Hóa đơn thu chi'}
                 </Text>
                 {isLandlord ? (
-                    <TouchableOpacity
-                        style={styles.templateButton}
+                    <TouchableOpacity 
+                        style={styles.templateButton} 
                         onPress={navigateToTemplates}
                     >
                         <Text style={styles.templateButtonText}>Mẫu</Text>
@@ -1095,7 +1095,7 @@ const BillScreen = () => {
                 )}
             </View>
 
-
+            
 
             {/* Dropdown bộ lọc */}
             <View style={styles.filterTabsWrapper}>
@@ -1114,9 +1114,9 @@ const BillScreen = () => {
                     overflow: 'hidden'
                 }
             ]}>
-                <View style={styles.activeFilterWrapper}>
-                    {renderActiveFilterContent()}
-                </View>
+            <View style={styles.activeFilterWrapper}>
+                {renderActiveFilterContent()}
+            </View>
             </Animated.View>
 
             {loading && !isRefreshing && (

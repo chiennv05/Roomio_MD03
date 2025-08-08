@@ -25,12 +25,14 @@ import 'react-native-gesture-handler';
 
 import PersonalInformation from '../screens/Profile/PersonalInformation';
 import MyRoomScreen from '../screens/ChuTro/MyRoom/MyRoomScreen';
+// <<<<<<< HEAD
 import BillScreen from '../screens/Bill/BillScreen';
 import BillDetailScreen from '../screens/Bill/BillDetailScreen';
 import RoommateInvoiceDetailScreen from '../screens/Bill/RoommateInvoiceDetailScreen';
 import CreateInvoiceScreen from '../screens/Bill/CreateInvoiceScreen';
 import EditInvoiceScreen from '../screens/Bill/EditInvoiceScreen';
 import InvoiceTemplatesScreen from '../screens/Bill/InvoiceTemplatesScreen';
+// =======
 import AddRoomScreen from '../screens/ChuTro/AddRoom/AddRoomScreen';
 
 import ContractManagement from '../screens/ChuTro/Contract/ContractManagement';
@@ -119,29 +121,31 @@ export default function TabScreen() {
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}
-          />
           <Stack.Screen
+            // <<<<<<< HEAD
+
+            // =======
             name="TenantList"
             component={TenantList}
+
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
           <Stack.Screen
+            // <<<<<<< HEAD
             name="BillDetails"
             component={BillDetailScreen}
-            options={{
-              ...TransitionPresets.SlideFromRightIOS,
-            }}
-          />
-          <Stack.Screen
+            // =======
             name="TenantDetail"
             component={TenantDetailScreen}
+            // {/* >>>>>>> origin/chien */}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
           <Stack.Screen
+            // <<<<<<< HEAD
             name="RoommateInvoiceDetails"
             component={RoommateInvoiceDetailScreen}
             options={{
@@ -165,13 +169,10 @@ export default function TabScreen() {
           <Stack.Screen
             name="InvoiceTemplates"
             component={InvoiceTemplatesScreen}
-            options={{
-              ...TransitionPresets.SlideFromRightIOS,
-            }}
-          />
-          <Stack.Screen
+            // =======
             name="ContractTenants"
             component={ContractTenantsScreen}
+            // {/* >>>>>>> origin/chien */}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}

@@ -6,6 +6,18 @@ export type RootStackParamList = {
   SplashScreen: undefined;
   UITab: undefined;
   ForgotPassword: undefined;
+  // <<<<<<< HEAD
+  //   OTPVerification: { email: string };
+  //   ResetPassWord: { email: string; resetToken: string };
+  //   PersonalInformation: { redirectTo?: string; roomId?: string };
+  //   LandlordRoom: undefined;
+  //   Bill: undefined;
+  //   BillDetails: { invoiceId: string };
+  //   RoommateInvoiceDetails: { invoiceId: string }; // Thêm route mới cho chi tiết hóa đơn người ở cùng
+  //   CreateInvoice: { contract?: any };
+  //   EditInvoice: { invoiceId: string };
+  //   InvoiceTemplates: undefined;
+  // =======
   OTPVerification: { email: string };
   ResetPassWord: { email: string; resetToken: string };
   PersonalInformation: { redirectTo?: string; roomId?: string };
@@ -13,12 +25,6 @@ export type RootStackParamList = {
   TenantList: undefined;
   TenantDetail: { tenantId: string };
   LandlordRoom: undefined;
-  Bill: undefined;
-  BillDetails: { invoiceId: string };
-  RoommateInvoiceDetails: { invoiceId: string };
-  CreateInvoice: { contract?: any };
-  EditInvoice: { invoiceId: string };
-  InvoiceTemplates: undefined;
   ContractManagement: undefined;
   ContractDetail: { contractId: string };
   ContractTenants: { contractId: string };
@@ -47,4 +53,5 @@ export type RootStackParamList = {
   UpdateRoomScreen: { item: Room };
   AddContract: { notificationId: string };
   UpdateContract: { contract: Contract };
+  // >>>>>>> origin/chien
 };

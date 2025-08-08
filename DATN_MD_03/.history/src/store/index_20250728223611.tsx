@@ -5,11 +5,11 @@ import roomReducer from './slices/roomSlice';
 import notificationReducer from './slices/notificationSlice';
 import tenantReducer from './slices/tenantSlice';
 import landlordRoomsReducer from './slices/landlordRoomsSlice';
-// <<<<<<< HEAD
+<<<<<<< HEAD
 import billReducer from './slices/billSlice';
-// =======
+=======
 import contractReducer from './slices/contractSlice';
-// >>>>>>> origin/chien
+>>>>>>> origin/chien
 
 export const store = configureStore({
   reducer: {
@@ -19,11 +19,11 @@ export const store = configureStore({
     notification: notificationReducer,
     tenant: tenantReducer,
     landlordRooms: landlordRoomsReducer,
-    // <<<<<<< HEAD
+<<<<<<< HEAD
     bill: billReducer,
-    // =======
+=======
     contract: contractReducer,
-    // >>>>>>> origin/chien
+>>>>>>> origin/chien
   },
 });
 

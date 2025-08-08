@@ -55,39 +55,39 @@ export default function ProfileScreen() {
   const handleConfirmLogout = async () => {
     if (!token) {
       setShowLogoutModal(false);
-      // <<<<<<< HEAD
-      //       navigation.navigate('Login', {});
-      // =======
+<<<<<<< HEAD
+      navigation.navigate('Login', {});
+=======
       navigation.replace('Login', {});
-      // >>>>>>> origin/chien
+>>>>>>> origin/chien
       return;
     }
 
     try {
       await dispatch(logoutUser(token)).unwrap();
       setShowLogoutModal(false);
-      // <<<<<<< HEAD
-      //       navigation.navigate('Login', {});
-      //     } catch (error) {
-      //       // Dù có lỗi API, vẫn logout local và navigate
-      //       setShowLogoutModal(false);
-      //       navigation.navigate('Login', {});
-      // =======
+<<<<<<< HEAD
+      navigation.navigate('Login', {});
+    } catch (error) {
+      // Dù có lỗi API, vẫn logout local và navigate
+      setShowLogoutModal(false);
+      navigation.navigate('Login', {});
+=======
       navigation.replace('Login', {});
     } catch (error) {
       // Dù có lỗi API, vẫn logout local và navigate
       setShowLogoutModal(false);
       navigation.replace('Login', {});
-      // >>>>>>> origin/chien
+>>>>>>> origin/chien
     }
   };
 
   const handleLogin = () => {
-    // <<<<<<< HEAD
-    //     navigation.navigate('Login', {});
-    // =======
+<<<<<<< HEAD
+    navigation.navigate('Login', {});
+=======
     navigation.replace('Login', {});
-    // >>>>>>> origin/chien
+>>>>>>> origin/chien
   };
 
   const hanleUpdateProfile = () => {
@@ -98,11 +98,11 @@ export default function ProfileScreen() {
         [
           {
             text: 'OK',
-            // <<<<<<< HEAD
-            //             onPress: () => navigation.navigate('Login', {}),
-            // =======
+<<<<<<< HEAD
+            onPress: () => navigation.navigate('Login', {}),
+=======
             onPress: () => navigation.replace('Login', {}), // Chuyển sang màn Login
-            // >>>>>>> origin/chien
+>>>>>>> origin/chien
           },
         ],
         { cancelable: false },
@@ -112,7 +112,7 @@ export default function ProfileScreen() {
     navigation.navigate('PersonalInformation', {});
   };
 
-  // <<<<<<< HEAD
+<<<<<<< HEAD
   const handleNavigateToBill = () => {
     if (!checkToken(token)) {
       Alert.alert(
@@ -129,8 +129,7 @@ export default function ProfileScreen() {
       return;
     }
     navigation.navigate('Bill');
-  }
-  // =======
+=======
   // Hàm xử lý khi nhấn vào "Danh sách người thuê"
   const handleTenantListPress = () => {
     // Chuyển đến màn hình TenantList
@@ -141,7 +140,7 @@ export default function ProfileScreen() {
   const handleContractPress = () => {
     // Chuyển đến màn hình ContractManagement
     navigation.navigate('ContractManagement');
-    // >>>>>>> origin/chien
+>>>>>>> origin/chien
   };
 
   // Show guest screen if not logged in
@@ -178,27 +177,27 @@ export default function ProfileScreen() {
           />
         </View>
 
-        {/* <<<<<<< HEAD
-      <View style={styles.box}>
-        <SettingItem
-          iconStat={Icons.IconFluentPersonRegular}
-          label="Thông tin cá nhân"
-          iconEnd={Icons.IconNext}
-          onPress={hanleUpdateProfile}
-        />
-        <SettingItem
-          iconStat={Icons.IconContract}
-          label="Hợp đồng thuê"
-          iconEnd={Icons.IconNext}
-        />
-        <SettingItem
-          iconStat={Icons.IconPaper}
-          label="Hóa đơn thu chi"
-          iconEnd={Icons.IconNext}
-          onPress={handleNavigateToBill}
-        />
-      </View>
-======= */}
+<<<<<<< HEAD
+  <View style={styles.box}>
+    <SettingItem
+      iconStat={Icons.IconFluentPersonRegular}
+      label="Thông tin cá nhân"
+      iconEnd={Icons.IconNext}
+      onPress={hanleUpdateProfile}
+    />
+    <SettingItem
+      iconStat={Icons.IconContract}
+      label="Hợp đồng thuê"
+      iconEnd={Icons.IconNext}
+    />
+    <SettingItem
+      iconStat={Icons.IconPaper}
+      label="Hóa đơn thu chi"
+      iconEnd={Icons.IconNext}
+      onPress={handleNavigateToBill}
+    />
+  </View>
+=======
         <View style={styles.box}>
           <SettingItem
             iconStat={Icons.IconFluentPersonRegular}
@@ -216,34 +215,40 @@ export default function ProfileScreen() {
             iconStat={Icons.IconPaper}
             label="Hóa đơn thu chi"
             iconEnd={Icons.IconNext}
-            onPress={handleNavigateToBill}
           />
-          {/* >>>>>>> origin/chien */}
+>>>>>>> origin/chien
 
-          {/* Chỉ hiển thị các tùy chọn cho chủ trọ nếu user có role là chuTro */}
-          {isLandlord && (
-            <>
-              <SettingItem
-                iconStat={Icons.IconListTenants}
-                label="Danh sách người thuê"
-                iconEnd={Icons.IconNext}
-                onPress={handleTenantListPress}
-              />
-              <SettingItem
-                iconStat={Icons.IconPaper}
-                label="Thống kê "
-                iconEnd={Icons.IconNext}
-                onPress={handleGoLandlord}
-              />
-              <SettingItem
-                iconStat={Icons.IconPaper}
-                label="Quản lý phòng trọ "
-                iconEnd={Icons.IconNext}
-                onPress={handleGoLandlord}
-              />
-            </>
-          )}
-        </View>
+  {/* Chỉ hiển thị các tùy chọn cho chủ trọ nếu user có role là chuTro */ }
+  {
+    isLandlord && (
+      <>
+        <SettingItem
+          iconStat={Icons.IconRomManagement}
+          label="Quản lý phòng trọ"
+          iconEnd={Icons.IconNext}
+        />
+        <SettingItem
+          iconStat={Icons.IconListTenants}
+          label="Danh sách người thuê"
+          iconEnd={Icons.IconNext}
+          onPress={handleTenantListPress}
+        />
+        <SettingItem
+          iconStat={Icons.IconPaper}
+          label="Thống kê "
+          iconEnd={Icons.IconNext}
+          onPress={handleGoLandlord}
+        />
+        <SettingItem
+          iconStat={Icons.IconPaper}
+          label="Quản lý phòng trọ "
+          iconEnd={Icons.IconNext}
+          onPress={handleGoLandlord}
+        />
+      </>
+    )
+  }
+        </View >
 
         <View style={styles.box}>
           <SettingItem
@@ -264,15 +269,15 @@ export default function ProfileScreen() {
           style={styles.logoutButtonContainer}>
           <Text style={styles.button}>Đăng xuất</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </ScrollView >
 
-      <LogoutModal
-        visible={showLogoutModal}
-        onCancel={handleCancelLogout}
-        onConfirm={handleConfirmLogout}
-        loading={loading}
-      />
-    </SafeAreaView>
+    <LogoutModal
+      visible={showLogoutModal}
+      onCancel={handleCancelLogout}
+      onConfirm={handleConfirmLogout}
+      loading={loading}
+    />
+    </SafeAreaView >
   );
 }
 

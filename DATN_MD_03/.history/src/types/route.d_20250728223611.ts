@@ -6,23 +6,29 @@ export type RootStackParamList = {
   SplashScreen: undefined;
   UITab: undefined;
   ForgotPassword: undefined;
+<<<<<<< HEAD
   OTPVerification: { email: string };
   ResetPassWord: { email: string; resetToken: string };
   PersonalInformation: { redirectTo?: string; roomId?: string };
-  Notification: undefined;
-  TenantList: undefined;
-  TenantDetail: { tenantId: string };
   LandlordRoom: undefined;
   Bill: undefined;
   BillDetails: { invoiceId: string };
-  RoommateInvoiceDetails: { invoiceId: string };
+  RoommateInvoiceDetails: { invoiceId: string }; // Thêm route mới cho chi tiết hóa đơn người ở cùng
   CreateInvoice: { contract?: any };
   EditInvoice: { invoiceId: string };
   InvoiceTemplates: undefined;
+=======
+  OTPVerification: {email: string};
+  ResetPassWord: {email: string; resetToken: string};
+  PersonalInformation: {redirectTo?: string; roomId?: string};
+  Notification: undefined;
+  TenantList: undefined;
+  TenantDetail: {tenantId: string};
+  LandlordRoom: undefined;
   ContractManagement: undefined;
-  ContractDetail: { contractId: string };
-  ContractTenants: { contractId: string };
-  PdfViewer: { pdfUrl: string };
+  ContractDetail: {contractId: string};
+  ContractTenants: {contractId: string};
+  PdfViewer: {pdfUrl: string};
   PolicyTerms: undefined;
   MapScreen: {
     latitude?: number;
@@ -43,8 +49,9 @@ export type RootStackParamList = {
       address?: string;
     };
   };
-  DetailRoomLandlord: { id: string };
-  UpdateRoomScreen: { item: Room };
-  AddContract: { notificationId: string };
-  UpdateContract: { contract: Contract };
+  DetailRoomLandlord: {id: string};
+  UpdateRoomScreen: {item: Room};
+  AddContract: {notificationId: string};
+  UpdateContract: {contract: Contract};
+>>>>>>> origin/chien
 };

@@ -47,4 +47,5 @@ export type RootStackParamList = {
   UpdateRoomScreen: { item: Room };
   AddContract: { notificationId: string };
   UpdateContract: { contract: Contract };
+  // >>>>>>> origin/chien
 };

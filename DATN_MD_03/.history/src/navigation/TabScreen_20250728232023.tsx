@@ -118,30 +118,32 @@ export default function TabScreen() {
             component={BillScreen}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
-            }}
-          />
+            }} />
           <Stack.Screen
+            // <<<<<<< HEAD
+
+            // =======
             name="TenantList"
             component={TenantList}
+
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
           <Stack.Screen
+            // <<<<<<< HEAD
             name="BillDetails"
             component={BillDetailScreen}
-            options={{
-              ...TransitionPresets.SlideFromRightIOS,
-            }}
-          />
-          <Stack.Screen
+            // =======
             name="TenantDetail"
             component={TenantDetailScreen}
+            // {/* >>>>>>> origin/chien */}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
           <Stack.Screen
+            // <<<<<<< HEAD
             name="RoommateInvoiceDetails"
             component={RoommateInvoiceDetailScreen}
             options={{
@@ -165,13 +167,10 @@ export default function TabScreen() {
           <Stack.Screen
             name="InvoiceTemplates"
             component={InvoiceTemplatesScreen}
-            options={{
-              ...TransitionPresets.SlideFromRightIOS,
-            }}
-          />
-          <Stack.Screen
+            // =======
             name="ContractTenants"
             component={ContractTenantsScreen}
+            // {/* >>>>>>> origin/chien */}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}
