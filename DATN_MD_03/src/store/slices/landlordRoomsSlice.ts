@@ -28,6 +28,7 @@ const initialState: LandlordRoomState = {
 export const getLandlordRooms = createAsyncThunk(
   'landlordRooms/getLandlordRooms',
   async (token: string, {rejectWithValue}) => {
+    console.log('hi');
     try {
       const res = await getLandlordRoomsService(token);
       if (!res?.success) {

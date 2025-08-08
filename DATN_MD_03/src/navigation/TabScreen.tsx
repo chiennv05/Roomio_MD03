@@ -41,8 +41,12 @@ import MapScreen from '../screens/ChuTro/AddRoom/MapScreen';
 import RoomDetail from '../screens/ChuTro/RoomDetail/RoomDetail';
 import UpdateRoom from '../screens/ChuTro/UpdateRoom/UpdateRoom';
 import UpdateContract from '../screens/ChuTro/Contract/UpdateContract';
+<<<<<<< HEAD
 import PolicyTerms from '../screens/PolicyTerms/PolicyTerms';
 // >>>>>>> origin/chien
+=======
+import AddContractNoNotification from '../screens/ChuTro/Contract/AddContractNoNotification';
+>>>>>>> origin/ton
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -214,13 +218,21 @@ export default function TabScreen() {
             }}
           />
           <Stack.Screen
+<<<<<<< HEAD
             name="PolicyTerms"
             component={PolicyTerms}
+=======
+            name="AddContractNoNotification"
+            component={AddContractNoNotification}
+>>>>>>> origin/ton
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/ton
         </Stack.Navigator>
       </NavigationContainer>
     </>

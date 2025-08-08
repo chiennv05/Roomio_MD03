@@ -97,12 +97,17 @@ const ContractManagement = () => {
   const handleGoContractDetail = (contractId: string) => {
     navigation.navigate('ContractDetail', {contractId});
   };
+  const handleGoAddContract = () => {
+    navigation.navigate('AddContractNoNotification');
+  };
   return (
     <SafeAreaView style={styles.container}>
       <UIHeader
         title="Quản lý hợp đồng"
         iconLeft={Icons.IconArrowLeft}
         onPressLeft={handleGoBack}
+        iconRight={Icons.IconAdd}
+        onPressRight={handleGoAddContract}
       />
 
       <View style={styles.conatinerFilter}>

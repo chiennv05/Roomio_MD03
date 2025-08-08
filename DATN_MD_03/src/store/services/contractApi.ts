@@ -1,5 +1,9 @@
 import api from '../../api/api';
-import {CreateContractPayload, UpdateContractPayload} from '../../types';
+import {
+  CreateContractPayload,
+  CreateContractPayloadWithoutNotification,
+  UpdateContractPayload,
+} from '../../types';
 
 // Tạo hợp đồng từ thông báo
 export const createContractFromNotification = async (
@@ -10,6 +14,26 @@ export const createContractFromNotification = async (
     return response.data;
   } catch (error: any) {
     console.error('Error creating contract from notification:', error);
+    throw {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+    };
+  }
+};
+// tạo hợp đồng mới ko qua thông báo
+export const createNewContract = async (
+  data: CreateContractPayloadWithoutNotification,
+) => {
+  try {
+    const response = await api.post('/contract/create', data);
+    console.log('res tao hop dong', response);
+    if (!response.data || !response.data.success) {
+      throw new Error(
+        response.data?.message || 'Tạo hợp đồng không thành công',
+      );
+    }
+    return response.data;
+  } catch (error: any) {
     throw {
       message: error.response?.data?.message || error.message,
       status: error.response?.status,
@@ -98,27 +122,23 @@ export const generateContractPDF = async (contractId: string) => {
 export const uploadSignedContractImage = async (
   contractId: string,
   formData: FormData,
+  append: boolean, // true = thêm ảnh vào list, false = thay thế toàn bộ
 ) => {
   try {
-    console.log('Uploading signed contract image for contract:', formData);
+    const url = `/contract/${contractId}/upload-signed?append=${append}`;
 
-    const response = await api.post(
-      `/contract/${contractId}/upload-signed`, // Sửa endpoint theo Postman
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        timeout: 30000,
+    const response = await api.post(url, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
       },
-    );
+      timeout: 30000,
+    });
 
     console.log('Upload response:', response.data);
 
     if (!response.data) {
       throw new Error('API không trả về dữ liệu');
     }
-
     if (!response.data.success) {
       throw new Error(response.data.message || 'Upload thất bại');
     }
@@ -126,13 +146,11 @@ export const uploadSignedContractImage = async (
     return response.data;
   } catch (error: any) {
     console.error(
-      'Error uploading signed image for contract',
-      contractId,
-      ':',
+      `Error uploading signed images for contract ${contractId}:`,
       error,
     );
     if (error.response) {
-      console.error('Error response:', error.response.data);
+      console.error('Server error response:', error.response.data);
       throw new Error(error.response.data?.message || 'Lỗi từ server');
     } else if (error.request) {
       throw new Error('Lỗi kết nối mạng');
@@ -141,6 +159,7 @@ export const uploadSignedContractImage = async (
     }
   }
 };
+
 // Admin phê duyệt hợp đồng
 export const approveContract = async (contractId: string) => {
   try {
@@ -192,12 +211,12 @@ export const updateContract = async (
   try {
     const response = await api.patch(`/contract/${contractId}/update`, data);
     console.log(`Update response for contract ${contractId}:`, response);
-    
     // Kiểm tra response có đúng cấu trúc
     if (!response.data || !response.data.success) {
-      throw new Error(response.data?.message || 'Cập nhật hợp đồng không thành công');
+      throw new Error(
+        response.data?.message || 'Cập nhật hợp đồng không thành công',
+      );
     }
-    
     return response.data;
   } catch (error: any) {
     console.error(`Error updating contract ${contractId}:`, error);
@@ -246,6 +265,60 @@ export const updateCoTenants = async (contractId: string) => {
   } catch (error: any) {
     console.error(
       `Error updating co-tenants for contract ${contractId}:`,
+      error,
+    );
+    throw {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+    };
+  }
+};
+
+// xóa 1 ảnh hợp đồng đã ký
+export const deleteSignedImages = async (contractId: string) => {
+  try {
+    // Gọi DELETE tới endpoint xóa toàn bộ ảnh hợp đồng đã ký
+    const response = await api.delete(
+      `/contract/${contractId}/delete-signed-image`,
+    );
+    if (!response.data || !response.data.success) {
+      throw new Error(
+        response.data?.message || 'Xóa ảnh hợp đồng không thành công',
+      );
+    }
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      `Error deleting signed images for contract ${contractId}:`,
+      error,
+    );
+    throw {
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+    };
+  }
+};
+
+export const deleteSignedImage = async (
+  contractId: string,
+  fileName: string,
+) => {
+  try {
+    // Gọi DELETE tới endpoint xóa 1 ảnh theo tên file
+    const response = await api.delete(
+      `/contract/${contractId}/delete-signed-image/${encodeURIComponent(
+        fileName,
+      )}`,
+    );
+    if (!response.data || !response.data.success) {
+      throw new Error(
+        response.data?.message || 'Xóa ảnh hợp đồng không thành công',
+      );
+    }
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      `Error deleting signed image "${fileName}" for contract ${contractId}:`,
       error,
     );
     throw {

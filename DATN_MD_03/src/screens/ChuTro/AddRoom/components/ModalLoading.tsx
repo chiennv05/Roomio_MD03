@@ -7,10 +7,10 @@ import {Icons} from '../../../../assets/icons';
 import {Colors} from '../../../../theme/color';
 
 interface ModalLoadingProps {
-  visible: boolean;
-  loading: boolean;
-  image: string;
-  onPressVisible: () => void;
+  visible?: boolean;
+  loading?: boolean;
+  image?: string;
+  onPressVisible?: () => void;
 }
 
 const ModalLoading = ({
