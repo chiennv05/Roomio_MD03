@@ -37,13 +37,8 @@ export interface RegisterPayload {
   username: string;
   email: string;
   password: string;
-  confirmPassword: string;
-  birthDate: string;
+
   role: string;
-  fullName: string;
-  phone: string;
-  identityNumber: string;
-  address: string;
 }
 
 export interface LoginPayload {

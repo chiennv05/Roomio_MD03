@@ -46,6 +46,9 @@ export type RootStackParamList = {
   AddContract: {notificationId: string};
   UpdateContract: {contract: Contract};
   StatisticScreen: undefined;
+  RoomStatisticScreen: undefined;
+  RevenueStatisticScreen: undefined;
+  ContractStatisticScreen: undefined;
   OTPVerification: {email: string};
   ResetPassWord: {email: string; resetToken: string};
   PersonalInformation: {redirectTo?: string; roomId?: string};
@@ -56,4 +59,15 @@ export type RootStackParamList = {
   CreateInvoice: {contract?: any};
   EditInvoice: {invoiceId: string};
   InvoiceTemplates: undefined;
+  AddContractNoNotification: undefined;
+  ContractLessee: undefined;
+  ContractDetailLessee: {contractId: string};
+  UpdateTenant: {contractId: string; currentUsernames: string[]};
+  CCCDResult: {
+    rawData?: string;
+    imageUri?: string;
+    redirectTo?: string;
+    roomId?: string;
+  };
+  CCCDScanning: {redirectTo?: string; roomId?: string};
 };

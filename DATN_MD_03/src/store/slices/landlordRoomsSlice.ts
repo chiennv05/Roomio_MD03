@@ -28,6 +28,7 @@ const initialState: LandlordRoomState = {
 export const getLandlordRooms = createAsyncThunk(
   'landlordRooms/getLandlordRooms',
   async (token: string, {rejectWithValue}) => {
+    console.log('hi');
     try {
       const res = await getLandlordRoomsService(token);
       if (!res?.success) {
@@ -46,7 +47,8 @@ export const createLandlordRoom = createAsyncThunk(
   async (room: Room, {rejectWithValue}) => {
     try {
       const res = await createLandlordRoomsService(room);
-      return res.data;
+      console.log(res);
+      return res.data.room; // Giả sử API trả về room data trong trường hợp thành công
     } catch (err: any) {
       return rejectWithValue(err.message || 'Tạo phòng thất bại');
     }
@@ -72,6 +74,7 @@ export const updateLandlordRoom = createAsyncThunk(
   async ({roomId, room}: {roomId: string; room: Room}, {rejectWithValue}) => {
     try {
       const res = await updateLandlordRoomService(roomId, room);
+      console.log(`Cập nhật phòng với ID ${roomId}:`, res.data);
       return res.data;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Lỗi cập nhật phòng');
@@ -97,6 +100,11 @@ const landlordRoomsSlice = createSlice({
   initialState,
   reducers: {
     resetCreateRoomStatus: state => {
+      state.success = false;
+      state.error = null;
+    },
+    // THÊM action mới
+    resetUpdateRoomStatus: state => {
       state.success = false;
       state.error = null;
     },
@@ -163,20 +171,31 @@ const landlordRoomsSlice = createSlice({
         },
       )
 
-      // UPDATE
+      // UPDATE - SỬA CHÍNH TẠI ĐÂY
       .addCase(updateLandlordRoom.pending, state => {
         state.loading = true;
         state.error = null;
+        state.success = false;
       })
       .addCase(
         updateLandlordRoom.fulfilled,
         (state, action: PayloadAction<Room>) => {
           state.loading = false;
-          const index = state.rooms.findIndex(
-            r => r._id === action.payload._id,
-          );
+          state.success = true;
+          // Lấy room data từ response structure
+          const updatedRoom = action.payload; // action.payload là room data
+          console.log('Updated room in reducer:', updatedRoom);
+
+          const index = state.rooms.findIndex(r => r._id === updatedRoom._id);
           if (index !== -1) {
-            state.rooms[index] = action.payload;
+            state.rooms[index] = updatedRoom;
+          }
+          // Cập nhật selectedRoom nếu đang được select
+          if (
+            state.selectedRoom &&
+            state.selectedRoom._id === updatedRoom._id
+          ) {
+            state.selectedRoom = updatedRoom;
           }
         },
       )
@@ -184,7 +203,8 @@ const landlordRoomsSlice = createSlice({
         updateLandlordRoom.rejected,
         (state, action: PayloadAction<any>) => {
           state.loading = false;
-          state.error = action.payload;
+          state.success = false;
+          state.error = action.payload; // SỬA: Lưu error message thay vì rooms
         },
       )
 
@@ -212,5 +232,6 @@ const landlordRoomsSlice = createSlice({
   },
 });
 
-export const {resetCreateRoomStatus} = landlordRoomsSlice.actions;
+export const {resetCreateRoomStatus, resetUpdateRoomStatus} =
+  landlordRoomsSlice.actions;
 export default landlordRoomsSlice.reducer;

@@ -1,11 +1,5 @@
 export {default as Header} from './Header';
 export {default as ImageSlider} from './ImageSlider';
-export {default as InfoSection} from './InfoSection';
-export {default as AddressSection} from './AddressSection';
-export {default as DescriptionSection} from './DescriptionSection';
-export {default as AmenitiesSection} from './AmenitiesSection';
-export {default as FurnitureSection} from './FurnitureSection';
-export {default as ServiceSection} from './ServiceSection';
-export {default as PriceHistorySection} from './PriceHistorySection';
 export {default as LoadingState} from './LoadingState';
-export {default as ErrorState} from './ErrorState'; 
+export {default as ErrorState} from './ErrorState';
+export {default as RoomInfo} from './RoomInfo';

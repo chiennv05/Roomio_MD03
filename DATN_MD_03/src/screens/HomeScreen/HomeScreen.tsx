@@ -58,6 +58,8 @@ const HomeScreen: React.FC = () => {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  // Xoá modal search, chỉ dùng input trực tiếp
 
   // Toggle để kiểm soát client-side filtering (có thể tắt nếu backend đã fix)
   const useClientSideFiltering = true;
@@ -120,43 +122,6 @@ const HomeScreen: React.FC = () => {
   }), []);
 
   // Navigation với animation
-  const handleSearchPress = useCallback(() => {
-    setShowSearchOverlay(true);
-    
-    // Tạo animation mượt mà khi chuyển màn - đẩy xuống và mờ dần
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 0.3,
-        duration: 250,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 0.9,
-        duration: 250,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(overlayAnim, {
-        toValue: 1,
-        duration: 250,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      // Navigate sau khi animation hoàn thành
-      navigation.navigate('Search' as any);
-      
-      // Reset animation về trạng thái ban đầu sau một chút
-      setTimeout(() => {
-        fadeAnim.setValue(1);
-        scaleAnim.setValue(1);
-        overlayAnim.setValue(0);
-        setShowSearchOverlay(false);
-      }, 100);
-    });
-  }, [navigation, fadeAnim, scaleAnim, overlayAnim]);
-
   const handleNotificationPress = useCallback(() => {
     if (!user) {
       setShowLoginModal(true);
@@ -262,6 +227,11 @@ const HomeScreen: React.FC = () => {
     loadRooms(buildFilters);
   }, [buildFilters, loadRooms]);
 
+  // Khi searchQuery hoặc filter thay đổi, gọi lại loadRooms
+  useEffect(() => {
+    loadRooms({ ...buildFilters, search: searchQuery });
+  }, [buildFilters, loadRooms, searchQuery]);
+
   // Memoized callbacks
   const handleFilterSelect = useCallback((index: number) => {
     setSelectedFilters(prev => {
@@ -361,11 +331,18 @@ const HomeScreen: React.FC = () => {
     />
   ), [loading, filteredRooms.length, handleRefresh]);
 
+  // Hàm xác nhận search (ấn Enter hoặc nút tìm kiếm)
+  const handleSearchSubmit = useCallback(() => {
+    // loadRooms sẽ tự động gọi lại qua useEffect khi searchQuery thay đổi
+  }, []);
+
   // Header component for FlatList
   const ListHeaderComponent = useMemo(() => (
     <View>
       <Header 
-        onSearchPress={handleSearchPress}
+        searchValue={searchQuery}
+        onChangeSearchText={setSearchQuery}
+        onSearchSubmit={handleSearchSubmit}
         onNotificationPress={handleNotificationPress}
         onUserPress={handleUserPress}
       />
@@ -388,7 +365,9 @@ const HomeScreen: React.FC = () => {
       <Text style={styles.recommendationTitle}>Đề xuất cho bạn</Text>
     </View>
   ), [
-    handleSearchPress, 
+    searchQuery,
+    setSearchQuery,
+    handleSearchSubmit,
     handleNotificationPress,
     handleUserPress, 
     filters, 
@@ -409,7 +388,12 @@ const HomeScreen: React.FC = () => {
 
   // Empty component
   const ListEmptyComponent = useMemo(() => (
-    !loading ? (
+    loading ? (
+      <View style={styles.loadingContainer}>
+        <LoadingAnimation size="large" color={Colors.limeGreen} />
+        <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
+      </View>
+    ) : (
       <EmptySearchAnimation
         title={hasActiveFilters ? 'Không tìm thấy phòng phù hợp' : 'Không có phòng nào'}
         subtitle={hasActiveFilters 
@@ -417,17 +401,17 @@ const HomeScreen: React.FC = () => {
           : 'Hiện tại chưa có phòng nào được đăng'
         }
       />
-    ) : null
+    )
   ), [loading, hasActiveFilters]);
 
   // Footer component
   const ListFooterComponent = useMemo(() => (
-    loading ? (
+    loading && filteredRooms.length > 0 ? (
       <View style={styles.footer}>
         <LoadingAnimation size="medium" color={Colors.limeGreen} />
       </View>
     ) : null
-  ), [loading]);
+  ), [loading, filteredRooms.length]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -532,5 +516,17 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     zIndex: 1000,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 300,
+  },
+  loadingText: {
+    marginTop: responsiveSpacing(16),
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.gray,
   },
 });

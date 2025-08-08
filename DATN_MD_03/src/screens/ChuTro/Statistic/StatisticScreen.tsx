@@ -7,9 +7,9 @@ import {
   RefreshControl,
   SafeAreaView,
   TouchableOpacity,
-  ImageBackground,
   StatusBar,
   Platform,
+  Image,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../../store';
@@ -17,13 +17,7 @@ import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
 import {responsiveFont, responsiveSpacing} from '../../../utils/responsive';
 import {fetchDashboard} from '../../../store/slices/dashboardSlice';
-import {
-  StatItem,
-  StatGroup,
-  StatChart,
-  TopRoomCard,
-  RecentContractItem,
-} from './components';
+import {StatisticCard, MainChart} from './components';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
@@ -42,6 +36,9 @@ const StatisticScreen = () => {
     (state: RootState) => state.dashboard,
   );
   const [refreshing, setRefreshing] = useState(false);
+  const [chartType, setChartType] = useState<'revenue' | 'rooms' | 'contracts'>(
+    'revenue',
+  );
 
   // Lấy chiều cao của thanh trạng thái
   const statusBarHeight =
@@ -63,18 +60,67 @@ const StatisticScreen = () => {
     setRefreshing(false);
   };
 
-  const navigateToRoomDetail = (roomId: string) => {
-    navigation.navigate('DetailRoomLandlord', {id: roomId});
+  // Thêm hàm xử lý quay lại
+  const handleGoBack = () => {
+    navigation.goBack();
   };
 
-  const navigateToContractDetail = (contractId: string) => {
-    navigation.navigate('ContractDetail', {contractId});
+  // Navigation functions cho các màn hình chi tiết
+  const navigateToRoomStatistic = () => {
+    navigation.navigate('RoomStatisticScreen');
+  };
+
+  const navigateToRevenueStatistic = () => {
+    navigation.navigate('RevenueStatisticScreen');
+  };
+
+  const navigateToContractStatistic = () => {
+    navigation.navigate('ContractStatisticScreen');
   };
 
   // Format money
   const formatMoney = (value: number) => {
     return value.toLocaleString('vi-VN');
   };
+
+  // Helper function để lấy metric chính dựa trên chartType
+  const getMainChartData = () => {
+    switch (chartType) {
+      case 'revenue':
+        return {
+          title: 'Doanh thu hàng tháng',
+          mainValue: formatMoney(data?.revenue?.totalRevenue || 0),
+          data: data?.monthlyStats?.revenue || [],
+          valueType: 'revenue' as const,
+        };
+
+      case 'rooms':
+        return {
+          title: 'Phòng trọ hàng tháng',
+          mainValue: (data?.overview?.totalRooms || 0).toString(),
+          data: data?.monthlyStats?.rooms || [],
+          valueType: 'rooms' as const,
+        };
+
+      case 'contracts':
+        return {
+          title: 'Hợp đồng hàng tháng',
+          mainValue: (data?.overview?.totalContracts || 0).toString(),
+          data: data?.monthlyStats?.contracts || [],
+          valueType: 'contracts' as const,
+        };
+
+      default:
+        return {
+          title: 'Doanh thu hàng tháng',
+          mainValue: formatMoney(data?.revenue?.totalRevenue || 0),
+          data: data?.monthlyStats?.revenue || [],
+          valueType: 'revenue' as const,
+        };
+    }
+  };
+
+  const mainChartData = getMainChartData();
 
   if (loading && !refreshing && !data) {
     return (
@@ -104,263 +150,124 @@ const StatisticScreen = () => {
         translucent
         barStyle="dark-content"
       />
+
+      {/* Header */}
+      <View style={[styles.header, {marginTop: statusBarHeight}]}>
+        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+          <Image
+            source={require('../../../assets/icons/icon_arrow_back.png')}
+          />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Thống kê</Text>
+        <View style={styles.placeholder} />
+      </View>
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }>
-        {/* Header Banner */}
-        <View style={[styles.headerContainer, {marginTop: statusBarHeight}]}>
-          <ImageBackground
-            source={require('../../../assets/images/image_backgroud_button.png')}
-            style={styles.headerBanner}
-            imageStyle={{opacity: 0.8, borderRadius: 16}}>
-            <View style={styles.bannerContent}>
-              <Text style={styles.welcomeText}>
-                Xin chào, {data?.user?.fullName || 'Chủ trọ'}
-              </Text>
-              <Text style={styles.subtitle}>
-                Tổng quan về tình hình kinh doanh
-              </Text>
-            </View>
-          </ImageBackground>
+        {/* Main Chart */}
+        <View
+          style={[styles.chartsContainer, {marginTop: statusBarHeight + 20}]}>
+          <MainChart
+            title={mainChartData.title}
+            subtitle={`Cập nhật: ${new Date().toLocaleTimeString(
+              'vi-VN',
+            )} Hôm nay`}
+            mainValue={mainChartData.mainValue}
+            data={mainChartData.data}
+            labels={data?.monthlyStats?.labels || []}
+            valueType={mainChartData.valueType}
+          />
         </View>
 
-        {/* Quick Stats */}
+        {/* Statistic Cards */}
         <View style={styles.quickStatsContainer}>
-          <Text style={styles.sectionTitle}>Thông số quan trọng</Text>
-          <StatItem
-            title="Tổng số phòng"
-            value={data?.overview?.totalRooms || 0}
-            color={Colors.primaryGreen}
-            icon={require('../../../assets/icons/icon_home.png')}
+          <StatisticCard
+            title="Phòng trọ"
+            icon={require('../../../assets/icons/icon_room.png')}
+            backgroundColor={Colors.lightGreenBackground}
+            iconColor={Colors.darkGreen}
+            stats={[
+              {
+                label: 'Tổng số phòng',
+                value: data?.overview?.totalRooms || 0,
+                color: Colors.darkGray,
+              },
+              {
+                label: 'Đã thuê',
+                value: data?.overview?.rentedRooms || 0,
+                color: Colors.darkGreen,
+              },
+              {
+                label: 'Còn trống',
+                value: data?.overview?.availableRooms || 0,
+                color: Colors.primaryGreen,
+              },
+              {
+                label: 'Chờ duyệt',
+                value: data?.overview?.pendingRooms || 0,
+                color: Colors.mediumGray,
+              },
+            ]}
+            onPress={navigateToRoomStatistic}
           />
-        </View>
 
-        {/* Room Stats */}
-        <StatGroup
-          title="Phòng trọ"
-          icon={require('../../../assets/icons/icon_room.png')}
-          backgroundColor={Colors.lightGreenBackground}>
-          <StatItem
-            title="Phòng đã thuê"
-            value={data?.overview?.rentedRooms || 0}
-            color={Colors.darkGreen}
-            icon={require('../../../assets/icons/icon_sofa.png')}
+          <StatisticCard
+            title="Doanh thu"
+            icon={require('../../../assets/icons/icon_area_black.png')}
+            backgroundColor={Colors.lightGreenBackground}
+            iconColor={Colors.darkGreen}
+            stats={[
+              {
+                label: 'Tổng doanh thu',
+                value: `${formatMoney(data?.revenue?.totalRevenue || 0)} đ`,
+                color: Colors.darkGreen,
+              },
+              {
+                label: 'Giá thuê TB',
+                value: `${formatMoney(data?.revenue?.averageRent || 0)} đ`,
+                color: Colors.primaryGreen,
+              },
+              {
+                label: 'Tỷ lệ lấp đầy',
+                value: `${data?.revenue?.occupancyRate || 0}%`,
+                color: Colors.primaryGreen,
+              },
+            ]}
+            onPress={navigateToRevenueStatistic}
           />
-          <StatItem
-            title="Phòng còn trống"
-            value={data?.overview?.availableRooms || 0}
-            color={Colors.limeGreen}
-            icon={require('../../../assets/icons/icon_area.png')}
-          />
-          <StatItem
-            title="Phòng chờ duyệt"
-            value={data?.overview?.pendingRooms || 0}
-            color={Colors.mediumGray}
-            icon={require('../../../assets/icons/icon_wifi.png')}
-          />
-        </StatGroup>
 
-        {/* Revenue Stats */}
-        <StatGroup
-          title="Doanh thu"
-          icon={require('../../../assets/icons/icon_area_black.png')}
-          backgroundColor={Colors.lightBlueBackground}>
-          <StatItem
-            title="Tổng doanh thu"
-            value={`${formatMoney(data?.revenue?.totalRevenue || 0)} đ`}
-            color={Colors.darkGreen}
-            icon={require('../../../assets/icons/icon_map.png')}
+          <StatisticCard
+            title="Hợp đồng"
+            icon={require('../../../assets/icons/icon_ban_ghe.png')}
+            backgroundColor={Colors.lightGreenBackground}
+            iconColor={Colors.darkGreen}
+            stats={[
+              {
+                label: 'Tổng hợp đồng',
+                value: data?.overview?.totalContracts || 0,
+                color: Colors.darkGray,
+              },
+              {
+                label: 'Đang hiệu lực',
+                value: data?.overview?.activeContracts || 0,
+                color: Colors.darkGreen,
+              },
+              {
+                label: 'Chờ ký',
+                value: data?.overview?.pendingContracts || 0,
+                color: Colors.mediumGray,
+              },
+              {
+                label: 'Đã hết hạn',
+                value: data?.overview?.expiredContracts || 0,
+                color: Colors.lightRed,
+              },
+            ]}
+            onPress={navigateToContractStatistic}
           />
-          <StatItem
-            title="Giá thuê trung bình"
-            value={`${formatMoney(data?.revenue?.averageRent || 0)} đ`}
-            color={Colors.primaryGreen}
-            icon={require('../../../assets/icons/icon_add.png')}
-          />
-          <StatItem
-            title="Tỷ lệ lấp đầy"
-            value={`${data?.revenue?.occupancyRate || 0}%`}
-            color={Colors.limeGreen}
-            icon={require('../../../assets/icons/icon_map.png')}
-          />
-        </StatGroup>
-
-        {/* Contract Stats */}
-        <StatGroup
-          title="Hợp đồng"
-          icon={require('../../../assets/icons/icon_ban_ghe.png')}
-          backgroundColor={Colors.lightYellowBackground}>
-          <StatItem
-            title="Tổng hợp đồng"
-            value={data?.overview?.totalContracts || 0}
-            color={Colors.primaryGreen}
-            icon={require('../../../assets/icons/icon_arrow_right.png')}
-          />
-          <StatItem
-            title="Đang chờ ký"
-            value={data?.overview?.pendingContracts || 0}
-            color={Colors.mediumGray}
-            icon={require('../../../assets/icons/icon_arrow_right.png')}
-          />
-          <StatItem
-            title="Đang hiệu lực"
-            value={data?.overview?.activeContracts || 0}
-            color={Colors.darkGreen}
-            icon={require('../../../assets/icons/icon_arrow_right.png')}
-          />
-          <StatItem
-            title="Đã hết hạn"
-            value={data?.overview?.expiredContracts || 0}
-            color={Colors.red}
-            icon={require('../../../assets/icons/icon_arrow_right.png')}
-          />
-        </StatGroup>
-
-        {/* Invoice Stats */}
-        <StatGroup
-          title="Hóa đơn"
-          icon={require('../../../assets/icons/icon_arrow_down.png')}
-          backgroundColor={Colors.lightPurpleBackground}>
-          <StatItem
-            title="Tổng hóa đơn"
-            value={data?.invoices?.totalInvoices || 0}
-            color={Colors.primaryGreen}
-            icon={require('../../../assets/icons/icon_arrow_left.png')}
-          />
-          <StatItem
-            title="Đã thanh toán"
-            value={data?.invoices?.paidInvoices || 0}
-            color={Colors.darkGreen}
-            icon={require('../../../assets/icons/icon_arrow_left.png')}
-          />
-          <StatItem
-            title="Đã phát hành"
-            value={data?.invoices?.issuedInvoices || 0}
-            color={Colors.limeGreen}
-            icon={require('../../../assets/icons/icon_arrow_left.png')}
-          />
-          <StatItem
-            title="Đã quá hạn"
-            value={data?.invoices?.overdueInvoices || 0}
-            color={Colors.red}
-            icon={require('../../../assets/icons/icon_arrow_left.png')}
-          />
-        </StatGroup>
-
-        {/* Tenant Stats */}
-        <StatGroup
-          title="Người thuê"
-          icon={require('../../../assets/icons/fluent_person_regular.png')}
-          backgroundColor={Colors.lightOrangeBackground}>
-          <StatItem
-            title="Tổng người thuê"
-            value={data?.tenants?.totalTenants || 0}
-            color={Colors.primaryGreen}
-            icon={require('../../../assets/icons/fluent_person_regular.png')}
-          />
-          <StatItem
-            title="Người thuê hoạt động"
-            value={data?.tenants?.activeTenants || 0}
-            color={Colors.darkGreen}
-            icon={require('../../../assets/icons/fluent_person_regular.png')}
-          />
-        </StatGroup>
-
-        {/* Monthly Charts */}
-        {data?.monthlyStats && (
-          <View style={styles.chartsContainer}>
-            <Text style={styles.sectionTitle}>Biểu đồ thống kê</Text>
-
-            <StatChart
-              title="Số phòng trọ"
-              data={data.monthlyStats.rooms}
-              labels={data.monthlyStats.labels}
-              color={Colors.primaryGreen}
-            />
-
-            <StatChart
-              title="Số hợp đồng"
-              data={data.monthlyStats.contracts}
-              labels={data.monthlyStats.labels}
-              color={Colors.limeGreen}
-            />
-
-            <StatChart
-              title="Doanh thu (VNĐ)"
-              data={data.monthlyStats.revenue}
-              labels={data.monthlyStats.labels}
-              color={Colors.darkGreen}
-            />
-
-            <StatChart
-              title="Tỷ lệ lấp đầy (%)"
-              data={data.monthlyStats.occupancyRate}
-              labels={data.monthlyStats.labels}
-              color={Colors.mediumGray}
-            />
-          </View>
-        )}
-
-        {/* Top Rooms */}
-        <View style={styles.topRoomsContainer}>
-          <Text style={styles.sectionTitle}>Phòng được xem nhiều nhất</Text>
-          {data?.topViewedRooms && data.topViewedRooms.length > 0 ? (
-            data.topViewedRooms.map((room: any, index: number) => (
-              <TopRoomCard
-                key={`view-${room._id}-${index}`}
-                roomNumber={room.roomNumber}
-                rentPrice={room.rentPrice}
-                photo={room.photos?.[0] || ''}
-                viewCount={room.stats?.viewCount || 0}
-                favoriteCount={room.stats?.favoriteCount || 0}
-                onPress={() => navigateToRoomDetail(room._id)}
-              />
-            ))
-          ) : (
-            <Text style={styles.noDataText}>Không có dữ liệu</Text>
-          )}
-        </View>
-
-        {/* Top Favorite Rooms */}
-        <View style={styles.topRoomsContainer}>
-          <Text style={styles.sectionTitle}>Phòng được yêu thích nhất</Text>
-          {data?.topFavoriteRooms && data.topFavoriteRooms.length > 0 ? (
-            data.topFavoriteRooms.map((room: any, index: number) => (
-              <TopRoomCard
-                key={`fav-${room._id}-${index}`}
-                roomNumber={room.roomNumber}
-                rentPrice={room.rentPrice}
-                photo={room.photos?.[0] || ''}
-                viewCount={room.stats?.viewCount || 0}
-                favoriteCount={room.stats?.favoriteCount || 0}
-                onPress={() => navigateToRoomDetail(room._id)}
-              />
-            ))
-          ) : (
-            <Text style={styles.noDataText}>Không có dữ liệu</Text>
-          )}
-        </View>
-
-        {/* Recent Contracts */}
-        <View style={styles.contractsContainer}>
-          <Text style={styles.sectionTitle}>Hợp đồng gần đây</Text>
-          {data?.recentContracts && data.recentContracts.length > 0 ? (
-            data.recentContracts.map((contract: any, index: number) => (
-              <RecentContractItem
-                key={`contract-${contract._id}-${index}`}
-                roomNumber={contract.roomId.roomNumber}
-                roomPhoto={contract.roomId.photos?.[0] || ''}
-                tenantName={contract.tenantId.fullName}
-                status={contract.status}
-                date={contract.createdAt}
-                onPress={() => navigateToContractDetail(contract._id)}
-              />
-            ))
-          ) : (
-            <Text style={styles.noDataText}>Không có hợp đồng gần đây</Text>
-          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -459,5 +366,26 @@ const styles = StyleSheet.create({
     color: Colors.textGray,
     textAlign: 'center',
     marginVertical: responsiveSpacing(20),
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(12),
+    backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.divider,
+  },
+  backButton: {
+    padding: responsiveSpacing(8),
+  },
+  headerTitle: {
+    fontSize: responsiveFont(18),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.darkGray,
+  },
+  placeholder: {
+    width: 40,
   },
 });

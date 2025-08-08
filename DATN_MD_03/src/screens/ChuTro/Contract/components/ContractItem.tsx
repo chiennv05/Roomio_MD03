@@ -17,37 +17,83 @@ export const getContractStatusInfo = (status: string) => {
     case 'draft':
       return {
         label: 'Bản nháp',
-        color: Colors.gray60,
+        color: Colors.textGray,
+        backgroudColor: Colors.gray,
+        backgroudStatus: Colors.white,
+        textColor: Colors.white,
+        textColorLabel: Colors.gray200,
       };
     case 'pending_signature':
       return {
         label: 'Chờ ký',
-        color: Colors.darkGreen,
+        color: Colors.black,
+        backgroudColor: Colors.limeGreen,
+        backgroudStatus: Colors.white,
+        textColor: Colors.dearkOlive,
+        textColorLabel: Colors.darkGray,
       };
     case 'pending_approval':
       return {
         label: 'Chờ phê duyệt',
-        color: Colors.darkGreen,
+        color: Colors.black,
+        backgroudColor: Colors.limeGreenOpacity,
+        backgroudStatus: Colors.white,
+        textColor: Colors.dearkOlive,
+        textColorLabel: Colors.darkGray,
       };
     case 'active':
       return {
-        label: 'Đang hoạt động',
-        color: Colors.primaryGreen,
+        label: 'Đang hiệu lực',
+        color: Colors.black,
+        backgroudColor: Colors.white,
+        backgroudStatus: Colors.limeGreen,
+        textColor: Colors.dearkOlive,
+        textColorLabel: Colors.darkGray,
       };
     case 'expired':
       return {
         label: 'Hết hạn',
-        color: Colors.red,
+        color: Colors.textGray,
+        backgroudColor: Colors.textGray,
+        backgroudStatus: Colors.white,
+        textColor: Colors.white,
+        textColorLabel: Colors.gray200,
       };
     case 'terminated':
       return {
         label: 'Đã chấm dứt',
         color: Colors.red,
+        backgroudColor: Colors.textGray,
+        backgroudStatus: Colors.white,
+        textColor: Colors.white,
+        textColorLabel: Colors.gray200,
+      };
+    case 'needs_resigning':
+      return {
+        label: 'Cần ký lại',
+        color: Colors.red,
+        backgroudColor: Colors.textGray,
+        backgroudStatus: Colors.white,
+        textColor: Colors.white,
+        textColorLabel: Colors.gray200,
+      };
+    case 'rejected':
+      return {
+        label: 'Bị từ chối',
+        color: Colors.textGray,
+        backgroudColor: Colors.textGray,
+        backgroudStatus: Colors.white,
+        textColor: Colors.white,
+        textColorLabel: Colors.gray200,
       };
     default:
       return {
         label: 'Không xác định',
-        color: Colors.gray60,
+        color: Colors.textGray,
+        backgroudColor: Colors.textGray,
+        backgroudStatus: Colors.white,
+        textColor: Colors.dearkOlive,
+        textColorLabel: Colors.darkGray,
       };
   }
 };
@@ -73,46 +119,65 @@ const ContractItem = ({contract, onPress}: ContractItemProps) => {
 
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, {backgroundColor: statusInfo.backgroudColor}]}
       onPress={() => onPress(contract._id)}>
       <View style={styles.contentContainer}>
         <View style={styles.header}>
-          <Text style={styles.roomNumber}>
+          <Text style={[styles.roomNumber, {color: statusInfo.textColor}]}>
             {contract.contractInfo.roomNumber}
           </Text>
           <View
-            style={[styles.statusBadge, {backgroundColor: statusInfo.color}]}>
-            <Text style={styles.statusText}>{statusInfo.label}</Text>
+            style={[
+              styles.statusBadge,
+              {
+                backgroundColor: statusInfo.backgroudStatus,
+              },
+            ]}>
+            <Text style={[styles.statusText, {color: statusInfo.color}]}>
+              {statusInfo.label}
+            </Text>
           </View>
         </View>
 
-        <Text style={styles.address} numberOfLines={1}>
+        <Text
+          style={[styles.address, {color: statusInfo.textColor}]}
+          numberOfLines={1}>
           {contract.contractInfo.roomAddress}
         </Text>
 
         <View style={styles.infoRow}>
-          <Text style={styles.label}>Người thuê:</Text>
-          <Text style={styles.value}>{contract.contractInfo.tenantName}</Text>
+          <Text style={[styles.label, {color: statusInfo.textColorLabel}]}>
+            Người thuê:
+          </Text>
+          <Text style={[styles.value, {color: statusInfo.textColor}]}>
+            {contract.contractInfo.tenantName}
+          </Text>
         </View>
 
         <View style={styles.infoRow}>
-          <Text style={styles.label}>Thời hạn:</Text>
-          <Text style={styles.value}>
+          <Text style={[styles.label, {color: statusInfo.textColorLabel}]}>
+            Thời hạn:
+          </Text>
+          <Text style={[styles.value, {color: statusInfo.textColor}]}>
             {contract.contractInfo.contractTerm} tháng
           </Text>
         </View>
 
         <View style={styles.infoRow}>
-          <Text style={styles.label}>Từ ngày:</Text>
-          <Text style={styles.value}>
+          <Text style={[styles.label, {color: statusInfo.textColorLabel}]}>
+            Từ ngày:
+          </Text>
+          <Text style={[styles.value, {color: statusInfo.textColor}]}>
             {formatDate(contract.contractInfo.startDate)} -{' '}
             {formatDate(contract.contractInfo.endDate)}
           </Text>
         </View>
 
         <View style={styles.infoRow}>
-          <Text style={styles.label}>Tiền thuê:</Text>
-          <Text style={styles.value}>
+          <Text style={[styles.label, {color: statusInfo.textColorLabel}]}>
+            Tiền thuê:
+          </Text>
+          <Text style={[styles.value, {color: statusInfo.textColor}]}>
             {contract.contractInfo.monthlyRent.toLocaleString('vi-VN')} đ/tháng
           </Text>
         </View>
@@ -166,8 +231,9 @@ const styles = StyleSheet.create({
   },
   address: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(14),
+    fontSize: responsiveFont(16),
     color: Colors.gray60,
+    fontWeight: 'bold',
     marginBottom: verticalScale(8),
   },
   infoRow: {
@@ -182,9 +248,10 @@ const styles = StyleSheet.create({
   },
   value: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(13),
+    fontSize: responsiveFont(16),
     color: Colors.black,
     flex: 1,
+    fontWeight: '500',
   },
 });
 

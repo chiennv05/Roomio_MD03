@@ -1,10 +1,21 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { Colors } from '../../../theme/color';
-import { Fonts } from '../../../theme/fonts';
-import { responsiveFont, responsiveSpacing, moderateScale } from '../../../utils/responsive';
-import { Icons } from '../../../assets/icons';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  StatusBar,
+  Image,
+} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import {Colors} from '../../../theme/color';
+import {Fonts} from '../../../theme/fonts';
+import {
+  responsiveFont,
+  responsiveSpacing,
+  moderateScale,
+} from '../../../utils/responsive';
+import {Icons} from '../../../assets/icons';
 
 interface NotificationScreenHeaderProps {
   onMenuPress?: () => void;
@@ -22,14 +33,13 @@ const NotificationScreenHeader: React.FC<NotificationScreenHeaderProps> = ({
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-      
+
       {/* Nút back */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.backButton}
         onPress={handleBackPress}
-        activeOpacity={0.7}
-      >
-        <Image 
+        activeOpacity={0.7}>
+        <Image
           source={{uri: Icons.IconOut}}
           style={styles.backIcon}
           resizeMode="contain"
@@ -40,12 +50,11 @@ const NotificationScreenHeader: React.FC<NotificationScreenHeaderProps> = ({
       <Text style={styles.title}>Thông báo</Text>
 
       {/* Nút menu */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.menuButton}
         onPress={onMenuPress}
-        activeOpacity={0.7}
-      >
-        <Image 
+        activeOpacity={0.7}>
+        <Image
           source={{uri: Icons.IconSelectDate}}
           style={styles.menuIcon}
           resizeMode="contain"
@@ -98,4 +107,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default NotificationScreenHeader; 
+export default NotificationScreenHeader;

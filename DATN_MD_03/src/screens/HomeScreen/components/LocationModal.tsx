@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -9,9 +9,18 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { Province, District, Ward, SelectedAddress } from '../../../types/Address';
-import { Colors } from '../../../theme/color';
-import { responsiveFont, responsiveSpacing, moderateScale } from '../../../utils/responsive';
+import {
+  Province,
+  District,
+  Ward,
+  SelectedAddress,
+} from '../../../types/Address';
+import {Colors} from '../../../theme/color';
+import {
+  responsiveFont,
+  responsiveSpacing,
+  moderateScale,
+} from '../../../utils/responsive';
 
 interface LocationModalProps {
   visible: boolean;
@@ -30,7 +39,9 @@ const LocationModal: React.FC<LocationModalProps> = ({
   const [districts, setDistricts] = useState<District[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
   const [loading, setLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState<'province' | 'district' | 'ward'>('province');
+  const [currentStep, setCurrentStep] = useState<
+    'province' | 'district' | 'ward'
+  >('province');
   const [tempSelected, setTempSelected] = useState<SelectedAddress>({});
 
   // Fetch provinces when modal opens
@@ -47,14 +58,14 @@ const LocationModal: React.FC<LocationModalProps> = ({
     try {
       const response = await fetch('https://provinces.open-api.vn/api/');
       const data = await response.json();
-      
       // Filter to only include the 3 main cities
       const mainCities = data.filter((province: Province) => {
-        return province.code === 1 ||  // Thành phố Hà Nội
-               province.code === 48 || // Thành phố Đà Nẵng
-               province.code === 79;   // Thành phố Hồ Chí Minh
+        return (
+          province.code === 1 || // Thành phố Hà Nội
+          province.code === 48 || // Thành phố Đà Nẵng
+          province.code === 79 // Thành phố Hồ Chí Minh
+        );
       });
-      
       setProvinces(mainCities);
     } catch (error) {
       Alert.alert('Lỗi', 'Không thể tải danh sách tỉnh thành');
@@ -66,7 +77,9 @@ const LocationModal: React.FC<LocationModalProps> = ({
   const fetchDistricts = async (provinceCode: number) => {
     setLoading(true);
     try {
-      const response = await fetch(`https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`);
+      const response = await fetch(
+        `https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`,
+      );
       const data = await response.json();
       setDistricts(data.districts || []);
     } catch (error) {
@@ -79,7 +92,9 @@ const LocationModal: React.FC<LocationModalProps> = ({
   const fetchWards = async (districtCode: number) => {
     setLoading(true);
     try {
-      const response = await fetch(`https://provinces.open-api.vn/api/d/${districtCode}?depth=2`);
+      const response = await fetch(
+        `https://provinces.open-api.vn/api/d/${districtCode}?depth=2`,
+      );
       const data = await response.json();
       setWards(data.wards || []);
     } catch (error) {
@@ -90,19 +105,19 @@ const LocationModal: React.FC<LocationModalProps> = ({
   };
 
   const handleProvinceSelect = (province: Province) => {
-    setTempSelected({ province });
+    setTempSelected({province});
     fetchDistricts(province.code);
     setCurrentStep('district');
   };
 
   const handleDistrictSelect = (district: District) => {
-    setTempSelected(prev => ({ ...prev, district }));
+    setTempSelected(prev => ({...prev, district}));
     fetchWards(district.code);
     setCurrentStep('ward');
   };
 
   const handleWardSelect = (ward: Ward) => {
-    const finalSelection = { ...tempSelected, ward };
+    const finalSelection = {...tempSelected, ward};
     setTempSelected(finalSelection);
     onSelect(finalSelection);
     onClose();
@@ -116,10 +131,13 @@ const LocationModal: React.FC<LocationModalProps> = ({
   const goBack = () => {
     if (currentStep === 'district') {
       setCurrentStep('province');
-      setTempSelected(prev => ({ province: prev.province }));
+      setTempSelected(prev => ({province: prev.province}));
     } else if (currentStep === 'ward') {
       setCurrentStep('district');
-      setTempSelected(prev => ({ province: prev.province, district: prev.district }));
+      setTempSelected(prev => ({
+        province: prev.province,
+        district: prev.district,
+      }));
     }
   };
 
@@ -165,7 +183,7 @@ const LocationModal: React.FC<LocationModalProps> = ({
 
   const renderBreadcrumb = () => {
     const breadcrumbs = [];
-    
+
     if (tempSelected.province) {
       breadcrumbs.push(tempSelected.province.name);
     }
@@ -216,8 +234,7 @@ const LocationModal: React.FC<LocationModalProps> = ({
                   <TouchableOpacity
                     key={item.code}
                     style={styles.listItem}
-                    onPress={() => handleItemSelect(item)}
-                  >
+                    onPress={() => handleItemSelect(item)}>
                     <Text style={styles.listItemText}>{item.name}</Text>
                     <Text style={styles.arrow}>→</Text>
                   </TouchableOpacity>
@@ -229,12 +246,12 @@ const LocationModal: React.FC<LocationModalProps> = ({
           {/* Footer - Show when user has made some selection but not complete */}
           {tempSelected.province && currentStep !== 'ward' && (
             <View style={styles.footer}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.confirmButton}
-                onPress={handleConfirmSelection}
-              >
+                onPress={handleConfirmSelection}>
                 <Text style={styles.confirmText}>
-                  Xác nhận với {tempSelected.district ? 'Quận/Huyện' : 'Tỉnh/Thành phố'} này
+                  Xác nhận với{' '}
+                  {tempSelected.district ? 'Quận/Huyện' : 'Tỉnh/Thành phố'} này
                 </Text>
               </TouchableOpacity>
             </View>
@@ -354,4 +371,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.darkGray,
   },
-}); 
+});

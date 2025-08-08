@@ -1,30 +1,30 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import {
   StyleSheet,
   FlatList,
   SafeAreaView,
   StatusBar,
-  Platform,
   View,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useSelector, useDispatch} from 'react-redux';
 import {RootState, AppDispatch} from '../../../store';
 import {Colors} from '../../../theme/color';
 import {
-  scale,
-  verticalScale,
+  responsiveSpacing,
 } from '../../../utils/responsive';
 import {fetchTenants} from '../../../store/slices/tenantSlice';
 import {TenantFilters} from '../../../types/Tenant';
-import {Icons} from '../../../assets/icons';
 
 // Import các component tái sử dụng
 import HeaderWithBack from './components/HeaderWithBack';
 import TenantItem from './components/TenantItem';
 import SearchBar from './components/SearchBar';
-import {LoadingView, ErrorView, EmptyView} from './components/LoadingAndError';
+import {LoadingView, ErrorView} from './components/LoadingAndError';
+import EmptyTenantList from './components/EmptyTenantList';
 
 const TenantList = () => {
+  const insets = useSafeAreaInsets();
   const dispatch = useDispatch<AppDispatch>();
   
   const {tenants, loading, error} = useSelector(
@@ -33,110 +33,146 @@ const TenantList = () => {
   const token = useSelector((state: RootState) => state.auth.token);
   
   const [searchText, setSearchText] = useState('');
-  const [filters, setFilters] = useState<TenantFilters>({
+  const [filters] = useState<TenantFilters>({
     page: 1,
     limit: 50, // Tăng giới hạn để hiển thị nhiều hơn
     search: '',
     status: '',
   });
 
+  // Lọc danh sách người thuê có contractStatus là "active"
+  const activeTenants = useMemo(() => {
+    if (!tenants || tenants.length === 0) return [];
+    console.log('Checking tenant contract statuses:');
+    tenants.forEach(tenant => {
+      console.log(`Tenant ${tenant.username} - contractStatus: ${tenant.contractStatus}`);
+    });
+    return tenants.filter(tenant => tenant.contractStatus === 'active');
+  }, [tenants]);
+
   useEffect(() => {
     if (token) {
+      console.log('Fetching tenants with token:', token ? 'Valid token' : 'No token');
       dispatch(fetchTenants({token, filters}));
     }
   }, [dispatch, token, filters]);
 
+  // Log state để debug
+  console.log('TenantList state:', {
+    loading,
+    error,
+    tenantsLength: tenants?.length || 0,
+    activeTenantsLength: activeTenants.length,
+    hasToken: !!token,
+  });
+
+  // Log chi tiết về tenants
+  console.log('Tenants data:', JSON.stringify(tenants, null, 2));
+  console.log('Active tenants:', JSON.stringify(activeTenants, null, 2));
+
   // Hàm xử lý khi nhấn tìm kiếm
   const handleSearch = () => {
-    setFilters(prev => ({...prev, search: searchText, page: 1}));
+   
   };
 
   // Render khi đang loading
   if (loading && (!tenants || tenants.length === 0)) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-        <View style={styles.container}>
+      <View style={styles.mainContainer}>
+        <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroud} />
+        <SafeAreaView style={[styles.safeArea, {paddingTop: insets.top}]}>
           <HeaderWithBack title="Danh sách người thuê" />
-          <LoadingView message="Đang tải dữ liệu..." />
-        </View>
-      </SafeAreaView>
+          <View style={styles.container}>
+            <LoadingView message="Đang tải dữ liệu..." />
+          </View>
+        </SafeAreaView>
+      </View>
     ); 
   }
 
   // Render khi có lỗi
   if (error && (!tenants || tenants.length === 0)) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <View style={styles.mainContainer}>
         <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-        <View style={styles.container}>
+        <SafeAreaView style={[styles.safeArea, {paddingTop: insets.top}]}>
           <HeaderWithBack title="Danh sách người thuê" />
-          <ErrorView 
-            error={error} 
-            onRetry={() => dispatch(fetchTenants({token: token || '', filters}))} 
-          />
-        </View>
-      </SafeAreaView>
+          <View style={styles.container}>
+            <ErrorView 
+              error={error} 
+              onRetry={() => dispatch(fetchTenants({token: token || '', filters}))} 
+            />
+          </View>
+        </SafeAreaView>
+      </View>
     );
   }
 
-  // Render khi không có người thuê
-  if (!loading && (!tenants || tenants.length === 0)) {
+  // Render khi không có người thuê active
+  if (!loading && activeTenants.length === 0) {
+    console.log('Rendering empty tenant list - No active tenants');
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <View style={styles.mainContainer}>
         <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-        <View style={styles.container}>
+        <SafeAreaView style={[styles.safeArea, {paddingTop: insets.top}]}>
           <HeaderWithBack title="Danh sách người thuê" />
+          <View style={styles.container}>
+            <SearchBar
+              placeholder="Tìm kiếm theo tên, email, số điện thoại"
+              value={searchText}
+              onChangeText={setSearchText}
+              onSubmit={handleSearch}
+            />
+            <EmptyTenantList />
+          </View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.mainContainer}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+      <SafeAreaView style={[styles.safeArea, {paddingTop: insets.top}]}>
+        <HeaderWithBack title="Danh sách người thuê" />
+        <View style={styles.container}>
           <SearchBar
             placeholder="Tìm kiếm theo tên, email, số điện thoại"
             value={searchText}
             onChangeText={setSearchText}
             onSubmit={handleSearch}
           />
-          <EmptyView message="Không có người thuê nào" icon={Icons.IconEmptyMessage} />
+          <FlatList
+            data={activeTenants}
+            renderItem={({item}) => <TenantItem item={item} />}
+            keyExtractor={item => item._id}
+            contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
+            onRefresh={() => dispatch(fetchTenants({token: token || '', filters}))}
+            refreshing={loading}
+          />
         </View>
       </SafeAreaView>
-    );
-  }
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-      <View style={styles.container}>
-        <HeaderWithBack title="Danh sách người thuê" />
-        <SearchBar
-          placeholder="Tìm kiếm theo tên, email, số điện thoại"
-          value={searchText}
-          onChangeText={setSearchText}
-          onSubmit={handleSearch}
-        />
-        <FlatList
-          data={tenants}
-          renderItem={({item}) => <TenantItem item={item} />}
-          keyExtractor={item => item._id}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-          onRefresh={() => dispatch(fetchTenants({token: token || '', filters}))}
-          refreshing={loading}
-        />
-      </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1,
+    backgroundColor: Colors.backgroud,
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.white,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    backgroundColor: Colors.backgroud,
   },
   container: {
     flex: 1,
     backgroundColor: Colors.backgroud,
   },
   listContainer: {
-    padding: scale(10),
-    paddingBottom: verticalScale(20),
+    paddingHorizontal: responsiveSpacing(20),
+    paddingBottom: responsiveSpacing(20),
   },
 });
 

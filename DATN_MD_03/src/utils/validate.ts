@@ -3,7 +3,6 @@ export const validateUserInputFirstError = (input: {
   password?: string;
   username?: string;
   confirmPassword?: string;
-  birthDay?: string | null;
 }): string | null => {
   if (input.username?.trim() === '') {
     return 'Vui lòng nhập tên đăng nhập';
@@ -44,9 +43,6 @@ export const validateUserInputFirstError = (input: {
 
   if (input.password !== input.confirmPassword) {
     return 'Mật khẩu xác nhận không khớp';
-  }
-  if (!input.birthDay || input.birthDay.trim() === '') {
-    return 'Vui lòng nhập ngày sinh';
   }
 
   return null; // không lỗi
@@ -125,7 +121,7 @@ export const validateResetPassword = (
  */
 export const removeVietnameseDiacritics = (str: string): string => {
   if (!str) return '';
-  
+
   return str
     .toLowerCase()
     .normalize('NFD')
@@ -139,12 +135,15 @@ export const removeVietnameseDiacritics = (str: string): string => {
  * Search text in Vietnamese with diacritics support
  * Tìm kiếm văn bản tiếng Việt có hỗ trợ dấu
  */
-export const searchVietnameseText = (searchTerm: string, targetText: string): boolean => {
+export const searchVietnameseText = (
+  searchTerm: string,
+  targetText: string,
+): boolean => {
   if (!searchTerm || !targetText) return false;
-  
+
   const normalizedSearch = removeVietnameseDiacritics(searchTerm);
   const normalizedTarget = removeVietnameseDiacritics(targetText);
-  
+
   return normalizedTarget.includes(normalizedSearch);
 };
 
@@ -152,27 +151,30 @@ export const searchVietnameseText = (searchTerm: string, targetText: string): bo
  * Filter rooms by search query (address or description)
  * Lọc phòng theo từ khóa tìm kiếm (địa chỉ hoặc mô tả)
  */
-export const filterRoomsBySearch = (rooms: any[], searchQuery: string): any[] => {
+export const filterRoomsBySearch = (
+  rooms: any[],
+  searchQuery: string,
+): any[] => {
   if (!searchQuery || !searchQuery.trim()) {
     return rooms;
   }
-  
+
   const trimmedQuery = searchQuery.trim();
-  
+
   return rooms.filter(room => {
     // Search in address
     const addressText = room?.location?.addressText || '';
     const district = room?.location?.district || '';
     const province = room?.location?.province || '';
     const ward = room?.location?.ward || '';
-    
+
     // Combine all address parts
     const fullAddress = `${addressText} ${district} ${province} ${ward}`.trim();
-    
+
     // Search in description
     const description = room?.description || '';
     const roomNumber = room?.roomNumber || '';
-    
+
     // Search in all fields
     return (
       searchVietnameseText(trimmedQuery, fullAddress) ||
@@ -191,42 +193,44 @@ export const filterRoomsBySearch = (rooms: any[], searchQuery: string): any[] =>
  */
 export const testVietnameseSearch = (): void => {
   console.log('🧪 Testing Vietnamese Search:');
-  
+
   // Test cases
   const testCases = [
     {
       search: 'ha noi',
       target: 'Hà Nội',
-      expected: true
+      expected: true,
     },
     {
       search: 'dong da',
       target: 'Đống Đa',
-      expected: true
+      expected: true,
     },
     {
       search: 'phong dep',
       target: 'Phòng đẹp giá rẻ',
-      expected: true
+      expected: true,
     },
     {
       search: 'nha tro',
       target: 'Nhà trọ cao cấp',
-      expected: true
+      expected: true,
     },
     {
       search: 'cao cap',
       target: 'cao cấp',
-      expected: true
-    }
+      expected: true,
+    },
   ];
-  
-  testCases.forEach(({ search, target, expected }, index) => {
+
+  testCases.forEach(({search, target, expected}, index) => {
     const result = searchVietnameseText(search, target);
     const status = result === expected ? '✅' : '❌';
-    console.log(`${status} Test ${index + 1}: "${search}" in "${target}" = ${result}`);
+    console.log(
+      `${status} Test ${index + 1}: "${search}" in "${target}" = ${result}`,
+    );
   });
-}
+};
 export const validateFullName = (fullName: string) => {
   if (!fullName || fullName.trim() === '') {
     return 'Tên không được để trống';

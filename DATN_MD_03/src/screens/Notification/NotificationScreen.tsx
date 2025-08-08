@@ -19,6 +19,7 @@ import NotificationHeader from './components/NotificationHeader';
 import NotificationListContainer, {
   FormattedNotification,
 } from './components/NotificationListContainer';
+import NotificationDetailModal from './components/NotificationDetailModal';
 import LoadingAnimation from '../../components/LoadingAnimation';
 import {Colors} from '../../theme/color';
 
@@ -40,6 +41,11 @@ const NotificationScreen = () => {
   const [activeTab, setActiveTab] = useState<
     'all' | 'schedule' | 'bill' | 'contract'
   >('all');
+
+  // State cho modal chi tiết thông báo
+  const [selectedNotification, setSelectedNotification] =
+    useState<FormattedNotification | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   // Load notifications khi component mount
   useEffect(() => {
@@ -105,7 +111,82 @@ const NotificationScreen = () => {
     [dispatch, user, token],
   );
 
-  // Handle notification press - Sự kiện mới thêm
+  // Function để hiển thị modal chi tiết thông báo
+  const showNotificationDetail = (notification: FormattedNotification) => {
+    setSelectedNotification(notification);
+    setModalVisible(true);
+  };
+
+  // Function để đóng modal
+  const closeModal = () => {
+    setModalVisible(false);
+    setSelectedNotification(null);
+  };
+
+  // Function để navigate đến màn hình hóa đơn
+  const navigateToBillScreen = (invoiceId?: string | null) => {
+    closeModal();
+    if (invoiceId) {
+      // Nếu có invoiceId, navigate đến chi tiết hóa đơn
+      navigation.navigate('BillDetails', {invoiceId});
+    } else {
+      // Nếu không có invoiceId, navigate đến danh sách hóa đơn
+      navigation.navigate('Bill');
+    }
+  };
+
+  // Function để navigate đến màn hình hợp đồng
+  const navigateToContractScreen = (roomId?: string | null) => {
+    closeModal();
+
+    // Kiểm tra nếu có selectedNotification để lấy thêm thông tin
+    if (selectedNotification) {
+      const originalNotification = notifications.find(
+        n => n._id === selectedNotification.id,
+      );
+
+      // Nếu có thông báo gốc và có rentRequestData, navigate đến AddContract
+      if (
+        originalNotification &&
+        originalNotification.rentRequestData?.tenantInfo
+      ) {
+        console.log(
+          'Navigate to AddContract with notificationId:',
+          selectedNotification.id,
+        );
+        navigation.navigate('AddContract', {
+          notificationId: selectedNotification.id,
+        });
+        return;
+      }
+    }
+
+    // Nếu có roomId, navigate đến chi tiết phòng
+    if (roomId) {
+      console.log('Navigate to room detail with roomId:', roomId);
+      navigation.navigate('DetailRoomLandlord', {id: roomId});
+    } else {
+      // Fallback: navigate đến quản lý hợp đồng
+      console.log('Navigate to contract management');
+      navigation.navigate('ContractManagement');
+    }
+  };
+
+  // Function để navigate đến màn hình quản lý phòng
+  const navigateToRoomManagement = () => {
+    closeModal();
+    console.log('Navigate to room management');
+    navigation.navigate('LandlordRoom');
+  };
+
+  // Function để navigate đến màn hình hỗ trợ
+  const navigateToSupport = () => {
+    closeModal();
+    console.log('Navigate to support screen');
+    navigation.navigate('SupportScreen');
+  };
+
+  // Handle notification press - Hiển thị modal chi tiết
   const handleNotificationPress = useCallback(
     (notification: FormattedNotification) => {
       // Mark as read first
@@ -113,43 +194,10 @@ const NotificationScreen = () => {
         handleMarkAsRead(notification.id);
       }
 
-      // Navigate based on notification type
-      switch (notification.type) {
-        case 'hopDong':
-          // Navigate to AddContract screen with notification ID
-          const originalNotification = notifications.find(
-            n => n._id === notification.id,
-          );
-          if (originalNotification) {
-            navigation.navigate('AddContract', {
-              notificationId: notification.id || '',
-            });
-          }
-          break;
-
-        case 'lichXemPhong':
-        case 'schedule':
-          // Navigate to schedule screen
-          // navigation.navigate('ScheduleDetail', {notificationId: notification.id});
-          console.log('Navigate to schedule detail');
-          break;
-
-        case 'thanhToan':
-        case 'bill':
-          // Navigate to bill screen
-          // navigation.navigate('BillDetail', {notificationId: notification.id});
-          console.log('Navigate to bill detail');
-          break;
-
-        case 'heThong':
-        case 'hoTro':
-        default:
-          // Just mark as read, no navigation
-          console.log('System notification - no navigation needed');
-          break;
-      }
+      // Hiển thị modal chi tiết cho tất cả loại thông báo
+      showNotificationDetail(notification);
     },
-    [handleMarkAsRead, navigation, notifications],
+    [handleMarkAsRead],
   );
 
   // Handle tab change
@@ -228,6 +276,17 @@ const NotificationScreen = () => {
           />
         )}
       </View>
+
+      {/* Modal chi tiết thông báo */}
+      <NotificationDetailModal
+        visible={modalVisible}
+        notification={selectedNotification}
+        onClose={closeModal}
+        onNavigateToBill={navigateToBillScreen}
+        onNavigateToContract={navigateToContractScreen}
+        onNavigateToRoomManagement={navigateToRoomManagement}
+        onNavigateToSupport={navigateToSupport}
+      />
     </SafeAreaView>
   );
 };

@@ -1,6 +1,7 @@
 export const Colors = {
   backgroud: '#F4F4F4',
   limeGreen: '#BAFD00',
+  limeGreenOpacity: 'rgba(186, 253, 0, 1)',
   darkGreen: '#5EB600',
   limeGreenLight: '#E6FCF5',
   white: '#FFFFFF',
@@ -35,4 +36,7 @@ export const Colors = {
   lightYellowBackground: '#F8F8F0',
   lightPurpleBackground: '#F8F0F8',
   lightOrangeBackground: '#F8F4F0',
+  rejectedBg: '#FCE4E4',
+  limeGreenOpacityLight: 'rgba(186, 253, 0, 0.4)',
+  ashGray: '#9F9F9F',
 };

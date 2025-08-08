@@ -271,6 +271,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
     paddingBottom: Platform.OS === 'ios' ? 0 : 16,
+    marginTop: 15,
   },
   contentContainer: {
     flex: 1,

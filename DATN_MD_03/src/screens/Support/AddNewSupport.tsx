@@ -128,7 +128,7 @@ const AddNewSupport: React.FC = () => {
           <Text style={styles.label}>Tiêu đề</Text>
           <TextInput
             style={styles.input}
-            placeholder="Nhập tiêu đề yêu cầu hỗ trợ"
+            placeholder="Nhập tiêu đề yêu cầu hỗ trợ (tối thiểu 5 ký tự)"
             value={title}
             onChangeText={setTitle}
           />
@@ -138,7 +138,7 @@ const AddNewSupport: React.FC = () => {
           <Text style={styles.label}>Nội dung</Text>
           <TextInput
             style={[styles.input, styles.textArea]}
-            placeholder="Mô tả chi tiết vấn đề của bạn"
+            placeholder="Mô tả chi tiết vấn đề của bạn (tối thiểu 10 ký tự)"
             value={content}
             onChangeText={setContent}
             multiline
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-    marginTop: 20,
+    marginTop: 25,
   },
   header: {
     height: 56,
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
   },
   backButton: {
-    padding: 8,
+    padding: 10,
   },
   headerTitle: {
     fontSize: 18,

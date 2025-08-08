@@ -8,39 +8,57 @@ import {ImageFile} from '../../../../store/services/uploadService';
 import ImagePicker from 'react-native-image-crop-picker';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../../types/route';
+import {Contract} from '../../../../types';
 
 // Xử lý xem PDF
 export const handleViewPDF = async (
-  contract: any,
+  contract: Contract,
   contractId: string,
   dispatch: AppDispatch,
   navigation: StackNavigationProp<RootStackParamList>,
+  setGeneratingPDF: (value: boolean) => void,
+  customAlert?: {
+    showError: (message: string, title?: string) => void;
+    showSuccess: (message: string, title?: string) => void;
+  }
 ) => {
   if (contract.status === 'draft') {
     try {
-      Alert.alert('Thông báo', 'Đang tạo file PDF hợp đồng...');
+      setGeneratingPDF(true);
 
       const response = await dispatch(generateContractPDF(contractId)).unwrap();
-      console.log('PDF generation response:', JSON.stringify(response));
 
-      if (response.success) {
-        navigation.navigate('PdfViewer', {pdfUrl: response.data.pdfUrl});
+      if (response.success && response.data?.viewPdfUrl) {
+        navigation.navigate('PdfViewer', {pdfUrl: response.data.viewPdfUrl});
       } else {
-        Alert.alert('Thông báo', 'Không thể tạo file PDF hợp đồng.');
+        if (customAlert) {
+          customAlert.showError('Không thể tạo file PDF hợp đồng.', 'Thông báo');
+        } else {
+          Alert.alert('Thông báo', 'Không thể tạo file PDF hợp đồng.');
+        }
       }
     } catch (error: any) {
       console.error('Error generating PDF:', error);
-      Alert.alert(
-        'Lỗi',
-        error?.message || 'Đã xảy ra lỗi khi tạo file PDF hợp đồng.',
-      );
+      if (customAlert) {
+        customAlert.showError(error?.message || 'Đã xảy ra lỗi khi tạo file PDF hợp đồng.', 'Lỗi');
+      } else {
+        Alert.alert(
+          'Lỗi',
+          error?.message || 'Đã xảy ra lỗi khi tạo file PDF hợp đồng.',
+        );
+      }
+    } finally {
+      setGeneratingPDF(false);
     }
   } else {
     if (contract.contractPdfUrl) {
-      console.log('PDF URL:', contract.contractPdfUrl);
       navigation.navigate('PdfViewer', {pdfUrl: contract.contractPdfUrl});
     } else {
-      Alert.alert('Thông báo', 'Hợp đồng chưa có file PDF.');
+      if (customAlert) {
+        customAlert.showError('Hợp đồng chưa có file PDF.', 'Thông báo');
+      } else {
+        Alert.alert('Thông báo', 'Hợp đồng chưa có file PDF.');
+      }
     }
   }
 };
@@ -49,6 +67,11 @@ export const handleViewPDF = async (
 export const handleCameraUpload = async (
   contractId: string,
   dispatch: AppDispatch,
+  append: boolean,
+  customAlert?: {
+    showError: (message: string, title?: string) => void;
+    showSuccess: (message: string, title?: string) => void;
+  }
 ) => {
   try {
     const image = await ImagePicker.openCamera({
@@ -66,7 +89,11 @@ export const handleCameraUpload = async (
     });
 
     if (!image.path || !image.mime) {
-      Alert.alert('Lỗi', 'Không thể lấy thông tin ảnh');
+      if (customAlert) {
+        customAlert.showError('Không thể lấy thông tin ảnh', 'Lỗi');
+      } else {
+        Alert.alert('Lỗi', 'Không thể lấy thông tin ảnh');
+      }
       return;
     }
 
@@ -77,11 +104,15 @@ export const handleCameraUpload = async (
     };
 
     console.log('Image file prepared:', imageFile);
-    await uploadImages(contractId, [imageFile], dispatch);
+    await uploadImages(contractId, [imageFile], dispatch, append, customAlert);
   } catch (e: any) {
     console.error('Camera error:', e);
     if (e.code !== 'E_PICKER_CANCELLED') {
-      Alert.alert('Lỗi', 'Không thể truy cập máy ảnh');
+      if (customAlert) {
+        customAlert.showError('Không thể truy cập máy ảnh', 'Lỗi');
+      } else {
+        Alert.alert('Lỗi', 'Không thể truy cập máy ảnh');
+      }
     }
   }
 };
@@ -90,6 +121,11 @@ export const handleCameraUpload = async (
 export const handleGalleryUpload = async (
   contractId: string,
   dispatch: AppDispatch,
+  append: boolean,
+  customAlert?: {
+    showError: (message: string, title?: string) => void;
+    showSuccess: (message: string, title?: string) => void;
+  }
 ) => {
   try {
     const selectedImages = await ImagePicker.openPicker({
@@ -99,8 +135,6 @@ export const handleGalleryUpload = async (
       includeBase64: false,
       includeExif: false,
     });
-
-    console.log('Selected images from gallery:', selectedImages);
 
     const imageArray = Array.isArray(selectedImages)
       ? selectedImages
@@ -112,12 +146,15 @@ export const handleGalleryUpload = async (
       filename: img.path.split('/').pop() || `gallery_${Date.now()}.jpg`,
     }));
 
-    console.log('Image files prepared:', imageFiles);
-    await uploadImages(contractId, imageFiles, dispatch);
+    await uploadImages(contractId, imageFiles, dispatch, append, customAlert);
   } catch (e: any) {
     console.error('Gallery error:', e);
     if (e.code !== 'E_PICKER_CANCELLED') {
-      Alert.alert('Lỗi', 'Không thể truy cập thư viện');
+      if (customAlert) {
+        customAlert.showError('Không thể truy cập thư viện', 'Lỗi');
+      } else {
+        Alert.alert('Lỗi', 'Không thể truy cập thư viện');
+      }
     }
   }
 };
@@ -127,30 +164,42 @@ const uploadImages = async (
   contractId: string,
   imageFiles: ImageFile[],
   dispatch: AppDispatch,
+  append: boolean,
+  customAlert?: {
+    showError: (message: string, title?: string, autoHide?: boolean) => void;
+    showSuccess: (message: string, title?: string, autoHide?: boolean) => void;
+  }
 ) => {
   try {
-    console.log('Uploading images with payload:', {
-      contractId,
-      images: imageFiles,
-    });
-
     const result = await dispatch(
       uploadContractImages({
         contractId,
         images: imageFiles,
+        append,
       }),
     ).unwrap();
 
-    console.log('Upload result:', result);
-
-    Alert.alert(
-      'Thành công',
-      result.message ||
-        'Upload ảnh hợp đồng thành công. Hợp đồng đang chờ admin phê duyệt.',
-    );
+    if (customAlert) {
+      customAlert.showSuccess(
+        result.message ||
+          'Upload ảnh hợp đồng thành công. Hợp đồng đang chờ admin phê duyệt.',
+        'Thành công',
+        true
+      );
+    } else {
+      Alert.alert(
+        'Thành công',
+        result.message ||
+          'Upload ảnh hợp đồng thành công. Hợp đồng đang chờ admin phê duyệt.',
+      );
+    }
   } catch (error: any) {
     console.error('Upload error:', error);
-    Alert.alert('Lỗi', error);
+    if (customAlert) {
+      customAlert.showError(error, 'Lỗi', true);
+    } else {
+      Alert.alert('Lỗi', error);
+    }
   }
 };
 
@@ -159,36 +208,81 @@ export const handlePickImages = (
   selectedContract: any,
   contractId: string,
   dispatch: AppDispatch,
+  customAlert?: {
+    showError: (message: string, title?: string) => void;
+    showSuccess: (message: string, title?: string) => void;
+    showConfirm: (
+      message: string,
+      onConfirm: () => void,
+      title?: string,
+      customButtons?: Array<{
+        text: string;
+        onPress: () => void;
+        style?: 'default' | 'cancel' | 'destructive';
+      }>,
+    ) => void;
+  }
 ) => {
-  // Kiểm tra status trước khi cho phép chọn ảnh
-  if (!selectedContract || selectedContract.status !== 'pending_signature') {
-    Alert.alert('Thông báo', 'Chỉ có thể upload ảnh khi hợp đồng đang chờ ký');
+  if (
+    !selectedContract ||
+    (selectedContract.status !== 'pending_signature' &&
+      selectedContract.status !== 'pending_approval')
+  ) {
+    if (customAlert) {
+      customAlert.showError('Chỉ có thể upload ảnh khi hợp đồng đang chờ ký', 'Thông báo');
+    } else {
+      Alert.alert('Thông báo', 'Chỉ có thể upload ảnh khi hợp đồng đang chờ ký');
+    }
     return;
   }
 
-  console.log('Current contract status:', selectedContract.status);
-  console.log(
-    'Can upload images:',
-    selectedContract.status === 'pending_signature',
-  );
+  const existingCount = selectedContract.signedContractImages?.length ?? 0;
 
-  Alert.alert('Chọn ảnh', 'Bạn muốn chọn ảnh từ đâu?', [
-    {
-      text: 'Máy ảnh',
-      onPress: () => handleCameraUpload(contractId, dispatch),
-    },
-    {
-      text: 'Thư viện',
-      onPress: () => handleGalleryUpload(contractId, dispatch),
-    },
-    {text: 'Hủy', style: 'cancel'},
-  ]);
-};
+  // Nếu chưa có ảnh nào, cứ mở picker luôn ở chế độ append
+  if (existingCount === 0) {
+    handleGalleryUpload(contractId, dispatch, true, customAlert);
+    return;
+  }
 
-// Xử lý xem ảnh đã ký
-export const handleViewImage = (index: number) => {
-  Alert.alert(
-    'Thông báo',
-    'Tính năng xem ảnh toàn màn hình sẽ được thực hiện sau',
-  );
+  // Ngược lại, hỏi thêm hay thay thế
+  if (customAlert) {
+    customAlert.showConfirm(
+      'Bạn muốn thêm ảnh mới hay thay thế toàn bộ ảnh cũ?',
+      () => {},
+      'Upload ảnh hợp đồng',
+      [
+        {
+          text: 'Thêm ảnh',
+          onPress: () => handleGalleryUpload(contractId, dispatch, true, customAlert),
+          style: 'default',
+        },
+        {
+          text: 'Thay thế toàn bộ ảnh',
+          onPress: () => handleGalleryUpload(contractId, dispatch, false, customAlert),
+          style: 'destructive',
+        },
+        {
+          text: 'Hủy',
+          onPress: () => {},
+          style: 'cancel',
+        },
+      ]
+    );
+  } else {
+    Alert.alert(
+      'Upload ảnh hợp đồng',
+      'Bạn muốn thêm ảnh mới hay thay thế toàn bộ ảnh cũ?',
+      [
+        {
+          text: 'Thêm ảnh',
+          onPress: () => handleGalleryUpload(contractId, dispatch, true),
+        },
+        {
+          text: 'Thay thế toàn bộ ảnh',
+          onPress: () => handleGalleryUpload(contractId, dispatch, false),
+        },
+        {text: 'Hủy', style: 'cancel'},
+      ],
+    );
+  }
 };

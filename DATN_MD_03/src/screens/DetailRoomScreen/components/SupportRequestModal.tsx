@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   Alert,
   ScrollView,
 } from 'react-native';
@@ -14,15 +13,24 @@ import { Fonts } from '../../../theme/fonts';
 import { responsiveSpacing, responsiveFont, responsiveIcon } from '../../../utils/responsive';
 import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
 import { Icons } from '../../../assets/icons';
+import { supportService } from '../../../store/services/supportService';
 
-interface SupportRequestModalProps {}
+interface SupportRequestModalProps {
+  roomId?: string;
+  roomInfo?: {
+    name?: string;
+    address?: string;
+    ownerName?: string;
+    roomCode?: string;
+  };
+}
 
-const SupportRequestModal = forwardRef<BottomSheet, SupportRequestModalProps>((props, ref) => {
+const SupportRequestModal = forwardRef<BottomSheet, SupportRequestModalProps>(({ roomId, roomInfo }, ref) => {
   // Tạo snap points cho bottom sheet
-  const snapPoints = useMemo(() => ['25%', '55%'], []);
+  const snapPoints = useMemo(() => ['25%', '45%'], []);
 
-  const [selectedOptions, setSelectedOptions] = React.useState<string[]>([]);
-  const [description, setDescription] = React.useState<string>('');
+  const [selectedOption, setSelectedOption] = React.useState<string>('');
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const supportOptions = useMemo(() => [
     { id: 'not_match_info', title: 'Thông tin không trùng khớp' },
@@ -31,35 +39,68 @@ const SupportRequestModal = forwardRef<BottomSheet, SupportRequestModalProps>((p
     { id: 'wrong_listing', title: 'Bài đăng bị trùng lặp' },
   ], []);
 
-  const handleOptionToggle = (optionId: string) => {
-    setSelectedOptions(prev => {
-      if (prev.includes(optionId)) {
-        return prev.filter(id => id !== optionId);
-      } else {
-        return [...prev, optionId];
-      }
-    });
+  const handleOptionSelect = (optionId: string) => {
+    setSelectedOption(optionId);
   };
 
-  const handleSubmit = useCallback(() => {
-    // Xử lý gửi yêu cầu hỗ trợ
-    Alert.alert(
-      'Yêu cầu đã được gửi',
-      `Các vấn đề đã chọn: ${selectedOptions.length} mục\nMô tả: ${description || 'Không có'}`,
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            // Reset form
-            setSelectedOptions([]);
-            setDescription('');
-            // Đóng modal
-            (ref as React.RefObject<BottomSheet>)?.current?.close();
-          }
-        }
-      ]
-    );
-  }, [selectedOptions, description, ref]);
+  const handleSubmit = useCallback(async () => {
+    if (!selectedOption) {
+      Alert.alert('Thông báo', 'Vui lòng chọn một vấn đề cần hỗ trợ');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Tìm title từ option đã chọn
+      const selectedOptionData = supportOptions.find(option => option.id === selectedOption);
+      const title = selectedOptionData?.title || 'Báo cáo phòng';
+
+      // Tạo content với thông tin phòng
+      let content = '';
+      
+      if (roomInfo || roomId) {
+        if (roomInfo?.roomCode) content += `Số Phòng: ${roomInfo.roomCode}\n`;
+        if (roomInfo?.address) content += `Địa chỉ: ${roomInfo.address}\n`;
+        if (roomInfo?.ownerName) content += `Chủ Trọ: ${roomInfo.ownerName}`;
+      }
+
+      // Gọi API tạo support request
+      const response = await supportService.createSupportRequest({
+        title: title,
+        content: content,
+        category: 'khac',
+        priority: 'trungBinh',
+      });
+
+      if ('isError' in response) {
+        Alert.alert(
+          'Lỗi',
+          response.message || 'Đã xảy ra lỗi khi gửi yêu cầu hỗ trợ',
+        );
+      } else {
+        Alert.alert(
+          'Thành công',
+          'Yêu cầu hỗ trợ của bạn đã được gửi thành công',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                // Reset form
+                setSelectedOption('');
+                // Đóng modal
+                (ref as React.RefObject<BottomSheet>)?.current?.close();
+              }
+            }
+          ]
+        );
+      }
+    } catch (error) {
+      Alert.alert('Lỗi', 'Đã xảy ra lỗi khi gửi yêu cầu hỗ trợ');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [selectedOption, supportOptions, roomInfo, roomId, ref]);
 
   const handleClose = useCallback(() => {
     (ref as React.RefObject<BottomSheet>)?.current?.close();
@@ -94,7 +135,7 @@ const SupportRequestModal = forwardRef<BottomSheet, SupportRequestModalProps>((p
         <View style={styles.header}>
           <Text style={styles.title}>Yêu cầu hỗ trợ</Text>
           <Text style={styles.subtitle}>
-            Gửi yêu cầu hỗ trợ bạn có thể hỗ trợ ban
+            Chọn vấn đề bạn cần được hỗ trợ
           </Text>
         </View>
 
@@ -104,41 +145,28 @@ const SupportRequestModal = forwardRef<BottomSheet, SupportRequestModalProps>((p
             <TouchableOpacity
               key={option.id}
               style={styles.itemContainer}
-              onPress={() => handleOptionToggle(option.id)}
+              onPress={() => handleOptionSelect(option.id)}
               activeOpacity={0.7}
             >
               <Text style={styles.itemLabel}>{option.title}</Text>
-              <View style={styles.checkboxContainer}>
+              <View style={styles.radioContainer}>
                 <View style={[
-                  styles.checkbox,
-                  selectedOptions.includes(option.id) && styles.checkboxSelected
+                  styles.radio,
+                  selectedOption === option.id && styles.radioSelected
                 ]}>
-                  {selectedOptions.includes(option.id) && (
-                    <Text style={styles.checkmark}>✓</Text>
+                  {selectedOption === option.id && (
+                    <View style={styles.radioDot} />
                   )}
                 </View>
               </View>
             </TouchableOpacity>
           ))}
-          
-          {/* Description Input */}
-          <View style={styles.descriptionContainer}>
-            <TextInput
-              style={styles.textArea}
-              placeholder="Mô tả chi tiết vấn đề bạn cần được hỗ trợ (không bắt buộc)"
-              value={description}
-              onChangeText={setDescription}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-          </View>
         </ScrollView>
 
         {/* Footer */}
         <View style={styles.footer}>
           <ItemButtonConfirm
-            title="Gửi yêu cầu hỗ trợ"
+            title={isSubmitting ? "Đang gửi..." : "Gửi yêu cầu hỗ trợ"}
             icon={Icons.IconRemoveWhite}
             onPress={handleSubmit}
             onPressIcon={handleClose}
@@ -208,45 +236,27 @@ const styles = StyleSheet.create({
     color: Colors.black,
     flex: 1,
   },
-  checkboxContainer: {
+  radioContainer: {
     marginLeft: responsiveSpacing(16),
   },
-  checkbox: {
+  radio: {
     width: responsiveIcon(24),
     height: responsiveIcon(24),
-    borderRadius: responsiveSpacing(4),
+    borderRadius: responsiveIcon(12),
     borderWidth: 2,
     borderColor: Colors.mediumGray,
     backgroundColor: Colors.white,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxSelected: {
-    backgroundColor: Colors.limeGreen,
+  radioSelected: {
     borderColor: Colors.limeGreen,
   },
-  checkmark: {
-    color: Colors.black,
-    fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Bold,
-  },
-  descriptionContainer: {
-    marginTop: responsiveSpacing(20),
-    paddingTop: responsiveSpacing(20),
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
-  },
-  textArea: {
-    borderWidth: 1,
-    borderColor: Colors.divider,
-    borderRadius: responsiveSpacing(8),
-    padding: responsiveSpacing(12),
-    fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Regular,
-    color: Colors.black,
-    backgroundColor: Colors.white,
-    height: responsiveSpacing(100),
-    textAlignVertical: 'top',
+  radioDot: {
+    width: responsiveIcon(12),
+    height: responsiveIcon(12),
+    borderRadius: responsiveIcon(6),
+    backgroundColor: Colors.limeGreen,
   },
   footer: {
     padding: responsiveSpacing(20),

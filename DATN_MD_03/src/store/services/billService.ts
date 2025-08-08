@@ -1264,70 +1264,140 @@ export const applyInvoiceTemplate = async (
 // Kiểm tra xem người dùng có trong danh sách coTenants không
 export const checkUserIsCoTenant = async (token: string) => {
   try {
-    // Gọi API để kiểm tra xem người dùng có trong danh sách coTenants không
-    const response = await api.get('/contract/check-cotenant', {
+    console.log('START: checkUserIsCoTenant');
+
+    // Lấy dữ liệu người dùng hiện tại từ profile endpoint
+    console.log('Getting user profile...');
+    const userResponse = await api.get('/user/profile', {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-    if ('isError' in response) {
+    if ('isError' in userResponse) {
+      console.error('Error getting user profile:', userResponse.message);
       throw new Error(
-        response.message ||
-          'Có lỗi xảy ra khi kiểm tra trạng thái người ở cùng',
+        userResponse.message || 'Không thể lấy thông tin người dùng',
       );
     }
 
-    return {
-      success: response.data.success,
-      isCoTenant: response.data.isCoTenant,
-      contracts: response.data.contracts || [],
-    };
-  } catch (error: any) {
-    console.error('Error checking coTenant status:', error.message);
+    // Dữ liệu người dùng nằm trong data.user theo cấu trúc mới
+    const currentUserId = userResponse.data.data?.user?._id;
 
-    // Nếu API endpoint chưa tồn tại, trả về một kết quả giả lập dựa trên dữ liệu hiện có
-    // Đây là một giải pháp tạm thời cho đến khi API được triển khai
+    if (!currentUserId) {
+      console.log('Cannot determine current user ID');
+      throw new Error('Không thể xác định ID người dùng hiện tại');
+    }
+
+    console.log('Current user ID:', currentUserId);
+
+    // Trực tiếp gọi API để lấy danh sách hóa đơn người ở cùng
+    console.log('Calling /billing/roommate/invoices API...');
+
     try {
-      // Thử gọi API lấy danh sách hợp đồng
-      const contractsResponse = await api.get('/contract/my-contracts', {
+      const response = await api.get('/billing/roommate/invoices', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if ('isError' in contractsResponse) {
-        throw new Error(contractsResponse.message);
+      // Log chi tiết về response
+      console.log('API Response Status:', response.status);
+      console.log('API Response has data:', !!response.data);
+      console.log('API Response success:', response.data?.success);
+
+      if ('isError' in response) {
+        console.error('API returned error:', response.message);
+        throw new Error(
+          response.message || 'Có lỗi xảy ra khi lấy hóa đơn người ở cùng',
+        );
       }
 
-      // Kiểm tra xem người dùng có trong danh sách coTenants của bất kỳ hợp đồng nào không
-      const contracts = contractsResponse.data.data?.contracts || [];
-      let isCoTenant = false;
+      // Kiểm tra có invoices không
+      const invoices = response.data?.invoices || [];
+      console.log('API returned', invoices.length, 'roommate invoices');
 
-      for (const contract of contracts) {
+      // QUAN TRỌNG: Kiểm tra từng hóa đơn xem có thật sự là của người ở cùng không
+      // Kiểm tra xem mỗi hợp đồng có chứa người dùng hiện tại trong danh sách coTenants không
+      let isReallyCoTenant = false;
+      let contractsUserIsCoTenantIn: any[] = [];
+
+      // Duyệt qua các hóa đơn để kiểm tra
+      for (const invoice of invoices) {
+        // Kiểm tra nếu invoice có contractId và contractInfo
         if (
-          contract.contractInfo &&
-          contract.contractInfo.coTenants &&
-          Array.isArray(contract.contractInfo.coTenants) &&
-          contract.contractInfo.coTenants.length > 0
+          invoice.contractId &&
+          typeof invoice.contractId === 'object' &&
+          invoice.contractId.contractInfo &&
+          invoice.contractId.contractInfo.coTenants
         ) {
-          isCoTenant = true;
-          break;
+          // Lấy danh sách coTenants
+          const coTenants = invoice.contractId.contractInfo.coTenants;
+
+          // Kiểm tra xem người dùng hiện tại có trong danh sách coTenants không
+          const isUserInCoTenants = coTenants.some(
+            (coTenant: any) => coTenant.userId === currentUserId,
+          );
+
+          console.log(
+            'Contract',
+            invoice.contractId._id,
+            'has user in coTenants:',
+            isUserInCoTenants,
+          );
+
+          if (isUserInCoTenants) {
+            isReallyCoTenant = true;
+
+            // Thêm hợp đồng vào danh sách nếu chưa có
+            if (
+              !contractsUserIsCoTenantIn.some(
+                c => c._id === invoice.contractId._id,
+              )
+            ) {
+              contractsUserIsCoTenantIn.push(invoice.contractId);
+            }
+          }
         }
       }
 
-      return {
+      console.log('Final isCoTenant determination:', isReallyCoTenant);
+      console.log(
+        'User is co-tenant in',
+        contractsUserIsCoTenantIn.length,
+        'contracts',
+      );
+
+      const result = {
         success: true,
-        isCoTenant,
-        contracts,
+        isCoTenant: isReallyCoTenant,
+        contracts: contractsUserIsCoTenantIn,
       };
-    } catch (fallbackError: any) {
-      console.error('Error in fallback coTenant check:', fallbackError.message);
-      return {
-        success: false,
-        isCoTenant: false,
-        contracts: [],
-      };
+
+      console.log(
+        'END: checkUserIsCoTenant with success, returning:',
+        JSON.stringify(result, null, 2),
+      );
+      return result;
+    } catch (apiError: any) {
+      console.error('API call failed:', apiError.message || apiError);
+      throw apiError;
     }
+  } catch (error: any) {
+    console.error('ERROR in checkUserIsCoTenant:', error.message || error);
+
+    // Trả về là không phải người ở cùng nếu có lỗi xảy ra
+    const errorResult = {
+      success: false,
+      isCoTenant: false,
+      contracts: [],
+      error: error.message || 'Lỗi không xác định',
+    };
+
+    console.log(
+      'END: checkUserIsCoTenant with error, returning:',
+      JSON.stringify(errorResult, null, 2),
+    );
+    return errorResult;
   }
 };

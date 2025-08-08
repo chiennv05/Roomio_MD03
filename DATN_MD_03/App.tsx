@@ -1,24 +1,23 @@
 import React from 'react';
 
-import { Provider } from 'react-redux';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { store } from './src/store';
+import {Provider} from 'react-redux';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {store} from './src/store';
 
 import TabScreen from './src/navigation/TabScreen';
-import AddRoomScreen from './src/screens/ChuTro/AddRoom/AddRoomScreen';
-import AddContract from './src/screens/ChuTro/Contract/AddContract';
+import {MenuProvider} from 'react-native-popup-menu';
 
 export default function App() {
   return (
-
     <SafeAreaProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView style={{flex: 1}}>
         <Provider store={store}>
-          <TabScreen />
+          <MenuProvider>
+            <TabScreen />
+          </MenuProvider>
         </Provider>
       </GestureHandlerRootView>
     </SafeAreaProvider>
-
   );
 }

@@ -5,12 +5,11 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   StyleSheet,
-  Image,
 } from 'react-native';
 import {Colors} from '../../../../theme/color';
 import {Fonts} from '../../../../theme/fonts';
 import {responsiveFont, scale, verticalScale} from '../../../../utils/responsive';
-import {Icons} from '../../../../assets/icons';
+import EmptySearchAnimation from '../../../../components/EmptySearchAnimation';
 
 interface LoadingProps {
   message?: string;
@@ -52,16 +51,14 @@ export const ErrorView: React.FC<ErrorViewProps> = ({
 
 interface EmptyViewProps {
   message?: string;
-  icon?: any;
 }
 
 export const EmptyView: React.FC<EmptyViewProps> = ({
-  message = 'Không có dữ liệu',
-  icon = Icons.IconEmptyMessage,
+  message = 'Không có người thuê nào',
 }) => {
   return (
     <View style={styles.centerContainer}>
-      <Image source={icon as any} style={styles.emptyIcon} />
+      <EmptySearchAnimation />
       <Text style={styles.emptyText}>{message}</Text>
     </View>
   );
@@ -99,16 +96,12 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(14),
   },
-  emptyIcon: {
-    width: scale(100),
-    height: scale(100),
-    marginBottom: verticalScale(20),
-  },
   emptyText: {
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.darkGray,
     textAlign: 'center',
+    marginTop: verticalScale(20),
   },
 });
 
@@ -116,4 +109,4 @@ export default {
   LoadingView,
   ErrorView,
   EmptyView,
-}; 
+};

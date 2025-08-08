@@ -57,7 +57,7 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
   };
 
   const statusInfo = getStatusInfo(item.status);
-  const canModify = item.status !== 'hoanTat';
+  const canModify = item.status == 'mo';
 
   const handleDelete = (e: any) => {
     e.stopPropagation(); // Prevent triggering the onPress event

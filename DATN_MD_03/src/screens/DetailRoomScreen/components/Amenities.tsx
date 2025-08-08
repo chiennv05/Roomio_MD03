@@ -157,6 +157,7 @@ const styles = StyleSheet.create({
     width: responsiveIcon(32),
     height: responsiveIcon(32),
     marginBottom: responsiveSpacing(4),
+    tintColor: Colors.darkGreen,
   },
   amenityLabelNoBg: {
     fontSize: responsiveFont(13),

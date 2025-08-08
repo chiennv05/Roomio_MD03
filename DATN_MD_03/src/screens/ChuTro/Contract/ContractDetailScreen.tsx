@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -6,27 +6,44 @@ import {
   SafeAreaView,
   TouchableOpacity,
   ScrollView,
-  Image,
   ActivityIndicator,
+  FlatList,
+  StatusBar,
 } from 'react-native';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
-import {scale, verticalScale, responsiveFont} from '../../../utils/responsive';
+import {
+  scale,
+  verticalScale,
+  responsiveFont,
+  SCREEN,
+} from '../../../utils/responsive';
 import {Icons} from '../../../assets/icons';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../../store';
-import {fetchContractDetail} from '../../../store/slices/contractSlice';
+import {
+  deleteContract,
+  extendContractThunk,
+  fetchContractDetail,
+  terminateContractThunk,
+} from '../../../store/slices/contractSlice';
 import {getContractStatusInfo} from './components/ContractItem';
 import {UIHeader} from '../MyRoom/components';
-import {
-  handleViewPDF,
-  handlePickImages,
-  handleViewImage,
-} from './utils/contractEvents';
-
+import {handleViewPDF, handlePickImages} from './utils/contractEvents';
+import {getPriceUnitLabel} from './utils/getPriceUnitLabel';
+import InfoRow from './components/InfoRow';
+import ModalLoading from '../AddRoom/components/ModalLoading';
+import ModalShowImageContract from './components/ModalShowImageContract';
+import ItemTitle from '../AddRoom/components/ItemTitle ';
+import ItemImage from './components/ItemImage';
+import {useContractImageActions} from '../AddRoom/hooks/useContractImageActions';
+import ContractMenu from './components/ContractMenu';
+import ModalConfirmContract from './components/ModalConfirmContract';
+import {useCustomAlert} from '../../../hooks/useCustomAlrert';
+import CustomAlertModal from '../../../components/CustomAlertModal';
 // Format tiền tệ
 const formatCurrency = (amount: number) => {
   return amount.toLocaleString('vi-VN') + ' đ';
@@ -52,7 +69,13 @@ const ContractDetailScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'ContractDetail'>>();
   const dispatch = useDispatch<AppDispatch>();
+
+  const [showModal, setShowModal] = useState(false);
+  const [action, setAction] = useState<'extend' | 'terminate' | null>(null);
+  const [value, setValue] = useState('');
   const {contractId} = route.params;
+  const {onDeleteAllImages, onDeleteImage} =
+    useContractImageActions(contractId);
 
   const {
     selectedContract,
@@ -61,6 +84,9 @@ const ContractDetailScreen = () => {
     uploadingImages,
   } = useSelector((state: RootState) => state.contract);
 
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [isVisibleImage, setIsVisibleImage] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   useEffect(() => {
     dispatch(fetchContractDetail(contractId));
   }, [contractId, dispatch]);
@@ -69,30 +95,243 @@ const ContractDetailScreen = () => {
     navigation.goBack();
   };
 
+  const {
+    alertConfig,
+    visible: alertVisible,
+    hideAlert,
+    showSuccess,
+    showError,
+    showConfirm,
+  } = useCustomAlert();
+
   // Event Handlers
   const onViewPDF = () => {
     if (selectedContract) {
-      handleViewPDF(selectedContract, contractId, dispatch, navigation);
+      if (selectedContract.status === 'terminated') {
+        showError(
+          'Hợp đồng đã bị chấm dứt, không thể xem PDF.',
+          'Thông báo',
+          true,
+        );
+        return;
+      }
+      if (selectedContract.status === 'rejected') {
+        showError(
+          'Hợp đồng đã bị từ chối, không thể xem PDF.',
+          'Thông báo',
+          true,
+        );
+        return;
+      }
+      handleViewPDF(
+        selectedContract,
+        contractId,
+        dispatch,
+        navigation,
+        setGeneratingPDF,
+        {
+          showSuccess: (msg, title) => showSuccess(msg, title, true),
+          showError: (msg, title) => showError(msg, title, true),
+        },
+      );
     }
   };
 
   const onPickImages = () => {
-    handlePickImages(selectedContract, contractId, dispatch);
+    handlePickImages(selectedContract, contractId, dispatch, {
+      showSuccess,
+      showError,
+      showConfirm,
+    });
   };
 
   const onViewImage = (index: number) => {
-    handleViewImage(index);
+    setSelectedImageIndex(index);
+    setIsVisibleImage(true);
+  };
+  const handleDeleteAllImage = () => {
+    if (!selectedContract) return;
+
+    const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
+
+    if (!allowedStatuses.includes(selectedContract.status)) {
+      showError(
+        'Chỉ có thể xóa ảnh hợp đồng ở trạng thái Nháp, Chờ ký hoặc Chờ duyệt.',
+        'Không thể xóa ảnh',
+        true,
+      );
+      return;
+    }
+
+    showConfirm(
+      'Bạn có chắc chắn muốn xóa tất cả ảnh không?',
+      () => onDeleteAllImages(),
+      'Xác nhận',
+      [
+        {
+          text: 'HỦY',
+          onPress: hideAlert,
+          style: 'cancel',
+        },
+        {
+          text: 'XÓA',
+          onPress: () => onDeleteAllImages(),
+          style: 'destructive',
+        },
+      ],
+    );
+  };
+  const onDeleteOneImage = (fileName: string) => {
+    if (!selectedContract) return;
+
+    const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
+
+    if (!allowedStatuses.includes(selectedContract.status)) {
+      showError(
+        'Chỉ có thể xóa ảnh hợp đồng ở trạng thái Nháp, Chờ ký hoặc Chờ duyệt.',
+        'Không thể xóa ảnh',
+        true,
+      );
+      return;
+    }
+
+    // Lấy tên file ngắn gọn để hiển thị
+    const shortFileName = fileName.split('/').pop() || fileName;
+
+    showConfirm(
+      `Bạn có chắc chắn muốn xóa ảnh "${shortFileName}" không?`,
+      () => onDeleteImage(fileName),
+      'Xác nhận',
+      [
+        {
+          text: 'HỦY',
+          onPress: hideAlert,
+          style: 'cancel',
+        },
+        {
+          text: 'XÓA',
+          onPress: () => onDeleteImage(fileName),
+          style: 'destructive',
+        },
+      ],
+    );
+  };
+
+  // gia hạn hợp đồng
+  const onExtendContract = () => {
+    if (!selectedContract) return;
+    if (selectedContract.status !== 'pending_signature') {
+      showError(
+        'Chỉ có thể gia hạn hợp đồng ở trạng thái Chờ ký.',
+        'Không thể gia hạn',
+      );
+      return;
+    }
+    setAction('extend');
+    setValue('');
+    setShowModal(true);
+  };
+
+  const onTerminateContract = () => {
+    if (!selectedContract) return;
+    if (selectedContract.status === 'terminated') {
+      showError('Hợp đồng đã bị chấm dứt trước đó.', 'Không thể chấm dứt');
+      return;
+    }
+    if (selectedContract.status === 'draft') {
+      showError(
+        'Hợp đồng ở trạng thái Nháp không thể chấm dứt.',
+        'Không thể chấm dứt',
+      );
+      return;
+    }
+    if (selectedContract.status === 'pending_signature') {
+      showError(
+        'Hợp đồng ở trạng thái Chờ ký không thể chấm dứt.',
+        'Không thể chấm dứt',
+      );
+      return;
+    }
+    if (selectedContract.status === 'pending_approval') {
+      showError(
+        'Hợp đồng ở trạng thái Chờ duyệt không thể chấm dứt.',
+        'Không thể chấm dứt',
+      );
+      return;
+    }
+    if (selectedContract.status === 'rejected') {
+      showError(
+        'Hợp đồng đã bị từ chối không thể chấm dứt.',
+        'Không thể chấm dứt',
+      );
+      return;
+    }
+
+    setAction('terminate');
+    setValue('');
+    setShowModal(true);
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedContract) return;
+
+    try {
+      if (action === 'extend') {
+        const months = parseInt(value.trim());
+        if (isNaN(months) || months <= 0) {
+          showError('Vui lòng nhập số tháng hợp lệ.', 'Lỗi', true);
+          return;
+        }
+
+        await dispatch(
+          extendContractThunk({
+            contractId: selectedContract._id,
+            months,
+          }),
+        ).unwrap();
+
+        showSuccess('Gia hạn hợp đồng thành công', 'Thành công', true);
+        setShowModal(false);
+      } else if (action === 'terminate') {
+        if (value.trim() === '') {
+          showError('Vui lòng nhập lý do chấm dứt', 'Lỗi', true);
+          return;
+        }
+
+        await dispatch(
+          terminateContractThunk({
+            contractId: selectedContract._id,
+            reason: value.trim(),
+          }),
+        ).unwrap();
+
+        showSuccess('Chấm dứt hợp đồng thành công', 'Thành công', true);
+        setShowModal(false);
+      }
+    } catch (err: any) {
+      showError(err?.message || 'Thao tác thất bại', 'Lỗi', true);
+    }
   };
 
   // Hiển thị màn hình loading
   if (selectedContractLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <UIHeader
-          title="Chi tiết hợp đồng"
-          iconLeft={Icons.IconArrowLeft}
-          onPressLeft={handleGoBack}
-        />
+        <View style={styles.headerContainer}>
+          <UIHeader
+            title="Chi tiết hợp đồng"
+            iconLeft={Icons.IconArrowLeft}
+            onPressLeft={handleGoBack}
+            iconRight={
+              <ContractMenu
+                onEdit={() => {}}
+                onExtend={() => {}}
+                onTerminate={() => {}}
+                onDeleteContract={() => {}}
+              />
+            }
+          />
+        </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.darkGreen} />
           <Text style={styles.loadingText}>Đang tải thông tin hợp đồng...</Text>
@@ -105,12 +344,21 @@ const ContractDetailScreen = () => {
   if (selectedContractError) {
     return (
       <SafeAreaView style={styles.container}>
-        <UIHeader
-          title="Chi tiết hợp đồng"
-          iconLeft={Icons.IconArrowLeft}
-          onPressLeft={handleGoBack}
-          iconRight={Icons.IconEditBlack}
-        />
+        <View style={styles.headerContainer}>
+          <UIHeader
+            title="Chi tiết hợp đồng"
+            iconLeft={Icons.IconArrowLeft}
+            onPressLeft={handleGoBack}
+            iconRight={
+              <ContractMenu
+                onEdit={() => {}}
+                onExtend={() => {}}
+                onTerminate={() => {}}
+                onDeleteContract={() => {}}
+              />
+            }
+          />
+        </View>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>
             Có lỗi xảy ra: {selectedContractError}. Vui lòng thử lại.
@@ -129,12 +377,21 @@ const ContractDetailScreen = () => {
   if (!selectedContract) {
     return (
       <SafeAreaView style={styles.container}>
-        <UIHeader
-          title="Chi tiết hợp đồng"
-          iconLeft={Icons.IconArrowLeft}
-          onPressLeft={handleGoBack}
-          iconRight={Icons.IconEditBlack}
-        />
+        <View style={styles.headerContainer}>
+          <UIHeader
+            title="Chi tiết hợp đồng"
+            iconLeft={Icons.IconArrowLeft}
+            onPressLeft={handleGoBack}
+            iconRight={
+              <ContractMenu
+                onEdit={() => {}}
+                onExtend={() => {}}
+                onTerminate={() => {}}
+                onDeleteContract={() => {}}
+              />
+            }
+          />
+        </View>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>
             Không tìm thấy thông tin hợp đồng
@@ -145,31 +402,116 @@ const ContractDetailScreen = () => {
   }
 
   const handleGoUpdateContract = () => {
-    console.log('updta');
-    navigation.navigate('UpdateContract', {
-      contract: selectedContract,
-    });
+    const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
+
+    if (selectedContract && allowedStatuses.includes(selectedContract.status)) {
+      navigation.navigate('UpdateContract', {
+        contract: selectedContract,
+      });
+    } else {
+      showError(
+        'Chỉ có thể chỉnh sửa hợp đồng ở trạng thái Nháp, Chờ ký hoặc Chờ duyệt.',
+        'Không thể chỉnh sửa',
+      );
+    }
   };
+
   const contract = selectedContract;
+  const imageList = contract.signedContractImages || [];
+
+  const handleDeleteContract = async () => {
+    const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
+    if (!allowedStatuses.includes(contract?.status)) {
+      showError(
+        'Chỉ có thể xóa hợp đồng ở trạng thái nháp, chờ ký hoặc chờ duyệt.',
+        'Không thể xóa',
+        true,
+      );
+      return;
+    }
+    // Hiện dialog xác nhận với 2 nút cho mọi trạng thái hợp lệ
+    showConfirm(
+      'Bạn có chắc chắn muốn xóa hợp đồng này không?',
+      async () => {
+        try {
+          await dispatch(deleteContract(contract._id)).unwrap();
+          showSuccess('Hợp đồng đã được xóa thành công', 'Thành công', true);
+          navigation.goBack();
+        } catch (error: any) {
+          showError(
+            error?.message || 'Có lỗi xảy ra khi xóa hợp đồng',
+            'Lỗi',
+            true,
+          );
+        }
+      },
+      'Xác nhận',
+      [
+        {
+          text: 'Hủy',
+          onPress: hideAlert,
+          style: 'cancel',
+        },
+        {
+          text: 'Xác nhận',
+          onPress: async () => {
+            try {
+              await dispatch(deleteContract(contract._id)).unwrap();
+              showSuccess(
+                'Hợp đồng đã được xóa thành công',
+                'Thành công',
+                true,
+              );
+              navigation.goBack();
+            } catch (error: any) {
+              showError(
+                error?.message || 'Có lỗi xảy ra khi xóa hợp đồng',
+                'Lỗi',
+                true,
+              );
+            }
+          },
+          style: 'destructive',
+        },
+      ],
+    );
+  };
+
   const statusInfo = getContractStatusInfo(contract.status);
-  const canUploadImages = contract.status === 'pending_signature';
+  const canUploadImages =
+    contract.status === 'pending_signature' ||
+    contract.status === 'pending_approval';
 
   return (
     <SafeAreaView style={styles.container}>
-      <UIHeader
-        title="Chi tiết hợp đồng"
-        iconLeft={Icons.IconArrowLeft}
-        onPressLeft={handleGoBack}
-        iconRight={Icons.IconEditBlack}
-        onPressRight={handleGoUpdateContract}
-      />
-
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
       <ScrollView
         style={styles.scrollView}
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollViewContent}>
+        <View style={styles.headerContainer}>
+          <UIHeader
+            title="Chi tiết hợp đồng"
+            iconLeft={Icons.IconArrowLeft}
+            onPressLeft={handleGoBack}
+            iconRight={
+              <ContractMenu
+                onEdit={handleGoUpdateContract}
+                onExtend={onExtendContract}
+                onTerminate={onTerminateContract}
+                onDeleteContract={handleDeleteContract}
+              />
+            }
+            color={Colors.white}
+          />
+        </View>
+
         {/* Trạng thái hợp đồng */}
         <View style={styles.statusContainer}>
-          <Text style={styles.sectionTitle}>Trạng thái hợp đồng</Text>
+          <View>
+            <Text style={styles.textContract}>Mã hợp đồng</Text>
+            <Text style={styles.textCodeContract}>{contract._id}</Text>
+          </View>
           <View
             style={[styles.statusBadge, {backgroundColor: statusInfo.color}]}>
             <Text style={styles.statusText}>{statusInfo.label}</Text>
@@ -179,112 +521,84 @@ const ContractDetailScreen = () => {
         {/* Thông tin phòng */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Thông tin phòng</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Số phòng:</Text>
-            <Text style={styles.value}>{contract.contractInfo.roomNumber}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Địa chỉ:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.roomAddress}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Diện tích:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.roomArea} m²
-            </Text>
-          </View>
+          <InfoRow label="Tên phòng" value={contract.contractInfo.roomNumber} />
+          <InfoRow label="Địa chỉ" value={contract.contractInfo.roomAddress} />
+          <InfoRow
+            label="Diện tích"
+            value={`${contract.contractInfo.roomArea} m²`}
+          />
         </View>
 
         {/* Thông tin hợp đồng */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Thông tin hợp đồng</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Ngày bắt đầu:</Text>
-            <Text style={styles.value}>
-              {formatFullDate(contract.contractInfo.startDate)}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Ngày kết thúc:</Text>
-            <Text style={styles.value}>
-              {formatFullDate(contract.contractInfo.endDate)}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Thời hạn:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.contractTerm} tháng
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Giá thuê:</Text>
-            <Text style={styles.value}>
-              {formatCurrency(contract.contractInfo.monthlyRent)}/tháng
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Tiền đặt cọc:</Text>
-            <Text style={styles.value}>
-              {formatCurrency(contract.contractInfo.deposit)}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Số người tối đa:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.maxOccupancy} người
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Số người hiện tại:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.tenantCount} người
-            </Text>
-          </View>
+
+          <InfoRow
+            label="Ngày bắt đầu"
+            value={formatFullDate(contract.contractInfo.startDate)}
+          />
+          <InfoRow
+            label="Ngày kết thúc"
+            value={formatFullDate(contract.contractInfo.endDate)}
+          />
+          <InfoRow
+            label="Thời hạn"
+            value={`${contract.contractInfo.contractTerm} tháng`}
+          />
+          <InfoRow
+            label="Giá thuê"
+            value={`${formatCurrency(contract.contractInfo.monthlyRent)}/tháng`}
+          />
+          <InfoRow
+            label="Tiền đặt cọc"
+            value={formatCurrency(contract.contractInfo.deposit)}
+          />
+          <InfoRow
+            label="Số người tối đa"
+            value={`${contract.contractInfo.maxOccupancy} người`}
+          />
+          <InfoRow
+            label="Số người hiện tại"
+            value={`${contract.contractInfo.tenantCount} người`}
+          />
         </View>
 
         {/* Dịch vụ */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Dịch vụ</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Tiền điện:</Text>
-            <Text style={styles.value}>
-              {formatCurrency(contract.contractInfo.serviceFees.electricity)}/
-              {contract.contractInfo.serviceFeeConfig.electricity === 'perUsage'
-                ? 'số'
-                : 'phòng'}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Tiền nước:</Text>
-            <Text style={styles.value}>
-              {formatCurrency(contract.contractInfo.serviceFees.water)}/
-              {contract.contractInfo.serviceFeeConfig.water === 'perUsage'
-                ? 'khối'
-                : 'phòng'}
-            </Text>
-          </View>
+
+          <InfoRow
+            label="Tiền điện"
+            value={`${formatCurrency(
+              contract.contractInfo.serviceFees.electricity,
+            )}/${getPriceUnitLabel(
+              contract.contractInfo.serviceFeeConfig.electricity,
+              'electricity',
+            )}`}
+          />
+
+          <InfoRow
+            label="Tiền nước"
+            value={`${formatCurrency(
+              contract.contractInfo.serviceFees.water,
+            )}/${getPriceUnitLabel(
+              contract.contractInfo.serviceFeeConfig.water,
+              'water',
+            )}`}
+          />
 
           {/* Dịch vụ tùy chọn */}
           {contract.contractInfo.customServices &&
-            contract.contractInfo.customServices.length > 0 && (
-              <>
-                {contract.contractInfo.customServices.map(service => (
-                  <View key={service._id} style={styles.infoRow}>
-                    <Text style={styles.label}>{service.name}:</Text>
-                    <Text style={styles.value}>
-                      {formatCurrency(service.price)}/
-                      {service.priceType === 'perPerson'
-                        ? 'người'
-                        : service.priceType === 'perRoom'
-                        ? 'phòng'
-                        : 'lần sử dụng'}
-                    </Text>
-                  </View>
-                ))}
-              </>
-            )}
+            contract.contractInfo.customServices.length > 0 &&
+            contract.contractInfo.customServices.map(service => (
+              <InfoRow
+                key={service._id}
+                label={service.name}
+                value={`${formatCurrency(service.price)}/${getPriceUnitLabel(
+                  service.priceType,
+                )}`}
+              />
+            ))}
         </View>
 
         {/* Nội thất */}
@@ -314,57 +628,36 @@ const ContractDetailScreen = () => {
         {/* Thông tin người thuê */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Thông tin người thuê</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Họ tên:</Text>
-            <Text style={styles.value}>{contract.contractInfo.tenantName}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Số điện thoại:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.tenantPhone}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Email:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.tenantEmail}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>CCCD:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.tenantIdentityNumber}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Địa chỉ:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.tenantAddress}
-            </Text>
-          </View>
+
+          <InfoRow label="Họ tên" value={contract.contractInfo.tenantName} />
+          <InfoRow
+            label="Số điện thoại"
+            value={contract.contractInfo.tenantPhone}
+          />
+          <InfoRow label="Email" value={contract.contractInfo.tenantEmail} />
+          <InfoRow
+            label="CCCD"
+            value={contract.contractInfo.tenantIdentityNumber}
+          />
+          <InfoRow
+            label="Địa chỉ"
+            value={contract.contractInfo.tenantAddress}
+          />
         </View>
 
         {/* Thông tin chủ trọ */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Thông tin chủ trọ</Text>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Họ tên:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.landlordName}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Số điện thoại:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.landlordPhone}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>CCCD:</Text>
-            <Text style={styles.value}>
-              {contract.contractInfo.landlordIdentityNumber}
-            </Text>
-          </View>
+
+          <InfoRow label="Họ tên" value={contract.contractInfo.landlordName} />
+          <InfoRow
+            label="Số điện thoại"
+            value={contract.contractInfo.landlordPhone}
+          />
+          <InfoRow
+            label="CCCD"
+            value={contract.contractInfo.landlordIdentityNumber}
+          />
         </View>
 
         {/* Người ở cùng */}
@@ -372,21 +665,13 @@ const ContractDetailScreen = () => {
           contract.contractInfo.coTenants.length > 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Người ở cùng</Text>
+
               {contract.contractInfo.coTenants.map((coTenant, index) => (
                 <View key={coTenant._id || index} style={styles.coTenantItem}>
-                  <View style={styles.infoRow}>
-                    <Text style={styles.label}>Tên:</Text>
-                    <Text style={styles.value}>{coTenant.username}</Text>
-                  </View>
-                  <View style={styles.infoRow}>
-                    <Text style={styles.label}>Email:</Text>
-                    <Text style={styles.value}>{coTenant.email}</Text>
-                  </View>
+                  <InfoRow label="Tên" value={coTenant.username} />
+                  <InfoRow label="Email" value={coTenant.email} />
                   {coTenant.phone && (
-                    <View style={styles.infoRow}>
-                      <Text style={styles.label}>Điện thoại:</Text>
-                      <Text style={styles.value}>{coTenant.phone}</Text>
-                    </View>
+                    <InfoRow label="Điện thoại" value={coTenant.phone} />
                   )}
                 </View>
               ))}
@@ -397,24 +682,25 @@ const ContractDetailScreen = () => {
         {contract.signedContractImages &&
           contract.signedContractImages.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Ảnh hợp đồng đã ký</Text>
-              <ScrollView
+              <ItemTitle
+                title="Ảnh hợp đồng đã ký"
+                icon={Icons.IconTrashCan}
+                onPress={handleDeleteAllImage}
+              />
+              <FlatList
+                data={contract.signedContractImages}
+                keyExtractor={(_, index) => `signed-image-${index}`}
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.imageContainer}>
-                {contract.signedContractImages.map((imageUrl, index) => (
-                  <TouchableOpacity
-                    key={`signed-image-${index}`}
-                    style={styles.imageWrapper}
-                    onPress={() => onViewImage(index)}>
-                    <Image
-                      source={{uri: imageUrl}}
-                      style={styles.contractImage}
-                      resizeMode="cover"
-                    />
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+                renderItem={({item, index}) => (
+                  <ItemImage
+                    imageUrl={item}
+                    index={index}
+                    onViewImage={onViewImage}
+                    onDelete={onDeleteOneImage}
+                  />
+                )}
+              />
             </View>
           )}
 
@@ -483,7 +769,32 @@ const ContractDetailScreen = () => {
         </TouchableOpacity>
 
         <View style={styles.bottomSpace} />
+        <ModalLoading loading={true} visible={generatingPDF} />
+        <ModalShowImageContract
+          visible={isVisibleImage}
+          images={imageList}
+          initialIndex={selectedImageIndex}
+          onClose={() => setIsVisibleImage(false)}
+        />
+        <ModalConfirmContract
+          visible={showModal}
+          onClose={() => setShowModal(false)}
+          action={action}
+          value={value}
+          setValue={setValue}
+          onSubmit={handleSubmit}
+        />
       </ScrollView>
+      {alertConfig && (
+        <CustomAlertModal
+          visible={alertVisible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          onClose={hideAlert}
+          type={alertConfig.type}
+          buttons={alertConfig.buttons}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -492,10 +803,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
-    alignItems: 'center',
   },
   scrollView: {
     flex: 1,
+    backgroundColor: Colors.backgroud,
+  },
+  scrollViewContent: {
+    paddingBottom: verticalScale(20),
+    alignItems: 'center',
   },
   statusContainer: {
     flexDirection: 'row',
@@ -503,20 +818,31 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: Colors.white,
     paddingHorizontal: scale(16),
-    paddingVertical: verticalScale(12),
-    marginTop: verticalScale(8),
+    paddingTop: verticalScale(12),
+    marginBottom: verticalScale(8),
+    width: SCREEN.width,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.white,
+    width: SCREEN.width,
+    paddingBottom: verticalScale(10),
   },
   section: {
     backgroundColor: Colors.white,
-    marginTop: verticalScale(8),
     paddingHorizontal: scale(16),
     paddingVertical: verticalScale(12),
+    width: SCREEN.width,
+    marginBottom: verticalScale(12),
   },
   sectionTitle: {
     fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(16),
     color: Colors.black,
-    marginBottom: verticalScale(8),
+    marginBottom: verticalScale(10),
+    fontWeight: '700',
   },
   infoRow: {
     flexDirection: 'row',
@@ -592,6 +918,7 @@ const styles = StyleSheet.create({
     paddingVertical: verticalScale(12),
     borderRadius: 8,
     alignItems: 'center',
+    width: SCREEN.width * 0.8,
   },
   disabledButton: {
     backgroundColor: Colors.gray,
@@ -627,16 +954,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     paddingVertical: verticalScale(8),
   },
-  imageWrapper: {
-    marginRight: scale(10),
-  },
-  contractImage: {
-    width: scale(200),
-    height: scale(280),
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.lightGray,
-  },
+
   historyItem: {
     marginBottom: verticalScale(12),
     padding: scale(10),
@@ -671,6 +989,18 @@ const styles = StyleSheet.create({
   },
   bottomSpace: {
     height: verticalScale(20),
+  },
+  textContract: {
+    fontFamily: Fonts.Roboto_Regular,
+    fontSize: responsiveFont(16),
+    color: Colors.black,
+    fontWeight: '700',
+  },
+  textCodeContract: {
+    fontFamily: Fonts.Roboto_Regular,
+    fontSize: responsiveFont(16),
+    color: Colors.black,
+    marginVertical: verticalScale(10),
   },
 });
 
