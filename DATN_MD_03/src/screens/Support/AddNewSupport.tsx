@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator,
   Alert,
   SafeAreaView,
   Image,
@@ -16,6 +15,10 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../types/route';
 import {supportService} from '../../store/services/supportService';
 import {SupportCategory, SupportPriority} from '../../types/Support';
+import {Colors} from '../../theme/color';
+import {Fonts} from '../../theme/fonts';
+import {responsiveFont, responsiveSpacing, scale} from '../../utils/responsive';
+import ItemButton from '../LoginAndRegister/components/ItemButton';
 
 type AddNewSupportScreenProps = StackNavigationProp<
   RootStackParamList,
@@ -37,6 +40,7 @@ const AddNewSupport: React.FC = () => {
     {value: 'kyThuat' as SupportCategory, label: 'Kỹ thuật'},
     {value: 'thanhToan' as SupportCategory, label: 'Thanh toán'},
     {value: 'hopDong' as SupportCategory, label: 'Hợp đồng'},
+    {value: 'goiDangKy' as SupportCategory, label: 'Gói đăng ký'},
     {value: 'khac' as SupportCategory, label: 'Khác'},
   ];
 
@@ -113,6 +117,7 @@ const AddNewSupport: React.FC = () => {
           onPress={() => navigation.goBack()}>
           <Image
             source={require('../../assets/icons/icon_arrow_back.png')}
+            style={styles.backIcon}
             resizeMode="contain"
           />
         </TouchableOpacity>
@@ -124,110 +129,118 @@ const AddNewSupport: React.FC = () => {
         style={styles.formContainer}
         contentContainerStyle={styles.formContent}
         showsVerticalScrollIndicator={false}>
+        <Text style={styles.sectionTitle}>Thông tin cần được hỗ trợ</Text>
+
         <View style={styles.formGroup}>
-          <Text style={styles.label}>Tiêu đề</Text>
           <TextInput
             style={styles.input}
-            placeholder="Nhập tiêu đề yêu cầu hỗ trợ (tối thiểu 5 ký tự)"
+            placeholder="Nhập tiêu đề yêu cầu hỗ trợ"
             value={title}
             onChangeText={setTitle}
+            placeholderTextColor={Colors.textGray}
           />
         </View>
 
+        <View style={styles.dropdownRow}>
+          <View style={styles.dropdownContainer}>
+            <TouchableOpacity
+              style={styles.dropdown}
+              onPress={() => setIsCategoryOpen(!isCategoryOpen)}>
+              <Text style={styles.dropdownText}>
+                {getCategoryLabel(category)}
+              </Text>
+              <Image
+                source={require('../../assets/icons/icon_arrowdown.png')}
+                style={styles.arrowIcon}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+            {isCategoryOpen && (
+              <View style={styles.dropdownList}>
+                {categories.map((item, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.dropdownItem,
+                      category === item.value && styles.selectedItem,
+                    ]}
+                    onPress={() => {
+                      setCategory(item.value as SupportCategory);
+                      setIsCategoryOpen(false);
+                    }}>
+                    <Text
+                      style={[
+                        styles.dropdownItemText,
+                        category === item.value && styles.selectedItemText,
+                      ]}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+
+          <View style={styles.dropdownContainer}>
+            <TouchableOpacity
+              style={styles.dropdown}
+              onPress={() => setIsPriorityOpen(!isPriorityOpen)}>
+              <Text style={styles.dropdownText}>
+                {getPriorityLabel(priority)}
+              </Text>
+              <Image
+                source={require('../../assets/icons/icon_arrowdown.png')}
+                style={styles.arrowIcon}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+            {isPriorityOpen && (
+              <View style={styles.dropdownList}>
+                {priorities.map((item, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.dropdownItem,
+                      priority === item.value && styles.selectedItem,
+                    ]}
+                    onPress={() => {
+                      setPriority(item.value as SupportPriority);
+                      setIsPriorityOpen(false);
+                    }}>
+                    <Text
+                      style={[
+                        styles.dropdownItemText,
+                        priority === item.value && styles.selectedItemText,
+                      ]}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
+
+        <Text style={styles.sectionTitle}>Nội dung sự cố</Text>
+
         <View style={styles.formGroup}>
-          <Text style={styles.label}>Nội dung</Text>
           <TextInput
             style={[styles.input, styles.textArea]}
-            placeholder="Mô tả chi tiết vấn đề của bạn (tối thiểu 10 ký tự)"
+            placeholder="Mô tả"
             value={content}
             onChangeText={setContent}
             multiline
-            numberOfLines={5}
+            numberOfLines={8}
             textAlignVertical="top"
+            placeholderTextColor={Colors.textGray}
           />
         </View>
-
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Danh mục</Text>
-          <TouchableOpacity
-            style={styles.dropdown}
-            onPress={() => setIsCategoryOpen(!isCategoryOpen)}>
-            <Text style={styles.dropdownText}>
-              {getCategoryLabel(category)}
-            </Text>
-          </TouchableOpacity>
-          {isCategoryOpen && (
-            <View style={styles.dropdownList}>
-              {categories.map((item, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.dropdownItem,
-                    category === item.value && styles.selectedItem,
-                  ]}
-                  onPress={() => {
-                    setCategory(item.value as SupportCategory);
-                    setIsCategoryOpen(false);
-                  }}>
-                  <Text
-                    style={[
-                      styles.dropdownItemText,
-                      category === item.value && styles.selectedItemText,
-                    ]}>
-                    {item.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Mức độ ưu tiên</Text>
-          <TouchableOpacity
-            style={styles.dropdown}
-            onPress={() => setIsPriorityOpen(!isPriorityOpen)}>
-            <Text style={styles.dropdownText}>
-              {getPriorityLabel(priority)}
-            </Text>
-          </TouchableOpacity>
-          {isPriorityOpen && (
-            <View style={styles.dropdownList}>
-              {priorities.map((item, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.dropdownItem,
-                    priority === item.value && styles.selectedItem,
-                  ]}
-                  onPress={() => {
-                    setPriority(item.value as SupportPriority);
-                    setIsPriorityOpen(false);
-                  }}>
-                  <Text
-                    style={[
-                      styles.dropdownItemText,
-                      priority === item.value && styles.selectedItemText,
-                    ]}>
-                    {item.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
-
-        <TouchableOpacity
-          style={styles.submitButton}
-          onPress={handleSubmit}
-          disabled={isLoading}>
-          {isLoading ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text style={styles.submitButtonText}>Gửi yêu cầu</Text>
-          )}
-        </TouchableOpacity>
       </ScrollView>
+
+      {/* Bottom Button Container */}
+      <View style={styles.bottomBar}>
+        <ItemButton onPress={handleSubmit} loading={isLoading} />
+      </View>
     </SafeAreaView>
   );
 };
@@ -235,110 +248,144 @@ const AddNewSupport: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    marginTop: 25,
+    backgroundColor: Colors.backgroud,
+    paddingTop: responsiveSpacing(5),
   },
   header: {
-    height: 56,
+    height: scale(50),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'white',
-    paddingHorizontal: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
+    backgroundColor: Colors.backgroud,
+    paddingHorizontal: responsiveSpacing(16),
+    paddingTop: responsiveSpacing(5),
   },
   backButton: {
-    padding: 10,
+    padding: responsiveSpacing(4),
+  },
+  backIcon: {
+    width: scale(24),
+    height: scale(24),
+    tintColor: Colors.black,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: responsiveFont(18),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+    flex: 1,
+    textAlign: 'center',
   },
   rightPlaceholder: {
-    width: 40,
+    width: scale(32),
   },
   formContainer: {
     flex: 1,
   },
   formContent: {
-    padding: 20,
-    paddingBottom: 40,
+    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(16),
+    paddingBottom: responsiveSpacing(80), // Giảm padding bottom vì đã có SupportButton
+  },
+  sectionTitle: {
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+    marginBottom: responsiveSpacing(12),
   },
   formGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 8,
-    color: '#333',
+    marginBottom: responsiveSpacing(16),
   },
   input: {
-    backgroundColor: 'white',
+    backgroundColor: Colors.white,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
-    padding: 12,
-    fontSize: 16,
+    borderColor: Colors.divider,
+    borderRadius: scale(24), // Bo góc nhiều hơn
+    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(12),
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.black,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   textArea: {
-    height: 120,
+    height: scale(150),
+    textAlignVertical: 'top',
+    borderRadius: scale(16),
+  },
+  dropdownRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: responsiveSpacing(12),
+    marginBottom: responsiveSpacing(16),
+  },
+  dropdownContainer: {
+    flex: 1,
   },
   dropdown: {
-    backgroundColor: 'white',
+    backgroundColor: Colors.white,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
-    padding: 12,
+    borderColor: Colors.divider,
+    borderRadius: scale(24),
+    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(12),
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  dropdownText: {
-    fontSize: 16,
-  },
-  dropdownList: {
-    backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 4,
-    marginTop: 5,
-    elevation: 3,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  dropdownText: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.black,
+    flex: 1,
+  },
+  arrowIcon: {
+    width: scale(16),
+    height: scale(16),
+    tintColor: Colors.textGray,
+  },
+  dropdownList: {
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    borderRadius: scale(8),
+    marginTop: responsiveSpacing(4),
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
   },
   dropdownItem: {
-    padding: 12,
+    paddingHorizontal: responsiveSpacing(12),
+    paddingVertical: responsiveSpacing(12),
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: Colors.divider,
   },
   selectedItem: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: Colors.lightGreenBackground,
   },
   dropdownItemText: {
-    fontSize: 16,
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.black,
   },
   selectedItemText: {
-    color: '#2196F3',
-    fontWeight: '500',
+    color: Colors.figmaGreen,
+    fontFamily: Fonts.Roboto_Bold,
   },
-  submitButton: {
-    backgroundColor: '#2196F3',
-    borderRadius: 4,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  submitButtonText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 16,
+  bottomBar: {
+    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(12),
+    backgroundColor: Colors.backgroud,
   },
 });
 

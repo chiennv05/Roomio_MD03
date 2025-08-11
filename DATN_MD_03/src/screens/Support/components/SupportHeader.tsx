@@ -46,38 +46,31 @@ const SupportHeader: React.FC<SupportHeaderProps> = ({title}) => {
 
 const styles = StyleSheet.create({
   container: {
-    height: scale(70),
+    height: scale(50), // Giảm height để gọn hơn
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.backgroud,
     paddingHorizontal: responsiveSpacing(16),
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    paddingTop: responsiveSpacing(25),
+    paddingTop: responsiveSpacing(5), // Giảm padding top
   },
   backButton: {
-    padding: responsiveSpacing(8),
-    borderRadius: scale(20),
-    backgroundColor: Colors.lightGray,
+    padding: responsiveSpacing(4),
   },
   backIcon: {
-    width: scale(20),
-    height: scale(20),
-    tintColor: Colors.darkGray,
+    width: scale(24),
+    height: scale(24),
+    tintColor: Colors.black,
   },
   title: {
-    fontSize: responsiveFont(20),
+    fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
     flex: 1,
     textAlign: 'center',
   },
   rightPlaceholder: {
-    width: scale(40),
+    width: scale(32),
   },
 });
 

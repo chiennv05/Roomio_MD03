@@ -12,11 +12,13 @@ export const Colors = {
   darkGray: '#444444',
 
   primaryGreen: '#86B600',
+  figmaGreen: '#5EB600', // Màu xanh từ Figma
+  figmaRed: '#FF383CE5', // Màu đỏ từ Figma
 
   primary: '#86B600', // Alias for primaryGreen
   success: '#5EB600', // Alias for darkGreen
   warning: '#FFC107', // Amber color
-  error: '#FF6B6B', // Alias for lightRed
+  error: '#FF383CE5', // Màu đỏ từ Figma
   info: '#2196F3', // Blue color
 
   cardBg: '#FFFFFF',

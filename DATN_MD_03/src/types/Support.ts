@@ -1,6 +1,11 @@
 export type SupportStatus = 'mo' | 'dangXuLy' | 'hoanTat';
 export type SupportPriority = 'thap' | 'trungBinh' | 'cao' | 'khanan';
-export type SupportCategory = 'kyThuat' | 'thanhToan' | 'hopDong' | 'khac';
+export type SupportCategory =
+  | 'kyThuat'
+  | 'thanhToan'
+  | 'hopDong'
+  | 'goiDangKy'
+  | 'khac';
 
 export interface SupportMessage {
   _id?: string;
@@ -16,11 +21,13 @@ export interface Support {
   content: string;
   status: SupportStatus;
   adminResponse?: string;
-  adminId?: string | {
-    _id: string;
-    username: string;
-    fullName: string;
-  };
+  adminId?:
+    | string
+    | {
+        _id: string;
+        username: string;
+        fullName: string;
+      };
   priority: SupportPriority;
   category: SupportCategory;
   messages?: SupportMessage[];

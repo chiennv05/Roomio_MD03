@@ -19,6 +19,9 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import {supportService} from '../../store/services/supportService';
 import {Support, SupportMessage} from '../../types/Support';
 
+import {Colors} from '../../theme/color';
+import {Fonts} from '../../theme/fonts';
+import {responsiveFont, responsiveSpacing} from '../../utils/responsive';
 type SupportDetailRouteParams = {
   supportId: string;
 };
@@ -67,7 +70,9 @@ const SupportDetail: React.FC = () => {
 
   // Format date
   const formatDate = (dateString?: string) => {
-    if (!dateString) {return '';}
+    if (!dateString) {
+      return '';
+    }
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN', {
       day: '2-digit',
@@ -82,13 +87,29 @@ const SupportDetail: React.FC = () => {
   const getStatusInfo = (status: string) => {
     switch (status) {
       case 'mo':
-        return {color: '#f44336', text: 'Mở'};
+        return {
+          color: Colors.figmaRed,
+          text: 'Mở',
+          bgColor: Colors.lightOrangeBackground,
+        };
       case 'dangXuLy':
-        return {color: '#ff9800', text: 'Đang xử lý'};
+        return {
+          color: Colors.warning,
+          text: 'Đang xử lý',
+          bgColor: Colors.lightYellowBackground,
+        };
       case 'hoanTat':
-        return {color: '#4caf50', text: 'Hoàn tất'};
+        return {
+          color: Colors.figmaGreen,
+          text: 'Hoàn tất',
+          bgColor: Colors.lightGreenBackground,
+        };
       default:
-        return {color: '#9e9e9e', text: 'Không xác định'};
+        return {
+          color: Colors.ashGray,
+          text: 'Không xác định',
+          bgColor: Colors.lightGray,
+        };
     }
   };
 
@@ -112,15 +133,13 @@ const SupportDetail: React.FC = () => {
   const getPriorityInfo = (priority: string) => {
     switch (priority) {
       case 'thap':
-        return {color: '#4caf50', text: 'Thấp'};
+        return {color: Colors.figmaGreen, text: 'Thấp'};
       case 'trungBinh':
-        return {color: '#ff9800', text: 'Trung bình'};
+        return {color: Colors.warning, text: 'Trung bình'};
       case 'cao':
-        return {color: '#f44336', text: 'Cao'};
-      case 'khanan':
-        return {color: '#d32f2f', text: 'Khẩn cấp'};
+        return {color: Colors.figmaRed, text: 'Cao'};
       default:
-        return {color: '#9e9e9e', text: 'Không xác định'};
+        return {color: Colors.ashGray, text: 'Không xác định'};
     }
   };
 
@@ -354,8 +373,8 @@ const SupportDetail: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    marginTop: 5,
+    backgroundColor: Colors.backgroud,
+    marginTop: responsiveSpacing(5),
   },
   loadingContainer: {
     flex: 1,
@@ -396,50 +415,45 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'white',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    paddingTop: 30,
+    backgroundColor: Colors.backgroud,
+    paddingVertical: responsiveSpacing(12),
+    paddingHorizontal: responsiveSpacing(16),
+    paddingTop: responsiveSpacing(5),
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: responsiveFont(18),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
   },
   backIcon: {
-    padding: 5,
+    padding: responsiveSpacing(4),
   },
   headerRight: {
     width: 32,
   },
   content: {
     flex: 1,
-    padding: 16,
+    padding: responsiveSpacing(16),
   },
   contentContainer: {
-    paddingBottom: 20,
+    paddingBottom: responsiveSpacing(20),
   },
   card: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: responsiveSpacing(16),
+    marginBottom: responsiveSpacing(12),
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 2,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 16,
+    fontSize: responsiveFont(18),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+    marginBottom: responsiveSpacing(12),
   },
   infoRow: {
     flexDirection: 'row',
@@ -450,52 +464,54 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   infoLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
+    fontSize: responsiveFont(12),
+    color: Colors.textGray,
+    marginBottom: responsiveSpacing(4),
   },
   infoValue: {
-    fontSize: 15,
-    color: '#333',
-    fontWeight: '500',
+    fontSize: responsiveFont(14),
+    color: Colors.black,
+    fontFamily: Fonts.Roboto_Bold,
   },
   statusContainer: {
     borderWidth: 1,
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    borderRadius: 12,
+    paddingHorizontal: responsiveSpacing(10),
+    paddingVertical: responsiveSpacing(6),
     alignSelf: 'flex-start',
+    backgroundColor: '#fff',
   },
   statusText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Bold,
   },
   priorityContainer: {
     borderWidth: 1,
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    borderRadius: 12,
+    paddingHorizontal: responsiveSpacing(10),
+    paddingVertical: responsiveSpacing(6),
     alignSelf: 'flex-start',
+    backgroundColor: '#fff',
   },
   priorityText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Bold,
   },
   contentSection: {
-    marginTop: 16,
+    marginTop: responsiveSpacing(16),
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+    marginBottom: responsiveSpacing(8),
   },
   contentBox: {
-    backgroundColor: '#f9f9f9',
-    borderRadius: 4,
-    padding: 12,
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: responsiveSpacing(12),
     borderWidth: 1,
-    borderColor: '#eeeeee',
+    borderColor: Colors.divider,
   },
   responseBox: {
     backgroundColor: '#e8f5e9',
@@ -510,9 +526,9 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   messageContainer: {
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 10,
+    borderRadius: 16,
+    padding: responsiveSpacing(10),
+    marginBottom: responsiveSpacing(8),
     borderWidth: 1,
     maxWidth: '85%',
   },
@@ -545,46 +561,46 @@ const styles = StyleSheet.create({
   adminMessage: {
     backgroundColor: '#e3f2fd',
     borderColor: '#bbdefb',
-    alignSelf: 'flex-start', // Admin bên trái
+    alignSelf: 'flex-start',
   },
   userMessage: {
     backgroundColor: '#f1f8e9',
     borderColor: '#dcedc8',
-    alignSelf: 'flex-end', // Khách hàng bên phải
+    alignSelf: 'flex-end',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    backgroundColor: 'white',
+    padding: responsiveSpacing(12),
+    backgroundColor: Colors.white,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: Colors.divider,
   },
   messageInput: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
+    backgroundColor: Colors.backgroud,
+    borderRadius: 24,
+    paddingHorizontal: responsiveSpacing(12),
+    paddingVertical: responsiveSpacing(8),
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: Colors.divider,
     maxHeight: 100,
   },
   sendButton: {
-    backgroundColor: '#2196F3',
-    borderRadius: 20,
-    width: 60,
+    backgroundColor: Colors.figmaGreen,
+    borderRadius: 24,
+    paddingHorizontal: responsiveSpacing(16),
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 8,
+    marginLeft: responsiveSpacing(8),
   },
   sendText: {
-    color: 'white',
-    fontWeight: '600',
+    color: Colors.white,
+    fontFamily: Fonts.Roboto_Bold,
   },
   disabledButton: {
-    backgroundColor: '#bdbdbd',
+    backgroundColor: Colors.gray150,
   },
   completedMessageContainer: {
     padding: 16,

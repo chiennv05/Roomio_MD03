@@ -27,7 +27,7 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
     switch (status) {
       case 'mo':
         return {
-          color: Colors.error,
+          color: Colors.figmaRed,
           text: 'Mở',
           bgColor: Colors.lightOrangeBackground,
         };
@@ -39,7 +39,7 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
         };
       case 'hoanTat':
         return {
-          color: Colors.success,
+          color: Colors.figmaGreen,
           text: 'Hoàn tất',
           bgColor: Colors.lightGreenBackground,
         };
@@ -70,7 +70,9 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
 
   // Format date
   const formatDate = (dateString?: string) => {
-    if (!dateString) {return '';}
+    if (!dateString) {
+      return '';
+    }
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN', {
       day: '2-digit',
@@ -102,68 +104,51 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
       onPress={() => onPress(item)}
       activeOpacity={0.7}>
       <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={2}>
-          {item.title}
-        </Text>
+        <View style={styles.headerRow}>
+          <Text style={styles.title} numberOfLines={1}>
+            {item.title}
+          </Text>
+          <View
+            style={[styles.statusBadge, {backgroundColor: statusInfo.color}]}>
+            <Text style={styles.statusBadgeText}>{statusInfo.text}</Text>
+          </View>
+        </View>
 
-        <View style={styles.infoRow}>
-          <View style={styles.categoryContainer}>
-            <Text style={styles.categoryText}>
+        {/* Hiển thị nội dung mô tả */}
+        {item.description && (
+          <Text style={styles.description} numberOfLines={2}>
+            {item.description}
+          </Text>
+        )}
+
+        <View style={styles.bottomRow}>
+          <View style={styles.metaInfo}>
+            <Text style={styles.dateText}>{formatDate(item.createdAt)}</Text>
+            <Text style={styles.categoryLabel}>
               {getCategoryText(item.category)}
             </Text>
           </View>
-
-          <View style={styles.dateContainer}>
-            <Text style={styles.dateText}>{formatDate(item.createdAt)}</Text>
-          </View>
         </View>
 
-        <View style={styles.actionsRow}>
-          <View
-            style={[
-              styles.statusContainer,
-              {
-                backgroundColor: statusInfo.bgColor,
-                borderColor: statusInfo.color,
-              },
-            ]}>
-            <Text style={[styles.statusText, {color: statusInfo.color}]}>
-              {statusInfo.text}
-            </Text>
-          </View>
+        {canModify && (
+          <View style={styles.actionsRow}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.editButton]}
+              onPress={handleEdit}
+              hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+              <Text style={styles.editButtonText}>Chỉnh sửa yêu cầu</Text>
+            </TouchableOpacity>
 
-          <View style={styles.buttonGroup}>
-            {canModify && (
+            {onDelete && (
               <TouchableOpacity
-                style={styles.actionButton}
-                onPress={handleEdit}
-                hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-                <View style={styles.editButton}>
-                  <Image
-                    source={require('../../../assets/icons/icon_edit_white.png')}
-                    style={styles.actionIcon}
-                    resizeMode="contain"
-                  />
-                </View>
-              </TouchableOpacity>
-            )}
-
-            {canModify && onDelete && (
-              <TouchableOpacity
-                style={styles.actionButton}
+                style={[styles.actionButton, styles.deleteButton]}
                 onPress={handleDelete}
                 hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-                <View style={styles.deleteButton}>
-                  <Image
-                    source={require('../../../assets/icons/icon_delete.png')}
-                    style={styles.actionIcon}
-                    resizeMode="contain"
-                  />
-                </View>
+                <Text style={styles.deleteButtonText}>Xóa yêu cầu</Text>
               </TouchableOpacity>
             )}
           </View>
-        </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -171,100 +156,96 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: Colors.white,
     borderRadius: scale(12),
     padding: responsiveSpacing(16),
-    marginBottom: responsiveSpacing(12),
-    marginHorizontal: responsiveSpacing(16),
-    elevation: 3,
+    marginBottom: responsiveSpacing(8), // Giảm margin bottom
+    marginHorizontal: responsiveSpacing(8), // Giảm margin ngang để item rộng hơn
+    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowRadius: 2,
   },
   content: {
     flex: 1,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: responsiveSpacing(8),
+  },
   title: {
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.darkGray,
-    marginBottom: responsiveSpacing(8),
+    color: Colors.black,
+    flex: 1,
+    marginRight: responsiveSpacing(8),
   },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: responsiveSpacing(8),
-  },
-  categoryContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.lightBlueBackground,
+  statusBadge: {
     paddingHorizontal: responsiveSpacing(8),
     paddingVertical: responsiveSpacing(4),
-    borderRadius: scale(6),
-  },
-  categoryText: {
-    fontSize: responsiveFont(12),
-    fontFamily: Fonts.Roboto_Regular,
-    color: Colors.info,
-  },
-  dateContainer: {
-    flexDirection: 'row',
+    borderRadius: scale(12),
+    minWidth: scale(50),
     alignItems: 'center',
+  },
+  statusBadgeText: {
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.white,
+  },
+  description: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
+    marginBottom: responsiveSpacing(8),
+    lineHeight: responsiveFont(20),
+  },
+  bottomRow: {
+    marginBottom: responsiveSpacing(12),
+  },
+  metaInfo: {
+    flexDirection: 'column',
   },
   dateText: {
     fontSize: responsiveFont(12),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.textGray,
-    marginLeft: responsiveSpacing(4),
+    marginBottom: responsiveSpacing(4),
+  },
+  categoryLabel: {
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
   },
   actionsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  statusContainer: {
-    borderWidth: 1,
-    borderRadius: scale(8),
-    paddingHorizontal: responsiveSpacing(12),
-    paddingVertical: responsiveSpacing(6),
-    alignSelf: 'flex-start',
-  },
-  statusText: {
-    fontSize: responsiveFont(12),
-    fontFamily: Fonts.Roboto_Bold,
-  },
-  buttonGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: responsiveSpacing(8),
   },
   actionButton: {
-    padding: responsiveSpacing(4),
+    flex: 1,
+    paddingVertical: responsiveSpacing(10),
+    paddingHorizontal: responsiveSpacing(12),
+    borderRadius: scale(20),
+    alignItems: 'center',
   },
   editButton: {
-    backgroundColor: Colors.info,
-    padding: responsiveSpacing(8),
-    borderRadius: scale(8),
-    marginRight: responsiveSpacing(8),
+    backgroundColor: Colors.figmaGreen,
   },
   deleteButton: {
-    backgroundColor: Colors.error,
-    padding: responsiveSpacing(8),
-    borderRadius: scale(8),
+    backgroundColor: Colors.figmaRed,
   },
-  actionIcon: {
-    width: scale(16),
-    height: scale(16),
-    tintColor: Colors.white,
+  editButtonText: {
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.white,
   },
-  arrow: {
-    marginLeft: responsiveSpacing(8),
+  deleteButtonText: {
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.white,
   },
 });
 

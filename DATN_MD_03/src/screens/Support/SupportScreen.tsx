@@ -28,7 +28,7 @@ import {
 } from '../../store/slices/supportSlice';
 import {
   SupportHeader,
-  FilterMenu,
+  FilterTabsRow,
   SupportItem,
   EmptySupport,
   Pagination,
@@ -158,47 +158,16 @@ const SupportScreen: React.FC = () => {
     {key: 'khac', label: 'Khác'},
   ];
 
-  // Render statistics bar
-  const renderStatsBar = () => (
-    <View style={styles.statsContainer}>
-      <View style={styles.statItem}>
-        <Text style={styles.statValue}>{summary.totalRequests}</Text>
-        <Text style={styles.statLabel}>Tổng số</Text>
-      </View>
-      <View style={styles.statDivider} />
-      <View style={styles.statItem}>
-        <Text style={styles.statValue}>{summary.openRequests}</Text>
-        <Text style={styles.statLabel}>Mở</Text>
-      </View>
-      <View style={styles.statDivider} />
-      <View style={styles.statItem}>
-        <Text style={styles.statValue}>{summary.processingRequests}</Text>
-        <Text style={styles.statLabel}>Đang xử lý</Text>
-      </View>
-      <View style={styles.statDivider} />
-      <View style={styles.statItem}>
-        <Text style={styles.statValue}>{summary.completedRequests}</Text>
-        <Text style={styles.statLabel}>Hoàn tất</Text>
-      </View>
-    </View>
-  );
-
   // Render the filter section
   const renderFilters = () => (
-    <View style={styles.filterContainer}>
-      <FilterMenu
-        title="Lọc theo trạng thái"
-        options={statusOptions}
-        selectedValue={statusFilter}
-        onSelect={setStatusFilter}
-      />
-      <FilterMenu
-        title="Lọc theo danh mục"
-        options={categoryOptions}
-        selectedValue={categoryFilter}
-        onSelect={setCategoryFilter}
-      />
-    </View>
+    <FilterTabsRow
+      statusOptions={statusOptions}
+      categoryOptions={categoryOptions}
+      selectedStatus={statusFilter}
+      selectedCategory={categoryFilter}
+      onSelectStatus={setStatusFilter}
+      onSelectCategory={setCategoryFilter}
+    />
   );
 
   // Render content based on loading state
@@ -250,7 +219,6 @@ const SupportScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <SupportHeader title="Yêu cầu hỗ trợ" />
-      {renderStatsBar()}
       {renderFilters()}
       <View style={styles.contentContainer}>{renderContent()}</View>
       {pagination.totalPages > 1 && (
@@ -275,13 +243,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.backgroud,
     paddingBottom: Platform.OS === 'ios' ? 0 : responsiveSpacing(16),
-    marginTop: responsiveSpacing(15),
+    paddingTop: responsiveSpacing(5), // Giảm marginTop để đẩy lên trên
   },
   contentContainer: {
     flex: 1,
   },
   listContent: {
-    padding: responsiveSpacing(16),
+    paddingHorizontal: responsiveSpacing(8), // Giảm padding ngang
+    paddingVertical: responsiveSpacing(8), // Giảm padding dọc
     paddingBottom: responsiveSpacing(100), // Tăng padding để tránh che nội dung bởi FAB
   },
   centerContainer: {
@@ -301,7 +270,7 @@ const styles = StyleSheet.create({
     marginTop: responsiveSpacing(16),
     paddingVertical: responsiveSpacing(12),
     paddingHorizontal: responsiveSpacing(20),
-    backgroundColor: Colors.primaryGreen,
+    backgroundColor: Colors.figmaGreen,
     borderRadius: scale(8),
   },
   retryButtonText: {
@@ -309,11 +278,22 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(14),
   },
+
   filterContainer: {
     backgroundColor: Colors.white,
     padding: responsiveSpacing(16),
     flexDirection: 'row',
     justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  categoryFilterContainer: {
+    backgroundColor: Colors.white,
+    paddingHorizontal: responsiveSpacing(16),
+    paddingBottom: responsiveSpacing(16),
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
@@ -328,7 +308,7 @@ const styles = StyleSheet.create({
     width: scale(56),
     height: scale(56),
     borderRadius: scale(28),
-    backgroundColor: Colors.primaryGreen,
+    backgroundColor: Colors.figmaGreen,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
@@ -336,40 +316,6 @@ const styles = StyleSheet.create({
     shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.3,
     shadowRadius: 6,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    backgroundColor: Colors.white,
-    paddingVertical: responsiveSpacing(16),
-    paddingHorizontal: responsiveSpacing(16),
-    justifyContent: 'space-between',
-    marginBottom: responsiveSpacing(8),
-    borderRadius: scale(12),
-    marginHorizontal: responsiveSpacing(16),
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  statValue: {
-    fontSize: responsiveFont(20),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.primaryGreen,
-  },
-  statLabel: {
-    fontSize: responsiveFont(12),
-    fontFamily: Fonts.Roboto_Regular,
-    color: Colors.textGray,
-    marginTop: responsiveSpacing(4),
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: Colors.divider,
   },
 });
 
