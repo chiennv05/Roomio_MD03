@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   ScrollView,
 } from 'react-native';
 import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
@@ -14,6 +13,7 @@ import { responsiveSpacing, responsiveFont, responsiveIcon } from '../../../util
 import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
 import { Icons } from '../../../assets/icons';
 import { supportService } from '../../../store/services/supportService';
+import CustomAlertModal from '../../../components/CustomAlertModal';
 
 interface SupportRequestModalProps {
   roomId?: string;
@@ -31,6 +31,21 @@ const SupportRequestModal = forwardRef<BottomSheet, SupportRequestModalProps>(({
 
   const [selectedOption, setSelectedOption] = React.useState<string>('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [alertVisible, setAlertVisible] = React.useState(false);
+  const [alertTitle, setAlertTitle] = React.useState<string | undefined>(undefined);
+  const [alertMessage, setAlertMessage] = React.useState('');
+  const [alertType, setAlertType] = React.useState<'success' | 'error' | 'warning' | 'info'>('info');
+  const [alertButtons, setAlertButtons] = React.useState<Array<{text: string; onPress: () => void; style?: 'default' | 'cancel' | 'destructive'}> | undefined>(undefined);
+
+  const openAlert = React.useCallback((opts: { title?: string; message: string; type?: 'success' | 'error' | 'warning' | 'info'; buttons?: Array<{ text: string; onPress: () => void; style?: 'default' | 'cancel' | 'destructive' }> }) => {
+    setAlertTitle(opts.title);
+    setAlertMessage(opts.message);
+    setAlertType(opts.type ?? 'info');
+    setAlertButtons(opts.buttons);
+    setAlertVisible(true);
+  }, []);
+
+  const closeAlert = React.useCallback(() => setAlertVisible(false), []);
 
   const supportOptions = useMemo(() => [
     { id: 'not_match_info', title: 'Thông tin không trùng khớp' },
@@ -45,7 +60,12 @@ const SupportRequestModal = forwardRef<BottomSheet, SupportRequestModalProps>(({
 
   const handleSubmit = useCallback(async () => {
     if (!selectedOption) {
-      Alert.alert('Thông báo', 'Vui lòng chọn một vấn đề cần hỗ trợ');
+      openAlert({
+        title: 'Thông báo',
+        message: 'Vui lòng chọn một vấn đề cần hỗ trợ',
+        type: 'warning',
+        buttons: [{ text: 'OK', onPress: closeAlert, style: 'default' }],
+      });
       return;
     }
 
@@ -74,33 +94,39 @@ const SupportRequestModal = forwardRef<BottomSheet, SupportRequestModalProps>(({
       });
 
       if ('isError' in response) {
-        Alert.alert(
-          'Lỗi',
-          response.message || 'Đã xảy ra lỗi khi gửi yêu cầu hỗ trợ',
-        );
+        openAlert({
+          title: 'Lỗi',
+          message: response.message || 'Đã xảy ra lỗi khi gửi yêu cầu hỗ trợ',
+          type: 'error',
+          buttons: [{ text: 'Đóng', onPress: closeAlert, style: 'cancel' }],
+        });
       } else {
-        Alert.alert(
-          'Thành công',
-          'Yêu cầu hỗ trợ của bạn đã được gửi thành công',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                // Reset form
-                setSelectedOption('');
-                // Đóng modal
-                (ref as React.RefObject<BottomSheet>)?.current?.close();
-              },
+        openAlert({
+          title: 'Thành công',
+          message: 'Yêu cầu hỗ trợ của bạn đã được gửi thành công',
+          type: 'success',
+          buttons: [{
+            text: 'OK',
+            onPress: () => {
+              setAlertVisible(false);
+              setSelectedOption('');
+              (ref as React.RefObject<BottomSheet>)?.current?.close();
             },
-          ]
-        );
+            style: 'default',
+          }],
+        });
       }
     } catch (error) {
-      Alert.alert('Lỗi', 'Đã xảy ra lỗi khi gửi yêu cầu hỗ trợ');
+      openAlert({
+        title: 'Lỗi',
+        message: 'Đã xảy ra lỗi khi gửi yêu cầu hỗ trợ',
+        type: 'error',
+        buttons: [{ text: 'Đóng', onPress: closeAlert, style: 'cancel' }],
+      });
     } finally {
       setIsSubmitting(false);
     }
-  }, [selectedOption, supportOptions, roomInfo, roomId, ref]);
+  }, [selectedOption, supportOptions, roomInfo, roomId, ref, openAlert, closeAlert]);
 
   const handleClose = useCallback(() => {
     (ref as React.RefObject<BottomSheet>)?.current?.close();
@@ -121,6 +147,7 @@ const SupportRequestModal = forwardRef<BottomSheet, SupportRequestModalProps>(({
   );
 
   return (
+    <>
     <BottomSheet
       ref={ref}
       index={-1}
@@ -174,6 +201,15 @@ const SupportRequestModal = forwardRef<BottomSheet, SupportRequestModalProps>(({
         </View>
       </BottomSheetView>
     </BottomSheet>
+    <CustomAlertModal
+      visible={alertVisible}
+      title={alertTitle}
+      message={alertMessage}
+      type={alertType}
+      onClose={closeAlert}
+      buttons={alertButtons}
+    />
+    </>
   );
 });
 
