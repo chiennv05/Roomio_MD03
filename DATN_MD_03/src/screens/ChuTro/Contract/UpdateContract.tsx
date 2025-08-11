@@ -129,6 +129,14 @@ export default function UpdateContract() {
       );
       return;
     }
+    if (rules.trim() === '') {
+      showError('Vui lòng nhập nội quy', 'Lỗi', true);
+      return;
+    }
+    if (additionalTerms.trim() === '') {
+      showError('Vui lòng nhập điều khoản bổ sung', 'Lỗi', true);
+      return;
+    }
 
     try {
       // 1. Cập nhật thông tin hợp đồng (dịch vụ, rules, additionalTerms)
@@ -216,7 +224,7 @@ export default function UpdateContract() {
         {
           text: 'Có',
           onPress: () => navigation.goBack(),
-          style: 'destructive',
+          style: 'cancel',
         },
       ],
     );

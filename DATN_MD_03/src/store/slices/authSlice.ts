@@ -1,6 +1,12 @@
 import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import {AuthState, LoginPayload, RegisterPayload} from '../../types';
-import {checkProfileAPI, login, register, updateProfile as updateProfileApi, logoutAPI} from '../services/authService';
+import {
+  checkProfileAPI,
+  login,
+  register,
+  updateProfile as updateProfileApi,
+  logoutAPI,
+} from '../services/authService';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import {storeUserSession} from '../services/storageService';
 import {mapApiUserToUser} from '../../utils/mapApiToUser';
@@ -30,6 +36,7 @@ export const loginUser = createAsyncThunk(
   async (data: LoginPayload, {rejectWithValue}) => {
     try {
       const res = await login(data);
+      console.log('response', res);
       if (!res?.success) throw new Error(res?.message);
 
       const {token, user} = res.data;
@@ -37,6 +44,7 @@ export const loginUser = createAsyncThunk(
       await storeUserSession(token);
       return {token, mapUser};
     } catch (err: any) {
+      console.log(err);
       return rejectWithValue(err.message || 'Đăng nhập thất bại');
     }
   },
@@ -79,14 +87,20 @@ export const checkProfile = createAsyncThunk(
 export const updateProfile = createAsyncThunk(
   'auth/updateProfile',
   async (
-    {token, data}: {token: string; data: {
-      fullName: string;
-      phone: string;
-      identityNumber: string;
-      address?: string;
-      birthDate?: string;
-    }},
-    {rejectWithValue}
+    {
+      token,
+      data,
+    }: {
+      token: string;
+      data: {
+        fullName: string;
+        phone: string;
+        identityNumber: string;
+        address?: string;
+        birthDate?: string;
+      };
+    },
+    {rejectWithValue},
   ) => {
     try {
       const user = await updateProfileApi(token, data);
@@ -94,7 +108,7 @@ export const updateProfile = createAsyncThunk(
     } catch (err: any) {
       return rejectWithValue(err.message || 'Update profile failed');
     }
-  }
+  },
 );
 
 const authSlice = createSlice({

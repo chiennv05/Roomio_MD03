@@ -1,5 +1,4 @@
 import {
-  Alert,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -64,18 +63,17 @@ export default function UpdateRoom() {
   const {item} = route.params;
   const dispatch = useDispatch<AppDispatch>();
   console.log('item room', item);
-  
 
-  const { 
-    alertConfig, 
-    visible, 
-    showAlert, 
-    hideAlert, 
-    showSuccess, 
-    showError, 
-    showConfirm 
+  const {
+    alertConfig,
+    visible,
+    showAlert,
+    hideAlert,
+    showSuccess,
+    showError,
+    showConfirm,
   } = useCustomAlert();
-  
+
   // Sử dụng hook useRoomData để quản lý state
   const {
     roomNumber,
@@ -186,7 +184,7 @@ export default function UpdateRoom() {
           console.log('Xoá ảnh thất bại');
         }
       },
-      'Xác nhận xoá'
+      'Xác nhận xoá',
     );
   };
 
@@ -222,7 +220,8 @@ export default function UpdateRoom() {
             const imageFile: ImageFile = {
               path: image.path,
               mime: image.mime || 'image/jpeg',
-              filename: image.path.split('/').pop() || `camera_${Date.now()}.jpg`,
+              filename:
+                image.path.split('/').pop() || `camera_${Date.now()}.jpg`,
             };
             onUpload([imageFile]);
           }
@@ -253,14 +252,16 @@ export default function UpdateRoom() {
             const imageFiles: ImageFile[] = result.map((img: any) => ({
               path: img.path,
               mime: img.mime || 'image/jpeg',
-              filename: img.path.split('/').pop() || `gallery_${Date.now()}.jpg`,
+              filename:
+                img.path.split('/').pop() || `gallery_${Date.now()}.jpg`,
             }));
             onUpload(imageFiles);
           } else {
             const imageFile: ImageFile = {
               path: result.path,
               mime: result.mime || 'image/jpeg',
-              filename: result.path.split('/').pop() || `gallery_${Date.now()}.jpg`,
+              filename:
+                result.path.split('/').pop() || `gallery_${Date.now()}.jpg`,
             };
             onUpload([imageFile]);
           }
@@ -303,20 +304,14 @@ export default function UpdateRoom() {
   const handleSaveModal = (item: ItemSeviceOptions) => {
     if (!item) return;
 
-    // *** SỬA: Logic xác định item mới đúng hơn ***
-    const existingItem = serviceOptionList.find(
-      service => service.id === item.id,
-    );
-    const isEditingExisting = existingItem !== undefined;
+    console.log('item', item);
 
-    // Item chỉ được coi là mới khi:
-    // 1. Đang chỉnh sửa template "khác" (value === 'khac')
-    // 2. Hoặc không có ID (item mới hoàn toàn)
-    const isCreatingNew = item.value === 'khac' || !isEditingExisting;
+    const isTemplateKhac = item.value === 'khac';
+    const isNew = isTemplateKhac || item.id === undefined || item.id === 3;
 
     const itemWithId: ItemSeviceOptions = {
       ...item,
-      id: isCreatingNew
+      id: isNew
         ? serviceOptionList.length > 0
           ? Math.max(...serviceOptionList.map(i => i.id ?? 0)) + 1
           : 1
@@ -324,8 +319,9 @@ export default function UpdateRoom() {
     };
 
     if (itemWithId.category === 'required') {
-      // Xử lý dịch vụ bắt buộc (điện, nước)
+      // *** SỬA CHÍNH TẠI ĐÂY ***
       if (itemWithId.value === 'electricity') {
+        console.log('Setting electricity price:', itemWithId.price);
         setServicePrices(prev => ({
           ...prev,
           electricity: itemWithId.price ?? 0,
@@ -335,6 +331,7 @@ export default function UpdateRoom() {
           electricity: itemWithId.priceType ?? 'perRoom',
         }));
       } else if (itemWithId.value === 'water') {
+        console.log('Setting water price:', itemWithId.price);
         setServicePrices(prev => ({...prev, water: itemWithId.price ?? 0}));
         setServicePriceConfig(prev => ({
           ...prev,
@@ -342,12 +339,20 @@ export default function UpdateRoom() {
         }));
       }
 
-      // Cập nhật item trong serviceOptionList
+      // Cập nhật serviceOptionList để hiển thị giá
       setServiceOptionList(prev =>
         prev.map(i => (i.id === itemWithId.id ? {...i, ...itemWithId} : i)),
       );
     } else {
-      // Xử lý dịch vụ tùy chọn
+      // Logic cho custom services...
+      if (isNew) {
+        setServiceOptionList(prev => [...prev, itemWithId]);
+      } else {
+        setServiceOptionList(prev =>
+          prev.map(i => (i.id === itemWithId.id ? {...i, ...itemWithId} : i)),
+        );
+      }
+
       const customService: CustomService = {
         name: itemWithId.label,
         price: itemWithId.price ?? 0,
@@ -355,30 +360,18 @@ export default function UpdateRoom() {
         description: itemWithId.description ?? '',
       };
 
-      if (isCreatingNew) {
-        // Thêm mới
-        setServiceOptionList(prev => [...prev, itemWithId]);
-        setCustomServices(prev => [...prev, customService]);
-      } else {
-        // Cập nhật item có sẵn
-        setServiceOptionList(prev =>
-          prev.map(i => (i.id === itemWithId.id ? {...i, ...itemWithId} : i)),
+      setCustomServices(prev => {
+        const existingIndex = prev.findIndex(
+          i => i.name === customService.name,
         );
-
-        // Cập nhật customServices dựa trên name cũ của item
-        setCustomServices(prev => {
-          const oldItemName = existingItem?.label || itemWithId.label;
-          const existingIndex = prev.findIndex(i => i.name === oldItemName);
-
-          if (existingIndex >= 0) {
-            const updated = [...prev];
-            updated[existingIndex] = customService;
-            return updated;
-          } else {
-            return [...prev, customService];
-          }
-        });
-      }
+        if (existingIndex >= 0) {
+          const updated = [...prev];
+          updated[existingIndex] = customService;
+          return updated;
+        } else {
+          return [...prev, customService];
+        }
+      });
     }
 
     setModalVisibleService(false);
@@ -396,7 +389,7 @@ export default function UpdateRoom() {
           prev.filter(service => service.value !== item.value),
         );
       },
-      'Xác nhận xóa'
+      'Xác nhận xóa',
     );
   };
 
@@ -498,9 +491,9 @@ export default function UpdateRoom() {
       description,
       rentPrice,
     });
-    
+
     if (!result.valid) {
-      showError(result.message, 'Lỗi');
+      showError(result.message || 'Có lỗi xảy ra', 'Lỗi');
       return;
     }
 
@@ -546,20 +539,18 @@ export default function UpdateRoom() {
       furniture: furniture,
     };
 
-    console.log('Updated room object:', JSON.stringify(updatedRoom, null, 2));
-
     try {
       // Ensure we have a valid roomId
       if (!item._id) {
         showError('Không tìm thấy ID phòng trọ', 'Lỗi');
         return;
       }
-      
+
       const res = await dispatch(
         updateLandlordRoom({
-          roomId: item._id as string, 
-          room: updatedRoom
-        })
+          roomId: item._id as string,
+          room: updatedRoom,
+        }),
       );
 
       if (updateLandlordRoom.fulfilled.match(res)) {

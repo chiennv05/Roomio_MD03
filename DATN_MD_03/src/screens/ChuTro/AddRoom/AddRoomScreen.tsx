@@ -1,5 +1,4 @@
 import {
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -51,8 +50,7 @@ import {
 } from '../../../types';
 import ModalService from './components/ModalService';
 import {validateRoomForm} from './utils/validateFromData';
-import LocationModal from './components/LocationModal';
-import {SelectedAddress} from '../../../types/Address';
+import LocationModal, {SelectedAddressNew} from './components/LocationModal';
 import {useCustomAlert} from '../../../hooks/useCustomAlrert';
 import {CustomAlertModal} from '../../../components';
 
@@ -113,7 +111,6 @@ export default function AddRoomScreen() {
     });
 
   const [customServices, setCustomServices] = useState<CustomService[]>([]);
-  console.log('hi', customServices);
   const [itemServiceEdit, setItemServiceEdit] = useState<
     ItemSeviceOptions | undefined
   >();
@@ -142,17 +139,14 @@ export default function AddRoomScreen() {
       console.log('Kết quả upload:', result);
 
       if (!result || !result.data || !result.data.photos) {
-        console.error('Kết quả API không đúng định dạng mong đợi:', result);
         showError('Không thể tải ảnh lên, vui lòng thử lại sau', 'Lỗi');
         return;
       }
 
       const uploaded = result.data.photos as ImageUploadResult[];
-      console.log('Uploaded photos:', uploaded);
 
       setImage(prev => {
         const newImages = [...prev, ...uploaded];
-        console.log('New images state:', newImages);
         const formattedPhotos = formatPhotoUrls(newImages);
         setImageArr(formattedPhotos);
         return newImages;
@@ -535,9 +529,6 @@ export default function AddRoomScreen() {
       water: servicePrices.water || 0,
     };
 
-    console.log('Final service prices before API:', finalServicePrices);
-    console.log('Service price config:', servicePriceConfig);
-
     const room: Room = {
       roomNumber: roomNumber,
       area: Number(area),
@@ -630,10 +621,10 @@ export default function AddRoomScreen() {
   const onClose = () => {
     setVisibleLocationModal(false);
   };
-  const handleSelectLocation = (item: SelectedAddress) => {
-    const fullProvinceName = item.province?.name || '';
-    const districtName = item.district?.name || '';
-    const wardName = item.ward?.name || '';
+  const handleSelectLocation = (item: SelectedAddressNew) => {
+    const fullProvinceName = item.province?.province_name || '';
+    const districtName = item.district?.district_name || '';
+    const wardName = item.ward?.ward_name || '';
     const provinceName = fullProvinceName.replace(/^Tỉnh\s|^Thành phố\s/i, '');
     // Ghép địa chỉ đầy đủ
     const fullAddress = [provinceName, districtName, wardName]

@@ -20,6 +20,8 @@ import {
   verticalScale,
   responsiveFont,
   SCREEN,
+  responsiveSpacing,
+  moderateScale,
 } from '../../../utils/responsive';
 import {Icons} from '../../../assets/icons';
 import {useDispatch, useSelector} from 'react-redux';
@@ -324,9 +326,10 @@ const ContractDetailScreen = () => {
     navigation.navigate('UpdateTenant', {
       contractId: selectedContract._id,
       existingTenants: selectedContract.contractInfo.coTenants || [],
+      maxOccupancy: selectedContract.contractInfo.maxOccupancy || 0,
     });
   };
-
+  console.log(selectedContract);
   // Hiển thị màn hình loading
   if (selectedContractLoading) {
     return (
@@ -535,7 +538,9 @@ const ContractDetailScreen = () => {
               styles.statusBadge,
               {backgroundColor: statusInfo.backgroudStatus},
             ]}>
-            <Text style={styles.statusText}>{statusInfo.label}</Text>
+            <Text style={[styles.statusText, {color: statusInfo.color}]}>
+              {statusInfo.label}
+            </Text>
           </View>
         </View>
 
@@ -737,11 +742,7 @@ const ContractDetailScreen = () => {
                     <Text style={styles.historyDate}>
                       {formatDateTime(history.date)}
                     </Text>
-                    <View
-                      style={[
-                        styles.historyStatus,
-                        {backgroundColor: statusInfo.backgroudStatus},
-                      ]}>
+                    <View style={[styles.historyStatus]}>
                       <Text
                         style={[
                           styles.historyStatusText,
@@ -887,19 +888,21 @@ const styles = StyleSheet.create({
   },
   contentText: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(14),
-    color: Colors.black,
+    fontSize: responsiveFont(16),
+    color: Colors.gray60,
     lineHeight: verticalScale(22),
+    fontWeight: '400',
   },
   statusBadge: {
-    paddingHorizontal: scale(12),
-    paddingVertical: verticalScale(4),
-    borderRadius: 12,
+    borderRadius: moderateScale(20),
   },
   statusText: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(14),
     color: Colors.white,
+    paddingHorizontal: responsiveSpacing(12),
+    paddingVertical: responsiveSpacing(8),
+    fontWeight: '500',
   },
   loadingContainer: {
     flex: 1,
@@ -937,22 +940,22 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   pdfButton: {
-    backgroundColor: Colors.darkGreen,
-    marginHorizontal: scale(16),
-    marginTop: verticalScale(16),
-    paddingVertical: verticalScale(12),
-    borderRadius: 8,
+    width: SCREEN.width * 0.9,
+    justifyContent: 'center',
     alignItems: 'center',
-    width: SCREEN.width * 0.8,
+    backgroundColor: Colors.limeGreen,
+    borderRadius: responsiveFont(50),
+    padding: responsiveSpacing(16),
+    marginTop: responsiveSpacing(16),
   },
   disabledButton: {
     backgroundColor: Colors.gray,
     opacity: 0.6,
   },
   pdfButtonText: {
-    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
     fontSize: responsiveFont(16),
-    color: Colors.white,
+    fontWeight: 'bold',
   },
   tagContainer: {
     flexDirection: 'row',
@@ -994,29 +997,30 @@ const styles = StyleSheet.create({
   },
   historyDate: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(14),
     color: Colors.textGray,
   },
   historyStatus: {
     paddingHorizontal: scale(8),
     paddingVertical: verticalScale(2),
     borderRadius: 10,
+    backgroundColor: Colors.mediumGray,
   },
   historyStatusText: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(10),
+    fontSize: responsiveFont(12),
     color: Colors.white,
   },
   historyNote: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(13),
+    fontSize: responsiveFont(14),
     color: Colors.black,
   },
   bottomSpace: {
     height: verticalScale(20),
   },
   textContract: {
-    fontFamily: Fonts.Roboto_Regular,
+    fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(16),
     color: Colors.black,
     fontWeight: '700',
@@ -1025,7 +1029,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Regular,
     fontSize: responsiveFont(16),
     color: Colors.black,
-    marginVertical: verticalScale(10),
+    marginVertical: verticalScale(12),
   },
 });
 

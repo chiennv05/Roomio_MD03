@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  ActivityIndicator,
   Image,
 } from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
@@ -28,6 +27,8 @@ import CustomAlertModal from '../../../components/CustomAlertModal';
 import {useCustomAlert} from '../../../hooks/useCustomAlrert';
 import {useAppSelector} from '../../../hooks';
 import {CoTenant} from '../../../types';
+import ItemButtonGreen from '../../../components/ItemButtonGreen';
+import ModalLoading from '../AddRoom/components/ModalLoading';
 
 interface Tenant {
   username: string;
@@ -36,14 +37,11 @@ interface Tenant {
 const UpdateTenant = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const {contractId, existingTenants} = route.params as {
+  const {contractId, existingTenants, maxOccupancy} = route.params as {
     contractId: string;
     existingTenants: CoTenant[];
+    maxOccupancy: number;
   };
-
-  console.log(route.params, 'params in UpdateTenant');
-
-  console.log(contractId);
 
   const dispatch = useDispatch<AppDispatch>();
   const {selectedContractLoading} = useAppSelector(state => state.contract);
@@ -51,7 +49,7 @@ const UpdateTenant = () => {
   const [tenants, setTenants] = useState<Tenant[]>(existingTenants || []);
   const [newUsername, setNewUsername] = useState('');
   const [loading, setLoading] = useState(false);
-
+  console.log(maxOccupancy, 'maxOccupancy');
   const {
     alertConfig,
     visible: alertVisible,
@@ -63,6 +61,7 @@ const UpdateTenant = () => {
 
   const handleAddTenant = () => {
     const username = newUsername.trim();
+
     if (!username) {
       showError('Vui lòng nhập username', 'Lỗi', true);
       return;
@@ -70,6 +69,17 @@ const UpdateTenant = () => {
 
     if (tenants.find(t => t.username === username)) {
       showError('Username này đã tồn tại trong danh sách', 'Lỗi', true);
+      return;
+    }
+
+    // Validate số lượng người thuê phụ không vượt quá giới hạn
+    const maxCoTenants = maxOccupancy - 1; // trừ người đại diện
+    if (tenants.length >= maxCoTenants) {
+      showError(
+        ` Phòng này chỉ cho phép tối đa  ${maxOccupancy} người ở`,
+        'Vượt giới hạn',
+        true,
+      );
       return;
     }
 
@@ -95,6 +105,7 @@ const UpdateTenant = () => {
                 t => t.username !== usernameToRemove,
               );
               setTenants(newList);
+              hideAlert();
             },
             style: 'destructive',
           },
@@ -105,9 +116,8 @@ const UpdateTenant = () => {
   );
 
   const handleSave = async () => {
-    console.log('nhấn vào lưu');
     const originalUsernames = existingTenants.map(t => t.username).sort();
-    console.log('danh sách người thuê gốc:', originalUsernames);
+
     const updatedUsernames = tenants.map(t => t.username).sort();
 
     const hasChanges =
@@ -115,7 +125,6 @@ const UpdateTenant = () => {
       originalUsernames.some(
         (username, index) => username !== updatedUsernames[index],
       );
-    console.log('hasChanges', hasChanges);
     if (!hasChanges) {
       showError(
         'Danh sách người thuê không thay đổi.',
@@ -137,7 +146,7 @@ const UpdateTenant = () => {
       showSuccess('Cập nhật thành công', 'Thành công', true);
       setTimeout(() => navigation.goBack(), 1000);
     } catch (err: any) {
-      showError(err?.message || 'Có lỗi xảy ra khi cập nhật', 'Lỗi', true);
+      showError(err.message || 'Có lỗi xảy ra khi cập nhật', 'Lỗi', true);
     } finally {
       setLoading(false);
     }
@@ -156,6 +165,22 @@ const UpdateTenant = () => {
       </TouchableOpacity>
     </View>
   );
+
+  const handleCancelUpdate = () => {
+    showConfirm(
+      'Bạn có chắc chắn muốn hủy cập nhật?',
+      () => navigation.goBack(),
+      'Hủy cập nhật',
+      [
+        {text: 'Không', onPress: hideAlert, style: 'cancel'},
+        {
+          text: 'Có',
+          onPress: () => navigation.goBack(),
+          style: 'cancel',
+        },
+      ],
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -193,29 +218,10 @@ const UpdateTenant = () => {
           contentContainerStyle={{paddingBottom: 16}}
         />
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, styles.cancelButton]}
-            onPress={() => navigation.goBack()}
-            disabled={loading}>
-            <Text style={styles.buttonText}>Hủy</Text>
-          </TouchableOpacity>
+        <ItemButtonGreen onPress={handleSave} title="Lưu" />
+        <ItemButtonGreen onPress={handleCancelUpdate} title="Hủy" />
 
-          <TouchableOpacity
-            style={[
-              styles.button,
-              styles.saveButton,
-              loading && styles.disabledButton,
-            ]}
-            onPress={handleSave}
-            disabled={loading}>
-            {loading ? (
-              <ActivityIndicator color={Colors.white} size="small" />
-            ) : (
-              <Text style={styles.buttonText}>Lưu</Text>
-            )}
-          </TouchableOpacity>
-        </View>
+        <ModalLoading visible={loading} loading={true} />
       </View>
 
       {alertConfig && (

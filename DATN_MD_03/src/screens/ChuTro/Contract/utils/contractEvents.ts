@@ -281,7 +281,7 @@ export const handlePickImages = (
           text: 'Thay thế toàn bộ ảnh',
           onPress: () =>
             handleGalleryUpload(contractId, dispatch, false, customAlert),
-          style: 'destructive',
+          style: 'default',
         },
         {
           text: 'Hủy',

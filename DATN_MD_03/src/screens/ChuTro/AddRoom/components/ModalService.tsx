@@ -7,12 +7,13 @@ import {
   View,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {SCREEN} from '../../../../utils/responsive';
+import {responsiveFont, SCREEN} from '../../../../utils/responsive';
 import {Colors} from '../../../../theme/color';
 import {ItemInput} from '../../MyRoom/components';
 import DropDownPicker from 'react-native-dropdown-picker';
 import {priceTypeList} from '../utils/priceType';
 import {ItemSeviceOptions} from '../utils/seviceOptions';
+import {Fonts} from '../../../../theme/fonts';
 
 interface ItemModal {
   visible: boolean;
@@ -194,16 +195,14 @@ export default function ModalService({
           {/* *** THÊM: Nút xóa (hiện khi có thể xóa) *** */}
 
           <View style={styles.buttonGroup}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel}>
+            <TouchableOpacity onPress={handleCancel}>
               <Text style={styles.cancelText}>Huỷ</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.saveBtn} onPress={handleSaveBtn}>
+            <TouchableOpacity onPress={handleSaveBtn}>
               <Text style={styles.saveText}>{isSaved ? 'Sửa' : 'Lưu'}</Text>
             </TouchableOpacity>
             {canDelete && (
-              <TouchableOpacity
-                style={styles.deleteBtn}
-                onPress={handleDeleteBtn}>
+              <TouchableOpacity onPress={handleDeleteBtn}>
                 <Text style={styles.deleteText}>Xóa dịch vụ</Text>
               </TouchableOpacity>
             )}
@@ -265,14 +264,14 @@ const styles = StyleSheet.create({
   deleteBtn: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: '#ff4444',
     borderRadius: 8,
     alignSelf: 'center',
   },
   deleteText: {
-    color: '#fff',
+    color: Colors.red,
     fontWeight: '600',
-    textAlign: 'center',
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Medium,
   },
   buttonGroup: {
     flexDirection: 'row',
@@ -280,24 +279,17 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 16,
   },
-  cancelBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: '#ddd',
-    borderRadius: 8,
-  },
-  saveBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: '#4CAF50',
-    borderRadius: 8,
-  },
+
   cancelText: {
-    color: '#333',
-    fontWeight: '500',
+    color: Colors.gray60,
+    fontWeight: '600',
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Medium,
   },
   saveText: {
-    color: '#fff',
+    color: Colors.darkGreen,
     fontWeight: '600',
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Medium,
   },
 });

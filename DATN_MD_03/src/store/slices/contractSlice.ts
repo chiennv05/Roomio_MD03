@@ -269,6 +269,7 @@ export const updateTenants = createAsyncThunk(
   ) => {
     try {
       const response = await updateTenantsApi(contractId, tenants);
+      console.log(' response  redux tenants:', response);
       if (!response.success) {
         return rejectWithValue(
           response.message || 'Không thể cập nhật người thuê',

@@ -3,7 +3,7 @@ import React, {useState} from 'react';
 import {Colors} from '../../../theme/color';
 import {ItemInput, UIHeader} from '../MyRoom/components';
 import {Icons} from '../../../assets/icons';
-import {NavigationProp, useNavigation} from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import {RootStackParamList} from '../../../types/route';
 import DatePicker from 'react-native-date-picker';
 import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
@@ -24,9 +24,10 @@ import {
 import {createNewContractThunk} from '../../../store/slices/contractSlice';
 import CustomAlertModal from '../../../components/CustomAlertModal';
 import {useCustomAlert} from '../../../hooks/useCustomAlrert';
+import {StackNavigationProp} from '@react-navigation/stack';
 
 export default function AddContractNoNotification() {
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const dispatch = useDispatch<AppDispatch>();
 
@@ -57,10 +58,13 @@ export default function AddContractNoNotification() {
     setTenantUsername('');
     setContractTerm(12);
     setStartDate('');
-    setRules('');
-    setAdditionalTerms('');
+    setRules('Hạn thu tiền quá 5 ngày sẽ bị phạt');
+    setAdditionalTerms(
+      'Không được phép sửa chữa phòng. Muốn sửa phòng phải được chủ trọ đồng ý',
+    );
     setCoTenants('');
     setStartDateObj(new Date());
+    hideAlert();
   };
 
   const handleGoBack = () => {
@@ -106,6 +110,14 @@ export default function AddContractNoNotification() {
 
     const tenantsArray = processCoTenants(cleanedCoTenants);
 
+    if (tenantsArray.includes(tenantUsername.trim())) {
+      showError(
+        'Tên người đại diện không được xuất hiện trong danh sách người cùng thuê',
+        'Lỗi',
+      );
+      return;
+    }
+
     const contractData: CreateContractPayloadWithoutNotification = {
       roomId,
       tenantUsername,
@@ -115,13 +127,12 @@ export default function AddContractNoNotification() {
       additionalTerms: cleanedAdditionalTerms,
       coTenants: tenantsArray,
     };
-
     dispatch(createNewContractThunk(contractData))
       .unwrap()
       .then(() => {
         showSuccess('Hợp đồng đã được tạo!', 'Thành công');
         clearForm();
-        navigation.navigate('ContractManagement');
+        navigation.replace('ContractManagement');
       })
       .catch((error: string) => {
         showError(error || 'Không thể tạo hợp đồng', 'Lỗi');
