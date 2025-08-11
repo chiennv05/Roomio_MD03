@@ -1,18 +1,14 @@
-import {
-  Alert,
-  Modal,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import {Modal, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React, {useEffect, useState} from 'react';
-import {SCREEN} from '../../../../utils/responsive';
+import {responsiveFont, SCREEN} from '../../../../utils/responsive';
 import {Colors} from '../../../../theme/color';
 import {ItemInput} from '../../MyRoom/components';
 import DropDownPicker from 'react-native-dropdown-picker';
 import {priceTypeList} from '../utils/priceType';
 import {ItemSeviceOptions} from '../utils/seviceOptions';
+import {Fonts} from '../../../../theme/fonts';
+import {useCustomAlert} from '../../../../hooks/useCustomAlrert';
+import {CustomAlertModal} from '../../../../components';
 
 interface ItemModal {
   visible: boolean;
@@ -35,7 +31,14 @@ export default function ModalService({
   const [priceType, setPriceType] = useState('perRoom');
   const [description, setDescription] = useState('');
   const [open, setOpen] = useState(false);
-  console.log(item);
+
+  const {
+    alertConfig,
+    visible: alertVisible,
+
+    showError,
+    hideAlert,
+  } = useCustomAlert();
 
   useEffect(() => {
     if (!item) {return;}
@@ -75,30 +78,30 @@ export default function ModalService({
     const isNew = item.label === 'Dịch vụ khác';
     const trimmedName = name.trim();
     if (!trimmedName) {
-      Alert.alert('Lỗi', 'Tên dịch vụ không được để trống');
+      showError('Tên dịch vụ không được để trống', 'Lỗi');
       return;
     }
     if (trimmedName.length > 50) {
-      Alert.alert('Lỗi', 'Tên dịch vụ không được quá 50 ký tự');
+      showError('Tên dịch vụ không được quá 50 ký tự', 'Lỗi');
       return;
     }
 
     if (price === '' || price <= 0) {
-      Alert.alert('Lỗi', 'Giá dịch vụ phải lớn hơn 0');
+      showError('Giá dịch vụ phải lớn hơn 0', 'Lỗi');
       return;
     }
 
     if (!['perRoom', 'perPerson', 'perUsage'].includes(priceType)) {
-      Alert.alert('Lỗi', 'Loại tính phí không hợp lệ');
+      showError('Loại tính phí không hợp lệ', 'Lỗi');
       return;
     }
     if (item.label === 'Dịch vụ khác') {
       if (!description.trim()) {
-        Alert.alert('Lỗi', 'Mô tả không được để trống');
+        showError('Mô tả không được để trống', 'Lỗi');
         return;
       }
       if (description.length > 200) {
-        Alert.alert('Lỗi', 'Mô tả không được vượt quá 200 ký tự');
+        showError('Mô tả không được vượt quá 200 ký tự', 'Lỗi');
         return;
       }
     }
@@ -194,21 +197,29 @@ export default function ModalService({
           {/* *** THÊM: Nút xóa (hiện khi có thể xóa) *** */}
 
           <View style={styles.buttonGroup}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel}>
+            <TouchableOpacity onPress={handleCancel}>
               <Text style={styles.cancelText}>Huỷ</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.saveBtn} onPress={handleSaveBtn}>
+            <TouchableOpacity onPress={handleSaveBtn}>
               <Text style={styles.saveText}>{isSaved ? 'Sửa' : 'Lưu'}</Text>
             </TouchableOpacity>
             {canDelete && (
-              <TouchableOpacity
-                style={styles.deleteBtn}
-                onPress={handleDeleteBtn}>
+              <TouchableOpacity onPress={handleDeleteBtn}>
                 <Text style={styles.deleteText}>Xóa dịch vụ</Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
+        {alertConfig && (
+          <CustomAlertModal
+            visible={alertVisible}
+            title={alertConfig.title}
+            message={alertConfig.message}
+            onClose={hideAlert}
+            type={alertConfig.type}
+            buttons={alertConfig.buttons}
+          />
+        )}
       </View>
     </Modal>
   );
@@ -265,14 +276,14 @@ const styles = StyleSheet.create({
   deleteBtn: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: '#ff4444',
     borderRadius: 8,
     alignSelf: 'center',
   },
   deleteText: {
-    color: '#fff',
+    color: Colors.red,
     fontWeight: '600',
-    textAlign: 'center',
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Medium,
   },
   buttonGroup: {
     flexDirection: 'row',
@@ -280,24 +291,17 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 16,
   },
-  cancelBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: '#ddd',
-    borderRadius: 8,
-  },
-  saveBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: '#4CAF50',
-    borderRadius: 8,
-  },
+
   cancelText: {
-    color: '#333',
-    fontWeight: '500',
+    color: Colors.gray60,
+    fontWeight: '600',
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Medium,
   },
   saveText: {
-    color: '#fff',
+    color: Colors.darkGreen,
     fontWeight: '600',
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Medium,
   },
 });

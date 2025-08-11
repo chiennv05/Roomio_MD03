@@ -1,3 +1,5 @@
+import {CoTenant} from './Contract';
+
 export type RootStackParamList = {
   HomeScreen: undefined;
   Login: {redirectTo?: string; roomId?: string};
@@ -62,7 +64,11 @@ export type RootStackParamList = {
   AddContractNoNotification: undefined;
   ContractLessee: undefined;
   ContractDetailLessee: {contractId: string};
-  UpdateTenant: {contractId: string; currentUsernames: string[]};
+  UpdateTenant: {
+    contractId: string;
+    existingTenants: CoTenant[];
+    maxOccupancy: number;
+  };
   CCCDResult: {
     rawData?: string;
     imageUri?: string;

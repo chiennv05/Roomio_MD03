@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, {useEffect} from 'react';
 import {
   Modal,
   View,
@@ -10,15 +10,13 @@ import {
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   withTiming,
+  withSpring,
   runOnJS,
 } from 'react-native-reanimated';
-import { Colors } from '../theme/color';
-import { Fonts } from '../theme/fonts';
-import { responsiveSpacing, responsiveFont } from '../utils/responsive';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+import {Colors} from '../theme/color';
+import {Fonts} from '../theme/fonts';
+import {responsiveSpacing, responsiveFont, SCREEN} from '../utils/responsive';
 
 interface CustomAlertModalProps {
   visible: boolean;
@@ -26,7 +24,6 @@ interface CustomAlertModalProps {
   message: string;
   onClose: () => void;
   type?: 'error' | 'success' | 'warning' | 'info';
-  buttonText?: string;
   buttons?: Array<{
     text: string;
     onPress: () => void;
@@ -40,7 +37,6 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
   message,
   onClose,
   type = 'info',
-  buttonText = 'OK',
   buttons,
 }) => {
   const opacity = useSharedValue(0);
@@ -49,134 +45,71 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
 
   useEffect(() => {
     if (visible) {
-      // Show animation
-      opacity.value = withTiming(1, { duration: 300 });
-      scale.value = withSpring(1, {
-        damping: 15,
-        stiffness: 200,
-      });
-      translateY.value = withSpring(0, {
-        damping: 15,
-        stiffness: 200,
-      });
+      opacity.value = withTiming(1, {duration: 300});
+      scale.value = withSpring(1);
+      translateY.value = withSpring(0);
     } else {
-      // Hide animation
-      opacity.value = withTiming(0, { duration: 200 });
-      scale.value = withTiming(0.3, { duration: 200 });
-      translateY.value = withTiming(50, { duration: 200 });
+      opacity.value = withTiming(0, {duration: 200});
+      scale.value = withTiming(0.3, {duration: 200});
+      translateY.value = withTiming(50, {duration: 200});
     }
-  }, [visible, opacity, scale, translateY]);
+  }, [opacity, scale, translateY, visible]);
 
-  const backdropStyle = useAnimatedStyle(() => {
-    return {
-      opacity: opacity.value,
-    };
-  });
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
 
-  const modalStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { scale: scale.value },
-        { translateY: translateY.value },
-      ],
-      opacity: opacity.value,
-    };
-  });
+  const modalStyle = useAnimatedStyle(() => ({
+    transform: [{scale: scale.value}, {translateY: translateY.value}],
+    opacity: opacity.value,
+  }));
 
   const handleClose = () => {
-    // Start close animation
-    opacity.value = withTiming(0, { duration: 200 });
-    scale.value = withTiming(0.3, { duration: 200 });
-    translateY.value = withTiming(50, { duration: 200 }, () => {
+    opacity.value = withTiming(0, {duration: 200});
+    scale.value = withTiming(0.3, {duration: 200});
+    translateY.value = withTiming(50, {duration: 200}, () => {
       runOnJS(onClose)();
     });
   };
-
-  const getTypeStyles = () => {
-    switch (type) {
-      case 'error':
-        return {
-          iconColor: '#FF4757',
-          borderColor: '#FF4757',
-          icon: '⚠️',
-        };
-      case 'success':
-        return {
-          iconColor: '#2ED573',
-          borderColor: '#2ED573',
-          icon: '✅',
-        };
-      case 'warning':
-        return {
-          iconColor: '#FFA502',
-          borderColor: '#FFA502',
-          icon: '⚠️',
-        };
-      default:
-        return {
-          iconColor: '#3742FA',
-          borderColor: '#3742FA',
-          icon: 'ℹ️',
-        };
-    }
-  };
-
-  const typeStyles = getTypeStyles();
 
   return (
     <Modal
       transparent
       visible={visible}
       animationType="none"
-      onRequestClose={handleClose}
-    >
+      onRequestClose={handleClose}>
       <Animated.View style={[styles.backdrop, backdropStyle]}>
         <TouchableOpacity
-          style={styles.backdropTouchable}
           activeOpacity={1}
-          onPress={handleClose}
-        >
+          style={styles.backdropTouchable}
+          onPress={handleClose}>
           <Animated.View style={[styles.modal, modalStyle]}>
             <TouchableOpacity activeOpacity={1}>
-              {/* Header with icon */}
-              <View style={styles.header}>
-                <View style={[styles.iconContainer, { backgroundColor: typeStyles.iconColor + '20' }]}>
-                  <Text style={styles.iconText}>{typeStyles.icon}</Text>
-                </View>
+              <View style={styles.content}>
                 <Text style={styles.title}>{title}</Text>
-              </View>
-
-              {/* Message */}
-              <View style={styles.messageContainer}>
                 <Text style={styles.message}>{message}</Text>
-              </View>
+                {buttons && buttons.length > 0 && (
+                  <View style={styles.buttonContainer}>
+                    {buttons.map((btn, idx) => (
+                      <TouchableOpacity
+                        key={idx}
+                        style={[styles.button]}
+                        onPress={btn.onPress}
+                        activeOpacity={0.8}>
+                        <Text
+                          style={[
+                            btn.style === 'cancel' && styles.cancelText,
+                            btn.style === 'default' && styles.confirmText,
+                            btn.style === 'destructive' &&
+                              styles.destructiveText,
+                          ]}>
+                          {btn.text}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
 
-              {/* Buttons */}
-              <View style={[
-                styles.buttonContainer,
-                buttons && buttons.length === 2 && styles.buttonContainerRow,
-              ]}>
-                {(buttons && buttons.length > 0
-                  ? buttons
-                  : [{ text: buttonText, onPress: handleClose }]
-                ).map((btn, idx) => (
-                  <TouchableOpacity
-                    key={idx}
-                    style={[
-                      styles.button,
-                      buttons && buttons.length === 2 && styles.buttonHalf,
-                      btn.style === 'cancel' && { backgroundColor: '#FFA502' },
-                      btn.style === 'destructive' && { backgroundColor: '#FF4757' },
-                      btn.style === 'default' && { backgroundColor: typeStyles.iconColor },
-                      !btn.style && { backgroundColor: typeStyles.iconColor },
-                      buttons && buttons.length !== 2 && { marginTop: idx > 0 ? 10 : 0 },
-                    ]}
-                    onPress={btn.onPress}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.buttonText}>{btn.text}</Text>
-                  </TouchableOpacity>
-                ))}
               </View>
             </TouchableOpacity>
           </Animated.View>
@@ -189,87 +122,70 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   backdropTouchable: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    width: '100%',
+    paddingHorizontal: responsiveSpacing(20),
+    paddingVertical: responsiveSpacing(24),
   },
   modal: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#fff',
     borderRadius: responsiveSpacing(16),
-    marginHorizontal: responsiveSpacing(24),
-    maxWidth: SCREEN_WIDTH - responsiveSpacing(48),
-    minWidth: SCREEN_WIDTH - responsiveSpacing(48),
-    shadowColor: Colors.black,
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  header: {
-    alignItems: 'center',
-    paddingTop: responsiveSpacing(24),
     paddingHorizontal: responsiveSpacing(20),
+    paddingVertical: responsiveSpacing(24),
+    width: SCREEN.width * 0.9,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 6,
   },
-  iconContainer: {
-    width: responsiveSpacing(60),
-    height: responsiveSpacing(60),
-    borderRadius: responsiveSpacing(30),
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: responsiveSpacing(16),
-  },
-  iconText: {
-    fontSize: responsiveFont(24),
+  content: {
+    width: SCREEN.width * 0.8,
   },
   title: {
     fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
-    textAlign: 'center',
-  },
-  messageContainer: {
-    paddingHorizontal: responsiveSpacing(20),
-    paddingVertical: responsiveSpacing(16),
+    marginBottom: responsiveSpacing(8),
+    textAlign: 'left',
   },
   message: {
-    fontSize: responsiveFont(15),
+    fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.darkGray,
-    textAlign: 'center',
+    textAlign: 'left',
     lineHeight: responsiveFont(22),
+    marginBottom: responsiveSpacing(20),
   },
   buttonContainer: {
-    paddingHorizontal: responsiveSpacing(20),
-    paddingBottom: responsiveSpacing(24),
-    paddingTop: responsiveSpacing(8),
-  },
-  buttonContainerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: responsiveSpacing(16),
+    justifyContent: 'flex-end',
   },
   button: {
-    paddingVertical: responsiveSpacing(14),
-    borderRadius: responsiveSpacing(12),
+    paddingVertical: responsiveSpacing(8),
+    borderRadius: responsiveSpacing(8),
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonHalf: {
-    width: '48%',
-    marginTop: 0,
-  },
-  buttonText: {
-    fontSize: responsiveFont(16),
+  cancelText: {
+    color: Colors.black,
+    fontSize: responsiveFont(15),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.white,
+  },
+  confirmText: {
+    color: Colors.success,
+    fontSize: responsiveFont(15),
+    fontFamily: Fonts.Roboto_Bold,
+  },
+  destructiveText: {
+    color: Colors.red, // hoặc 'red' nếu bạn chưa định nghĩa Colors.error
+    fontSize: responsiveFont(15),
+    fontFamily: Fonts.Roboto_Bold,
   },
 });
 

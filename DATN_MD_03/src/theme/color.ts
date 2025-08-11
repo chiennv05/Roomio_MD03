@@ -24,7 +24,7 @@ export const Colors = {
   unselectedText: '#666666',
   divider: '#F0F0F0',
   red: '#FF0000',
-  lightRed: '#FF6B6B',
+  lightRed: 'rgba(255, 56, 60, 0.9)',
   gray: '#ccc',
   colorAvata: '#b3c6ff',
   gray200: '#E0E0E0',

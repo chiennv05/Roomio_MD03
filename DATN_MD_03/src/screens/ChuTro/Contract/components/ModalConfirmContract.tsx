@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import {Colors} from '../../../../theme/color';
+import {responsiveFont, responsiveSpacing} from '../../../../utils/responsive';
+import {Fonts} from '../../../../theme/fonts';
 
 interface Props {
   visible: boolean;
@@ -50,10 +52,10 @@ const ModalConfirmContract = ({
             keyboardType={isExtend ? 'numeric' : 'default'}
           />
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+            <TouchableOpacity style={styles.button} onPress={onClose}>
               <Text style={styles.cancelText}>Hủy</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.confirmButton} onPress={onSubmit}>
+            <TouchableOpacity style={styles.button} onPress={onSubmit}>
               <Text style={styles.confirmText}>Xác nhận</Text>
             </TouchableOpacity>
           </View>
@@ -97,23 +99,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
   },
-  cancelButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    marginRight: 12,
+
+  button: {
+    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(8),
+    borderRadius: responsiveSpacing(8),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cancelText: {
-    color: Colors.gray,
-    fontWeight: '500',
-  },
-  confirmButton: {
-    backgroundColor: Colors.darkGreen,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    color: Colors.black,
+    fontSize: responsiveFont(15),
+    fontFamily: Fonts.Roboto_Bold,
   },
   confirmText: {
-    color: 'white',
-    fontWeight: '600',
+    color: Colors.success,
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Bold,
   },
 });

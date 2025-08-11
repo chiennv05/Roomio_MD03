@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
+  StatusBar,
 } from 'react-native';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -204,13 +205,16 @@ const PdfViewerScreen = () => {
   };
   return (
     <SafeAreaView style={styles.container}>
-      <UIHeader
-        title="Xem hợp đồng PDF"
-        iconLeft={Icons.IconArrowLeft}
-        onPressLeft={handleGoBack}
-        iconRight={Icons.IconDownLoad}
-        onPressRight={handleDownloadPdf}
-      />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroud} />
+      <View style={styles.headerContainer}>
+        <UIHeader
+          title="Xem hợp đồng PDF"
+          iconLeft={Icons.IconArrowLeft}
+          onPressLeft={handleGoBack}
+          iconRight={Icons.IconDownLoad}
+          onPressRight={handleDownloadPdf}
+        />
+      </View>
 
       <View style={styles.pdfContainer}>
         {isLoading && (
@@ -268,6 +272,12 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Regular,
     fontSize: responsiveFont(14),
     color: Colors.textGray,
+  },
+  headerContainer: {
+    width: '100%',
+    paddingBottom: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

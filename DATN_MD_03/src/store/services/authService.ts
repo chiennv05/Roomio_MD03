@@ -16,6 +16,13 @@ export const register = async (data: RegisterPayload) => {
 export const login = async (data: LoginPayload) => {
   try {
     const response = await api.post('/auth/login', data);
+
+    const role = response.data?.data?.user?.role;
+
+    if (role === 'admin') {
+      throw new Error('Tài khoản admin không thể đăng nhập vào ứng dụng này');
+    }
+
     return response.data;
   } catch (error: any) {
     throw {

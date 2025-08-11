@@ -34,8 +34,8 @@ const styles = StyleSheet.create({
     flex: 1,
     color: Colors.black,
     fontSize: responsiveFont(16),
-    fontFamily: Fonts.Roboto_Regular,
-    fontWeight: '600',
+    fontFamily: Fonts.Roboto_Medium,
+    fontWeight: '500',
   },
 });
 

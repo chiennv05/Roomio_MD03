@@ -5,10 +5,6 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
-  Alert,
-  View,
-  FlatList,
-  Image,
   ActivityIndicator,
 } from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
@@ -18,10 +14,7 @@ import {Contract, CustomService} from '../../../types';
 import {Colors} from '../../../theme/color';
 import {useDispatch} from 'react-redux';
 import {AppDispatch} from '../../../store';
-import {
-  updateContractFrom,
-  updateTenants,
-} from '../../../store/slices/contractSlice';
+import {updateContractFrom} from '../../../store/slices/contractSlice';
 import ServiceItem from './components/ServiceItem';
 import {ItemInput, UIHeader} from '../MyRoom/components';
 import {Icons} from '../../../assets/icons';
@@ -29,15 +22,22 @@ import {
   moderateScale,
   responsiveFont,
   responsiveSpacing,
-  responsiveIcon,
   SCREEN,
 } from '../../../utils/responsive';
 import {useAppSelector} from '../../../hooks';
 import {Fonts} from '../../../theme/fonts';
-import { useCustomAlert } from '../../../hooks/useCustomAlrert';
+import {useCustomAlert} from '../../../hooks/useCustomAlrert';
 import CustomAlertModal from '../../../components/CustomAlertModal';
 
 export default function UpdateContract() {
+  const {
+    alertConfig,
+    visible: alertVisible,
+    hideAlert,
+    showSuccess,
+    showError,
+    showConfirm,
+  } = useCustomAlert();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute();
   const {contract} = route.params as {contract: Contract};
@@ -49,10 +49,6 @@ export default function UpdateContract() {
     contract?.contractInfo?.additionalTerms || '',
   );
   const [isUpdated, setIsUpdated] = useState(false);
-  const [usernames, setUsernames] = useState<string[]>(
-    contract?.contractInfo.coTenants?.map(tenant => tenant.username) || [],
-  );
-  const [newUsername, setNewUsername] = useState('');
 
   useEffect(() => {
     if (!contract || !contract.contractInfo) {
@@ -61,7 +57,7 @@ export default function UpdateContract() {
         navigation.goBack();
       }, 1000);
     }
-  }, [contract, navigation]);
+  }, [contract, navigation, showError]);
 
   // Chỉ chứa dịch vụ có thay đổi
   const [customServices, setCustomServices] = useState<CustomService[]>([]);
@@ -124,56 +120,6 @@ export default function UpdateContract() {
     });
   };
 
-  // Tenant management functions
-  const handleAddUsername = () => {
-    if (!newUsername.trim()) {
-      showError('Vui lòng nhập username', 'Lỗi', true);
-      return;
-    }
-
-    if (usernames.includes(newUsername.trim())) {
-      showError('Username này đã tồn tại trong danh sách', 'Lỗi', true);
-      return;
-    }
-
-    setUsernames([...usernames, newUsername.trim()]);
-    setNewUsername('');
-  };
-
-  const handleRemoveUsername = (username: string) => {
-    showConfirm(
-      `Bạn có chắc chắn muốn xóa "${username}" khỏi danh sách?`,
-      () => {
-        setUsernames(usernames.filter(u => u !== username));
-      },
-      'Xác nhận xóa',
-      [
-        {text: 'Hủy', onPress: hideAlert, style: 'cancel'},
-        {
-          text: 'Xóa',
-          onPress: () => {
-            setUsernames(usernames.filter(u => u !== username));
-          },
-          style: 'destructive',
-        },
-      ]
-    );
-  };
-
-  const renderUsernameItem = ({item}: {item: string}) => (
-    <View style={styles.usernameItem}>
-      <Text style={styles.usernameText}>@{item}</Text>
-      <TouchableOpacity
-        style={styles.removeButton}
-        onPress={() => handleRemoveUsername(item)}>
-        <Image
-          source={{uri: Icons.IconDelete}}
-          style={[styles.styleIcon, {tintColor: 'red'}]}
-        />
-      </TouchableOpacity>
-    </View>
-  );
-
   const handleUpdate = async () => {
     if (!contract || !contract.contractInfo) {
       showError(
@@ -181,6 +127,14 @@ export default function UpdateContract() {
         'Lỗi',
         true,
       );
+      return;
+    }
+    if (rules.trim() === '') {
+      showError('Vui lòng nhập nội quy', 'Lỗi', true);
+      return;
+    }
+    if (additionalTerms.trim() === '') {
+      showError('Vui lòng nhập điều khoản bổ sung', 'Lỗi', true);
       return;
     }
 
@@ -234,12 +188,6 @@ export default function UpdateContract() {
         additionalTerms,
         customServices: finalList,
       };
-
-      console.log(
-        'Contract payload:',
-        JSON.stringify(contractPayload, null, 2),
-      );
-
       const contractResult = await dispatch(
         updateContractFrom({contractId: contract._id, data: contractPayload}),
       );
@@ -249,36 +197,6 @@ export default function UpdateContract() {
           (contractResult.payload as string) || 'Đã xảy ra lỗi';
         showError(`Không thể cập nhật hợp đồng: ${errorMessage}`, 'Lỗi', true);
         return;
-      }
-
-      // 2. Cập nhật danh sách người thuê nếu có thay đổi
-      const originalUsernames = (
-        contract?.contractInfo?.coTenants?.map(tenant => tenant.username) || []
-      )
-        .slice()
-        .sort();
-      const updatedUsernames = usernames.slice().sort();
-
-      const isTenantSame =
-        originalUsernames.length === updatedUsernames.length &&
-        originalUsernames.every(
-          (username, index) => username === updatedUsernames[index],
-        );
-
-      if (!isTenantSame) {
-        console.log('Updating tenants:', usernames);
-
-        const tenantResult = await dispatch(
-          updateTenants({
-            contractId: contract._id,
-            tenants: usernames,
-          }),
-        );
-
-        if (!updateTenants.fulfilled.match(tenantResult)) {
-          showError(tenantResult.payload as string, 'Lỗi', true);
-          return;
-        }
       }
 
       setIsUpdated(true);
@@ -306,21 +224,11 @@ export default function UpdateContract() {
         {
           text: 'Có',
           onPress: () => navigation.goBack(),
-          style: 'destructive',
+          style: 'cancel',
         },
-      ]
+      ],
     );
   };
-
-  const {
-    alertConfig,
-    visible: alertVisible,
-    showAlert,
-    hideAlert,
-    showSuccess,
-    showError,
-    showConfirm,
-  } = useCustomAlert();
 
   return (
     <ScrollView
@@ -331,42 +239,6 @@ export default function UpdateContract() {
         iconLeft={Icons.IconArrowLeft}
         onPressLeft={handleCancelUpdate}
       />
-
-      {/* Tenant Management Section */}
-      <Text style={styles.label}>
-        Danh sách người thuê ({usernames.length})
-      </Text>
-
-      <View style={styles.inputSection}>
-        <ItemInput
-          value={newUsername}
-          onChangeText={setNewUsername}
-          placeholder="Nhập username..."
-          width={SCREEN.width * 0.8}
-          editable={!selectedContractLoading}
-        />
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={handleAddUsername}
-          disabled={selectedContractLoading}>
-          <Image source={{uri: Icons.IconAdd}} style={styles.styleIcon} />
-        </TouchableOpacity>
-      </View>
-
-      {usernames.length > 0 ? (
-        <FlatList
-          data={usernames}
-          keyExtractor={(item, index) => `${item}_${index}`}
-          renderItem={renderUsernameItem}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContainer}
-          scrollEnabled={false}
-        />
-      ) : (
-        <Text style={styles.noServicesText}>
-          Không có người ở cùng nào . Nhập usenamer người dùng để thêm
-        </Text>
-      )}
 
       <Text style={styles.label}>Nội quy</Text>
       <TextInput
@@ -508,52 +380,4 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   // Tenant management styles
-  inputSection: {
-    flexDirection: 'row',
-    marginBottom: 20,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  addButton: {
-    backgroundColor: Colors.limeGreen,
-    width: responsiveIcon(48),
-    height: responsiveIcon(48),
-    borderRadius: responsiveIcon(48) / 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: responsiveSpacing(10),
-  },
-  listContainer: {
-    paddingBottom: 10,
-
-    width: SCREEN.width * 0.9,
-  },
-  usernameItem: {
-    backgroundColor: Colors.white,
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  usernameText: {
-    fontSize: 16,
-    color: Colors.primary,
-    fontWeight: '500',
-  },
-  removeButton: {
-    padding: 4,
-  },
-  styleIcon: {
-    width: responsiveIcon(24),
-    height: responsiveIcon(24),
-  },
 });

@@ -19,7 +19,6 @@ const ModalLoading = ({
   image,
   onPressVisible,
 }: ModalLoadingProps) => {
-  console.log(image);
   return (
     <Modal
       visible={visible}

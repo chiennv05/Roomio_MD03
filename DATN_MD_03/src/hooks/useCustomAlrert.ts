@@ -44,7 +44,11 @@ export const useCustomAlert = () => {
     setAlertConfig(null);
   };
 
-  const showSuccess = (message: string, title?: string, autoHide: boolean = true) => {
+  const showSuccess = (
+    message: string,
+    title?: string,
+    autoHide: boolean = true,
+  ) => {
     showAlert({
       title,
       message,
@@ -55,12 +59,15 @@ export const useCustomAlert = () => {
     });
   };
 
-  const showError = (message: string, title?: string, autoHide: boolean = true) => {
+  const showError = (
+    message: string,
+    title?: string,
+    autoHide: boolean = true,
+  ) => {
     showAlert({
       title,
       message,
       type: 'error',
-      buttons: [{text: 'OK', onPress: hideAlert}],
       autoHide,
       autoHideTimeout: 2000,
     });

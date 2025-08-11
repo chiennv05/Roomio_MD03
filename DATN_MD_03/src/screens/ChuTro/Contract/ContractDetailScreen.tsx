@@ -20,6 +20,8 @@ import {
   verticalScale,
   responsiveFont,
   SCREEN,
+  responsiveSpacing,
+  moderateScale,
 } from '../../../utils/responsive';
 import {Icons} from '../../../assets/icons';
 import {useDispatch, useSelector} from 'react-redux';
@@ -83,7 +85,6 @@ const ContractDetailScreen = () => {
     selectedContractError,
     uploadingImages,
   } = useSelector((state: RootState) => state.contract);
-
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [isVisibleImage, setIsVisibleImage] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -142,6 +143,7 @@ const ContractDetailScreen = () => {
       showSuccess,
       showError,
       showConfirm,
+      hideAlert,
     });
   };
 
@@ -150,7 +152,9 @@ const ContractDetailScreen = () => {
     setIsVisibleImage(true);
   };
   const handleDeleteAllImage = () => {
-    if (!selectedContract) {return;}
+    if (!selectedContract) {
+      return;
+    }
 
     const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
 
@@ -175,14 +179,19 @@ const ContractDetailScreen = () => {
         },
         {
           text: 'XÓA',
-          onPress: () => onDeleteAllImages(),
+          onPress: () => {
+            hideAlert();
+            onDeleteAllImages();
+          },
           style: 'destructive',
         },
       ],
     );
   };
   const onDeleteOneImage = (fileName: string) => {
-    if (!selectedContract) {return;}
+    if (!selectedContract) {
+      return;
+    }
 
     const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
 
@@ -195,11 +204,8 @@ const ContractDetailScreen = () => {
       return;
     }
 
-    // Lấy tên file ngắn gọn để hiển thị
-    const shortFileName = fileName.split('/').pop() || fileName;
-
     showConfirm(
-      `Bạn có chắc chắn muốn xóa ảnh "${shortFileName}" không?`,
+      'Bạn có chắc chắn muốn xóa ảnh này không?',
       () => onDeleteImage(fileName),
       'Xác nhận',
       [
@@ -210,7 +216,10 @@ const ContractDetailScreen = () => {
         },
         {
           text: 'XÓA',
-          onPress: () => onDeleteImage(fileName),
+          onPress: () => {
+            hideAlert();
+            onDeleteImage(fileName);
+          },
           style: 'destructive',
         },
       ],
@@ -219,8 +228,11 @@ const ContractDetailScreen = () => {
 
   // gia hạn hợp đồng
   const onExtendContract = () => {
-    if (!selectedContract) {return;}
-    if (selectedContract.status !== 'pending_signature') {
+    if (!selectedContract) return;
+    if (
+      selectedContract.status !== 'pending_signature' &&
+      selectedContract.status !== 'active'
+    ) {
       showError(
         'Chỉ có thể gia hạn hợp đồng ở trạng thái Chờ ký.',
         'Không thể gia hạn',
@@ -233,7 +245,9 @@ const ContractDetailScreen = () => {
   };
 
   const onTerminateContract = () => {
-    if (!selectedContract) {return;}
+    if (!selectedContract) {
+      return;
+    }
     if (selectedContract.status === 'terminated') {
       showError('Hợp đồng đã bị chấm dứt trước đó.', 'Không thể chấm dứt');
       return;
@@ -273,7 +287,9 @@ const ContractDetailScreen = () => {
   };
 
   const handleSubmit = async () => {
-    if (!selectedContract) {return;}
+    if (!selectedContract) {
+      return;
+    }
 
     try {
       if (action === 'extend') {
@@ -313,6 +329,15 @@ const ContractDetailScreen = () => {
     }
   };
 
+  const handleUpdateTenant = () => {
+    if (!selectedContract) return;
+    navigation.navigate('UpdateTenant', {
+      contractId: selectedContract._id,
+      existingTenants: selectedContract.contractInfo.coTenants || [],
+      maxOccupancy: selectedContract.contractInfo.maxOccupancy || 0,
+    });
+  };
+  console.log(selectedContract);
   // Hiển thị màn hình loading
   if (selectedContractLoading) {
     return (
@@ -328,6 +353,7 @@ const ContractDetailScreen = () => {
                 onExtend={() => {}}
                 onTerminate={() => {}}
                 onDeleteContract={() => {}}
+                onUpdateTenant={() => {}}
               />
             }
           />
@@ -355,6 +381,7 @@ const ContractDetailScreen = () => {
                 onExtend={() => {}}
                 onTerminate={() => {}}
                 onDeleteContract={() => {}}
+                onUpdateTenant={() => {}}
               />
             }
           />
@@ -388,6 +415,7 @@ const ContractDetailScreen = () => {
                 onExtend={() => {}}
                 onTerminate={() => {}}
                 onDeleteContract={() => {}}
+                onUpdateTenant={() => {}}
               />
             }
           />
@@ -500,6 +528,7 @@ const ContractDetailScreen = () => {
                 onExtend={onExtendContract}
                 onTerminate={onTerminateContract}
                 onDeleteContract={handleDeleteContract}
+                onUpdateTenant={handleUpdateTenant}
               />
             }
             color={Colors.white}
@@ -513,8 +542,13 @@ const ContractDetailScreen = () => {
             <Text style={styles.textCodeContract}>{contract._id}</Text>
           </View>
           <View
-            style={[styles.statusBadge, {backgroundColor: statusInfo.color}]}>
-            <Text style={styles.statusText}>{statusInfo.label}</Text>
+            style={[
+              styles.statusBadge,
+              {backgroundColor: statusInfo.backgroudStatus},
+            ]}>
+            <Text style={[styles.statusText, {color: statusInfo.color}]}>
+              {statusInfo.label}
+            </Text>
           </View>
         </View>
 
@@ -716,12 +750,12 @@ const ContractDetailScreen = () => {
                     <Text style={styles.historyDate}>
                       {formatDateTime(history.date)}
                     </Text>
-                    <View
-                      style={[
-                        styles.historyStatus,
-                        {backgroundColor: statusInfo.color},
-                      ]}>
-                      <Text style={styles.historyStatusText}>
+                    <View style={[styles.historyStatus]}>
+                      <Text
+                        style={[
+                          styles.historyStatusText,
+                          {color: Colors.white},
+                        ]}>
                         {statusInfo.label}
                       </Text>
                     </View>
@@ -862,19 +896,21 @@ const styles = StyleSheet.create({
   },
   contentText: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(14),
-    color: Colors.black,
+    fontSize: responsiveFont(16),
+    color: Colors.gray60,
     lineHeight: verticalScale(22),
+    fontWeight: '400',
   },
   statusBadge: {
-    paddingHorizontal: scale(12),
-    paddingVertical: verticalScale(4),
-    borderRadius: 12,
+    borderRadius: moderateScale(20),
   },
   statusText: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(14),
     color: Colors.white,
+    paddingHorizontal: responsiveSpacing(12),
+    paddingVertical: responsiveSpacing(8),
+    fontWeight: '500',
   },
   loadingContainer: {
     flex: 1,
@@ -912,22 +948,22 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   pdfButton: {
-    backgroundColor: Colors.darkGreen,
-    marginHorizontal: scale(16),
-    marginTop: verticalScale(16),
-    paddingVertical: verticalScale(12),
-    borderRadius: 8,
+    width: SCREEN.width * 0.9,
+    justifyContent: 'center',
     alignItems: 'center',
-    width: SCREEN.width * 0.8,
+    backgroundColor: Colors.limeGreen,
+    borderRadius: responsiveFont(50),
+    padding: responsiveSpacing(16),
+    marginTop: responsiveSpacing(16),
   },
   disabledButton: {
     backgroundColor: Colors.gray,
     opacity: 0.6,
   },
   pdfButtonText: {
-    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
     fontSize: responsiveFont(16),
-    color: Colors.white,
+    fontWeight: 'bold',
   },
   tagContainer: {
     flexDirection: 'row',
@@ -969,29 +1005,30 @@ const styles = StyleSheet.create({
   },
   historyDate: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(14),
     color: Colors.textGray,
   },
   historyStatus: {
     paddingHorizontal: scale(8),
     paddingVertical: verticalScale(2),
     borderRadius: 10,
+    backgroundColor: Colors.mediumGray,
   },
   historyStatusText: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(10),
+    fontSize: responsiveFont(12),
     color: Colors.white,
   },
   historyNote: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(13),
+    fontSize: responsiveFont(14),
     color: Colors.black,
   },
   bottomSpace: {
     height: verticalScale(20),
   },
   textContract: {
-    fontFamily: Fonts.Roboto_Regular,
+    fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(16),
     color: Colors.black,
     fontWeight: '700',
@@ -1000,7 +1037,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Regular,
     fontSize: responsiveFont(16),
     color: Colors.black,
-    marginVertical: verticalScale(10),
+    marginVertical: verticalScale(12),
   },
 });
 
