@@ -51,9 +51,9 @@ export const getMyContracts = async (params?: {
     const queryParams = new URLSearchParams();
 
     // Thêm tham số phân trang nếu có
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.status) queryParams.append('status', params.status);
+    if (params?.page) {queryParams.append('page', params.page.toString());}
+    if (params?.limit) {queryParams.append('limit', params.limit.toString());}
+    if (params?.status) {queryParams.append('status', params.status);}
 
     const url = `/contract/my-contracts${
       queryParams.toString() ? `?${queryParams.toString()}` : ''

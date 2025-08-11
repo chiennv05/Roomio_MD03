@@ -15,16 +15,16 @@ export interface RoomCardData {
 export const convertApiRoomToRoom = (apiRoom: ApiRoom): RoomCardData => {
   // Chuyển đổi đường dẫn tương đối thành URL đầy đủ cho hình ảnh
   const images = apiRoom.photos.map(photo => getImageUrl(photo));
-  
+
   // Format giá tiền theo định dạng Việt Nam (có dấu phẩy ngăn cách)
   const formattedPrice = `${apiRoom.rentPrice.toLocaleString('vi-VN')}đ/tháng`;
-  
+
   // Tạo chuỗi thông tin chi tiết gồm diện tích và địa chỉ
   const detail = `${apiRoom.area}m² • ${apiRoom.location.addressText}`;
-  
+
   // Tạo tiêu đề từ mô tả hoặc số phòng nếu không có mô tả
   const title = apiRoom.description || `Phòng trọ ${apiRoom.roomNumber}`;
-  
+
   return {
     image: images[0] || 'https://via.placeholder.com/300x200', // Hình đầu tiên làm hình chính
     images: images.length > 0 ? images : ['https://via.placeholder.com/300x200'], // Danh sách hình hoặc hình mặc định
@@ -59,10 +59,10 @@ export const validateRoomByFilters = (
   areaRange?: { min: number; max: number }
 ): boolean => {
   // Nếu không có filter nào được chọn, hiển thị tất cả
-  if (selectedAmenities.length === 0 && 
-      selectedFurniture.length === 0 && 
-      selectedRegions.length === 0 && 
-      !priceRange && 
+  if (selectedAmenities.length === 0 &&
+      selectedFurniture.length === 0 &&
+      selectedRegions.length === 0 &&
+      !priceRange &&
       !areaRange) {
     return true;
   }
@@ -71,7 +71,7 @@ export const validateRoomByFilters = (
   if (selectedRegions.length > 0) {
     const roomDistrict = room.location.district;
     const roomProvince = room.location.province;
-    
+
     // Kiểm tra xem phòng có thuộc khu vực được chọn không
     const isInSelectedRegion = selectedRegions.some(region => {
       // So sánh với district hoặc province của phòng
@@ -80,7 +80,7 @@ export const validateRoomByFilters = (
              region.toLowerCase().includes(roomDistrict?.toLowerCase() || '') ||
              region.toLowerCase().includes(roomProvince?.toLowerCase() || '');
     });
-    
+
     if (!isInSelectedRegion) {
       return false;
     }
@@ -102,7 +102,7 @@ export const validateRoomByFilters = (
 
   // Kiểm tra amenities - phải có TẤT CẢ amenities được chọn
   if (selectedAmenities.length > 0) {
-    const hasAllAmenities = selectedAmenities.every(amenity => 
+    const hasAllAmenities = selectedAmenities.every(amenity =>
       room.amenities.includes(amenity)
     );
     if (!hasAllAmenities) {
@@ -110,9 +110,9 @@ export const validateRoomByFilters = (
     }
   }
 
-  // Kiểm tra furniture - phải có TẤT CẢ furniture được chọn  
+  // Kiểm tra furniture - phải có TẤT CẢ furniture được chọn
   if (selectedFurniture.length > 0) {
-    const hasAllFurniture = selectedFurniture.every(furniture => 
+    const hasAllFurniture = selectedFurniture.every(furniture =>
       room.furniture.includes(furniture)
     );
     if (!hasAllFurniture) {
@@ -141,26 +141,26 @@ export const debugRoomFilter = (
   console.log(`   🔍 Required regions: [${selectedRegions.join(', ')}]`);
   console.log(`   🔍 Required amenities: [${selectedAmenities.join(', ')}]`);
   console.log(`   🔍 Required furniture: [${selectedFurniture.join(', ')}]`);
-  if (priceRange) console.log(`   🔍 Price range: ${priceRange.min.toLocaleString()} - ${priceRange.max.toLocaleString()}đ`);
-  if (areaRange) console.log(`   🔍 Area range: ${areaRange.min} - ${areaRange.max}m²`);
-  
+  if (priceRange) {console.log(`   🔍 Price range: ${priceRange.min.toLocaleString()} - ${priceRange.max.toLocaleString()}đ`);}
+  if (areaRange) {console.log(`   🔍 Area range: ${areaRange.min} - ${areaRange.max}m²`);}
+
   const regionMatch = selectedRegions.length === 0 || selectedRegions.some(region => {
     const roomDistrict = room.location.district?.toLowerCase() || '';
     const roomProvince = room.location.province?.toLowerCase() || '';
     const searchRegion = region.toLowerCase();
-    return roomDistrict.includes(searchRegion) || 
+    return roomDistrict.includes(searchRegion) ||
            roomProvince.includes(searchRegion) ||
            searchRegion.includes(roomDistrict) ||
            searchRegion.includes(roomProvince);
   });
-  
+
   const priceMatch = !priceRange || (room.rentPrice >= priceRange.min && room.rentPrice <= priceRange.max);
   const areaMatch = !areaRange || (room.area >= areaRange.min && room.area <= areaRange.max);
-  const amenitiesMatch = selectedAmenities.length === 0 || 
+  const amenitiesMatch = selectedAmenities.length === 0 ||
     selectedAmenities.every(amenity => room.amenities.includes(amenity));
-  const furnitureMatch = selectedFurniture.length === 0 || 
+  const furnitureMatch = selectedFurniture.length === 0 ||
     selectedFurniture.every(furniture => room.furniture.includes(furniture));
-  
+
   console.log(`   ✅ Region match: ${regionMatch}`);
   console.log(`   ✅ Price match: ${priceMatch}`);
   console.log(`   ✅ Area match: ${areaMatch}`);
@@ -189,15 +189,15 @@ export const formatRoomData = (room: Room) => {
  * @returns Điểm số (cao hơn = được ưu tiên hơn)
  */
 export const calculateRoomScore = (room: any): number => {
-  if (!room?.stats) return 0;
-  
+  if (!room?.stats) {return 0;}
+
   // Trọng số: yêu thích quan trọng hơn lượt xem
   const VIEW_WEIGHT = 1;
   const FAVORITE_WEIGHT = 2;
-  
+
   const viewScore = (room.stats.viewCount || 0) * VIEW_WEIGHT;
   const favoriteScore = (room.stats.favoriteCount || 0) * FAVORITE_WEIGHT;
-  
+
   return viewScore + favoriteScore;
 };
 
@@ -206,4 +206,4 @@ export const calculateRoomScore = (room: any): number => {
  */
 export const sortRoomsByScore = (rooms: any[]): any[] => {
   return [...rooms].sort((a, b) => calculateRoomScore(b) - calculateRoomScore(a));
-}; 
+};

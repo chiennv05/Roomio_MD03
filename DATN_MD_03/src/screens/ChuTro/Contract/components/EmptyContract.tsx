@@ -47,4 +47,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EmptyContract; 
+export default EmptyContract;

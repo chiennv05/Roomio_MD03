@@ -150,7 +150,7 @@ const ContractDetailScreen = () => {
     setIsVisibleImage(true);
   };
   const handleDeleteAllImage = () => {
-    if (!selectedContract) return;
+    if (!selectedContract) {return;}
 
     const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
 
@@ -182,7 +182,7 @@ const ContractDetailScreen = () => {
     );
   };
   const onDeleteOneImage = (fileName: string) => {
-    if (!selectedContract) return;
+    if (!selectedContract) {return;}
 
     const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
 
@@ -219,7 +219,7 @@ const ContractDetailScreen = () => {
 
   // gia hạn hợp đồng
   const onExtendContract = () => {
-    if (!selectedContract) return;
+    if (!selectedContract) {return;}
     if (selectedContract.status !== 'pending_signature') {
       showError(
         'Chỉ có thể gia hạn hợp đồng ở trạng thái Chờ ký.',
@@ -233,7 +233,7 @@ const ContractDetailScreen = () => {
   };
 
   const onTerminateContract = () => {
-    if (!selectedContract) return;
+    if (!selectedContract) {return;}
     if (selectedContract.status === 'terminated') {
       showError('Hợp đồng đã bị chấm dứt trước đó.', 'Không thể chấm dứt');
       return;
@@ -273,7 +273,7 @@ const ContractDetailScreen = () => {
   };
 
   const handleSubmit = async () => {
-    if (!selectedContract) return;
+    if (!selectedContract) {return;}
 
     try {
       if (action === 'extend') {

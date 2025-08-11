@@ -300,4 +300,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default ContractSelectionModal; 
+export default ContractSelectionModal;

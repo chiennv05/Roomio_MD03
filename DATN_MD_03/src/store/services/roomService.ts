@@ -27,11 +27,11 @@ export const getRooms = async (filters: RoomFilters = {}) => {
       params.append('furnitureAll', filters.furniture.join(','));
     }
     if (filters.minPrice)
-      params.append('minPrice', filters.minPrice.toString());
+      {params.append('minPrice', filters.minPrice.toString());}
     if (filters.maxPrice)
-      params.append('maxPrice', filters.maxPrice.toString());
-    if (filters.minArea) params.append('minArea', filters.minArea.toString());
-    if (filters.maxArea) params.append('maxArea', filters.maxArea.toString());
+      {params.append('maxPrice', filters.maxPrice.toString());}
+    if (filters.minArea) {params.append('minArea', filters.minArea.toString());}
+    if (filters.maxArea) {params.append('maxArea', filters.maxArea.toString());}
     if (filters.districts && filters.districts.length > 0) {
       filters.districts.forEach(district =>
         params.append('districts', district),
@@ -64,12 +64,12 @@ export const getRoomDetail = async (roomId: string, token?: string): Promise<Det
   try {
     const headers = token ? {Authorization: `Bearer ${token}`} : {};
     const response = await api.get(`/home/rooms/${roomId}`, {headers});
-    
+
     // Kiểm tra xem response có phải là error không
     if ('isError' in response && response.isError) {
       throw new Error(response.message);
     }
-    
+
     return response.data;
   } catch (error: any) {
     throw {
@@ -194,12 +194,12 @@ export const getRelatedRoomsFallback = async (
         let bLocationScore = 0;
 
         // District match: +2 điểm
-        if (aDistrict.includes(targetDistrict) || targetDistrict.includes(aDistrict)) aLocationScore += 2;
-        if (bDistrict.includes(targetDistrict) || targetDistrict.includes(bDistrict)) bLocationScore += 2;
+        if (aDistrict.includes(targetDistrict) || targetDistrict.includes(aDistrict)) {aLocationScore += 2;}
+        if (bDistrict.includes(targetDistrict) || targetDistrict.includes(bDistrict)) {bLocationScore += 2;}
 
         // Province match: +1 điểm
-        if (aProvince.includes(targetProvince) || targetProvince.includes(aProvince)) aLocationScore += 1;
-        if (bProvince.includes(targetProvince) || targetProvince.includes(bProvince)) bLocationScore += 1;
+        if (aProvince.includes(targetProvince) || targetProvince.includes(aProvince)) {aLocationScore += 1;}
+        if (bProvince.includes(targetProvince) || targetProvince.includes(bProvince)) {bLocationScore += 1;}
 
         // Tính điểm popularity (views + favorites)
         const aPopularityScore = calculateRoomScore(a);
@@ -237,14 +237,14 @@ export const getRelatedRoomsFallback = async (
 
 // Hàm tính điểm popularity cho phòng
 const calculateRoomScore = (room: any): number => {
-  if (!room?.stats) return 0;
-  
+  if (!room?.stats) {return 0;}
+
   const VIEW_WEIGHT = 1;
   const FAVORITE_WEIGHT = 2;
-  
+
   const viewScore = (room.stats.viewCount || 0) * VIEW_WEIGHT;
   const favoriteScore = (room.stats.favoriteCount || 0) * FAVORITE_WEIGHT;
-  
+
   return viewScore + favoriteScore;
 };
 
@@ -252,18 +252,18 @@ const calculateRoomScore = (room: any): number => {
 export const toggleRoomFavorite = async (roomId: string, token: string) => {
   try {
     const endpoint = `/home/room/${roomId}/toggle-favorite`;
-    
+
     const response = await api.post(endpoint, {}, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    
+
     // Kiểm tra xem response có phải là error không
     if ('isError' in response && response.isError) {
       throw new Error(response.message);
     }
-    
+
     return response.data;
   } catch (error: any) {
     throw {
@@ -318,11 +318,11 @@ export const searchRooms = async (
       );
     }
     if (filters.minPrice)
-      params.append('minPrice', filters.minPrice.toString());
+      {params.append('minPrice', filters.minPrice.toString());}
     if (filters.maxPrice)
-      params.append('maxPrice', filters.maxPrice.toString());
-    if (filters.minArea) params.append('minArea', filters.minArea.toString());
-    if (filters.maxArea) params.append('maxArea', filters.maxArea.toString());
+      {params.append('maxPrice', filters.maxPrice.toString());}
+    if (filters.minArea) {params.append('minArea', filters.minArea.toString());}
+    if (filters.maxArea) {params.append('maxArea', filters.maxArea.toString());}
     if (filters.districts && filters.districts.length > 0) {
       filters.districts.forEach(district =>
         params.append('districts', district),

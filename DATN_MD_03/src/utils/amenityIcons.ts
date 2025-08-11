@@ -16,7 +16,7 @@ export const furnitureMapping: Record<string, {label: string; icon: string}> = {
   sofa: {label: 'Sofa', icon: Icons.IconChairSelectd || DEFAULT_ICON},
   guong: {label: 'Gương', icon: Icons.IconGuongSelectd || DEFAULT_ICON},
   remCua: {label: 'Rèm cửa', icon: Icons.IconCurtainsSelectd || DEFAULT_ICON},
-  doGiaDung: {label: 'Đồ gia dụng', icon: Icons.IconDoGiaDungDefault|| DEFAULT_ICON},
+  doGiaDung: {label: 'Đồ gia dụng', icon: Icons.IconDoGiaDungDefault || DEFAULT_ICON},
   chanGaGoi: {label: 'Chăn ga gối', icon: Icons.IconBlanketSelectd || DEFAULT_ICON},
   khac: {label: 'Khác', icon: DEFAULT_ICON},
 };

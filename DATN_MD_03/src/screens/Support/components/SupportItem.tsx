@@ -4,6 +4,13 @@ import {Support} from '../../../types/Support';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../../types/route';
+import {Colors} from '../../../theme/color';
+import {Fonts} from '../../../theme/fonts';
+import {
+  responsiveFont,
+  responsiveSpacing,
+  scale,
+} from '../../../utils/responsive';
 
 interface SupportItemProps {
   item: Support;
@@ -19,13 +26,29 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
   const getStatusInfo = (status: string) => {
     switch (status) {
       case 'mo':
-        return {color: '#f44336', text: 'Mở'};
+        return {
+          color: Colors.error,
+          text: 'Mở',
+          bgColor: Colors.lightOrangeBackground,
+        };
       case 'dangXuLy':
-        return {color: '#ff9800', text: 'Đang xử lý'};
+        return {
+          color: Colors.warning,
+          text: 'Đang xử lý',
+          bgColor: Colors.lightYellowBackground,
+        };
       case 'hoanTat':
-        return {color: '#4caf50', text: 'Hoàn tất'};
+        return {
+          color: Colors.success,
+          text: 'Hoàn tất',
+          bgColor: Colors.lightGreenBackground,
+        };
       default:
-        return {color: '#9e9e9e', text: 'Không xác định'};
+        return {
+          color: Colors.textGray,
+          text: 'Không xác định',
+          bgColor: Colors.lightGray,
+        };
     }
   };
 
@@ -47,7 +70,7 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
 
   // Format date
   const formatDate = (dateString?: string) => {
-    if (!dateString) return '';
+    if (!dateString) {return '';}
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN', {
       day: '2-digit',
@@ -97,7 +120,13 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
 
         <View style={styles.actionsRow}>
           <View
-            style={[styles.statusContainer, {borderColor: statusInfo.color}]}>
+            style={[
+              styles.statusContainer,
+              {
+                backgroundColor: statusInfo.bgColor,
+                borderColor: statusInfo.color,
+              },
+            ]}>
             <Text style={[styles.statusText, {color: statusInfo.color}]}>
               {statusInfo.text}
             </Text>
@@ -109,15 +138,10 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
                 style={styles.actionButton}
                 onPress={handleEdit}
                 hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-                <View
-                  style={{
-                    backgroundColor: '#007bff',
-                    padding: 5,
-                    borderRadius: 10,
-                    marginRight: 10,
-                  }}>
+                <View style={styles.editButton}>
                   <Image
                     source={require('../../../assets/icons/icon_edit_white.png')}
+                    style={styles.actionIcon}
                     resizeMode="contain"
                   />
                 </View>
@@ -129,14 +153,10 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
                 style={styles.actionButton}
                 onPress={handleDelete}
                 hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-                <View
-                  style={{
-                    backgroundColor: 'red',
-                    padding: 5,
-                    borderRadius: 10,
-                  }}>
+                <View style={styles.deleteButton}>
                   <Image
                     source={require('../../../assets/icons/icon_delete.png')}
+                    style={styles.actionIcon}
                     resizeMode="contain"
                   />
                 </View>
@@ -154,47 +174,54 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 12,
-    elevation: 2,
+    backgroundColor: Colors.white,
+    borderRadius: scale(12),
+    padding: responsiveSpacing(16),
+    marginBottom: responsiveSpacing(12),
+    marginHorizontal: responsiveSpacing(16),
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 3,
   },
   content: {
     flex: 1,
   },
   title: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.darkGray,
+    marginBottom: responsiveSpacing(8),
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: responsiveSpacing(8),
   },
   categoryContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: Colors.lightBlueBackground,
+    paddingHorizontal: responsiveSpacing(8),
+    paddingVertical: responsiveSpacing(4),
+    borderRadius: scale(6),
   },
   categoryText: {
-    fontSize: 14,
-    color: '#555',
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.info,
   },
   dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   dateText: {
-    fontSize: 14,
-    color: '#555',
-    marginLeft: 4,
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
+    marginLeft: responsiveSpacing(4),
   },
   actionsRow: {
     flexDirection: 'row',
@@ -203,24 +230,41 @@ const styles = StyleSheet.create({
   },
   statusContainer: {
     borderWidth: 1,
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    borderRadius: scale(8),
+    paddingHorizontal: responsiveSpacing(12),
+    paddingVertical: responsiveSpacing(6),
     alignSelf: 'flex-start',
   },
   statusText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Bold,
   },
   buttonGroup: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: responsiveSpacing(8),
   },
   actionButton: {
-    padding: 4,
+    padding: responsiveSpacing(4),
+  },
+  editButton: {
+    backgroundColor: Colors.info,
+    padding: responsiveSpacing(8),
+    borderRadius: scale(8),
+    marginRight: responsiveSpacing(8),
+  },
+  deleteButton: {
+    backgroundColor: Colors.error,
+    padding: responsiveSpacing(8),
+    borderRadius: scale(8),
+  },
+  actionIcon: {
+    width: scale(16),
+    height: scale(16),
+    tintColor: Colors.white,
   },
   arrow: {
-    marginLeft: 8,
+    marginLeft: responsiveSpacing(8),
   },
 });
 

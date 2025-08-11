@@ -94,7 +94,7 @@ const ApplyTemplateModal: React.FC<ApplyTemplateModalProps> = ({
                 month: selectedMonth,
                 year: selectedYear,
                 dueDate: formattedDueDate,
-                keepReadings: keepReadings
+                keepReadings: keepReadings,
             };
 
             // Không log ra console để tránh hiển thị lỗi
@@ -177,7 +177,7 @@ const ApplyTemplateModal: React.FC<ApplyTemplateModalProps> = ({
     const formatMonthYear = (date: Date) => {
         const months = [
             'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-            'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+            'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
         ];
         return `${months[date.getMonth()]} ${date.getFullYear()}`;
     };
@@ -390,4 +390,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default ApplyTemplateModal; 
+export default ApplyTemplateModal;

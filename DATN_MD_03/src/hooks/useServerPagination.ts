@@ -32,18 +32,18 @@ export const useServerPagination = ({
   pageSize = 20,
   filters = {},
   searchQuery = '',
-  isSearchMode = false
+  isSearchMode = false,
 }: UseServerPaginationOptions): UseServerPaginationReturn => {
   const dispatch = useDispatch<AppDispatch>();
-  const { 
-    rooms, 
-    searchResults, 
-    loading, 
-    searchLoading, 
-    error, 
-    searchError, 
+  const {
+    rooms,
+    searchResults,
+    loading,
+    searchLoading,
+    error,
+    searchError,
     pagination,
-    searchPagination 
+    searchPagination,
   } = useSelector((state: RootState) => state.room);
 
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -62,7 +62,7 @@ export const useServerPagination = ({
 
   // Load more data
   const loadMore = useCallback(async () => {
-    if (!hasMore || isLoadingMore || currentLoading) return;
+    if (!hasMore || isLoadingMore || currentLoading) {return;}
 
     setIsLoadingMore(true);
     try {
@@ -70,7 +70,7 @@ export const useServerPagination = ({
         // For search, use loadMoreSearchResults
         await dispatch(loadMoreSearchResults({
           searchQuery: searchQuery.trim(),
-          filters: { ...filters, limit: pageSize }
+          filters: { ...filters, limit: pageSize },
         }));
       } else {
         // For normal rooms, use loadMoreRooms
@@ -82,14 +82,14 @@ export const useServerPagination = ({
       setIsLoadingMore(false);
     }
   }, [
-    hasMore, 
-    isLoadingMore, 
-    currentLoading, 
-    isSearchMode, 
-    searchQuery, 
-    filters, 
-    pageSize, 
-    dispatch
+    hasMore,
+    isLoadingMore,
+    currentLoading,
+    isSearchMode,
+    searchQuery,
+    filters,
+    pageSize,
+    dispatch,
   ]);
 
   // Refresh data (reload from first page)
@@ -97,7 +97,7 @@ export const useServerPagination = ({
     if (isSearchMode && searchQuery.trim()) {
       dispatch(searchRoomsAction({
         searchQuery: searchQuery.trim(),
-        filters: { ...filters, page: 1, limit: pageSize }
+        filters: { ...filters, page: 1, limit: pageSize },
       }));
     } else {
       dispatch(fetchRooms({ ...filters, page: 1, limit: pageSize }));
@@ -114,7 +114,7 @@ export const useServerPagination = ({
     if (isSearchMode && searchQuery.trim()) {
       dispatch(searchRoomsAction({
         searchQuery: searchQuery.trim(),
-        filters: { ...filters, page: 1, limit: pageSize }
+        filters: { ...filters, page: 1, limit: pageSize },
       }));
     } else if (!isSearchMode) {
       dispatch(fetchRooms({ ...filters, page: 1, limit: pageSize }));
@@ -132,6 +132,6 @@ export const useServerPagination = ({
     totalItems,
     loadMore,
     refresh,
-    reset
+    reset,
   };
-}; 
+};

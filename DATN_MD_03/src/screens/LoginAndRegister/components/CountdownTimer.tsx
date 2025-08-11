@@ -14,7 +14,7 @@ const CountdownTimer: React.FC<Props> = ({initialTime = 300}) => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (intervalRef.current) return; // tránh tạo lại interval
+    if (intervalRef.current) {return;} // tránh tạo lại interval
 
     intervalRef.current = setInterval(() => {
       setTimeLeft(prev => {

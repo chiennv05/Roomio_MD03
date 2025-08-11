@@ -21,7 +21,7 @@ import {
     completeInvoice,
     resetCompleteInvoiceState,
     markAsPaid,
-    resetMarkAsPaidState
+    resetMarkAsPaidState,
 } from '../../store/slices/billSlice';
 import { RootStackParamList } from '../../types/route';
 import { SCREEN, scale, verticalScale } from '../../utils/responsive';
@@ -49,7 +49,7 @@ const BillDetailScreen = () => {
         markAsPaidError,
         completeInvoiceLoading,
         completeInvoiceSuccess,
-        completeInvoiceError
+        completeInvoiceError,
     } = useAppSelector(state => state.bill);
     const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
     const [paymentModalVisible, setPaymentModalVisible] = useState(false);
@@ -74,16 +74,16 @@ const BillDetailScreen = () => {
     useEffect(() => {
         if (confirmPaymentSuccess) {
             Alert.alert(
-                "Thành công",
-                "Đã xác nhận thanh toán hóa đơn thành công!",
+                'Thành công',
+                'Đã xác nhận thanh toán hóa đơn thành công!',
                 [{
-                    text: "OK",
+                    text: 'OK',
                     onPress: () => {
                         // Reload invoice details after successful confirmation
                         if (token && invoiceId) {
                             dispatch(fetchInvoiceDetails({ token, invoiceId }));
                         }
-                    }
+                    },
                 }]
             );
             dispatch(resetConfirmPaymentState());
@@ -91,9 +91,9 @@ const BillDetailScreen = () => {
 
         if (confirmPaymentError) {
             Alert.alert(
-                "Lỗi",
+                'Lỗi',
                 `Không thể xác nhận thanh toán hóa đơn: ${confirmPaymentError}`,
-                [{ text: "OK" }]
+                [{ text: 'OK' }]
             );
             dispatch(resetConfirmPaymentState());
         }
@@ -103,16 +103,16 @@ const BillDetailScreen = () => {
     useEffect(() => {
         if (markAsPaidSuccess) {
             Alert.alert(
-                "Thành công",
-                "Đã thanh toán hóa đơn thành công!",
+                'Thành công',
+                'Đã thanh toán hóa đơn thành công!',
                 [{
-                    text: "OK",
+                    text: 'OK',
                     onPress: () => {
                         // Reload invoice details after successful payment
                         if (token && invoiceId) {
                             dispatch(fetchInvoiceDetails({ token, invoiceId }));
                         }
-                    }
+                    },
                 }]
             );
             dispatch(resetMarkAsPaidState());
@@ -121,9 +121,9 @@ const BillDetailScreen = () => {
 
         if (markAsPaidError) {
             Alert.alert(
-                "Lỗi",
+                'Lỗi',
                 `Không thể thanh toán hóa đơn: ${markAsPaidError}`,
-                [{ text: "OK" }]
+                [{ text: 'OK' }]
             );
             dispatch(resetMarkAsPaidState());
         }
@@ -133,18 +133,18 @@ const BillDetailScreen = () => {
     useEffect(() => {
         if (completeInvoiceSuccess) {
             Alert.alert(
-                "Thành công",
-                "Đã hoàn thành hóa đơn thành công!",
-                [{ text: "OK" }]
+                'Thành công',
+                'Đã hoàn thành hóa đơn thành công!',
+                [{ text: 'OK' }]
             );
             dispatch(resetCompleteInvoiceState());
         }
 
         if (completeInvoiceError) {
             Alert.alert(
-                "Lỗi",
+                'Lỗi',
                 `Không thể hoàn thành hóa đơn: ${completeInvoiceError}`,
-                [{ text: "OK" }]
+                [{ text: 'OK' }]
             );
             dispatch(resetCompleteInvoiceState());
         }
@@ -152,7 +152,7 @@ const BillDetailScreen = () => {
 
     // Format date function
     const formatDate = (dateString?: string) => {
-        if (!dateString) return 'N/A';
+        if (!dateString) {return 'N/A';}
         const date = new Date(dateString);
         return `${date.getDate().toString().padStart(2, '0')}/${(
             date.getMonth() + 1
@@ -163,7 +163,7 @@ const BillDetailScreen = () => {
 
     // Format period
     const formatPeriod = (period: any) => {
-        if (!period) return 'N/A';
+        if (!period) {return 'N/A';}
         if (typeof period === 'string') {
             return formatDate(period).substring(3); // Return MM/YYYY
         }
@@ -228,21 +228,21 @@ const BillDetailScreen = () => {
     // Xử lý xác nhận thanh toán
     const handleConfirmPayment = () => {
         Alert.alert(
-            "Xác nhận thanh toán",
-            "Bạn có chắc chắn muốn xác nhận hoá đơn này đã thanh toán?",
+            'Xác nhận thanh toán',
+            'Bạn có chắc chắn muốn xác nhận hoá đơn này đã thanh toán?',
             [
                 {
-                    text: "Hủy",
-                    style: "cancel"
+                    text: 'Hủy',
+                    style: 'cancel',
                 },
                 {
-                    text: "Xác nhận",
+                    text: 'Xác nhận',
                     onPress: () => {
                         if (token && invoiceId) {
                             dispatch(confirmPayment({ token, invoiceId }));
                         }
-                    }
-                }
+                    },
+                },
             ]
         );
     };
@@ -250,21 +250,21 @@ const BillDetailScreen = () => {
     // Xử lý hoàn thành hóa đơn
     const handleCompleteInvoice = () => {
         Alert.alert(
-            "Hoàn thành hóa đơn",
-            "Bạn có chắc chắn muốn đánh dấu hóa đơn này là đã hoàn thành?",
+            'Hoàn thành hóa đơn',
+            'Bạn có chắc chắn muốn đánh dấu hóa đơn này là đã hoàn thành?',
             [
                 {
-                    text: "Hủy",
-                    style: "cancel"
+                    text: 'Hủy',
+                    style: 'cancel',
                 },
                 {
-                    text: "Xác nhận",
+                    text: 'Xác nhận',
                     onPress: () => {
                         if (token && invoiceId) {
                             dispatch(completeInvoice({ token, invoiceId }));
                         }
-                    }
-                }
+                    },
+                },
             ]
         );
     };
@@ -299,7 +299,7 @@ const BillDetailScreen = () => {
     };
 
     const renderInvoiceInfo = () => {
-        if (!selectedInvoice) return null;
+        if (!selectedInvoice) {return null;}
 
         const roomInfo = selectedInvoice.contractId?.contractInfo || {};
         const tenant = selectedInvoice.tenantId;
@@ -318,14 +318,14 @@ const BillDetailScreen = () => {
             // Nếu tenantId là object có chứa thông tin
             const tenant = selectedInvoice.tenantId;
             if (tenant && typeof tenant === 'object') {
-                if (tenant.fullName) return tenant.fullName;
-                if (tenant.name) return tenant.name;
-                if (tenant.displayName) return tenant.displayName;
-                if (tenant.firstName && tenant.lastName) return `${tenant.firstName} ${tenant.lastName}`;
-                if (tenant.firstName) return tenant.firstName;
-                if (tenant.lastName) return tenant.lastName;
-                if (tenant.email) return tenant.email;
-                if (tenant.phone) return tenant.phone;
+                if (tenant.fullName) {return tenant.fullName;}
+                if (tenant.name) {return tenant.name;}
+                if (tenant.displayName) {return tenant.displayName;}
+                if (tenant.firstName && tenant.lastName) {return `${tenant.firstName} ${tenant.lastName}`;}
+                if (tenant.firstName) {return tenant.firstName;}
+                if (tenant.lastName) {return tenant.lastName;}
+                if (tenant.email) {return tenant.email;}
+                if (tenant.phone) {return tenant.phone;}
             }
 
             // Nếu tenantId là string, tham chiếu đến hợp đồng để lấy thông tin
@@ -351,9 +351,9 @@ const BillDetailScreen = () => {
 
             // Kiểm tra nếu roomId là object
             if (selectedInvoice.roomId && typeof selectedInvoice.roomId === 'object') {
-                if (selectedInvoice.roomId.roomNumber) return selectedInvoice.roomId.roomNumber;
-                if (selectedInvoice.roomId.name) return selectedInvoice.roomId.name;
-                if (selectedInvoice.roomId.title) return selectedInvoice.roomId.title;
+                if (selectedInvoice.roomId.roomNumber) {return selectedInvoice.roomId.roomNumber;}
+                if (selectedInvoice.roomId.name) {return selectedInvoice.roomId.name;}
+                if (selectedInvoice.roomId.title) {return selectedInvoice.roomId.title;}
             }
 
             // Nếu roomId là string, tham chiếu đến hợp đồng để lấy thông tin
@@ -474,7 +474,7 @@ const BillDetailScreen = () => {
     };
 
     const renderSummary = () => {
-        if (!selectedInvoice) return null;
+        if (!selectedInvoice) {return null;}
 
         return (
             <View style={styles.summarySection}>
@@ -641,7 +641,7 @@ const BillDetailScreen = () => {
 
 const styles = StyleSheet.create({
     container: {
-        
+
         flex: 1,
         backgroundColor: Colors.backgroud,
     },
@@ -935,4 +935,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default BillDetailScreen; 
+export default BillDetailScreen;

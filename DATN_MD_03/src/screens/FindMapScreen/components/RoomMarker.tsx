@@ -15,7 +15,7 @@ interface RoomMarkerProps {
 
 const RoomMarker: React.FC<RoomMarkerProps> = ({room, onPress, isSelected}) => {
   const coordinates = room.location?.coordinates?.coordinates;
-  if (!coordinates || coordinates.length !== 2) return null;
+  if (!coordinates || coordinates.length !== 2) {return null;}
 
   const [longitude, latitude] = coordinates;
 
@@ -77,4 +77,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RoomMarker; 
+export default RoomMarker;

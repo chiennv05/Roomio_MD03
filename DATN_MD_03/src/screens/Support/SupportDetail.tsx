@@ -67,7 +67,7 @@ const SupportDetail: React.FC = () => {
 
   // Format date
   const formatDate = (dateString?: string) => {
-    if (!dateString) return '';
+    if (!dateString) {return '';}
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN', {
       day: '2-digit',

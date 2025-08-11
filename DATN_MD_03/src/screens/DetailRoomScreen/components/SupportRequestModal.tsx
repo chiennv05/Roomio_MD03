@@ -58,11 +58,11 @@ const SupportRequestModal = forwardRef<BottomSheet, SupportRequestModalProps>(({
 
       // Tạo content với thông tin phòng
       let content = '';
-      
+
       if (roomInfo || roomId) {
-        if (roomInfo?.roomCode) content += `Số Phòng: ${roomInfo.roomCode}\n`;
-        if (roomInfo?.address) content += `Địa chỉ: ${roomInfo.address}\n`;
-        if (roomInfo?.ownerName) content += `Chủ Trọ: ${roomInfo.ownerName}`;
+        if (roomInfo?.roomCode) {content += `Số Phòng: ${roomInfo.roomCode}\n`;}
+        if (roomInfo?.address) {content += `Địa chỉ: ${roomInfo.address}\n`;}
+        if (roomInfo?.ownerName) {content += `Chủ Trọ: ${roomInfo.ownerName}`;}
       }
 
       // Gọi API tạo support request
@@ -90,8 +90,8 @@ const SupportRequestModal = forwardRef<BottomSheet, SupportRequestModalProps>(({
                 setSelectedOption('');
                 // Đóng modal
                 (ref as React.RefObject<BottomSheet>)?.current?.close();
-              }
-            }
+              },
+            },
           ]
         );
       }
@@ -152,7 +152,7 @@ const SupportRequestModal = forwardRef<BottomSheet, SupportRequestModalProps>(({
               <View style={styles.radioContainer}>
                 <View style={[
                   styles.radio,
-                  selectedOption === option.id && styles.radioSelected
+                  selectedOption === option.id && styles.radioSelected,
                 ]}>
                   {selectedOption === option.id && (
                     <View style={styles.radioDot} />
@@ -166,7 +166,7 @@ const SupportRequestModal = forwardRef<BottomSheet, SupportRequestModalProps>(({
         {/* Footer */}
         <View style={styles.footer}>
           <ItemButtonConfirm
-            title={isSubmitting ? "Đang gửi..." : "Gửi yêu cầu hỗ trợ"}
+            title={isSubmitting ? 'Đang gửi...' : 'Gửi yêu cầu hỗ trợ'}
             icon={Icons.IconRemoveWhite}
             onPress={handleSubmit}
             onPressIcon={handleClose}
@@ -263,4 +263,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-}); 
+});

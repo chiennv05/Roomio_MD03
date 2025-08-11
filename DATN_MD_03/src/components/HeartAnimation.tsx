@@ -117,7 +117,7 @@ const HeartAnimation: React.FC<HeartAnimationProps> = ({
 
       {/* Floating love sparkles */}
       <FloatingSparkles />
-      
+
       {/* Love bubbles */}
       <LoveBubbles />
     </View>
@@ -379,4 +379,4 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FF1493',
   },
-}); 
+});

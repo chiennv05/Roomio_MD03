@@ -57,22 +57,22 @@ const EmptyTenantList: React.FC = () => {
 
   return (
     <View style={styles.outerContainer} testID="empty-tenant-list">
-      <Animated.View 
+      <Animated.View
         style={[
-          styles.container, 
-          { 
+          styles.container,
+          {
             opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }]
-          }
+            transform: [{ scale: scaleAnim }],
+          },
         ]}
       >
         <View style={styles.iconContainer}>
           <View style={styles.iconBackground} />
-          <Animated.Image 
-            source={{ uri: Icons.IconSearch }} 
+          <Animated.Image
+            source={{ uri: Icons.IconSearch }}
             style={[
               styles.searchIcon,
-              { transform: [{ scale: pulseAnim }] }
+              { transform: [{ scale: pulseAnim }] },
             ]}
             resizeMode="contain"
           />
@@ -80,7 +80,7 @@ const EmptyTenantList: React.FC = () => {
           <View style={[styles.dot, styles.dot2]} />
           <View style={[styles.dot, styles.dot3]} />
         </View>
-        
+
         <Text style={styles.title}>Danh sách người thuê trống</Text>
         <Text style={styles.subtitle}>
           Bạn chưa có người thuê nào đang hoạt động
@@ -162,4 +162,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EmptyTenantList; 
+export default EmptyTenantList;

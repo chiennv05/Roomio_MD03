@@ -91,7 +91,7 @@ const DetailRoomScreen: React.FC = () => {
 
   // Memoized computed values
   const roomDetailData = useMemo(() => {
-    if (!roomDetail) return null;
+    if (!roomDetail) {return null;}
 
     return {
       name: roomDetail.description || 'Phòng trọ',
@@ -328,7 +328,7 @@ const DetailRoomScreen: React.FC = () => {
 
   // Memoized error component
   const ErrorComponent = useMemo(() => {
-    if (!hasError) return null;
+    if (!hasError) {return null;}
 
     return (
       <View style={styles.errorContainer}>
@@ -381,7 +381,7 @@ const DetailRoomScreen: React.FC = () => {
 
   // Memoized no data component
   const NoDataComponent = useMemo(() => {
-    if (roomDetailData || isLoading || hasError) return null;
+    if (roomDetailData || isLoading || hasError) {return null;}
 
     // sự kiện liên hệ đặt phòng
 
@@ -398,7 +398,7 @@ const DetailRoomScreen: React.FC = () => {
 
   // Memoized main content
   const MainContent = useMemo(() => {
-    if (!roomDetailData) return null;
+    if (!roomDetailData) {return null;}
 
     return (
       <GestureHandlerRootView style={styles.container}>

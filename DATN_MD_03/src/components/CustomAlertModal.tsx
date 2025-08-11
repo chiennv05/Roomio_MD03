@@ -131,7 +131,7 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
       onRequestClose={handleClose}
     >
       <Animated.View style={[styles.backdrop, backdropStyle]}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backdropTouchable}
           activeOpacity={1}
           onPress={handleClose}
@@ -154,7 +154,7 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
               {/* Buttons */}
               <View style={[
                 styles.buttonContainer,
-                buttons && buttons.length === 2 && styles.buttonContainerRow
+                buttons && buttons.length === 2 && styles.buttonContainerRow,
               ]}>
                 {(buttons && buttons.length > 0
                   ? buttons
@@ -273,4 +273,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CustomAlertModal; 
+export default CustomAlertModal;

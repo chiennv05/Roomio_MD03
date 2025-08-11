@@ -8,6 +8,6 @@ export const formatCurrency = (amount: number): string => {
         style: 'currency',
         currency: 'VND',
         minimumFractionDigits: 0,
-        maximumFractionDigits: 0
+        maximumFractionDigits: 0,
     }).format(amount);
-}; 
+};

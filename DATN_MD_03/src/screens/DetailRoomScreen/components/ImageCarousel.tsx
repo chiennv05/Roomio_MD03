@@ -65,7 +65,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
     });
 
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.imageContainer}
         onPress={() => handleImagePress(index)}
         activeOpacity={0.9}
@@ -108,7 +108,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
         pagingEnabled
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          { 
+          {
             useNativeDriver: false,
             listener: handleScroll,
           }
@@ -123,16 +123,16 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
         <View style={styles.progressContainer}>
           <View style={styles.progressBars}>
             {images.map((_, index) => (
-              <View 
-                key={index} 
+              <View
+                key={index}
                 style={[
                   styles.progressBar,
                   {
-                    backgroundColor: index === currentIndex 
-                      ? '#BAFD00' 
-                      : 'rgba(255, 255, 255, 0.4)'
-                  }
-                ]} 
+                    backgroundColor: index === currentIndex
+                      ? '#BAFD00'
+                      : 'rgba(255, 255, 255, 0.4)',
+                  },
+                ]}
               />
             ))}
           </View>
@@ -170,11 +170,11 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({ images }) => {
           )}
           renderHeader={() => (
             <View style={styles.headerContainer}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.closeButton}
                 onPress={handleCloseImageViewer}
               >
-                <Image source={{ uri: Icons.IconRemove }} 
+                <Image source={{ uri: Icons.IconRemove }}
                 style={styles.closeButtonIcon} />
               </TouchableOpacity>
             </View>

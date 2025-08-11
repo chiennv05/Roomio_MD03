@@ -10,9 +10,18 @@ import {
 import {launchImageLibrary} from 'react-native-image-picker';
 import BarcodeScanning from '@react-native-ml-kit/barcode-scanning';
 
-const CCCDQRScanner = () => {
-  const [qrData, setQrData] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
+type QrParsed = {
+  hoTen?: string;
+  ngaySinh?: string;
+  soCccd?: string;
+  gioiTinh?: string;
+  diaChi?: string;
+  [k: string]: any;
+};
+
+const CCCDQRScanner: React.FC = () => {
+  const [qrData, setQrData] = useState<QrParsed | null>(null);
+  const [selectedImage, setSelectedImage] = useState<any>(null);
 
   const handleSelectImage = () => {
     launchImageLibrary({mediaType: 'photo'}, async response => {

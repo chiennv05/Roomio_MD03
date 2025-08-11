@@ -38,7 +38,7 @@ export default function ModalService({
   console.log(item);
 
   useEffect(() => {
-    if (!item) return;
+    if (!item) {return;}
     if (item?.label !== 'Dịch vụ khác') {
       setName(item.label);
       setPrice(item.price ?? 0);
@@ -61,7 +61,7 @@ export default function ModalService({
 
   // *** THÊM: Function kiểm tra có thể xóa không ***
   const isDeletable = () => {
-    if (!item) return false;
+    if (!item) {return false;}
     // Chỉ cho phép xóa dịch vụ tùy chọn và không phải template "khác"
     return item.category === 'optional' && item.value !== 'khac';
   };
@@ -70,7 +70,7 @@ export default function ModalService({
   const canDelete = isDeletable();
 
   const handleSaveBtn = () => {
-    if (!item) return;
+    if (!item) {return;}
 
     const isNew = item.label === 'Dịch vụ khác';
     const trimmedName = name.trim();
@@ -125,7 +125,7 @@ export default function ModalService({
   };
 
   const handleDeleteBtn = () => {
-    if (!item || !handleDelete) return;
+    if (!item || !handleDelete) {return;}
 
     handleDelete(item);
   };

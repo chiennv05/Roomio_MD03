@@ -21,12 +21,12 @@ import EmptyFavorite from './components/EmptyFavorite';
 const FavoriteScreen: React.FC = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch<AppDispatch>();
-  
+
   // Get data from Redux store
-  const { 
-    favoriteRooms, 
+  const {
+    favoriteRooms,
   } = useSelector((state: RootState) => state.room);
-  
+
   // Get user info for authentication
   const { user } = useSelector((state: RootState) => state.auth);
 
@@ -65,11 +65,11 @@ const FavoriteScreen: React.FC = () => {
 
   // Filter favorite rooms by search query
   const filteredFavoriteRooms = useMemo(() => {
-    if (!favoriteRooms || !Array.isArray(favoriteRooms)) return [];
-    
+    if (!favoriteRooms || !Array.isArray(favoriteRooms)) {return [];}
+
     // Apply search filter with debounced query
     const searchFiltered = filterRoomsBySearch(favoriteRooms, debouncedSearchQuery);
-    
+
     return searchFiltered;
   }, [favoriteRooms, debouncedSearchQuery]);
 
@@ -104,7 +104,7 @@ const FavoriteScreen: React.FC = () => {
       fadeAnim.setValue(0);
       slideAnim.setValue(100);
       scaleAnim.setValue(1.05);
-      
+
       // Start animation
       const timer = setTimeout(() => {
         animateIn();
@@ -154,7 +154,7 @@ const FavoriteScreen: React.FC = () => {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroud} />
-        <EmptyFavorite 
+        <EmptyFavorite
           isLoggedIn={isLoggedIn}
           onLoginPress={handleLoginPress}
         />
@@ -165,17 +165,17 @@ const FavoriteScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroud} />
-      
-      <Animated.View 
+
+      <Animated.View
         style={[
           styles.animatedContainer,
           {
             opacity: fadeAnim,
             transform: [
               { translateY: slideAnim },
-              { scale: scaleAnim }
+              { scale: scaleAnim },
             ],
-          }
+          },
         ]}
       >
         {/* Search Bar */}
@@ -185,7 +185,7 @@ const FavoriteScreen: React.FC = () => {
           onSearchPress={handleSearch}
           placeholder="Tìm trong danh sách yêu thích..."
         />
-   
+
         {/* Favorite Results */}
         <FavoriteSearchResults
           title={favoriteTitle}

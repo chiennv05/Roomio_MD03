@@ -116,7 +116,7 @@ const FindMapScreen: React.FC = () => {
         setSelectedLocation({latitude, longitude});
         // Xóa phòng đang được chọn nếu có
         setSelectedRoom(null);
-        
+
         if (mapRef.current) {
           mapRef.current.animateToRegion(region, 1000);
         }
@@ -137,7 +137,7 @@ const FindMapScreen: React.FC = () => {
 
   const handleRoomPress = useCallback((room: Room) => {
     setSelectedRoom(room);
-    
+
     const coordinates = room.location?.coordinates?.coordinates;
     if (coordinates && coordinates.length === 2) {
       const [longitude, latitude] = coordinates;
@@ -172,7 +172,7 @@ const FindMapScreen: React.FC = () => {
       const matchesSearch =
         room.description?.toLowerCase().includes(searchLower) ||
         room.location?.addressText?.toLowerCase().includes(searchLower);
-      if (!matchesSearch) return false;
+      if (!matchesSearch) {return false;}
     }
 
     // Lọc theo bán kính nếu có vị trí được chọn

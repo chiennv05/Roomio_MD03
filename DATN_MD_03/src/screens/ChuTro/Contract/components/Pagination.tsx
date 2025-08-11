@@ -19,7 +19,7 @@ const Pagination = ({currentPage, totalPages, onPageChange}: PaginationProps) =>
   // Tạo mảng các số trang để hiển thị
   const renderPageNumbers = () => {
     const pageNumbers = [];
-    
+
     // Luôn hiển thị trang đầu tiên
     pageNumbers.push(1);
 
@@ -69,7 +69,7 @@ const Pagination = ({currentPage, totalPages, onPageChange}: PaginationProps) =>
               </Text>
             );
           }
-          
+
           const pageNumber = page as number;
           return (
             <TouchableOpacity
@@ -170,4 +170,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Pagination; 
+export default Pagination;

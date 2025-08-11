@@ -87,4 +87,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HeaderWithBack; 
+export default HeaderWithBack;

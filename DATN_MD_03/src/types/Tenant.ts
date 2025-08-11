@@ -94,7 +94,7 @@ export interface TenantState {
   loading: boolean;
   error: string | null;
   pagination: TenantsPagination | null;
-  
+
   // Chi tiết người thuê
   selectedTenant: TenantDetail | null;
   activeContract: Contract | null;
@@ -109,4 +109,4 @@ export interface TenantFilters {
   limit?: number;
   search?: string;
   status?: string;
-} 
+}

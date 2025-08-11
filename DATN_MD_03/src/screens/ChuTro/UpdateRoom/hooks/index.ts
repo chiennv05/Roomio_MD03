@@ -1,1 +1,1 @@
-export {useRoomData} from './useRoomData'; 
+export {useRoomData} from './useRoomData';

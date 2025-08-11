@@ -61,10 +61,10 @@ const ContractTenantsScreen = () => {
         </View>
         {isMainTenant && status && (
           <View style={[styles.statusBadge, {
-            backgroundColor: status === 'active' ? Colors.limeGreenLight : Colors.lightGray
+            backgroundColor: status === 'active' ? Colors.limeGreenLight : Colors.lightGray,
           }]}>
             <Text style={[styles.statusText, {
-              color: status === 'active' ? Colors.darkGreen : Colors.darkGray
+              color: status === 'active' ? Colors.darkGreen : Colors.darkGray,
             }]}>
               {status === 'active' ? 'Đang hoạt động' : 'Không hoạt động'}
             </Text>
@@ -161,11 +161,11 @@ const ContractTenantsScreen = () => {
                   fullName: selectedContract.contractInfo.tenantName,
                   email: selectedContract.contractInfo.tenantEmail,
                   phone: selectedContract.contractInfo.tenantPhone,
-                  isMainTenant: true
+                  isMainTenant: true,
                 })}
 
                 {/* Người ở cùng */}
-                {selectedContract.contractInfo.coTenants && 
+                {selectedContract.contractInfo.coTenants &&
                  selectedContract.contractInfo.coTenants.length > 0 && (
                   <>
                     <Text style={styles.sectionTitle}>
@@ -175,7 +175,7 @@ const ContractTenantsScreen = () => {
                       return renderTenantCard({
                         fullName: coTenant.username || coTenant.fullName,
                         email: coTenant.email,
-                        phone: coTenant.phone
+                        phone: coTenant.phone,
                       });
                     })}
                   </>
@@ -385,4 +385,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ContractTenantsScreen; 
+export default ContractTenantsScreen;

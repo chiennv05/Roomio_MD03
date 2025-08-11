@@ -11,7 +11,7 @@ interface LoadingAnimationProps {
 const LoadingAnimation: React.FC<LoadingAnimationProps> = ({
   size = 'medium',
   color = Colors.limeGreen,
-  style
+  style,
 }) => {
   const spinAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -21,7 +21,7 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({
   const sizeConfig = {
     small: { container: 30, dots: 6, spacing: 15 },
     medium: { container: 50, dots: 10, spacing: 25 },
-    large: { container: 70, dots: 14, spacing: 35 }
+    large: { container: 70, dots: 14, spacing: 35 },
   };
 
   const currentSize = sizeConfig[size];
@@ -78,7 +78,7 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({
   });
 
   return (
-    <Animated.View 
+    <Animated.View
       style={[
         styles.container,
         {
@@ -86,7 +86,7 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({
           height: currentSize.container * 2,
           transform: [{ scale: scaleAnim }],
         },
-        style
+        style,
       ]}
     >
       {/* Background pulse circle */}
@@ -101,7 +101,7 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({
           },
         ]}
       />
-      
+
       {/* Rotating dots container */}
       <Animated.View
         style={[
@@ -119,7 +119,7 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({
           const radians = (angle * Math.PI) / 180;
           const x = Math.cos(radians) * currentSize.spacing;
           const y = Math.sin(radians) * currentSize.spacing;
-          
+
           return (
             <Animated.View
               key={index}
@@ -139,7 +139,7 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({
                     { scale: pulseAnim.interpolate({
                       inputRange: [1, 1.3],
                       outputRange: [0.6, 1],
-                    })}
+                    })},
                   ],
                 },
               ]}
@@ -147,7 +147,7 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({
           );
         })}
       </Animated.View>
-      
+
       {/* Center dot */}
       <Animated.View
         style={[
@@ -192,4 +192,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoadingAnimation; 
+export default LoadingAnimation;

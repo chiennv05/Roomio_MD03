@@ -153,4 +153,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RoomCard; 
+export default RoomCard;

@@ -8,7 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Image
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
@@ -69,7 +69,7 @@ const RegionModal: React.FC<RegionModalProps> = ({
   }, [visible, selectedRegions]);
 
   const fetchCities = async () => {
-    console.log("call")
+    console.log('call');
     setLoading(true);
     try {
       const response = await fetch('https://provinces.open-api.vn/api/');
@@ -95,7 +95,7 @@ const RegionModal: React.FC<RegionModalProps> = ({
   const fetchDistricts = async (cityCode: number, cityName: string) => {
     // Check if districts for this city are already cached
     if (districtsCache[cityCode] && districtsCache[cityCode].length > 0) {
-      console.log("call cache")
+      console.log('call cache');
       setDistricts(districtsCache[cityCode]);
       return;
     }
@@ -117,7 +117,7 @@ const RegionModal: React.FC<RegionModalProps> = ({
       // Cache the districts for this city
       setDistrictsCache(prev => ({
         ...prev,
-        [cityCode]: mappedDistricts
+        [cityCode]: mappedDistricts,
       }));
     } catch (error) {
       Alert.alert('Lỗi', 'Không thể tải danh sách quận/huyện');
@@ -160,7 +160,7 @@ const RegionModal: React.FC<RegionModalProps> = ({
   const handleConfirm = () => {
     console.log('🔍 Region Filter - Selected districts:', tempSelected.map(d => ({
       name: d.name,
-      city: d.cityName
+      city: d.cityName,
     })));
     onConfirm(tempSelected);
     onClose();
@@ -376,4 +376,4 @@ const styles = StyleSheet.create({
     width: moderateScale(12),
     height: moderateScale(20),
   },
-}); 
+});

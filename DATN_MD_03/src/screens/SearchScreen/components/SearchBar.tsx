@@ -9,10 +9,10 @@ import {
 import { Icons } from '../../../assets/icons';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
-import { 
-  responsiveFont, 
-  responsiveIcon, 
-  responsiveSpacing 
+import {
+  responsiveFont,
+  responsiveIcon,
+  responsiveSpacing,
 } from '../../../utils/responsive';
 
 interface SearchBarProps {
@@ -26,7 +26,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   value,
   onChangeText,
   onSearchPress,
-  placeholder = "Tìm kiếm tin đăng..."
+  placeholder = 'Tìm kiếm tin đăng...',
 }) => {
   return (
     <View style={styles.searchContainer}>
@@ -40,7 +40,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         />
       </View>
       <TouchableOpacity style={styles.searchButton} onPress={onSearchPress}>
-        <Image 
+        <Image
           source={{ uri: Icons.IconSearch }}
           style={styles.searchIcon}
         />
@@ -101,4 +101,4 @@ const styles = StyleSheet.create({
     height: responsiveIcon(20),
     tintColor: Colors.black,
   },
-}); 
+});

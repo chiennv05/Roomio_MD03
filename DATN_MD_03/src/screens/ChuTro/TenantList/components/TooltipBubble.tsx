@@ -10,7 +10,7 @@ interface TooltipBubbleProps {
 }
 
 const TooltipBubble: React.FC<TooltipBubbleProps> = ({text, visible}) => {
-  if (!visible) return null;
+  if (!visible) {return null;}
 
   return (
     <View style={styles.container}>
@@ -60,4 +60,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TooltipBubble; 
+export default TooltipBubble;

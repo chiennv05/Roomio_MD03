@@ -16,6 +16,10 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
+import {Colors} from '../../theme/color';
+import {Fonts} from '../../theme/fonts';
+import {responsiveFont, responsiveSpacing, scale} from '../../utils/responsive';
+
 import {Support} from '../../types/Support';
 import {RootState} from '../../store';
 import {
@@ -269,87 +273,103 @@ const SupportScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    paddingBottom: Platform.OS === 'ios' ? 0 : 16,
-    marginTop: 15,
+    backgroundColor: Colors.backgroud,
+    paddingBottom: Platform.OS === 'ios' ? 0 : responsiveSpacing(16),
+    marginTop: responsiveSpacing(15),
   },
   contentContainer: {
     flex: 1,
   },
   listContent: {
-    padding: 16,
-    paddingBottom: 100, // Tăng padding để tránh che nội dung bởi FAB
+    padding: responsiveSpacing(16),
+    paddingBottom: responsiveSpacing(100), // Tăng padding để tránh che nội dung bởi FAB
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: responsiveSpacing(20),
   },
   errorText: {
-    fontSize: 16,
-    color: '#555',
-    marginTop: 16,
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
+    marginTop: responsiveSpacing(16),
     textAlign: 'center',
   },
   retryButton: {
-    marginTop: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: '#2196F3',
-    borderRadius: 4,
+    marginTop: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(12),
+    paddingHorizontal: responsiveSpacing(20),
+    backgroundColor: Colors.primaryGreen,
+    borderRadius: scale(8),
   },
   retryButtonText: {
-    color: 'white',
-    fontWeight: '500',
+    color: Colors.white,
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(14),
   },
   filterContainer: {
-    backgroundColor: 'white',
-    padding: 16,
+    backgroundColor: Colors.white,
+    padding: responsiveSpacing(16),
     flexDirection: 'row',
     justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   fabButton: {
     position: 'absolute',
-    right: 20,
-    bottom: Platform.OS === 'ios' ? 20 : 30,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#2196F3',
+    right: responsiveSpacing(20),
+    bottom:
+      Platform.OS === 'ios' ? responsiveSpacing(20) : responsiveSpacing(30),
+    width: scale(56),
+    height: scale(56),
+    borderRadius: scale(28),
+    backgroundColor: Colors.primaryGreen,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 5,
+    elevation: 8,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 3},
-    shadowOpacity: 0.27,
-    shadowRadius: 4.65,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
   },
   statsContainer: {
     flexDirection: 'row',
-    backgroundColor: 'white',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    backgroundColor: Colors.white,
+    paddingVertical: responsiveSpacing(16),
+    paddingHorizontal: responsiveSpacing(16),
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: responsiveSpacing(8),
+    borderRadius: scale(12),
+    marginHorizontal: responsiveSpacing(16),
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   statItem: {
     alignItems: 'center',
     flex: 1,
   },
   statValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: responsiveFont(20),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.primaryGreen,
   },
   statLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
+    marginTop: responsiveSpacing(4),
   },
   statDivider: {
     width: 1,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: Colors.divider,
   },
 });
 

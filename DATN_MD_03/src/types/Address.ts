@@ -26,4 +26,4 @@ export interface SelectedAddress {
   province?: Province;
   district?: District;
   ward?: Ward;
-} 
+}

@@ -32,7 +32,7 @@ import {
     completeInvoice,
     saveInvoiceAsTemplate,
     resetSaveTemplateState,
-    resetCompleteInvoiceState
+    resetCompleteInvoiceState,
 } from '../../store/slices/billSlice';
 import { RootStackParamList } from '../../types/route';
 import { SCREEN, scale, verticalScale } from '../../utils/responsive';
@@ -66,7 +66,7 @@ const EditInvoiceScreen = () => {
         deleteItemError,
         saveTemplateLoading,
         saveTemplateSuccess,
-        saveTemplateError
+        saveTemplateError,
     } = useAppSelector(state => state.bill);
 
     // Local state for editable fields
@@ -125,7 +125,7 @@ const EditInvoiceScreen = () => {
     const [initialInvoiceData, setInitialInvoiceData] = useState({
         dueDate: '',
         note: '',
-        items: [] as InvoiceItem[]
+        items: [] as InvoiceItem[],
     });
 
     // Load invoice details
@@ -193,7 +193,7 @@ const EditInvoiceScreen = () => {
             setInitialInvoiceData({
                 dueDate: selectedInvoice.dueDate || '',
                 note: selectedInvoice.note || '',
-                items: JSON.parse(JSON.stringify(selectedInvoice.items || []))
+                items: JSON.parse(JSON.stringify(selectedInvoice.items || [])),
             });
         }
     }, [selectedInvoice]);
@@ -224,9 +224,9 @@ const EditInvoiceScreen = () => {
 
         if (updateInvoiceError) {
             Alert.alert(
-                "Lỗi",
+                'Lỗi',
                 `Không thể cập nhật hóa đơn: ${updateInvoiceError}`,
-                [{ text: "OK", onPress: () => dispatch(resetUpdateInvoiceState()) }]
+                [{ text: 'OK', onPress: () => dispatch(resetUpdateInvoiceState()) }]
             );
         }
     }, [updateInvoiceSuccess, updateInvoiceError, dispatch, navigation]);
@@ -248,9 +248,9 @@ const EditInvoiceScreen = () => {
 
         if (addItemError) {
             Alert.alert(
-                "Lỗi",
+                'Lỗi',
                 `Không thể thêm khoản mục tùy chỉnh: ${addItemError}`,
-                [{ text: "OK", onPress: () => dispatch(resetAddItemState()) }]
+                [{ text: 'OK', onPress: () => dispatch(resetAddItemState()) }]
             );
         }
     }, [addItemSuccess, addItemError, dispatch, token, invoiceId]);
@@ -268,9 +268,9 @@ const EditInvoiceScreen = () => {
 
         if (updateItemsError) {
             Alert.alert(
-                "Lỗi",
+                'Lỗi',
                 `Không thể cập nhật khoản mục hóa đơn: ${updateItemsError}`,
-                [{ text: "OK", onPress: () => dispatch(resetUpdateItemsState()) }]
+                [{ text: 'OK', onPress: () => dispatch(resetUpdateItemsState()) }]
             );
         }
     }, [updateItemsSuccess, updateItemsError, dispatch, token, invoiceId]);
@@ -279,9 +279,9 @@ const EditInvoiceScreen = () => {
     useEffect(() => {
         if (deleteItemSuccess) {
             Alert.alert(
-                "Thành công",
-                "Đã xóa khoản mục hóa đơn thành công!",
-                [{ text: "OK", onPress: () => dispatch(resetDeleteItemState()) }]
+                'Thành công',
+                'Đã xóa khoản mục hóa đơn thành công!',
+                [{ text: 'OK', onPress: () => dispatch(resetDeleteItemState()) }]
             );
 
             // Refresh invoice details to get updated data
@@ -292,9 +292,9 @@ const EditInvoiceScreen = () => {
 
         if (deleteItemError) {
             Alert.alert(
-                "Lỗi",
+                'Lỗi',
                 `Không thể xóa khoản mục hóa đơn: ${deleteItemError}`,
-                [{ text: "OK", onPress: () => dispatch(resetDeleteItemState()) }]
+                [{ text: 'OK', onPress: () => dispatch(resetDeleteItemState()) }]
             );
         }
     }, [deleteItemSuccess, deleteItemError, dispatch, token, invoiceId]);
@@ -304,25 +304,25 @@ const EditInvoiceScreen = () => {
         if (saveTemplateSuccess) {
             setHasBeenSavedAsTemplate(true);
             Alert.alert(
-                "Thành công",
-                "Đã lưu mẫu hóa đơn thành công!",
-                [{ text: "OK", onPress: () => dispatch(resetSaveTemplateState()) }]
+                'Thành công',
+                'Đã lưu mẫu hóa đơn thành công!',
+                [{ text: 'OK', onPress: () => dispatch(resetSaveTemplateState()) }]
             );
             setSaveTemplateModalVisible(false);
         }
 
         if (saveTemplateError) {
             Alert.alert(
-                "Lỗi",
+                'Lỗi',
                 `Không thể lưu mẫu hóa đơn: ${saveTemplateError}`,
-                [{ text: "OK", onPress: () => dispatch(resetSaveTemplateState()) }]
+                [{ text: 'OK', onPress: () => dispatch(resetSaveTemplateState()) }]
             );
         }
     }, [saveTemplateSuccess, saveTemplateError, dispatch]);
 
     // Helper function to safely access nested properties
     const getNestedValue = (obj: any, path: string, defaultValue: any = undefined) => {
-        if (!obj) return defaultValue;
+        if (!obj) {return defaultValue;}
 
         const keys = path.split('.');
         let result = obj;
@@ -339,7 +339,7 @@ const EditInvoiceScreen = () => {
 
     // Format date function
     const formatDate = (dateString?: string) => {
-        if (!dateString) return '';
+        if (!dateString) {return '';}
         const date = new Date(dateString);
         return `${date.getDate().toString().padStart(2, '0')}/${(
             date.getMonth() + 1
@@ -364,7 +364,7 @@ const EditInvoiceScreen = () => {
 
     // Format period
     const formatPeriod = (period: any) => {
-        if (!period) return 'N/A';
+        if (!period) {return 'N/A';}
         if (typeof period === 'string') {
             return formatDate(period).substring(3); // Return MM/YYYY
         }
@@ -394,7 +394,7 @@ const EditInvoiceScreen = () => {
     const updateMeterReading = (itemId: string, field: 'previousReading' | 'currentReading', value: string) => {
         const newItems = [...invoiceItems];
         const itemIndex = newItems.findIndex(item => item._id === itemId);
-        if (itemIndex === -1) return;
+        if (itemIndex === -1) {return;}
 
         const item = newItems[itemIndex];
 
@@ -403,8 +403,8 @@ const EditInvoiceScreen = () => {
             ...prev,
             [itemId]: {
                 ...prev[itemId],
-                [field]: value
-            }
+                [field]: value,
+            },
         }));
 
         // Validate input
@@ -442,8 +442,8 @@ const EditInvoiceScreen = () => {
             ...prev,
             [itemId]: {
                 ...prev[itemId],
-                [field]: errorMessage
-            }
+                [field]: errorMessage,
+            },
         }));
 
         // Only update numeric value if there's no error
@@ -474,8 +474,8 @@ const EditInvoiceScreen = () => {
                         ...prev,
                         [itemId]: {
                             ...prev[itemId],
-                            currentReading: newCurrentReading.toString()
-                        }
+                            currentReading: newCurrentReading.toString(),
+                        },
                     }));
 
                     // Cập nhật trực tiếp vào invoiceItems
@@ -486,8 +486,8 @@ const EditInvoiceScreen = () => {
                         ...prev,
                         [itemId]: {
                             ...prev[itemId],
-                            currentReading: ''
-                        }
+                            currentReading: '',
+                        },
                     }));
                 }
             }
@@ -519,7 +519,7 @@ const EditInvoiceScreen = () => {
     const updateItemQuantity = (itemId: string, value: string) => {
         const newItems = [...invoiceItems];
         const itemIndex = newItems.findIndex(item => item._id === itemId);
-        if (itemIndex === -1) return;
+        if (itemIndex === -1) {return;}
 
         const item = newItems[itemIndex];
 
@@ -528,8 +528,8 @@ const EditInvoiceScreen = () => {
             ...prev,
             [itemId]: {
                 ...prev[itemId],
-                quantity: value
-            }
+                quantity: value,
+            },
         }));
 
         // Validate input
@@ -553,8 +553,8 @@ const EditInvoiceScreen = () => {
             ...prev,
             [itemId]: {
                 ...prev[itemId],
-                quantity: errorMessage
-            }
+                quantity: errorMessage,
+            },
         }));
 
         // Only update numeric value if there's no error
@@ -584,7 +584,7 @@ const EditInvoiceScreen = () => {
     const updateItemUnitPrice = (itemId: string, value: string) => {
         const newItems = [...invoiceItems];
         const itemIndex = newItems.findIndex(item => item._id === itemId);
-        if (itemIndex === -1) return;
+        if (itemIndex === -1) {return;}
 
         const item = newItems[itemIndex];
 
@@ -593,8 +593,8 @@ const EditInvoiceScreen = () => {
             ...prev,
             [itemId]: {
                 ...prev[itemId],
-                unitPrice: value
-            }
+                unitPrice: value,
+            },
         }));
 
         // Validate input
@@ -618,8 +618,8 @@ const EditInvoiceScreen = () => {
             ...prev,
             [itemId]: {
                 ...prev[itemId],
-                unitPrice: errorMessage
-            }
+                unitPrice: errorMessage,
+            },
         }));
 
         // Only update numeric value if there's no error
@@ -678,10 +678,10 @@ const EditInvoiceScreen = () => {
 
     // Handle add custom item
     const handleAddCustomItem = () => {
-        if (!token || !invoiceId) return;
+        if (!token || !invoiceId) {return;}
 
         if (!customItemName.trim()) {
-            Alert.alert("Lỗi", "Vui lòng nhập tên khoản mục");
+            Alert.alert('Lỗi', 'Vui lòng nhập tên khoản mục');
             return;
         }
 
@@ -689,7 +689,7 @@ const EditInvoiceScreen = () => {
         const quantity = parseInt(customItemQuantity) || 1;
 
         if (unitPrice <= 0) {
-            Alert.alert("Lỗi", "Đơn giá phải lớn hơn 0");
+            Alert.alert('Lỗi', 'Đơn giá phải lớn hơn 0');
             return;
         }
 
@@ -700,7 +700,7 @@ const EditInvoiceScreen = () => {
             unitPrice,
             category: customItemCategory,
             isRecurring: customItemIsRecurring,
-            type: 'fixed'
+            type: 'fixed',
         };
 
         dispatch(addCustomInvoiceItem({ token, invoiceId, itemData: customItem }));
@@ -740,8 +740,8 @@ const EditInvoiceScreen = () => {
                         ...prev,
                         [itemId]: {
                             ...prev[itemId],
-                            previousReading: 'Không được để trống'
-                        }
+                            previousReading: 'Không được để trống',
+                        },
                     }));
                     return true;
                 }
@@ -751,8 +751,8 @@ const EditInvoiceScreen = () => {
                         ...prev,
                         [itemId]: {
                             ...prev[itemId],
-                            currentReading: 'Không được để trống'
-                        }
+                            currentReading: 'Không được để trống',
+                        },
                     }));
                     return true;
                 }
@@ -774,8 +774,8 @@ const EditInvoiceScreen = () => {
                             ...prev,
                             [itemId]: {
                                 ...prev[itemId],
-                                previousReading: 'Chỉ số không được bằng 0'
-                            }
+                                previousReading: 'Chỉ số không được bằng 0',
+                            },
                         }));
                         return true;
                     }
@@ -786,8 +786,8 @@ const EditInvoiceScreen = () => {
                             ...prev,
                             [itemId]: {
                                 ...prev[itemId],
-                                currentReading: 'Chỉ số không được bằng 0'
-                            }
+                                currentReading: 'Chỉ số không được bằng 0',
+                            },
                         }));
                         return true;
                     }
@@ -799,8 +799,8 @@ const EditInvoiceScreen = () => {
                         ...prev,
                         [itemId]: {
                             ...prev[itemId],
-                            quantity: 'Không được để trống'
-                        }
+                            quantity: 'Không được để trống',
+                        },
                     }));
                     return true;
                 }
@@ -811,8 +811,8 @@ const EditInvoiceScreen = () => {
                         ...prev,
                         [itemId]: {
                             ...prev[itemId],
-                            unitPrice: 'Không được để trống'
-                        }
+                            unitPrice: 'Không được để trống',
+                        },
                     }));
                     return true;
                 }
@@ -834,8 +834,8 @@ const EditInvoiceScreen = () => {
                             ...prev,
                             [itemId]: {
                                 ...prev[itemId],
-                                previousReading: 'Chỉ số không được bằng 0'
-                            }
+                                previousReading: 'Chỉ số không được bằng 0',
+                            },
                         }));
                         return true;
                     }
@@ -845,8 +845,8 @@ const EditInvoiceScreen = () => {
                             ...prev,
                             [itemId]: {
                                 ...prev[itemId],
-                                currentReading: 'Chỉ số không được bằng 0'
-                            }
+                                currentReading: 'Chỉ số không được bằng 0',
+                            },
                         }));
                         return true;
                     }
@@ -972,9 +972,9 @@ const EditInvoiceScreen = () => {
         // Kiểm tra lỗi trước khi lưu
         if (hasFormErrors()) {
             Alert.alert(
-                "Lỗi",
-                "Vui lòng nhập hợp lệ tất cả các trường trước khi lưu.",
-                [{ text: "OK" }]
+                'Lỗi',
+                'Vui lòng nhập hợp lệ tất cả các trường trước khi lưu.',
+                [{ text: 'OK' }]
             );
             return;
         }
@@ -992,7 +992,7 @@ const EditInvoiceScreen = () => {
             const itemId = item._id || '';
             const inputData = itemInputs[itemId];
 
-            if (!inputData) return item;
+            if (!inputData) {return item;}
 
             const updatedItem = { ...item };
 
@@ -1057,7 +1057,7 @@ const EditInvoiceScreen = () => {
             tenantId: originalTenantId,
             contractId: originalContractId,
             items: updatedItems,
-            totalAmount: newTotalAmount
+            totalAmount: newTotalAmount,
         };
 
         // Thực hiện lưu theo thứ tự: khoản mục trước, sau đó là thông tin cơ bản
@@ -1066,7 +1066,7 @@ const EditInvoiceScreen = () => {
                 return dispatch(updateInvoiceItems({
                     token,
                     invoiceId,
-                    items: editableItems
+                    items: editableItems,
                 })).unwrap();
             }
             return Promise.resolve();
@@ -1080,7 +1080,7 @@ const EditInvoiceScreen = () => {
                     token,
                     invoiceId,
                     updateData: basicUpdateData,
-                    updateType: 'basic'
+                    updateType: 'basic',
                 })).unwrap();
             })
             .then(() => {
@@ -1143,30 +1143,30 @@ const EditInvoiceScreen = () => {
 
     // Tối ưu hóa handleIssueInvoice
     const handleIssueInvoice = () => {
-        if (!token || !selectedInvoice) return;
+        if (!token || !selectedInvoice) {return;}
 
         // Kiểm tra lỗi trước khi phát hành
         if (hasFormErrors()) {
             Alert.alert(
-                "Lỗi",
-                "Vui lòng nhập hợp lệ tất cả các trường trước khi phát hành hóa đơn.",
-                [{ text: "OK" }]
+                'Lỗi',
+                'Vui lòng nhập hợp lệ tất cả các trường trước khi phát hành hóa đơn.',
+                [{ text: 'OK' }]
             );
             return;
         }
 
         // Hiển thị xác nhận phát hành
         Alert.alert(
-            "Xác nhận phát hành",
-            "Bạn có chắc chắn muốn phát hành hóa đơn này không? Sau khi phát hành, hóa đơn sẽ được gửi đến người thuê và không thể chỉnh sửa.",
+            'Xác nhận phát hành',
+            'Bạn có chắc chắn muốn phát hành hóa đơn này không? Sau khi phát hành, hóa đơn sẽ được gửi đến người thuê và không thể chỉnh sửa.',
             [
                 {
-                    text: "Hủy",
-                    style: "cancel"
+                    text: 'Hủy',
+                    style: 'cancel',
                 },
                 {
-                    text: "Phát hành",
-                    style: "default",
+                    text: 'Phát hành',
+                    style: 'default',
                     onPress: () => {
                         // Hiển thị loading
                         setIsLoading(true);
@@ -1181,7 +1181,7 @@ const EditInvoiceScreen = () => {
                             const itemId = item._id || '';
                             const inputData = itemInputs[itemId];
 
-                            if (!inputData) return item;
+                            if (!inputData) {return item;}
 
                             const updatedItem = { ...item };
 
@@ -1246,7 +1246,7 @@ const EditInvoiceScreen = () => {
                             tenantId: originalTenantId,
                             contractId: originalContractId,
                             items: updatedItems,
-                            totalAmount: newTotalAmount
+                            totalAmount: newTotalAmount,
                         };
 
                         // Thực hiện lưu theo thứ tự: khoản mục trước, sau đó là thông tin cơ bản, cuối cùng là phát hành
@@ -1255,7 +1255,7 @@ const EditInvoiceScreen = () => {
                                 return dispatch(updateInvoiceItems({
                                     token,
                                     invoiceId,
-                                    items: editableItems
+                                    items: editableItems,
                                 })).unwrap();
                             }
                             return Promise.resolve();
@@ -1269,7 +1269,7 @@ const EditInvoiceScreen = () => {
                                     token,
                                     invoiceId,
                                     updateData: basicUpdateData,
-                                    updateType: 'basic'
+                                    updateType: 'basic',
                                 })).unwrap();
                             })
                             .then(() => {
@@ -1288,26 +1288,26 @@ const EditInvoiceScreen = () => {
 
                                 // Hiển thị thông báo thành công
                                 Alert.alert(
-                                    "Thành công",
-                                    "Hóa đơn đã được phát hành thành công!",
+                                    'Thành công',
+                                    'Hóa đơn đã được phát hành thành công!',
                                     [
                                         {
-                                            text: "OK",
-                                            onPress: () => navigation.navigate('Bill')
-                                        }
+                                            text: 'OK',
+                                            onPress: () => navigation.navigate('Bill'),
+                                        },
                                     ]
                                 );
                             })
                             .catch((error) => {
                                 setIsLoading(false);
                                 Alert.alert(
-                                    "Lỗi",
-                                    "Không thể phát hành hóa đơn. Vui lòng thử lại.",
-                                    [{ text: "OK" }]
+                                    'Lỗi',
+                                    'Không thể phát hành hóa đơn. Vui lòng thử lại.',
+                                    [{ text: 'OK' }]
                                 );
                             });
-                    }
-                }
+                    },
+                },
             ]
         );
     };
@@ -1342,7 +1342,7 @@ const EditInvoiceScreen = () => {
             canEditDescription: false,
             canEditQuantity: false,
             canEditUnitPrice: false,
-            canEditMeterReadings: false
+            canEditMeterReadings: false,
         };
 
         // Các khoản mục tiện ích (utility) luôn có thể chỉnh sửa
@@ -1377,15 +1377,15 @@ const EditInvoiceScreen = () => {
     const updateItemName = (itemId: string, value: string) => {
         const newItems = [...invoiceItems];
         const itemIndex = newItems.findIndex(item => item._id === itemId);
-        if (itemIndex === -1) return;
+        if (itemIndex === -1) {return;}
 
         // Update string input state
         setItemInputs(prev => ({
             ...prev,
             [itemId]: {
                 ...prev[itemId],
-                name: value
-            }
+                name: value,
+            },
         }));
 
         // Update the actual item
@@ -1397,15 +1397,15 @@ const EditInvoiceScreen = () => {
     const updateItemDescription = (itemId: string, value: string) => {
         const newItems = [...invoiceItems];
         const itemIndex = newItems.findIndex(item => item._id === itemId);
-        if (itemIndex === -1) return;
+        if (itemIndex === -1) {return;}
 
         // Update string input state
         setItemInputs(prev => ({
             ...prev,
             [itemId]: {
                 ...prev[itemId],
-                description: value
-            }
+                description: value,
+            },
         }));
 
         // Update the actual item
@@ -1417,31 +1417,31 @@ const EditInvoiceScreen = () => {
     const handleDeleteItem = (item: InvoiceItem) => {
         if (!token || !selectedInvoice || !item._id) {
             Alert.alert(
-                "Lỗi",
-                "Không thể xóa khoản mục này. Thiếu thông tin cần thiết.",
-                [{ text: "Đóng" }]
+                'Lỗi',
+                'Không thể xóa khoản mục này. Thiếu thông tin cần thiết.',
+                [{ text: 'Đóng' }]
             );
             return;
         }
 
         // Confirm deletion
         Alert.alert(
-            "Xác nhận xóa",
+            'Xác nhận xóa',
             `Bạn có chắc chắn muốn xóa khoản mục "${item.name}" không?`,
             [
                 {
-                    text: "Hủy",
-                    style: "cancel"
+                    text: 'Hủy',
+                    style: 'cancel',
                 },
                 {
-                    text: "Xóa",
-                    style: "destructive",
+                    text: 'Xóa',
+                    style: 'destructive',
                     onPress: () => {
                         // Call API to delete the item
                         dispatch(deleteInvoiceItem({
                             token,
                             invoiceId,
-                            itemId: item._id as string
+                            itemId: item._id as string,
                         }))
                             .unwrap()
                             .then(() => {
@@ -1451,20 +1451,20 @@ const EditInvoiceScreen = () => {
                                 // Error will be handled by the useEffect
                                 // Show error alert in case the useEffect doesn't catch it
                                 Alert.alert(
-                                    "Lỗi",
+                                    'Lỗi',
                                     `Không thể xóa khoản mục: ${error}`,
-                                    [{ text: "Đóng" }]
+                                    [{ text: 'Đóng' }]
                                 );
                             });
-                    }
-                }
+                    },
+                },
             ]
         );
     };
 
     // Tính toán lượng sử dụng dựa trên dữ liệu từ input hoặc từ item
     const calculateUsage = (item: InvoiceItem, inputData?: any) => {
-        if (!item) return 0;
+        if (!item) {return 0;}
 
         // Lấy giá trị chỉ số từ input hoặc từ item
         const currentReading = inputData?.currentReading !== undefined ?
@@ -1481,7 +1481,7 @@ const EditInvoiceScreen = () => {
 
     // Tính toán số tiền của item dựa trên dữ liệu từ input hoặc từ item
     const calculateItemAmount = (item: InvoiceItem, inputData?: any) => {
-        if (!item) return 0;
+        if (!item) {return 0;}
 
         if (item.type === 'fixed') {
             // Lấy số lượng và đơn giá từ input hoặc từ item
@@ -1515,9 +1515,9 @@ const EditInvoiceScreen = () => {
     const handleSaveAsTemplate = (templateName: string) => {
         if (!token || !selectedInvoice) {
             Alert.alert(
-                "Lỗi",
-                "Không thể lưu mẫu hóa đơn. Thiếu thông tin cần thiết.",
-                [{ text: "Đóng" }]
+                'Lỗi',
+                'Không thể lưu mẫu hóa đơn. Thiếu thông tin cần thiết.',
+                [{ text: 'Đóng' }]
             );
             return;
         }
@@ -1525,9 +1525,9 @@ const EditInvoiceScreen = () => {
         // Kiểm tra lỗi trước khi lưu mẫu
         if (hasFormErrors()) {
             Alert.alert(
-                "Lỗi",
-                "Vui lòng nhập hợp lệ tất cả các trường trước khi lưu mẫu hóa đơn.",
-                [{ text: "OK" }]
+                'Lỗi',
+                'Vui lòng nhập hợp lệ tất cả các trường trước khi lưu mẫu hóa đơn.',
+                [{ text: 'OK' }]
             );
             return;
         }
@@ -1545,7 +1545,7 @@ const EditInvoiceScreen = () => {
             const itemId = item._id || '';
             const inputData = itemInputs[itemId];
 
-            if (!inputData) return item;
+            if (!inputData) {return item;}
 
             const updatedItem = { ...item };
 
@@ -1610,7 +1610,7 @@ const EditInvoiceScreen = () => {
             tenantId: originalTenantId,
             contractId: originalContractId,
             items: updatedItems,
-            totalAmount: newTotalAmount
+            totalAmount: newTotalAmount,
         };
 
         // Thực hiện lưu theo thứ tự: khoản mục trước, sau đó là thông tin cơ bản, cuối cùng là lưu mẫu
@@ -1619,7 +1619,7 @@ const EditInvoiceScreen = () => {
                 return dispatch(updateInvoiceItems({
                     token,
                     invoiceId,
-                    items: editableItems
+                    items: editableItems,
                 })).unwrap();
             }
             return Promise.resolve();
@@ -1633,7 +1633,7 @@ const EditInvoiceScreen = () => {
                     token,
                     invoiceId,
                     updateData: basicUpdateData,
-                    updateType: 'basic'
+                    updateType: 'basic',
                 })).unwrap();
             })
             .then(() => {
@@ -1644,7 +1644,7 @@ const EditInvoiceScreen = () => {
                 return dispatch(saveInvoiceAsTemplate({
                     token,
                     invoiceId,
-                    templateName
+                    templateName,
                 })).unwrap();
             })
             .then(() => {
@@ -1656,9 +1656,9 @@ const EditInvoiceScreen = () => {
 
                 // Hiển thị thông báo lỗi
                 Alert.alert(
-                    "Lỗi",
+                    'Lỗi',
                     `Không thể lưu hóa đơn hoặc lưu mẫu: ${error}`,
-                    [{ text: "Đóng" }]
+                    [{ text: 'Đóng' }]
                 );
             });
     };
@@ -1681,7 +1681,7 @@ const EditInvoiceScreen = () => {
     };
 
     const renderInvoiceInfo = () => {
-        if (!selectedInvoice) return null;
+        if (!selectedInvoice) {return null;}
 
         const roomInfo = selectedInvoice.contractId?.contractInfo || {};
         const tenant = selectedInvoice.tenantId;
@@ -1711,13 +1711,13 @@ const EditInvoiceScreen = () => {
 
                 // Các trường thông tin khác của tenantId
                 const name = getNestedValue(selectedInvoice.tenantId, 'name');
-                if (name) return name;
+                if (name) {return name;}
 
                 const displayName = getNestedValue(selectedInvoice.tenantId, 'displayName');
-                if (displayName) return displayName;
+                if (displayName) {return displayName;}
 
                 const username = getNestedValue(selectedInvoice.tenantId, 'username');
-                if (username) return username;
+                if (username) {return username;}
             }
 
             // Fallback: Nếu tenantId là string, hiển thị "Người thuê"
@@ -1744,11 +1744,11 @@ const EditInvoiceScreen = () => {
 
                 // Thử lấy name
                 const name = getNestedValue(selectedInvoice.roomId, 'name');
-                if (name) return name;
+                if (name) {return name;}
 
                 // Thử lấy title
                 const title = getNestedValue(selectedInvoice.roomId, 'title');
-                if (title) return title;
+                if (title) {return title;}
             }
 
             // Fallback: Nếu roomId là string, hiển thị "Phòng {roomId}"
@@ -1920,7 +1920,7 @@ const EditInvoiceScreen = () => {
                                             <TextInput
                                                 style={[
                                                     styles.meterInput,
-                                                    inputErrors[itemId]?.previousReading ? styles.inputError : {}
+                                                    inputErrors[itemId]?.previousReading ? styles.inputError : {},
                                                 ]}
                                                 value={itemInputs[itemId]?.previousReading}
                                                 onChangeText={(value) => updateMeterReading(itemId, 'previousReading', value)}
@@ -1942,7 +1942,7 @@ const EditInvoiceScreen = () => {
                                             <TextInput
                                                 style={[
                                                     styles.meterInput,
-                                                    inputErrors[itemId]?.currentReading ? styles.inputError : {}
+                                                    inputErrors[itemId]?.currentReading ? styles.inputError : {},
                                                 ]}
                                                 value={itemInputs[itemId]?.currentReading}
                                                 onChangeText={(value) => updateMeterReading(itemId, 'currentReading', value)}
@@ -1970,7 +1970,7 @@ const EditInvoiceScreen = () => {
                                             <TextInput
                                                 style={[
                                                     styles.quantityInput,
-                                                    inputErrors[itemId]?.quantity ? styles.inputError : {}
+                                                    inputErrors[itemId]?.quantity ? styles.inputError : {},
                                                 ]}
                                                 value={itemInputs[itemId]?.quantity}
                                                 onChangeText={(value) => updateItemQuantity(itemId, value)}
@@ -1994,7 +1994,7 @@ const EditInvoiceScreen = () => {
                                                     <TextInput
                                                         style={[
                                                             styles.unitPriceInput,
-                                                            inputErrors[itemId]?.unitPrice ? styles.inputError : {}
+                                                            inputErrors[itemId]?.unitPrice ? styles.inputError : {},
                                                         ]}
                                                         value={itemInputs[itemId]?.unitPrice}
                                                         onChangeText={(value) => updateItemUnitPrice(itemId, value)}
@@ -2122,13 +2122,13 @@ const EditInvoiceScreen = () => {
                                             key={category}
                                             style={[
                                                 styles.categoryButton,
-                                                customItemCategory === category && styles.categoryButtonActive
+                                                customItemCategory === category && styles.categoryButtonActive,
                                             ]}
                                             onPress={() => setCustomItemCategory(category)}
                                         >
                                             <Text style={[
                                                 styles.categoryButtonText,
-                                                customItemCategory === category && styles.categoryButtonTextActive
+                                                customItemCategory === category && styles.categoryButtonTextActive,
                                             ]}>
                                                 {getCategoryText(category)}
                                             </Text>
@@ -2143,13 +2143,13 @@ const EditInvoiceScreen = () => {
                                     <TouchableOpacity
                                         style={[
                                             styles.categoryButton,
-                                            customItemIsRecurring && styles.categoryButtonActive
+                                            customItemIsRecurring && styles.categoryButtonActive,
                                         ]}
                                         onPress={() => setCustomItemIsRecurring(true)}
                                     >
                                         <Text style={[
                                             styles.categoryButtonText,
-                                            customItemIsRecurring && styles.categoryButtonTextActive
+                                            customItemIsRecurring && styles.categoryButtonTextActive,
                                         ]}>
                                             Có
                                         </Text>
@@ -2157,13 +2157,13 @@ const EditInvoiceScreen = () => {
                                     <TouchableOpacity
                                         style={[
                                             styles.categoryButton,
-                                            !customItemIsRecurring && styles.categoryButtonActive
+                                            !customItemIsRecurring && styles.categoryButtonActive,
                                         ]}
                                         onPress={() => setCustomItemIsRecurring(false)}
                                     >
                                         <Text style={[
                                             styles.categoryButtonText,
-                                            !customItemIsRecurring && styles.categoryButtonTextActive
+                                            !customItemIsRecurring && styles.categoryButtonTextActive,
                                         ]}>
                                             Không
                                         </Text>
@@ -2295,7 +2295,7 @@ const EditInvoiceScreen = () => {
 
 const styles = StyleSheet.create({
     container: {
-        
+
         flex: 1,
         backgroundColor: Colors.backgroud,
     },
@@ -2949,4 +2949,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default EditInvoiceScreen; 
+export default EditInvoiceScreen;

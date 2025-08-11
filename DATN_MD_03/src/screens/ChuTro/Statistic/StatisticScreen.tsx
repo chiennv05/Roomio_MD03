@@ -36,9 +36,9 @@ const StatisticScreen = () => {
     (state: RootState) => state.dashboard,
   );
   const [refreshing, setRefreshing] = useState(false);
-  const [chartType, setChartType] = useState<'revenue' | 'rooms' | 'contracts'>(
-    'revenue',
-  );
+  const [chartType, _setChartType] = useState<
+    'revenue' | 'rooms' | 'contracts'
+  >('revenue');
 
   // Lấy chiều cao của thanh trạng thái
   const statusBarHeight =
@@ -172,13 +172,9 @@ const StatisticScreen = () => {
           style={[styles.chartsContainer, {marginTop: statusBarHeight + 20}]}>
           <MainChart
             title={mainChartData.title}
-            subtitle={`Cập nhật: ${new Date().toLocaleTimeString(
-              'vi-VN',
-            )} Hôm nay`}
-            mainValue={mainChartData.mainValue}
             data={mainChartData.data}
             labels={data?.monthlyStats?.labels || []}
-            valueType={mainChartData.valueType}
+            color={Colors.success}
           />
         </View>
 
@@ -187,7 +183,7 @@ const StatisticScreen = () => {
           <StatisticCard
             title="Phòng trọ"
             icon={require('../../../assets/icons/icon_room.png')}
-            backgroundColor={Colors.lightGreenBackground}
+            backgroundColor={Colors.white}
             iconColor={Colors.darkGreen}
             stats={[
               {
@@ -217,7 +213,7 @@ const StatisticScreen = () => {
           <StatisticCard
             title="Doanh thu"
             icon={require('../../../assets/icons/icon_area_black.png')}
-            backgroundColor={Colors.lightGreenBackground}
+            backgroundColor={Colors.white}
             iconColor={Colors.darkGreen}
             stats={[
               {
@@ -242,7 +238,7 @@ const StatisticScreen = () => {
           <StatisticCard
             title="Hợp đồng"
             icon={require('../../../assets/icons/icon_ban_ghe.png')}
-            backgroundColor={Colors.lightGreenBackground}
+            backgroundColor={Colors.white}
             iconColor={Colors.darkGreen}
             stats={[
               {

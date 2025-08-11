@@ -33,7 +33,7 @@ export {
   LogoutModal,
   ModalAleartProfile,
   ShareModal,
-  
+
   // New components
   HeaderWithBack,
   InfoRow,
@@ -59,7 +59,7 @@ export default {
   LogoutModal,
   ModalAleartProfile,
   ShareModal,
-  
+
   // New components
   HeaderWithBack,
   InfoRow,
@@ -70,4 +70,4 @@ export default {
   TenantItem,
   Pagination,
   SearchBar,
-}; 
+};

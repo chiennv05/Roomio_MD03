@@ -12,41 +12,41 @@ interface HeaderProps {
   favoriteLoading?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ 
-  onGoBack, 
-  onFavoritePress, 
+const Header: React.FC<HeaderProps> = ({
+  onGoBack,
+  onFavoritePress,
   onSharePress,
   isFavorited = false,
-  favoriteLoading = false
+  favoriteLoading = false,
 }) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.button} onPress={onGoBack}>
-        <Image 
-          source={{ uri: Icons.IconArrowLeft }} 
+        <Image
+          source={{ uri: Icons.IconArrowLeft }}
           style={styles.icon2}
         />
       </TouchableOpacity>
       <View style={styles.rightButtons}>
-        <TouchableOpacity 
-          style={[styles.button, favoriteLoading && styles.loadingButton]} 
+        <TouchableOpacity
+          style={[styles.button, favoriteLoading && styles.loadingButton]}
           onPress={onFavoritePress}
           disabled={favoriteLoading}
         >
-          <Image 
-            source={{ uri: isFavorited ? Icons.IconHeartFavourite : Icons.IconFavourite }} 
+          <Image
+            source={{ uri: isFavorited ? Icons.IconHeartFavourite : Icons.IconFavourite }}
             style={[
-              isFavorited ? styles.favoriteIcon : styles.icon, 
-              favoriteLoading && styles.loadingIcon
+              isFavorited ? styles.favoriteIcon : styles.icon,
+              favoriteLoading && styles.loadingIcon,
             ]}
           />
         </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.button, styles.shareButton]} 
+        <TouchableOpacity
+          style={[styles.button, styles.shareButton]}
           onPress={onSharePress}
         >
-          <Image 
-            source={{ uri: Icons.IconShare }} 
+          <Image
+            source={{ uri: Icons.IconShare }}
             style={styles.icon}
           />
         </TouchableOpacity>
@@ -57,13 +57,13 @@ const Header: React.FC<HeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute', 
-    top: responsiveSpacing(50), 
-    left: 0, 
+    position: 'absolute',
+    top: responsiveSpacing(50),
+    left: 0,
     right: 0,
-    flexDirection: 'row', 
+    flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: responsiveSpacing(16), 
+    paddingHorizontal: responsiveSpacing(16),
     zIndex: 10,
   },
   rightButtons: {
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
   },
   loadingIcon: {
     opacity: 0.5,
-  }
+  },
 });
 
 export default Header;

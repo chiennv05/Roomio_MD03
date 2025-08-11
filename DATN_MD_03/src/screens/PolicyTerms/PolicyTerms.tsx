@@ -34,7 +34,7 @@ const PolicyTerms = () => {
       </View>
 
       {/* Content */}
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}

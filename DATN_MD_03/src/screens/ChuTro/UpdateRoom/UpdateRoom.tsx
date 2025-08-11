@@ -64,18 +64,18 @@ export default function UpdateRoom() {
   const {item} = route.params;
   const dispatch = useDispatch<AppDispatch>();
   console.log('item room', item);
-  
 
-  const { 
-    alertConfig, 
-    visible, 
-    showAlert, 
-    hideAlert, 
-    showSuccess, 
-    showError, 
-    showConfirm 
+
+  const {
+    alertConfig,
+    visible,
+    showAlert,
+    hideAlert,
+    showSuccess,
+    showError,
+    showConfirm,
   } = useCustomAlert();
-  
+
   // Sử dụng hook useRoomData để quản lý state
   const {
     roomNumber,
@@ -301,7 +301,7 @@ export default function UpdateRoom() {
   };
 
   const handleSaveModal = (item: ItemSeviceOptions) => {
-    if (!item) return;
+    if (!item) {return;}
 
     // *** SỬA: Logic xác định item mới đúng hơn ***
     const existingItem = serviceOptionList.find(
@@ -387,7 +387,7 @@ export default function UpdateRoom() {
 
   // Thêm hàm xử lý xóa dịch vụ
   const handleDeleteService = (item: ItemSeviceOptions) => {
-    if (!item) return;
+    if (!item) {return;}
 
     showConfirm(
       `Bạn có chắc chắn muốn xóa dịch vụ "${item.label}" không?`,
@@ -498,7 +498,7 @@ export default function UpdateRoom() {
       description,
       rentPrice,
     });
-    
+
     if (!result.valid) {
       showError(result.message, 'Lỗi');
       return;
@@ -554,11 +554,11 @@ export default function UpdateRoom() {
         showError('Không tìm thấy ID phòng trọ', 'Lỗi');
         return;
       }
-      
+
       const res = await dispatch(
         updateLandlordRoom({
-          roomId: item._id as string, 
-          room: updatedRoom
+          roomId: item._id as string,
+          room: updatedRoom,
         })
       );
 

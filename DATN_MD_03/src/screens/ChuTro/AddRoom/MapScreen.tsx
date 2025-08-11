@@ -380,23 +380,23 @@ export default function MapScreen({route}: MapScreenProps) {
     }
 
     // Đảm bảo có đủ thông tin tối thiểu
-    if (!houseNumber) houseNumber = '1';
-    if (!street) street = 'Chưa có tên đường';
-    if (!district) district = 'Chưa có quận/huyện';
+    if (!houseNumber) {houseNumber = '1';}
+    if (!street) {street = 'Chưa có tên đường';}
+    if (!district) {district = 'Chưa có quận/huyện';}
 
     // Tạo địa chỉ theo format mong muốn
     const formattedParts = [];
 
-    if (houseNumber) formattedParts.push(houseNumber);
-    if (street) formattedParts.push(street);
-    if (district) formattedParts.push(district);
+    if (houseNumber) {formattedParts.push(houseNumber);}
+    if (street) {formattedParts.push(street);}
+    if (district) {formattedParts.push(district);}
     formattedParts.push(city); // Luôn thêm thành phố vào cuối
 
     return formattedParts.join(', ');
   };
 
   const handleMapPress = async (e: any) => {
-    if (!isSelectMode) return;
+    if (!isSelectMode) {return;}
 
     const {latitude, longitude} = e.nativeEvent.coordinate;
 

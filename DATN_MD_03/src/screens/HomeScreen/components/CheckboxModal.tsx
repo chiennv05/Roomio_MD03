@@ -90,7 +90,7 @@ const CheckboxModal: React.FC<CheckboxModalProps> = ({
                 <View style={styles.checkboxContainer}>
                   <View style={[
                     styles.checkbox,
-                    selected.includes(item.id) && styles.checkboxSelected
+                    selected.includes(item.id) && styles.checkboxSelected,
                   ]}>
                     {selected.includes(item.id) && (
                       <Text style={styles.checkmark}>✓</Text>
@@ -189,4 +189,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-}); 
+});

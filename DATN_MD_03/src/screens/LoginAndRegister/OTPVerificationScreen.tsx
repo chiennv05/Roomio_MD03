@@ -92,7 +92,7 @@ export default function OTPVerificationScreen() {
     }
   }, [handleSetModal, navigation, email, value]);
   const handleGuilai = useCallback(async () => {
-    if (!canResend || isLoading) return;
+    if (!canResend || isLoading) {return;}
 
     const error = validateEmail(email);
     if (error) {

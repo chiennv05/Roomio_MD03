@@ -60,7 +60,7 @@ const CreateInvoiceScreen = () => {
     const [datePickerOpen, setDatePickerOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [items, setItems] = useState<InvoiceItem[]>([
-        { name: 'Tiền thuê phòng', amount: 0, type: 'rent' }
+        { name: 'Tiền thuê phòng', amount: 0, type: 'rent' },
     ]);
 
     // State cho modal lưu mẫu
@@ -87,7 +87,7 @@ const CreateInvoiceScreen = () => {
     const formatMonthYear = (date: Date) => {
         const months = [
             'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
-            'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+            'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
         ];
         return `${months[date.getMonth()]} ${date.getFullYear()}`;
     };
@@ -106,7 +106,7 @@ const CreateInvoiceScreen = () => {
             if (typeof contract.roomId === 'object' && contract.roomId) {
                 setSelectedRoom({
                     id: contract.roomId._id,
-                    name: contract.roomId.roomNumber
+                    name: contract.roomId.roomNumber,
                 });
             }
 
@@ -114,12 +114,12 @@ const CreateInvoiceScreen = () => {
             if (typeof contract.tenantId === 'object' && contract.tenantId) {
                 setSelectedTenant({
                     id: contract.tenantId._id,
-                    name: contract.tenantId.fullName
+                    name: contract.tenantId.fullName,
                 });
             } else {
                 setSelectedTenant({
                     id: 'unknown',
-                    name: contract.contractInfo.tenantName
+                    name: contract.contractInfo.tenantName,
                 });
             }
 
@@ -128,8 +128,8 @@ const CreateInvoiceScreen = () => {
                 {
                     name: 'Tiền thuê phòng',
                     amount: contract.contractInfo.monthlyRent,
-                    type: 'rent'
-                }
+                    type: 'rent',
+                },
             ];
 
             // Thêm các dịch vụ từ hợp đồng
@@ -138,7 +138,7 @@ const CreateInvoiceScreen = () => {
                     defaultItems.push({
                         name: service.name,
                         amount: service.price,
-                        type: 'service'
+                        type: 'service',
                     });
                 });
             }
@@ -173,7 +173,7 @@ const CreateInvoiceScreen = () => {
                 month: selectedMonth,
                 year: selectedYear,
                 dueDate: formattedDueDate,
-                includeServices: true
+                includeServices: true,
             };
 
             const response = await createInvoice(token || '', requestBody);
@@ -206,8 +206,8 @@ const CreateInvoiceScreen = () => {
                             } else {
                                 navigation.goBack();
                             }
-                        }
-                    }
+                        },
+                    },
                 ]
             );
         } catch (error: any) {
@@ -649,4 +649,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default CreateInvoiceScreen; 
+export default CreateInvoiceScreen;

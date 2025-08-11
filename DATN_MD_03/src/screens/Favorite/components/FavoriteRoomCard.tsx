@@ -10,11 +10,11 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { Colors } from '../../../theme/color';
 import { Room } from '../../../types/Room';
-import { 
-  SCREEN, 
-  responsiveFont, 
+import {
+  SCREEN,
+  responsiveFont,
   responsiveSpacing,
-  moderateScale 
+  moderateScale,
 } from '../../../utils/responsive';
 import { Fonts } from '../../../theme/fonts';
 import { getImageUrl } from '../../../configs';
@@ -32,12 +32,12 @@ const FavoriteRoomCard: React.FC<FavoriteRoomCardProps> = ({ item, onPress }) =>
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const { toggleFavoriteLoading } = useSelector((state: RootState) => state.room);
-  
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
+
   // Chuyển đổi đường dẫn hình ảnh từ API thành URL đầy đủ
   const images = item.photos?.map(photo => getImageUrl(photo)) || [];
-  
+
   // Hàm xử lý khi người dùng scroll qua các hình ảnh
   const handleScroll = (event: any) => {
     const slideSize = SCREEN.width - responsiveSpacing(32);
@@ -57,12 +57,12 @@ const FavoriteRoomCard: React.FC<FavoriteRoomCardProps> = ({ item, onPress }) =>
   // Hàm xử lý toggle favorite
   const handleToggleFavorite = useCallback((event: any) => {
     event.stopPropagation(); // Prevent card press
-    
-    if (!user?.auth_token || !item._id) return;
-    
+
+    if (!user?.auth_token || !item._id) {return;}
+
     dispatch(toggleFavorite({
       roomId: item._id,
-      token: user.auth_token
+      token: user.auth_token,
     }));
   }, [dispatch, user?.auth_token, item._id]);
 
@@ -83,27 +83,27 @@ const FavoriteRoomCard: React.FC<FavoriteRoomCardProps> = ({ item, onPress }) =>
             </View>
           ))}
         </ScrollView>
-        
+
         {/* Heart Icon - Top Right */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.heartContainer}
           onPress={handleToggleFavorite}
           disabled={toggleFavoriteLoading}
           activeOpacity={0.8}
         >
-          <Image 
-            source={{ uri: Icons.IconHeartFavourite }} 
+          <Image
+            source={{ uri: Icons.IconHeartFavourite }}
             style={styles.heartIcon}
           />
         </TouchableOpacity>
-        
+
         {/* Price tag overlay ở góc dưới bên trái */}
         <View style={styles.priceOverlay}>
           <Text style={styles.priceOverlayText}>
             {item.rentPrice?.toLocaleString('vi-VN')}/ tháng
           </Text>
         </View>
-        
+
         {/* Các chấm indicator */}
         {images.length > 1 && (
           <View style={styles.dotsContainer}>
@@ -112,14 +112,14 @@ const FavoriteRoomCard: React.FC<FavoriteRoomCardProps> = ({ item, onPress }) =>
                 key={index}
                 style={[
                   styles.dot,
-                  currentImageIndex === index && styles.activeDot
+                  currentImageIndex === index && styles.activeDot,
                 ]}
               />
             ))}
           </View>
         )}
       </View>
-      
+
       {/* Phần thông tin phòng trọ */}
       <View style={styles.info}>
         <Text style={styles.title}>{item.description}</Text>
@@ -282,4 +282,4 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: responsiveFont(20),
   },
-}); 
+});

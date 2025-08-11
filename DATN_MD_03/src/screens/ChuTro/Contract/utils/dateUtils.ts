@@ -98,7 +98,7 @@ export const getDateLimits = (yearsInFuture: number = 5) => {
   const today = new Date();
   const maxDate = new Date();
   maxDate.setFullYear(today.getFullYear() + yearsInFuture);
-  
+
   return {
     today,
     maxDate,

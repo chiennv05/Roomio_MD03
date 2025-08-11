@@ -1155,7 +1155,7 @@ export const getInvoiceTemplates = async (token: string) => {
     console.log('Fetching invoice templates');
 
     const response = await api.get<{success: boolean; templates: any[]}>(
-      `/billing/templates`,
+      '/billing/templates',
       {
         headers: {
           Authorization: `Bearer ${token}`,

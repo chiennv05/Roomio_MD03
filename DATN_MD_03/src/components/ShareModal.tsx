@@ -42,7 +42,7 @@ const ShareModal: React.FC<ShareModalProps> = ({
   const createShareContent = () => {
     const deepUrl = `roomio://room/${roomId}`;
     const webUrl = `https://roomio.app/room/${roomId}`;
-    
+
     return {
       title: 'Chia sẻ phòng trọ từ Roomio',
       message: `🏠 ${roomName}
@@ -63,7 +63,7 @@ Tải app Roomio để khám phá thêm nhiều phòng trọ chất lượng!`,
     try {
       const shareContent = createShareContent();
       await Clipboard.setString(shareContent.message);
-      
+
       setShowCopySuccess(true);
       setTimeout(() => {
         setShowCopySuccess(false);
@@ -78,7 +78,7 @@ Tải app Roomio để khám phá thêm nhiều phòng trọ chất lượng!`,
   const handleShare = async () => {
     try {
       const shareContent = createShareContent();
-      
+
       const result = await Share.share({
         title: shareContent.title,
         message: shareContent.message,
@@ -303,4 +303,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ShareModal; 
+export default ShareModal;

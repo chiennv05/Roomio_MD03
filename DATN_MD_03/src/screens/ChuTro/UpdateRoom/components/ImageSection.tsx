@@ -37,14 +37,14 @@ const ImageSection: React.FC<ImageSectionProps> = ({
       setVisibleImage(true);
       const result = await uploadRoomPhotos(images);
       console.log('Kết quả upload:', result);
-      
+
       // Kiểm tra kết quả trả về có đúng định dạng không
       if (!result || !result.data || !result.data.photos) {
         console.error('Kết quả API không đúng định dạng mong đợi:', result);
         Alert.alert('Lỗi', 'Không thể tải ảnh lên, vui lòng thử lại sau');
         return;
       }
-      
+
       const uploaded = result.data.photos;
       console.log('Uploaded photos:', uploaded);
 
@@ -52,11 +52,11 @@ const ImageSection: React.FC<ImageSectionProps> = ({
       setImage(prev => {
         const newImages = [...prev, ...uploaded];
         console.log('New images state:', newImages);
-        
+
         // Cập nhật imageArr sau khi cập nhật image
         const formattedPhotos = formatPhotoUrls(newImages);
         setImageArr(formattedPhotos);
-        
+
         return newImages;
       });
     } catch (e) {
@@ -107,11 +107,11 @@ const ImageSection: React.FC<ImageSectionProps> = ({
   // Hàm chọn ảnh từ thư viện hoặc máy ảnh
   const pickImages = () => {
     Alert.alert(
-      'Chọn ảnh', 
-      'Bạn muốn chọn ảnh từ đâu?', 
+      'Chọn ảnh',
+      'Bạn muốn chọn ảnh từ đâu?',
       [
         {
-          text: 'Máy ảnh', 
+          text: 'Máy ảnh',
           onPress: () => {
             ImagePicker.openCamera({
               width: 1000,
@@ -122,19 +122,19 @@ const ImageSection: React.FC<ImageSectionProps> = ({
             })
             .then(image => {
               console.log('Ảnh từ máy ảnh:', image);
-              
+
               // Kiểm tra dữ liệu trước khi tạo ImageFile
               if (!image.path || !image.mime) {
                 Alert.alert('Lỗi', 'Không thể lấy thông tin ảnh');
                 return;
               }
-              
+
               const imageFile: ImageFile = {
                 path: image.path,
                 mime: image.mime,
                 filename: image.path.split('/').pop() || `camera_${Date.now()}.jpg`,
               };
-              
+
               console.log('ImageFile được tạo:', imageFile);
               onUpload([imageFile]);
             })
@@ -147,7 +147,7 @@ const ImageSection: React.FC<ImageSectionProps> = ({
           },
         },
         {
-          text: 'Thư viện', 
+          text: 'Thư viện',
           onPress: () => {
             ImagePicker.openPicker({
               multiple: true,
@@ -158,28 +158,28 @@ const ImageSection: React.FC<ImageSectionProps> = ({
             })
             .then(images => {
               console.log('Ảnh từ thư viện:', images);
-              
+
               // Đảm bảo images là một mảng
               if (!Array.isArray(images)) {
                 images = [images];
               }
-              
+
               const imageFiles: ImageFile[] = images.map(img => {
                 // Kiểm tra từng thuộc tính
                 if (!img.path || !img.mime) {
                   console.error('Ảnh không hợp lệ:', img);
                   throw new Error('Ảnh không hợp lệ');
                 }
-                
+
                 return {
                   path: img.path,
                   mime: img.mime,
                   filename: img.path.split('/').pop() || `gallery_${Date.now()}.jpg`,
                 };
               });
-              
+
               console.log('Mảng ImageFile được tạo:', imageFiles);
-              
+
               if (imageFiles.length > 0) {
                 onUpload(imageFiles);
               } else {
@@ -192,9 +192,9 @@ const ImageSection: React.FC<ImageSectionProps> = ({
                 Alert.alert('Thông báo', 'Không thể truy cập thư viện, vui lòng kiểm tra quyền truy cập');
               }
             });
-          }
+          },
         },
-        {text: 'Hủy', style: 'cancel'}
+        {text: 'Hủy', style: 'cancel'},
       ]
     );
   };
@@ -251,4 +251,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ImageSection; 
+export default ImageSection;

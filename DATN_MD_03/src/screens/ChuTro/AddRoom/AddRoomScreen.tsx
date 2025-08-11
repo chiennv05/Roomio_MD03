@@ -353,7 +353,7 @@ export default function AddRoomScreen() {
 
   //modal add
   const handleSaveModal = (item: ItemSeviceOptions) => {
-    if (!item) return;
+    if (!item) {return;}
 
     console.log('item', item);
 
@@ -429,7 +429,7 @@ export default function AddRoomScreen() {
     setItemServiceEdit(undefined);
   };
   const handleDeleteService = (item: ItemSeviceOptions) => {
-    if (!item) return;
+    if (!item) {return;}
 
     showConfirm(
       `Bạn có chắc chắn muốn xóa dịch vụ "${item.label}" không?`,

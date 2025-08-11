@@ -18,7 +18,7 @@ import {
     fetchInvoiceTemplates,
     resetTemplatesState,
     deleteInvoiceTemplate,
-    resetDeleteTemplateState
+    resetDeleteTemplateState,
 } from '../../store/slices/billSlice';
 import ContractSelectionModal from './components/ContractSelectionModal';
 import ApplyTemplateModal from './components/ApplyTemplateModal';
@@ -34,7 +34,7 @@ const InvoiceTemplatesScreen = () => {
         templatesError,
         deleteTemplateLoading,
         deleteTemplateSuccess,
-        deleteTemplateError
+        deleteTemplateError,
     } = useAppSelector(state => state.bill);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -103,7 +103,7 @@ const InvoiceTemplatesScreen = () => {
 
     // Xử lý xóa mẫu hóa đơn
     const handleDeleteTemplate = (template: any) => {
-        if (!token || !template._id) return;
+        if (!token || !template._id) {return;}
 
         Alert.alert(
             'Xác nhận xóa',
@@ -111,21 +111,21 @@ const InvoiceTemplatesScreen = () => {
             [
                 {
                     text: 'Hủy',
-                    style: 'cancel'
+                    style: 'cancel',
                 },
                 {
                     text: 'Xóa',
                     style: 'destructive',
                     onPress: () => {
                         dispatch(deleteInvoiceTemplate({ token, templateId: template._id }));
-                    }
-                }
+                    },
+                },
             ]
         );
     };
 
     const formatPeriod = (period: any) => {
-        if (!period) return 'N/A';
+        if (!period) {return 'N/A';}
         if (typeof period === 'string') {
             return period;
         }
@@ -428,4 +428,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default InvoiceTemplatesScreen; 
+export default InvoiceTemplatesScreen;

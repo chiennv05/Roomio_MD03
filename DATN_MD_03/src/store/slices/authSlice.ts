@@ -17,7 +17,7 @@ export const registerUser = createAsyncThunk(
   async (data: RegisterPayload, {rejectWithValue}) => {
     try {
       const res = await register(data);
-      if (!res?.success) throw new Error(res?.message);
+      if (!res?.success) {throw new Error(res?.message);}
       return res;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Đăng ký thất bại');
@@ -30,7 +30,7 @@ export const loginUser = createAsyncThunk(
   async (data: LoginPayload, {rejectWithValue}) => {
     try {
       const res = await login(data);
-      if (!res?.success) throw new Error(res?.message);
+      if (!res?.success) {throw new Error(res?.message);}
 
       const {token, user} = res.data;
       const mapUser = mapApiUserToUser(user, token);

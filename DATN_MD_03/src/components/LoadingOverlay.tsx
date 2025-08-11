@@ -14,11 +14,11 @@ interface LoadingOverlayProps {
 
 const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
   visible,
-  message = "Đang tải...",
+  message = 'Đang tải...',
   size = 'large',
-  transparent = false
+  transparent = false,
 }) => {
-  if (!visible) return null;
+  if (!visible) {return null;}
 
   return (
     <Modal
@@ -29,11 +29,11 @@ const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
     >
       <View style={[
         styles.overlay,
-        transparent && styles.transparentOverlay
+        transparent && styles.transparentOverlay,
       ]}>
         <View style={styles.container}>
-          <LoadingAnimation 
-            size={size} 
+          <LoadingAnimation
+            size={size}
             color={Colors.limeGreen}
           />
           {message && (
@@ -79,4 +79,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoadingOverlay; 
+export default LoadingOverlay;

@@ -11,10 +11,10 @@ import {
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store';
 import { Icons } from '../../../assets/icons';
-import { 
-  responsiveFont, 
-  responsiveIcon, 
-  responsiveSpacing 
+import {
+  responsiveFont,
+  responsiveIcon,
+  responsiveSpacing,
 } from '../../../utils/responsive';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
@@ -27,34 +27,34 @@ interface HeaderProps {
   onSearchSubmit?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ 
+const Header: React.FC<HeaderProps> = ({
   onNotificationPress,
   onUserPress,
   searchValue = '',
   onChangeSearchText,
-  onSearchSubmit
+  onSearchSubmit,
 }) => {
   // Get user info from Redux store
   const { user } = useSelector((state: RootState) => state.auth);
-  
+
   // Get display name and avatar
   const displayName = user?.username || 'Guest';
   const isGuest = !user;
-  
+
   // Create avatar from first letter
   const getAvatarLetter = (name: string) => {
-    if (name === 'Guest') return 'G';
+    if (name === 'Guest') {return 'G';}
     return name.charAt(0).toUpperCase();
   };
-  
+
   const avatarLetter = getAvatarLetter(displayName);
-  
+
   return (
     <>
       <StatusBar barStyle="dark-content" backgroundColor="#f5f5f5" />
       <View style={styles.header}>
         <View style={styles.topRow}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.userInfo}
             onPress={onUserPress}
             activeOpacity={0.7}
@@ -69,11 +69,11 @@ const Header: React.FC<HeaderProps> = ({
               <Text style={styles.name}>{displayName}</Text>
             </View>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.notificationButton}
             onPress={onNotificationPress}
           >
-            <Image 
+            <Image
               source={{ uri: Icons.IconNotification }}
               style={styles.notificationIcon}
             />
@@ -90,11 +90,11 @@ const Header: React.FC<HeaderProps> = ({
             returnKeyType="search"
             onSubmitEditing={onSearchSubmit}
           />
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.searchButton}
             onPress={onSearchSubmit}
           >
-            <Image 
+            <Image
               source={{ uri: Icons.IconSearch }}
               style={styles.searchIcon}
             />

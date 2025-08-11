@@ -50,12 +50,12 @@ const SearchScreen: React.FC = () => {
     error,
     hasMore,
     loadMore,
-    totalItems
+    totalItems,
   } = useServerPagination({
     pageSize: 20,
     searchQuery: debouncedSearchQuery,
     isSearchMode: debouncedSearchQuery.trim().length > 0,
-    filters: {}
+    filters: {},
   });
 
   // Sắp xếp rooms theo điểm số
@@ -94,9 +94,9 @@ const SearchScreen: React.FC = () => {
       fadeAnim.setValue(0);
       slideAnim.setValue(100); // Bắt đầu từ vị trí dưới
       scaleAnim.setValue(1.05); // Bắt đầu từ scale lớn hơn
-      
+
       // No need to manually load - useServerPagination handles this
-      
+
       // Start animation ngay lập tức để liền mạch với HomeScreen
       const timer = setTimeout(() => {
         animateIn();
@@ -112,25 +112,25 @@ const SearchScreen: React.FC = () => {
       id: 'tim-o-ghep',
       label: 'Tìm ở ghép',
       icon: Icons.IconChanGaGoi || '',
-      isSelected: selectedFilters.includes('tim-o-ghep')
+      isSelected: selectedFilters.includes('tim-o-ghep'),
     },
     {
       id: 'tim-phong-lan-can',
       label: 'Tìm phòng lân cận',
       icon: Icons.IconLocation || '',
-      isSelected: selectedFilters.includes('tim-phong-lan-can')
+      isSelected: selectedFilters.includes('tim-phong-lan-can'),
     },
     {
       id: 'van-chuyen',
       label: 'Vận chuyển',
       icon: Icons.IconGuiXe || '',
-      isSelected: selectedFilters.includes('van-chuyen')
+      isSelected: selectedFilters.includes('van-chuyen'),
     },
     {
       id: 'noi-that-gia-re',
       label: 'Nội thất giá rẻ',
       icon: Icons.IconSofa || '',
-      isSelected: selectedFilters.includes('noi-that-gia-re')
+      isSelected: selectedFilters.includes('noi-that-gia-re'),
     },
   ], [selectedFilters]);
 
@@ -208,17 +208,17 @@ const SearchScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroud} />
-      
-      <Animated.View 
+
+      <Animated.View
         style={[
           styles.animatedContainer,
           {
             opacity: fadeAnim,
             transform: [
               { translateY: slideAnim },
-              { scale: scaleAnim }
+              { scale: scaleAnim },
             ],
-          }
+          },
         ]}
       >
         {/* Search Bar */}
@@ -228,7 +228,7 @@ const SearchScreen: React.FC = () => {
           onSearchPress={handleSearch}
           placeholder="Tìm theo địa chỉ, mô tả phòng..."
         />
-   
+
         {/* Search Results */}
         <SearchResults
           title={searchTitle}

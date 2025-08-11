@@ -29,7 +29,7 @@ const PaymentMethodModal = ({
     const paymentMethods = [
         { id: 'cash', name: 'Tiền mặt' },
         { id: 'bank_transfer', name: 'Chuyển khoản' },
-        
+
     ];
 
     return (
@@ -140,4 +140,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default PaymentMethodModal; 
+export default PaymentMethodModal;

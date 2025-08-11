@@ -9,12 +9,12 @@ export const formatPhotoUrls = (images: ImageUploadResult[]): string[] => {
         if (img.url.startsWith('/api')) {
           return img.url;
         }
-        
+
         // Xử lý các trường hợp khác
-        const path = img.url.includes('/api') 
+        const path = img.url.includes('/api')
           ? img.url.split('/api')[1] // lấy phần sau "/api"
           : img.url; // nếu không có '/api', giữ nguyên url
-          
+
         return path.startsWith('/') ? '/api' + path : '/api/' + path;
       } catch (error) {
         console.error('Lỗi xử lý URL ảnh:', img, error);

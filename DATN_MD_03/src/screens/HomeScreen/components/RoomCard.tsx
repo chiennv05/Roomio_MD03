@@ -10,8 +10,8 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { Colors } from '../../../theme/color';
 import { Room } from '../../../types/Room';
-import { 
-  responsiveFont, 
+import {
+  responsiveFont,
   responsiveSpacing,
   scale,
   verticalScale,
@@ -30,9 +30,9 @@ interface RoomCardProps {
 
 const RoomCard: React.FC<RoomCardProps> = ({ item, onPress }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
+
   const images = item.photos?.map(photo => getImageUrl(photo)) || [];
-  
+
   const onScroll = useCallback((event: any) => {
     const slideSize = event.nativeEvent.layoutMeasurement.width;
     const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
@@ -79,36 +79,36 @@ const RoomCard: React.FC<RoomCardProps> = ({ item, onPress }) => {
             scrollEventThrottle={16}
             style={styles.carousel}
           />
-          
+
           {/* Price tag overlay */}
           <View style={styles.priceTag}>
             <Text style={styles.priceText}>
               {formatPrice(item.rentPrice || 0)}
             </Text>
           </View>
-          
+
           {/* Progress bars */}
           {images.length > 1 && (
             <View style={styles.progressContainer}>
               <View style={styles.progressBars}>
                 {images.map((_, index) => (
-                  <View 
-                    key={index} 
+                  <View
+                    key={index}
                     style={[
                       styles.progressBar,
                       {
-                        backgroundColor: index === currentImageIndex 
+                        backgroundColor: index === currentImageIndex
                           ? '#BAFD00'
-                          : 'rgba(255, 255, 255, 0.4)'
-                      }
-                    ]} 
+                          : 'rgba(255, 255, 255, 0.4)',
+                      },
+                    ]}
                   />
                 ))}
               </View>
             </View>
           )}
         </View>
-        
+
         {/* Thông tin phòng */}
         <View style={styles.info}>
           <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
