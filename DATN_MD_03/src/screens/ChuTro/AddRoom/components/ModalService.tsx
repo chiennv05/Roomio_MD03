@@ -1,11 +1,4 @@
-import {
-  Alert,
-  Modal,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import {Modal, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {responsiveFont, SCREEN} from '../../../../utils/responsive';
 import {Colors} from '../../../../theme/color';
@@ -14,6 +7,8 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import {priceTypeList} from '../utils/priceType';
 import {ItemSeviceOptions} from '../utils/seviceOptions';
 import {Fonts} from '../../../../theme/fonts';
+import {useCustomAlert} from '../../../../hooks/useCustomAlrert';
+import {CustomAlertModal} from '../../../../components';
 
 interface ItemModal {
   visible: boolean;
@@ -36,7 +31,14 @@ export default function ModalService({
   const [priceType, setPriceType] = useState('perRoom');
   const [description, setDescription] = useState('');
   const [open, setOpen] = useState(false);
-  console.log(item);
+
+  const {
+    alertConfig,
+    visible: alertVisible,
+
+    showError,
+    hideAlert,
+  } = useCustomAlert();
 
   useEffect(() => {
     if (!item) return;
@@ -76,30 +78,30 @@ export default function ModalService({
     const isNew = item.label === 'Dịch vụ khác';
     const trimmedName = name.trim();
     if (!trimmedName) {
-      Alert.alert('Lỗi', 'Tên dịch vụ không được để trống');
+      showError('Tên dịch vụ không được để trống', 'Lỗi');
       return;
     }
     if (trimmedName.length > 50) {
-      Alert.alert('Lỗi', 'Tên dịch vụ không được quá 50 ký tự');
+      showError('Tên dịch vụ không được quá 50 ký tự', 'Lỗi');
       return;
     }
 
     if (price === '' || price <= 0) {
-      Alert.alert('Lỗi', 'Giá dịch vụ phải lớn hơn 0');
+      showError('Giá dịch vụ phải lớn hơn 0', 'Lỗi');
       return;
     }
 
     if (!['perRoom', 'perPerson', 'perUsage'].includes(priceType)) {
-      Alert.alert('Lỗi', 'Loại tính phí không hợp lệ');
+      showError('Loại tính phí không hợp lệ', 'Lỗi');
       return;
     }
     if (item.label === 'Dịch vụ khác') {
       if (!description.trim()) {
-        Alert.alert('Lỗi', 'Mô tả không được để trống');
+        showError('Mô tả không được để trống', 'Lỗi');
         return;
       }
       if (description.length > 200) {
-        Alert.alert('Lỗi', 'Mô tả không được vượt quá 200 ký tự');
+        showError('Mô tả không được vượt quá 200 ký tự', 'Lỗi');
         return;
       }
     }
@@ -208,6 +210,16 @@ export default function ModalService({
             )}
           </View>
         </View>
+        {alertConfig && (
+          <CustomAlertModal
+            visible={alertVisible}
+            title={alertConfig.title}
+            message={alertConfig.message}
+            onClose={hideAlert}
+            type={alertConfig.type}
+            buttons={alertConfig.buttons}
+          />
+        )}
       </View>
     </Modal>
   );
