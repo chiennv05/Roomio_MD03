@@ -12,7 +12,7 @@ import {
   Modal,
   RefreshControl,
   ImageSourcePropType,
-  Platform
+  Platform,
 } from 'react-native';
 import LoadingOverlay from '../../components/LoadingOverlay';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
@@ -34,7 +34,7 @@ const formatCurrency = (amount: number): string => {
       style: 'currency',
       currency: 'VND',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
   }).format(amount);
 };
 
@@ -42,28 +42,28 @@ const formatCurrency = (amount: number): string => {
 const extractInvoiceInfo = (invoice: any) => {
   // Lấy thông tin phòng
   const roomNumber = invoice?.contractId?.contractInfo?.roomNumber || 'Không xác định';
-  
+
   // Lấy thông tin người thuê
-  const tenantName = invoice?.contractId?.contractInfo?.tenantName || 
-                    (invoice?.tenantId && typeof invoice.tenantId === 'object' ? 
+  const tenantName = invoice?.contractId?.contractInfo?.tenantName ||
+                    (invoice?.tenantId && typeof invoice.tenantId === 'object' ?
                      invoice.tenantId.fullName : 'Không xác định');
-  
+
   // Lấy kỳ hóa đơn
   const period = invoice?.period ? `${invoice.period.month}/${invoice.period.year}` :
                 (invoice?.month && invoice?.year ? `${invoice.month}/${invoice.year}` : 'Không xác định');
 
   // Lấy địa chỉ phòng
   const roomAddress = invoice?.contractId?.contractInfo?.roomAddress || '';
-  
+
   // Lấy hạn thanh toán
   const dueDate = invoice?.dueDate ? formatDate(invoice.dueDate) : 'Không xác định';
-  
+
   return {
     roomNumber,
     tenantName,
     period,
     roomAddress,
-    dueDate
+    dueDate,
   };
 };
 
@@ -109,7 +109,7 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
       console.log('Roommate invoice loaded in detail screen:', {
         id: roommateInvoice._id,
         isRoommate: roommateInvoice.isRoommate,
-        status: roommateInvoice.status
+        status: roommateInvoice.status,
       });
     }
   }, [roommateInvoice]);
@@ -126,20 +126,20 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
   }, [markAsPaidSuccess, markAsPaidError, loadInvoiceDetails]);
 
   const handleMarkAsPaid = () => {
-    if (!token || !invoiceId) return;
-    
+    if (!token || !invoiceId) {return;}
+
     setShowPaymentModal(true);
   };
 
   const confirmMarkAsPaid = () => {
-    if (!token || !invoiceId || !selectedPaymentMethod) return;
+    if (!token || !invoiceId || !selectedPaymentMethod) {return;}
 
     dispatch(markAsPaid({
       token,
       invoiceId,
-      paymentMethod: selectedPaymentMethod
+      paymentMethod: selectedPaymentMethod,
     }));
-    
+
     setShowPaymentModal(false);
   };
 
@@ -200,7 +200,7 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
 
   // Lấy trạng thái hóa đơn
   const status = getStatusText(roommateInvoice.status);
-  
+
   // Trích xuất thông tin từ hóa đơn
   const { roomNumber, tenantName, period, roomAddress, dueDate } = extractInvoiceInfo(roommateInvoice);
 
@@ -247,19 +247,19 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
               <Text style={styles.value}>{roommateInvoice.invoiceNumber}</Text>
             </View>
           )}
-          
+
           <View style={styles.cardRow}>
             <Text style={styles.label}>Phòng:</Text>
             <Text style={styles.value}>{roomNumber}</Text>
           </View>
-          
+
           {roomAddress && (
             <View style={styles.cardRow}>
               <Text style={styles.label}>Địa chỉ:</Text>
               <Text style={styles.value}>{roomAddress}</Text>
             </View>
           )}
-          
+
           <View style={styles.cardRow}>
             <Text style={styles.label}>Người thuê:</Text>
             <Text style={styles.value}>{tenantName}</Text>
@@ -285,14 +285,14 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
             </View>
           )}
           */}
-          
+
           <View style={styles.cardRow}>
             <Text style={styles.label}>Trạng thái:</Text>
             <Text style={[styles.value, { color: status.color }]}>{status.text}</Text>
           </View>
 
-          
-          
+
+
           {roommateInvoice.status === 'paid' && roommateInvoice.paymentDate && (
             <View style={styles.cardRow}>
               <Text style={styles.label}>Đã thanh toán:</Text>
@@ -311,7 +311,7 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
         {/* Invoice Items */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Chi tiết thanh toán</Text>
-          
+
           {hasItems ? (
             <>
               {roommateInvoice.items?.map((item, index) => {
@@ -319,7 +319,7 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
                 const isRent = item.category === 'rent';
                 const isUtility = item.category === 'utility' && item.type === 'variable';
                 const isService = item.category === 'service' || (item.category === 'utility' && item.type !== 'variable');
-                
+
                 return (
                   <View key={item._id || index} style={styles.itemContainer}>
                     <View style={styles.itemHeader}>
@@ -328,11 +328,11 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
                         {formatCurrency(item.amount)}
                       </Text>
                     </View>
-                    
+
                     {item.description && (
                       <Text style={styles.itemDescription}>{item.description}</Text>
                     )}
-                    
+
                     {isUtility && item.previousReading !== undefined && item.currentReading !== undefined ? (
                       <Text style={styles.itemDescription}>
                         Chỉ số: {item.previousReading} → {item.currentReading} ({item.currentReading - item.previousReading} đơn vị)
@@ -349,7 +349,7 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
                   </View>
                 );
               })}
-              
+
               <View style={styles.totalSection}>
                 <Text style={styles.totalLabel}>Tổng cộng</Text>
                 <Text style={styles.totalAmount}>{formatCurrency(roommateInvoice.totalAmount)}</Text>
@@ -362,8 +362,8 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
 
         {/* Action buttons - using type assertion to allow 'pending' status */}
         {isTenant && roommateInvoice.status === 'pending' && (
-          <TouchableOpacity 
-            style={styles.actionButton} 
+          <TouchableOpacity
+            style={styles.actionButton}
             onPress={handleMarkAsPaid}
             disabled={markAsPaidLoading}
           >
@@ -386,11 +386,11 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Chọn phương thức thanh toán</Text>
-            
+
             <TouchableOpacity
               style={[
-                styles.paymentOption, 
-                selectedPaymentMethod === 'cash' && styles.selectedPaymentOption
+                styles.paymentOption,
+                selectedPaymentMethod === 'cash' && styles.selectedPaymentOption,
               ]}
               onPress={() => setSelectedPaymentMethod('cash')}
             >
@@ -399,11 +399,11 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
                 <Image source={Icons.IconCheck as ImageSourcePropType} style={styles.checkIcon} />
               )}
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[
                 styles.paymentOption,
-                selectedPaymentMethod === 'bank_transfer' && styles.selectedPaymentOption
+                selectedPaymentMethod === 'bank_transfer' && styles.selectedPaymentOption,
               ]}
               onPress={() => setSelectedPaymentMethod('bank_transfer')}
             >
@@ -414,15 +414,15 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
             </TouchableOpacity>
 
             <View style={styles.modalActions}>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.cancelButton]} 
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
                 onPress={() => setShowPaymentModal(false)}
               >
                 <Text style={styles.cancelButtonText}>Hủy</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.confirmButton]} 
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
                 onPress={confirmMarkAsPaid}
               >
                 <Text style={styles.confirmButtonText}>Xác nhận</Text>
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroud,
-    marginTop: 10
+    marginTop: 10,
   },
   scrollContainer: {
     padding: scale(16),
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
     borderRadius: scale(8),
     padding: scale(16),
     marginBottom: scale(16),
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -727,4 +727,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RoommateInvoiceDetailScreen; 
+export default RoommateInvoiceDetailScreen;

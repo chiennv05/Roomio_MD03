@@ -8,7 +8,7 @@ const initialState: TenantState = {
   loading: false,
   error: null,
   pagination: null,
-  
+
   // Chi tiết người thuê
   selectedTenant: null,
   activeContract: null,
@@ -105,4 +105,4 @@ const tenantSlice = createSlice({
 });
 
 export const { clearTenantErrors, resetTenantState, resetTenantDetail } = tenantSlice.actions;
-export default tenantSlice.reducer; 
+export default tenantSlice.reducer;

@@ -24,7 +24,7 @@ interface UsePaginatedDataReturn {
 export const usePaginatedData = ({
   data = [],
   pageSize = 10,
-  initialPageCount = 1
+  initialPageCount = 1,
 }: UsePaginatedDataOptions): UsePaginatedDataReturn => {
   const [currentPage, setCurrentPage] = useState(initialPageCount);
   const [isLoading, setIsLoading] = useState(false);
@@ -49,7 +49,7 @@ export const usePaginatedData = ({
   const loadMore = useCallback(() => {
     if (hasMore && !isLoading) {
       setIsLoading(true);
-      
+
       // Simulate loading delay for smooth UX
       setTimeout(() => {
         setCurrentPage(prev => prev + 1);
@@ -72,6 +72,6 @@ export const usePaginatedData = ({
     reset,
     totalItems: data.length,
     currentPage,
-    totalPages
+    totalPages,
   };
-}; 
+};

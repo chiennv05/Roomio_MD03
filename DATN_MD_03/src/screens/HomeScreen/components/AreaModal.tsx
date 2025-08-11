@@ -177,4 +177,4 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.backgroud,
   },
-}); 
+});

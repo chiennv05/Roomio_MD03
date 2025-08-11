@@ -40,7 +40,7 @@ export const fetchRooms = createAsyncThunk(
   async (filters: RoomFilters = {}, {rejectWithValue}) => {
     try {
       const res = await getRooms(filters);
-      if (!res?.success) throw new Error(res?.message);
+      if (!res?.success) {throw new Error(res?.message);}
       return res.data;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Lấy danh sách phòng trọ thất bại');
@@ -57,7 +57,7 @@ export const loadMoreRooms = createAsyncThunk(
       const nextPage = currentPage + 1;
 
       const res = await getRooms({...filters, page: nextPage});
-      if (!res?.success) throw new Error(res?.message);
+      if (!res?.success) {throw new Error(res?.message);}
       return res.data;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Tải thêm phòng trọ thất bại');
@@ -73,15 +73,15 @@ export const fetchRoomDetail = createAsyncThunk(
   ) => {
     try {
       const res = await getRoomDetail(roomId, token);
-      if (!res?.success) throw new Error(res?.message);
-      
+      if (!res?.success) {throw new Error(res?.message);}
+
       // Map API response to use isFavorited consistently
       const roomWithFavorite = {
         ...res.data.room,
         isFavorited: res.data.isFavorited,
         owner: res.data.owner,
       };
-      
+
       return roomWithFavorite;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Lấy chi tiết phòng thất bại');
@@ -157,7 +157,7 @@ export const fetchFavoriteRooms = createAsyncThunk(
   async (token: string, {rejectWithValue}) => {
     try {
       const res = await getFavoriteRooms(token);
-      if (!res?.success) throw new Error(res?.message);
+      if (!res?.success) {throw new Error(res?.message);}
       return res.data;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Lấy danh sách yêu thích thất bại');
@@ -173,7 +173,7 @@ export const searchRoomsAction = createAsyncThunk(
   ) => {
     try {
       const res = await searchRooms(searchQuery, filters);
-      if (!res?.success) throw new Error(res?.message);
+      if (!res?.success) {throw new Error(res?.message);}
       return res.data;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Tìm kiếm phòng thất bại');
@@ -193,7 +193,7 @@ export const loadMoreSearchResults = createAsyncThunk(
       const nextPage = currentPage + 1;
 
       const res = await searchRooms(searchQuery, {...filters, page: nextPage});
-      if (!res?.success) throw new Error(res?.message);
+      if (!res?.success) {throw new Error(res?.message);}
       return res.data;
     } catch (err: any) {
       return rejectWithValue(
@@ -313,7 +313,7 @@ const roomSlice = createSlice({
       .addCase(toggleFavorite.fulfilled, (state, action) => {
         state.toggleFavoriteLoading = false;
         const {roomId, data} = action.payload;
-        
+
         // Get new favorite status from API response
         const newFavoriteStatus = data?.isFavorited ?? !state.roomDetail?.isFavorited;
 

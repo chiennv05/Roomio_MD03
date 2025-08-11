@@ -48,7 +48,7 @@ export function validateContractFormNoNotification(
 
     if (totalPeople > form.maxOccupancy) {
       errors.push(
-        `Số người thuê (${totalPeople}) vượt quá sức chứa tối đa (${form.maxOccupancy}) của phòng.`,
+        `Phòng chỉ cho phép tối đa ${form.maxOccupancy} người, nhưng hiện có ${totalPeople} người.`,
       );
     }
   }

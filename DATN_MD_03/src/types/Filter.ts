@@ -29,4 +29,4 @@ export interface FilterState {
   furnitureCategories: FilterCategory;
   amenitiesCategories: FilterCategory;
   error: string | null;
-} 
+}

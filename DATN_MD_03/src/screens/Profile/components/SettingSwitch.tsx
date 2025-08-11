@@ -29,7 +29,7 @@ export default function SettingSwitch({iconStat, label, initialValue}: Props) {
   const animatedValue = useState(new Animated.Value(initialValue ? 1 : 0))[0];
 
   const getImageSource = () => {
-    if (!iconStat) return undefined;
+    if (!iconStat) {return undefined;}
     if (typeof iconStat === 'string') {
       return {uri: iconStat};
     }
@@ -39,7 +39,7 @@ export default function SettingSwitch({iconStat, label, initialValue}: Props) {
   const toggleSwitch = () => {
     const newValue = !isEnabled;
     setIsEnabled(newValue);
-    
+
     // Smooth animation
     Animated.timing(animatedValue, {
       toValue: newValue ? 1 : 0,
@@ -55,7 +55,7 @@ export default function SettingSwitch({iconStat, label, initialValue}: Props) {
         <Text style={styles.label}>{label}</Text>
       </View>
       <TouchableOpacity onPress={toggleSwitch} style={styles.switchContainer}>
-        <Animated.View 
+        <Animated.View
           style={[
             styles.switchTrack,
             {
@@ -113,13 +113,13 @@ const styles = StyleSheet.create({
     padding: responsiveSpacing(4),
   },
   switchTrack: {
-    width: responsiveSpacing(53), 
-    height: responsiveSpacing(32), 
+    width: responsiveSpacing(53),
+    height: responsiveSpacing(32),
     borderRadius: responsiveSpacing(16),
     position: 'relative',
     justifyContent: 'center',
   },
- 
+
   switchThumb: {
     position: 'absolute',
     width: responsiveSpacing(28),  // Tăng kích thước thumb

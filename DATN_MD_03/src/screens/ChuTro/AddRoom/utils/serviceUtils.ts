@@ -32,7 +32,7 @@ export const saveService = ({
   setCustomServices,
   onCloseModal,
 }: SaveServiceParams) => {
-  if (!editingService) return;
+  if (!editingService) {return;}
 
   const {value} = editingService;
 

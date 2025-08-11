@@ -21,7 +21,7 @@ export const createWebUrl = (roomId: string): string => {
 export const createShareContent = (content: ShareContent) => {
   const deepUrl = createDeepLinkUrl(content.roomId);
   const webUrl = createWebUrl(content.roomId);
-  
+
   return {
     title: 'Chia sẻ phòng trọ từ Roomio',
     message: `🏠 ${content.roomName}
@@ -45,7 +45,7 @@ export const parseDeepLink = (url: string): string | null => {
     if (url.startsWith('roomio://room/')) {
       return url.replace('roomio://room/', '');
     }
-    
+
     // Handle https://roomio.app/room/roomId
     if (url.includes('roomio.app/room/')) {
       const parts = url.split('roomio.app/room/');
@@ -53,7 +53,7 @@ export const parseDeepLink = (url: string): string | null => {
         return parts[1].split('?')[0]; // Remove query params if any
       }
     }
-    
+
     return null;
   } catch (error) {
     console.error('Error parsing deep link:', error);
@@ -65,4 +65,4 @@ export const parseDeepLink = (url: string): string | null => {
 export const isValidRoomId = (roomId: string): boolean => {
   // Kiểm tra roomId có hợp lệ không (MongoDB ObjectId format)
   return /^[a-fA-F0-9]{24}$/.test(roomId);
-}; 
+};

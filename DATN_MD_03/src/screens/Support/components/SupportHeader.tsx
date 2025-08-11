@@ -1,7 +1,20 @@
 import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  StatusBar,
+} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
-import {Image} from 'react-native';
+import {Colors} from '../../../theme/color';
+import {Fonts} from '../../../theme/fonts';
+import {
+  responsiveFont,
+  responsiveSpacing,
+  scale,
+} from '../../../utils/responsive';
 
 interface SupportHeaderProps {
   title: string;
@@ -11,45 +24,60 @@ const SupportHeader: React.FC<SupportHeaderProps> = ({title}) => {
   const navigation = useNavigation();
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}>
-        <Image
-          source={require('../../../assets/icons/icon_arrow_back.png')}
-          resizeMode="contain"
-        />
-      </TouchableOpacity>
-      <Text style={styles.title}>{title}</Text>
-      <View style={styles.rightPlaceholder} />
-    </View>
+    <>
+      <StatusBar backgroundColor={Colors.white} barStyle="dark-content" />
+      <View style={styles.container}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}>
+          <Image
+            source={require('../../../assets/icons/icon_arrow_back.png')}
+            style={styles.backIcon}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+        <Text style={styles.title}>{title}</Text>
+        <View style={styles.rightPlaceholder} />
+      </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    height: 56,
+    height: scale(70),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    elevation: 2,
+    backgroundColor: Colors.white,
+    paddingHorizontal: responsiveSpacing(16),
+    elevation: 4,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
-    shadowRadius: 1,
-    paddingTop: 25,
+    shadowRadius: 4,
+    paddingTop: responsiveSpacing(25),
   },
   backButton: {
-    padding: 10,
+    padding: responsiveSpacing(8),
+    borderRadius: scale(20),
+    backgroundColor: Colors.lightGray,
+  },
+  backIcon: {
+    width: scale(20),
+    height: scale(20),
+    tintColor: Colors.darkGray,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: responsiveFont(20),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+    flex: 1,
+    textAlign: 'center',
   },
   rightPlaceholder: {
-    width: 40,
+    width: scale(40),
   },
 });
 

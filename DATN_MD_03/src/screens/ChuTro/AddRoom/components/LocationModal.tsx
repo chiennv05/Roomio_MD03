@@ -5,16 +5,10 @@ import {
   Modal,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
   ActivityIndicator,
   Alert,
+  FlatList,
 } from 'react-native';
-import {
-  Province,
-  District,
-  Ward,
-  SelectedAddress,
-} from '../../../../types/Address';
 import {Colors} from '../../../../theme/color';
 import {
   responsiveFont,
@@ -22,11 +16,35 @@ import {
   moderateScale,
 } from '../../../../utils/responsive';
 
+// ==== INTERFACES ====
+interface Province {
+  province_id: string;
+  province_name: string;
+}
+
+interface District {
+  district_id: string;
+  district_name: string;
+  province_id: string;
+}
+
+interface Ward {
+  ward_id: string;
+  ward_name: string;
+  district_id: string;
+}
+
+export interface SelectedAddressNew {
+  province?: Province;
+  district?: District;
+  ward?: Ward;
+}
+
 interface LocationModalProps {
   visible: boolean;
   onClose: () => void;
-  onSelect: (address: SelectedAddress) => void;
-  selectedAddress?: SelectedAddress;
+  onSelect: (address: SelectedAddressNew) => void;
+  selectedAddress?: SelectedAddressNew;
 }
 
 const LocationModal: React.FC<LocationModalProps> = ({
@@ -42,9 +60,9 @@ const LocationModal: React.FC<LocationModalProps> = ({
   const [currentStep, setCurrentStep] = useState<
     'province' | 'district' | 'ward'
   >('province');
-  const [tempSelected, setTempSelected] = useState<SelectedAddress>({});
+  const [tempSelected, setTempSelected] = useState<SelectedAddressNew>({});
 
-  // Fetch provinces when modal opens
+  // Load provinces when modal opens
   useEffect(() => {
     if (visible) {
       fetchProvinces();
@@ -56,65 +74,59 @@ const LocationModal: React.FC<LocationModalProps> = ({
   const fetchProvinces = async () => {
     setLoading(true);
     try {
-      const response = await fetch('https://provinces.open-api.vn/api/');
-      const data = await response.json();
-
-      // Filter to only include the 3 main cities
-      const mainCities = data.filter((province: Province) => {
-        return (
-          province.code === 1 || // Thành phố Hà Nội
-          province.code === 48 || // Thành phố Đà Nẵng
-          province.code === 79
-        ); // Thành phố Hồ Chí Minh
-      });
-
-      setProvinces(mainCities);
-    } catch (error) {
-      Alert.alert('Lỗi', 'Không thể tải danh sách tỉnh thành');
+      const res = await fetch('https://api.vnappmob.com/api/v2/province/');
+      const data = await res.json();
+      setProvinces(data.results || []);
+    } catch {
+      Alert.alert('Lỗi', 'Không thể tải danh sách tỉnh/thành phố');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchDistricts = async (provinceCode: number) => {
+  const fetchDistricts = async (provinceId: string) => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`,
+      const res = await fetch(
+        `https://api.vnappmob.com/api/v2/province/district/${provinceId}`,
       );
-      const data = await response.json();
-      setDistricts(data.districts || []);
-    } catch (error) {
-      Alert.alert('Lỗi', 'Không thể tải danh sách quận huyện');
+      const data = await res.json();
+      setDistricts(data.results || []);
+    } catch {
+      Alert.alert('Lỗi', 'Không thể tải danh sách quận/huyện');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchWards = async (districtCode: number) => {
+  const fetchWards = async (districtId: string) => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `https://provinces.open-api.vn/api/d/${districtCode}?depth=2`,
+      const res = await fetch(
+        `https://api.vnappmob.com/api/v2/province/ward/${districtId}`,
       );
-      const data = await response.json();
-      setWards(data.wards || []);
-    } catch (error) {
-      Alert.alert('Lỗi', 'Không thể tải danh sách phường xã');
+      const data = await res.json();
+      setWards(data.results || []);
+    } catch {
+      Alert.alert('Lỗi', 'Không thể tải danh sách phường/xã');
     } finally {
       setLoading(false);
     }
   };
 
+  // === Select handlers ===
   const handleProvinceSelect = (province: Province) => {
     setTempSelected({province});
-    fetchDistricts(province.code);
+    setDistricts([]);
+    setWards([]);
+    fetchDistricts(province.province_id);
     setCurrentStep('district');
   };
 
   const handleDistrictSelect = (district: District) => {
     setTempSelected(prev => ({...prev, district}));
-    fetchWards(district.code);
+    setWards([]);
+    fetchWards(district.district_id);
     setCurrentStep('ward');
   };
 
@@ -122,11 +134,6 @@ const LocationModal: React.FC<LocationModalProps> = ({
     const finalSelection = {...tempSelected, ward};
     setTempSelected(finalSelection);
     onSelect(finalSelection);
-    onClose();
-  };
-
-  const handleConfirmSelection = () => {
-    onSelect(tempSelected);
     onClose();
   };
 
@@ -170,31 +177,22 @@ const LocationModal: React.FC<LocationModalProps> = ({
   };
 
   const handleItemSelect = (item: Province | District | Ward) => {
-    switch (currentStep) {
-      case 'province':
-        handleProvinceSelect(item as Province);
-        break;
-      case 'district':
-        handleDistrictSelect(item as District);
-        break;
-      case 'ward':
-        handleWardSelect(item as Ward);
-        break;
+    if (currentStep === 'province') {
+      handleProvinceSelect(item as Province);
+    } else if (currentStep === 'district') {
+      handleDistrictSelect(item as District);
+    } else if (currentStep === 'ward') {
+      handleWardSelect(item as Ward);
     }
   };
 
   const renderBreadcrumb = () => {
-    const breadcrumbs = [];
-
-    if (tempSelected.province) {
-      breadcrumbs.push(tempSelected.province.name);
-    }
-    if (tempSelected.district) {
-      breadcrumbs.push(tempSelected.district.name);
-    }
-    if (tempSelected.ward) {
-      breadcrumbs.push(tempSelected.ward.name);
-    }
+    const breadcrumbs: string[] = [];
+    if (tempSelected.province)
+      breadcrumbs.push(tempSelected.province.province_name);
+    if (tempSelected.district)
+      breadcrumbs.push(tempSelected.district.district_name);
+    if (tempSelected.ward) breadcrumbs.push(tempSelected.ward.ward_name);
 
     return breadcrumbs.length > 0 ? (
       <View style={styles.breadcrumb}>
@@ -231,17 +229,27 @@ const LocationModal: React.FC<LocationModalProps> = ({
                 <Text style={styles.loadingText}>Đang tải...</Text>
               </View>
             ) : (
-              <ScrollView style={styles.list}>
-                {getCurrentData().map((item: any) => (
-                  <TouchableOpacity
-                    key={item.code}
-                    style={styles.listItem}
-                    onPress={() => handleItemSelect(item)}>
-                    <Text style={styles.listItemText}>{item.name}</Text>
-                    <Text style={styles.arrow}>→</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+              <FlatList
+                style={styles.list}
+                data={getCurrentData()}
+                keyExtractor={(item: any, index) =>
+                  (item.province_id || item.district_id || item.ward_id || '') +
+                  '_' +
+                  index
+                }
+                renderItem={({item}: {item: any}) => {
+                  const name =
+                    item.province_name || item.district_name || item.ward_name;
+                  return (
+                    <TouchableOpacity
+                      style={styles.listItem}
+                      onPress={() => handleItemSelect(item)}>
+                      <Text style={styles.listItemText}>{name}</Text>
+                      <Text style={styles.arrow}>→</Text>
+                    </TouchableOpacity>
+                  );
+                }}
+              />
             )}
           </View>
         </View>
@@ -252,6 +260,7 @@ const LocationModal: React.FC<LocationModalProps> = ({
 
 export default LocationModal;
 
+// ==== STYLES ====
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
@@ -341,22 +350,5 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(16),
     color: Colors.limeGreen,
     fontWeight: 'bold',
-  },
-  footer: {
-    padding: responsiveSpacing(16),
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
-  },
-  confirmButton: {
-    backgroundColor: Colors.limeGreen,
-    paddingVertical: responsiveSpacing(12),
-    paddingHorizontal: responsiveSpacing(24),
-    borderRadius: moderateScale(8),
-    alignItems: 'center',
-  },
-  confirmText: {
-    fontSize: responsiveFont(16),
-    fontWeight: 'bold',
-    color: Colors.darkGray,
   },
 });

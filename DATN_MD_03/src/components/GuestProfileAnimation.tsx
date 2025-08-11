@@ -428,4 +428,4 @@ const styles = StyleSheet.create({
     borderRadius: responsiveIcon(4),
     backgroundColor: Colors.limeGreen,
   },
-}); 
+});

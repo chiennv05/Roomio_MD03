@@ -13,7 +13,7 @@ interface OwnerInfoProps {
 const OwnerInfo: React.FC<OwnerInfoProps> = ({ name, phone }) => {
   // Create avatar letter from first letter of name
   const getAvatarLetter = (ownerName: string) => {
-    if (!ownerName || ownerName === 'Chủ trọ') return 'C';
+    if (!ownerName || ownerName === 'Chủ trọ') {return 'C';}
     return ownerName.charAt(0).toUpperCase();
   };
 
@@ -75,8 +75,8 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(15),
     color: Colors.darkGreen,
     fontFamily: Fonts.Roboto_Regular,
-    fontWeight: "bold"
-    
+    fontWeight: 'bold',
+
   },
 });
 

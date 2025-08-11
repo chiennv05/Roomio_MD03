@@ -120,7 +120,7 @@ export const validateResetPassword = (
  * Bỏ dấu tiếng Việt để tìm kiếm
  */
 export const removeVietnameseDiacritics = (str: string): string => {
-  if (!str) return '';
+  if (!str) {return '';}
 
   return str
     .toLowerCase()
@@ -139,7 +139,7 @@ export const searchVietnameseText = (
   searchTerm: string,
   targetText: string,
 ): boolean => {
-  if (!searchTerm || !targetText) return false;
+  if (!searchTerm || !targetText) {return false;}
 
   const normalizedSearch = removeVietnameseDiacritics(searchTerm);
   const normalizedTarget = removeVietnameseDiacritics(targetText);

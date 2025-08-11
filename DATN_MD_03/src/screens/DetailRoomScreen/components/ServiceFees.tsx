@@ -7,12 +7,12 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
-import { 
-  responsiveSpacing, 
-  responsiveFont, 
+import {
+  responsiveSpacing,
+  responsiveFont,
   responsiveIcon,
   isSmallDevice,
-  isTablet
+  isTablet,
 } from '../../../utils/responsive';
 import { Icons } from '../../../assets/icons';
 import { ServicePrices, ServicePriceConfig, CustomService } from '../../../types/Room';
@@ -61,13 +61,13 @@ const getPriceUnit = (serviceKey: string, priceType?: string): string => {
         return `/${baseUnits[serviceKey]}`;
       }
       return '/lần sử dụng';
-      
+
     case 'perPerson':
       return '/người/tháng';
-      
+
     case 'perRoom':
       return '/phòng/tháng';
-      
+
     default:
       // Fallback: nếu không có priceType hoặc không xác định
       if (baseUnits[serviceKey]) {
@@ -125,7 +125,7 @@ const AnimatedServiceItem: React.FC<AnimatedServiceItemProps> = ({ service, inde
 const getCustomServiceIcon = (serviceName: string): string => {
   const name = serviceName.toLowerCase();
   const defaultIcon = Icons.IconServiceSelected || '';
-  
+
   if (name.includes('internet') || name.includes('wifi')) {
     return Icons.IconWifiMienPhi || defaultIcon;
   }
@@ -147,15 +147,15 @@ const getCustomServiceIcon = (serviceName: string): string => {
   if (name.includes('sinh hoạt') || name.includes('phí ở')) {
     return Icons.IconServiceSelected || defaultIcon;
   }
-  
+
   // Icon mặc định cho dịch vụ khác
   return defaultIcon;
 };
 
-const ServiceFees: React.FC<ServiceFeesProps> = ({ 
-  servicePrices, 
+const ServiceFees: React.FC<ServiceFeesProps> = ({
+  servicePrices,
   servicePriceConfig = {},
-  customServices = [] 
+  customServices = [],
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useSharedValue(0);
@@ -167,7 +167,7 @@ const ServiceFees: React.FC<ServiceFeesProps> = ({
     .map(([key, value]) => {
       const serviceInfo = serviceMapping[key as keyof typeof serviceMapping];
       const priceType = servicePriceConfig[key as keyof ServicePriceConfig];
-      
+
       return {
         key,
         value: value as number,
@@ -200,17 +200,17 @@ const ServiceFees: React.FC<ServiceFeesProps> = ({
     const offsetX = event.nativeEvent.contentOffset.x;
     const contentWidth = event.nativeEvent.contentSize.width;
     const scrollViewWidth = event.nativeEvent.layoutMeasurement.width;
-    
+
     scrollX.value = offsetX;
-    
+
     // Calculate progress through the scroll
     const maxScrollX = contentWidth - scrollViewWidth;
     const scrollProgress = maxScrollX > 0 ? offsetX / maxScrollX : 0;
-    
+
     // Calculate which indicator should be active based on scroll progress
     const totalPages = Math.max(1, Math.ceil(allServices.length / 3));
     const currentPage = Math.min(Math.floor(scrollProgress * totalPages), totalPages - 1);
-    
+
     setCurrentIndex(currentPage);
   };
 

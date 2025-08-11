@@ -9,15 +9,15 @@ const EmptyNotification = () => {
   return (
     <View style={styles.container}>
       {/* Icon */}
-      <Image 
+      <Image
         source={{uri: Icons.IconEmptyMessage}}
         style={styles.icon}
         resizeMode="contain"
       />
-      
+
       {/* Tiêu đề chính */}
       <Text style={styles.title}>Hiện chưa có thông báo nào</Text>
-      
+
       {/* Mô tả phụ */}
       <Text style={styles.subtitle}>Chúng tôi sẽ thông báo khi có điều gì mới</Text>
     </View>
@@ -53,4 +53,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EmptyNotification; 
+export default EmptyNotification;

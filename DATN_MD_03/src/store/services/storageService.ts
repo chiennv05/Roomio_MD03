@@ -13,7 +13,7 @@ export const storeUserSession = async (token: string) => {
 
 export const getUserSession = async () => {
   const data = await EncryptedStorage.getItem('user_session');
-  if (!data) return null;
+  if (!data) {return null;}
   return JSON.parse(data);
 };
 

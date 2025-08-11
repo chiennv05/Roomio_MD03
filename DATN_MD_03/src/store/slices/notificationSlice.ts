@@ -1,10 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { NotificationState, Notification } from '../../types/Notification';
-import { 
-  getNotifications, 
-  markNotificationAsRead, 
+import {
+  getNotifications,
+  markNotificationAsRead,
   markAllNotificationsAsRead,
-  deleteNotification
+  deleteNotification,
 } from '../services/notificationService';
 
 const initialState: NotificationState = {
@@ -195,7 +195,7 @@ const notificationSlice = createSlice({
       .addCase(markAllAsRead.rejected, (state, action) => {
         state.error = action.payload as string;
       })
-      
+
       // Delete notification
       .addCase(deleteNotificationById.fulfilled, (state, action) => {
         const notificationId = action.payload;
@@ -216,4 +216,4 @@ const notificationSlice = createSlice({
 });
 
 export const { clearNotificationError, clearNotifications } = notificationSlice.actions;
-export default notificationSlice.reducer; 
+export default notificationSlice.reducer;

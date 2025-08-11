@@ -1,6 +1,21 @@
 export * from './User';
 export * from './Room';
-export * from './Contract';
+export {
+  ContractStatus,
+  CoTenant,
+  ServiceFees,
+  ServiceFeeConfig,
+  ContractInfo,
+  ContractApproval,
+  StatusHistoryItem,
+  RoomLocation,
+  UserInfo,
+  Contract,
+  type CreateContractPayload,
+  type CreateContractPayloadWithoutNotification,
+  type ContractTenantResponse,
+  type UpdateContractPayload,
+} from './Contract';
 export * from './Bill';
 export * from './Notification';
 export * from './CostRecord';

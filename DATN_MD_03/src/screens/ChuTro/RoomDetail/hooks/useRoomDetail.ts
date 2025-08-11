@@ -8,7 +8,7 @@ import {
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../../types/route';
-import {Alert} from 'react-native';
+import {useCustomAlert} from '../../../../hooks/useCustomAlrert';
 
 export const useRoomDetail = (roomId: string) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -18,18 +18,30 @@ export const useRoomDetail = (roomId: string) => {
     (state: RootState) => state.landlordRooms,
   );
 
+  const {
+    alertConfig,
+    visible: alertVisible,
+    hideAlert,
+    showSuccess,
+    showError,
+    showConfirm,
+  } = useCustomAlert();
+
   useEffect(() => {
     dispatch(getLandlordRoomDetail(roomId));
   }, [dispatch, roomId]);
 
   const handleNavigateToUpdate = () => {
+    if (selectedRoom?.status === 'daThue') {
+      showError(
+        'Phòng này đã được thuê, không thể cập nhật thông tin.',
+        'Thông báo',
+      );
+      return;
+    }
     if (selectedRoom) {
       navigation.navigate('UpdateRoomScreen', {item: selectedRoom});
     }
-  };
-
-  const formatNumber = (num: number) => {
-    return num?.toLocaleString('vi-VN') || '0';
   };
 
   const handleRetry = () => {
@@ -37,32 +49,23 @@ export const useRoomDetail = (roomId: string) => {
   };
 
   const handleDeleteRoom = () => {
-    Alert.alert(
-      'Xác nhận xóa',
+    if (selectedRoom?.status === 'daThue') {
+      showError('Phòng này đã được thuê, không thể xóa.', 'Thông báo');
+      return;
+    }
+
+    showConfirm(
       'Bạn có chắc chắn muốn xóa phòng này không? Hành động này không thể hoàn tác.',
-      [
-        {
-          text: 'Hủy',
-          style: 'cancel',
-        },
-        {
-          text: 'Xóa',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await dispatch(deleteLandlordRoom(roomId)).unwrap();
-              Alert.alert('Thành công', 'Xóa phòng thành công!', [
-                {
-                  text: 'OK',
-                  onPress: () => navigation.goBack(),
-                },
-              ]);
-            } catch (error: any) {
-              Alert.alert('Lỗi', error || 'Không thể xóa phòng');
-            }
-          },
-        },
-      ],
+      async () => {
+        try {
+          await dispatch(deleteLandlordRoom(roomId)).unwrap();
+          showSuccess('Xóa phòng thành công!', 'Thành công');
+          navigation.goBack();
+        } catch (err: any) {
+          showError(err || 'Không thể xóa phòng', 'Lỗi');
+        }
+      },
+      'Xác nhận xóa',
     );
   };
 
@@ -71,9 +74,14 @@ export const useRoomDetail = (roomId: string) => {
     loading,
     error,
     handleNavigateToUpdate,
-    formatNumber,
     handleRetry,
     handleDeleteRoom,
     navigation,
+    alertConfig,
+    alertVisible,
+    hideAlert,
+    showSuccess,
+    showError,
+    showConfirm,
   };
 };

@@ -14,10 +14,10 @@ import AreaModal from './AreaModal';
 import CheckboxModal from './CheckboxModal';
 import { District } from '../../../types/Address';
 import { useFilter } from '../../../hooks';
-import { 
-  responsiveFont, 
-  responsiveIcon, 
-  responsiveSpacing
+import {
+  responsiveFont,
+  responsiveIcon,
+  responsiveSpacing,
 } from '../../../utils/responsive';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
@@ -59,7 +59,7 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
   selectedAmenities = [],
 }) => {
   const { furniture, amenities, loading, loadFilterOptions } = useFilter();
-  
+
   const [showRegionModal, setShowRegionModal] = useState(false);
   const [showPriceModal, setShowPriceModal] = useState(false);
   const [showAreaModal, setShowAreaModal] = useState(false);
@@ -136,21 +136,21 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
   };
 
   const getDisplayText = (item: string, index: number) => {
-    if (index === 1 && selectedPriceRange && 
+    if (index === 1 && selectedPriceRange &&
         (selectedPriceRange.min !== 0 || selectedPriceRange.max !== 20000000)) { // Khoảng giá
       return `${formatPrice(selectedPriceRange.min)} - ${formatPrice(selectedPriceRange.max)}`;
     }
-    if (index === 2 && selectedAreaRange && 
+    if (index === 2 && selectedAreaRange &&
         (selectedAreaRange.min !== 20 || selectedAreaRange.max !== 70)) { // Diện tích
       return `${selectedAreaRange.min}m² - ${selectedAreaRange.max}m²`;
     }
     if (index === 3 && selectedFurniture.length > 0) { // Nội thất
-      return selectedFurniture.length === 1 
+      return selectedFurniture.length === 1
         ? furniture.find(f => f.value === selectedFurniture[0])?.label || item
         : `${selectedFurniture.length} mục`;
     }
     if (index === 4 && selectedAmenities.length > 0) { // Tiện nghi
-      return selectedAmenities.length === 1 
+      return selectedAmenities.length === 1
         ? amenities.find(a => a.value === selectedAmenities[0])?.label || item
         : `${selectedAmenities.length} mục`;
     }
@@ -158,45 +158,45 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
   };
   return (
     <View style={styles.wrapper}>
-      <ScrollView 
+      <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.container}
       >
         {/* Clear All Button */}
-        {(selectedIndices.length > 0 || 
-          selectedRegions.length > 0 || 
+        {(selectedIndices.length > 0 ||
+          selectedRegions.length > 0 ||
           (selectedPriceRange && (selectedPriceRange.min !== 0 || selectedPriceRange.max !== 20000000)) ||
           (selectedAreaRange && (selectedAreaRange.min !== 20 || selectedAreaRange.max !== 70)) ||
-          selectedFurniture.length > 0 || 
+          selectedFurniture.length > 0 ||
           selectedAmenities.length > 0) && (
           <TouchableOpacity
             onPress={onClearAll}
             style={styles.clearButton}
           >
-            <Image 
+            <Image
               source={{ uri: Icons.IconRemoveFilter }}
               style={styles.clearIcon}
             />
           </TouchableOpacity>
         )}
-        
+
         {filters.map((item, index) => {
           // Check if price range is different from default
-          const isPriceActive = selectedPriceRange && 
+          const isPriceActive = selectedPriceRange &&
             (selectedPriceRange.min !== 0 || selectedPriceRange.max !== 20000000);
-          
-          // Check if area range is different from default  
-          const isAreaActive = selectedAreaRange && 
+
+          // Check if area range is different from default
+          const isAreaActive = selectedAreaRange &&
             (selectedAreaRange.min !== 20 || selectedAreaRange.max !== 70);
-            
-          const isSelected = selectedIndices.includes(index) || 
+
+          const isSelected = selectedIndices.includes(index) ||
                            (index === 0 && selectedRegions.length > 0) ||
                            (index === 1 && isPriceActive) ||
                            (index === 2 && isAreaActive) ||
                            (index === 3 && selectedFurniture.length > 0) ||
                            (index === 4 && selectedAmenities.length > 0);
-          
+
           return (
             <TouchableOpacity
               key={index}
@@ -209,7 +209,7 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
               <Text style={styles.tabText}>
                 {getDisplayText(item, index)}
               </Text>
-              <Image 
+              <Image
                 source={{ uri: Icons.IconArrowDown2 }}
                 style={styles.arrowIcon}
               />
@@ -217,14 +217,14 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
           );
         })}
       </ScrollView>
-      
+
       <RegionModal
         visible={showRegionModal}
         onClose={() => setShowRegionModal(false)}
         onConfirm={handleRegionConfirm}
         selectedRegions={selectedRegions}
       />
-      
+
       <PriceRangeModal
         visible={showPriceModal}
         onClose={() => setShowPriceModal(false)}
@@ -232,7 +232,7 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
         selectedMinPrice={selectedPriceRange?.min}
         selectedMaxPrice={selectedPriceRange?.max}
       />
-      
+
       <AreaModal
         visible={showAreaModal}
         onClose={() => setShowAreaModal(false)}
@@ -240,7 +240,7 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
         selectedMinArea={selectedAreaRange?.min}
         selectedMaxArea={selectedAreaRange?.max}
       />
-      
+
       <CheckboxModal
         visible={showFurnitureModal}
         onClose={() => setShowFurnitureModal(false)}
@@ -250,7 +250,7 @@ const FilterTabs: React.FC<FilterTabsProps> = ({
         items={furniture.map(item => ({ id: item.value, label: item.label }))}
         selectedItems={selectedFurniture}
       />
-      
+
       <CheckboxModal
         visible={showAmenityModal}
         onClose={() => setShowAmenityModal(false)}

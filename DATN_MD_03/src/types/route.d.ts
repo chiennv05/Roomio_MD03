@@ -79,7 +79,11 @@ export type RootStackParamList = {
   AddContractNoNotification: undefined;
   ContractLessee: undefined;
   ContractDetailLessee: {contractId: string};
-  UpdateTenant: {contractId: string; existingTenants: CoTenant[]};
+  UpdateTenant: {
+    contractId: string;
+    existingTenants: CoTenant[];
+    maxOccupancy: number;
+  };
   CCCDResult: {
     rawData?: string;
     imageUri?: string;

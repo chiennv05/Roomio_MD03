@@ -10,8 +10,8 @@ interface EmptySearchAnimationProps {
 }
 
 const EmptySearchAnimation: React.FC<EmptySearchAnimationProps> = ({
-  title = "Không tìm thấy phòng phù hợp",
-  subtitle = "Thử thay đổi từ khóa tìm kiếm khác"
+  title = 'Không tìm thấy phòng phù hợp',
+  subtitle = 'Thử thay đổi từ khóa tìm kiếm khác',
 }) => {
   const searchIconAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -87,7 +87,7 @@ const EmptySearchAnimation: React.FC<EmptySearchAnimationProps> = ({
   });
 
   return (
-    <Animated.View 
+    <Animated.View
       style={[
         styles.container,
         {
@@ -96,34 +96,34 @@ const EmptySearchAnimation: React.FC<EmptySearchAnimationProps> = ({
             inputRange: [0, 1],
             outputRange: [50, 0],
           })}],
-        }
+        },
       ]}
     >
       <View style={styles.animationContainer}>
         {/* Background circles */}
-        <Animated.View 
+        <Animated.View
           style={[
             styles.backgroundCircle,
             styles.circle1,
-            { transform: [{ scale: pulseAnim }] }
-          ]} 
+            { transform: [{ scale: pulseAnim }] },
+          ]}
         />
-        <Animated.View 
+        <Animated.View
           style={[
             styles.backgroundCircle,
             styles.circle2,
             { transform: [{ scale: pulseAnim.interpolate({
               inputRange: [1, 1.2],
               outputRange: [1.1, 1.3],
-            })}] }
-          ]} 
+            })}] },
+          ]}
         />
-        
+
         {/* Search icon container */}
-        <Animated.View 
+        <Animated.View
           style={[
             styles.searchIconContainer,
-            { transform: [{ rotate: searchIconRotation }] }
+            { transform: [{ rotate: searchIconRotation }] },
           ]}
         >
           <View style={styles.searchIcon}>
@@ -258,4 +258,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EmptySearchAnimation; 
+export default EmptySearchAnimation;

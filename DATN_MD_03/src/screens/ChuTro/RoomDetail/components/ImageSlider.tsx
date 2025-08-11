@@ -127,4 +127,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ImageSlider; 
+export default ImageSlider;

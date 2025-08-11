@@ -9,21 +9,21 @@ interface NotificationItemProps {
   onPress?: () => void;
 }
 
-const NotificationItem: React.FC<NotificationItemProps> = ({ 
-  title, 
-  content, 
-  time, 
+const NotificationItem: React.FC<NotificationItemProps> = ({
+  title,
+  content,
+  time,
   isRead,
-  onPress 
+  onPress,
 }) => {
   const Container = onPress ? TouchableOpacity : View;
-  
+
   return (
-    <Container 
+    <Container
       style={[styles.container, { backgroundColor: isRead ? '#E0E0E0' : '#D0F2FF' }]}
       onPress={onPress}
       activeOpacity={onPress ? 0.7 : 1}
-    > 
+    >
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.content}>{content}</Text>
       <Text style={styles.time}>{time}</Text>
@@ -54,4 +54,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default NotificationItem; 
+export default NotificationItem;

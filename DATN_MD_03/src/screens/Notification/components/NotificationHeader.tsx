@@ -24,8 +24,8 @@ const NotificationHeader: React.FC<NotificationHeaderProps> = ({
 
   return (
     <View style={styles.container}>
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         style={styles.scrollContainer}
@@ -143,4 +143,4 @@ const styles = StyleSheet.create({
 
 });
 
-export default NotificationHeader; 
+export default NotificationHeader;

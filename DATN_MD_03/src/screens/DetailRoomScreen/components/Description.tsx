@@ -11,7 +11,7 @@ interface DescriptionProps {
 const Description: React.FC<DescriptionProps> = ({ text }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const maxLength = 150;
-  
+
   const shouldShowReadMore = text.length > maxLength;
   const displayText = isExpanded ? text : text.substring(0, maxLength);
 

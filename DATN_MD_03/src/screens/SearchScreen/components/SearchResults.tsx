@@ -12,10 +12,10 @@ import {
 } from 'react-native';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
-import { 
-  responsiveFont, 
-  responsiveIcon, 
-  responsiveSpacing 
+import {
+  responsiveFont,
+  responsiveIcon,
+  responsiveSpacing,
 } from '../../../utils/responsive';
 import { Room } from '../../../types/Room';
 import RoomCard from '../../HomeScreen/components/RoomCard';
@@ -42,7 +42,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   isFilterActive = false,
   hasMore = false,
   onLoadMore,
-  isLoading = false
+  isLoading = false,
 }) => {
   // Animation for room cards
   const animatedValues = useRef<Map<string, Animated.Value>>(new Map()).current;
@@ -67,10 +67,10 @@ const SearchResults: React.FC<SearchResultsProps> = ({
     visibleItems.forEach(({ item, isViewable }) => {
       if (item && item._id) {
         const animValue = getAnimatedValue(item._id);
-        
+
         if (isViewable && !viewableItems.has(item._id)) {
           viewableItems.add(item._id);
-          
+
           // Animate in with stagger effect
           Animated.timing(animValue, {
             toValue: 1,
@@ -80,7 +80,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
           }).start();
         } else if (!isViewable && viewableItems.has(item._id)) {
           viewableItems.delete(item._id);
-          
+
           // Optional: animate out when not viewable
           Animated.timing(animValue, {
             toValue: 0,
@@ -102,7 +102,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   // Animated Room Card Component
   const AnimatedRoomCard = useCallback(({ item }: { item: Room }) => {
     const animValue = getAnimatedValue(item._id || '');
-    
+
     const translateY = animValue.interpolate({
       inputRange: [0, 1],
       outputRange: [50, 0], // Slide up from 50px below
@@ -131,8 +131,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({
           },
         ]}
       >
-        <RoomCard 
-          item={item} 
+        <RoomCard
+          item={item}
           onPress={onRoomPress}
         />
       </Animated.View>
@@ -167,11 +167,11 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   const renderEmptyComponent = () => {
     // Check if this is a search result or general room list
     const isSearching = title.includes('Kết quả tìm kiếm');
-    
+
     return (
       <EmptySearchAnimation
-        title={isSearching ? "Không tìm thấy phòng phù hợp" : "Chưa có phòng trọ nào"}
-        subtitle={isSearching ? "Thử thay đổi từ khóa tìm kiếm khác" : "Vui lòng thử lại sau"}
+        title={isSearching ? 'Không tìm thấy phòng phù hợp' : 'Chưa có phòng trọ nào'}
+        subtitle={isSearching ? 'Thử thay đổi từ khóa tìm kiếm khác' : 'Vui lòng thử lại sau'}
       />
     );
   };
@@ -179,7 +179,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   // Handle end reached for loading more data
   const handleEndReached = () => {
     if (hasMore && !isLoading && onLoadMore) {
-      console.log(`🔄 Loading more...`);
+      console.log('🔄 Loading more...');
       onLoadMore();
     }
   };
@@ -197,22 +197,22 @@ const SearchResults: React.FC<SearchResultsProps> = ({
           )}
         </Text>
         {onFilterPress && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[
               styles.filterButton,
-              isFilterActive && styles.activeFilterButton
-            ]} 
+              isFilterActive && styles.activeFilterButton,
+            ]}
             onPress={() => {
               onFilterPress();
             }}
           >
-            <Image 
+            <Image
               source={{ uri: isFilterActive ? Icons.IconRemoveFilter
-                 : Icons.IconFilter }} 
+                 : Icons.IconFilter }}
               style={[
                 styles.filterIcon,
-                isFilterActive && styles.activeFilterIcon
-              ]} 
+                isFilterActive && styles.activeFilterIcon,
+              ]}
             />
           </TouchableOpacity>
         )}
@@ -226,7 +226,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.listContainer,
-          displayedData.length === 0 && styles.emptyListContainer
+          displayedData.length === 0 && styles.emptyListContainer,
         ]}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListFooterComponent={renderFooter}
@@ -331,4 +331,4 @@ const styles = StyleSheet.create({
     marginBottom: responsiveSpacing(4),
   },
 
-}); 
+});

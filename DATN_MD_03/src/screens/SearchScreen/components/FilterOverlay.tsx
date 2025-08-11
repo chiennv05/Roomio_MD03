@@ -16,10 +16,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
-import { 
-  responsiveFont, 
-  responsiveIcon, 
-  responsiveSpacing 
+import {
+  responsiveFont,
+  responsiveIcon,
+  responsiveSpacing,
 } from '../../../utils/responsive';
 
 interface FilterOption {
@@ -40,7 +40,7 @@ const FilterOverlay: React.FC<FilterOverlayProps> = ({
   visible,
   onClose,
   filters,
-  onFilterPress
+  onFilterPress,
 }) => {
   const overlayOpacity = useSharedValue(0);
   const overlayScale = useSharedValue(0.8);
@@ -160,7 +160,7 @@ const FilterChip: React.FC<FilterChipProps> = ({ filter, index, onPress, visible
     return {
       transform: [
         { translateY: translateY.value },
-        { scale: scale.value }
+        { scale: scale.value },
       ],
       opacity: opacity.value,
     };
@@ -171,7 +171,7 @@ const FilterChip: React.FC<FilterChipProps> = ({ filter, index, onPress, visible
       <TouchableOpacity
         style={[
           styles.filterChip,
-          filter.isSelected ? styles.selectedChip : styles.unselectedChip
+          filter.isSelected ? styles.selectedChip : styles.unselectedChip,
         ]}
         onPress={(event) => {
           event.stopPropagation();
@@ -189,7 +189,7 @@ const FilterChip: React.FC<FilterChipProps> = ({ filter, index, onPress, visible
           </View>
           <Text style={[
             styles.chipText,
-            filter.isSelected ? styles.selectedChipText : styles.unselectedChipText
+            filter.isSelected ? styles.selectedChipText : styles.unselectedChipText,
           ]}>
             {filter.label}
           </Text>
@@ -270,4 +270,4 @@ const styles = StyleSheet.create({
   unselectedChipText: {
     color: Colors.black,
   },
-}); 
+});

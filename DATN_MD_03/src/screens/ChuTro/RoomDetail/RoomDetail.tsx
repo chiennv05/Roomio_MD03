@@ -10,6 +10,7 @@ import {responsiveSpacing} from '../../../utils/responsive';
 import ServiceFees from '../../DetailRoomScreen/components/ServiceFees';
 import Amenities from '../../DetailRoomScreen/components/Amenities';
 import Description from '../../DetailRoomScreen/components/Description';
+import {CustomAlertModal} from '../../../components';
 
 type RoomDetailRouteProp = {
   params: {
@@ -27,8 +28,11 @@ export default function RoomDetail() {
     error,
     handleNavigateToUpdate,
     handleRetry,
-    handleDeleteRoom, // Thêm function này
+    handleDeleteRoom,
     navigation,
+    alertConfig,
+    alertVisible,
+    hideAlert,
   } = useRoomDetail(roomId);
 
   if (loading) {
@@ -37,7 +41,7 @@ export default function RoomDetail() {
         <StatusBar
           barStyle="dark-content"
           backgroundColor="transparent"
-          translucent={true}
+          translucent
         />
         <LoadingState />
       </View>
@@ -50,14 +54,11 @@ export default function RoomDetail() {
         <StatusBar
           barStyle="dark-content"
           backgroundColor="transparent"
-          translucent={true}
+          translucent
         />
         <ErrorState error={error} onRetry={handleRetry} />
       </View>
     );
-  }
-  if (!selectedRoom) {
-    return null; // Hoặc có thể hiển thị một thông báo nào đó
   }
 
   return (
@@ -65,7 +66,7 @@ export default function RoomDetail() {
       <StatusBar
         barStyle="dark-content"
         backgroundColor="transparent"
-        translucent={true}
+        translucent
       />
       <View style={styles.container}>
         <View style={styles.statusBarBackground} />
@@ -76,7 +77,7 @@ export default function RoomDetail() {
           <HeaderItem
             onGoBack={() => navigation.goBack()}
             onUpdate={handleNavigateToUpdate}
-            onDelete={handleDeleteRoom} // Thêm prop này
+            onDelete={handleDeleteRoom}
           />
           <ImageCarousel images={selectedRoom.photos || []} />
           <View style={styles.content}>
@@ -95,7 +96,7 @@ export default function RoomDetail() {
               servicePriceConfig={
                 selectedRoom.location?.servicePriceConfig || {}
               }
-              customServices={selectedRoom.customServices}
+              customServices={selectedRoom.location?.customServices || []}
             />
 
             <View style={styles.divider} />
@@ -105,13 +106,22 @@ export default function RoomDetail() {
             />
 
             <View style={styles.divider} />
-
-            <View style={styles.divider} />
             <Description text={selectedRoom.description} />
 
             <View style={styles.divider} />
           </View>
         </ScrollView>
+
+        {alertConfig && (
+          <CustomAlertModal
+            visible={alertVisible}
+            title={alertConfig.title}
+            message={alertConfig.message}
+            onClose={hideAlert}
+            type={alertConfig.type}
+            buttons={alertConfig.buttons}
+          />
+        )}
       </View>
     </View>
   );
@@ -141,7 +151,7 @@ const styles = StyleSheet.create({
   content: {
     padding: responsiveSpacing(16),
     paddingTop: responsiveSpacing(6),
-    paddingBottom: responsiveSpacing(100), // Thêm padding để tránh bị che bởi button
+    paddingBottom: responsiveSpacing(100),
   },
   divider: {
     height: 1,

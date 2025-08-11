@@ -104,11 +104,11 @@ const CustomSlider: React.FC<CustomSliderProps> = ({
   const handleTrackPress = (event: any) => {
     const { locationX } = event.nativeEvent;
     const newValue = positionToValue(locationX);
-    
+
     // Determine which thumb is closer
     const distanceToMin = Math.abs(newValue - values[0]);
     const distanceToMax = Math.abs(newValue - values[1]);
-    
+
     if (distanceToMin < distanceToMax) {
       const clampedValue = Math.max(minValue, Math.min(values[1], newValue));
       onValuesChange([clampedValue, values[1]]);
@@ -120,14 +120,14 @@ const CustomSlider: React.FC<CustomSliderProps> = ({
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.sliderContainer}
         onPress={handleTrackPress}
         activeOpacity={1}
       >
         {/* Track */}
         <View style={styles.track} />
-        
+
         {/* Selected Range */}
         <View
           style={[
@@ -138,7 +138,7 @@ const CustomSlider: React.FC<CustomSliderProps> = ({
             },
           ]}
         />
-        
+
         {/* Min Thumb */}
         <View style={{ position: 'absolute', left: minPosition - 15 }}>
           <Text style={[styles.thumbText, { left: 15 - (formatThumbValue(values[0], maxValue).length * 3) }]}>
@@ -148,13 +148,13 @@ const CustomSlider: React.FC<CustomSliderProps> = ({
             {...minPanResponder.panHandlers}
             style={[
               styles.thumb,
-              { 
+              {
                 transform: [{ scale: dragging === 'min' ? 1.2 : 1 }],
               },
             ]}
           />
         </View>
-        
+
         {/* Max Thumb */}
         <View style={{ position: 'absolute', left: maxPosition - 15 }}>
           <Text style={[styles.thumbText, { left: 15 - (formatThumbValue(values[1], maxValue).length * 3) }]}>
@@ -164,7 +164,7 @@ const CustomSlider: React.FC<CustomSliderProps> = ({
             {...maxPanResponder.panHandlers}
             style={[
               styles.thumb,
-              { 
+              {
                 transform: [{ scale: dragging === 'max' ? 1.2 : 1 }],
               },
             ]}
@@ -234,4 +234,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CustomSlider; 
+export default CustomSlider;

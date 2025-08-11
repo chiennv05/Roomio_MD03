@@ -26,12 +26,12 @@ import EmptyTenantList from './components/EmptyTenantList';
 const TenantList = () => {
   const insets = useSafeAreaInsets();
   const dispatch = useDispatch<AppDispatch>();
-  
+
   const {tenants, loading, error} = useSelector(
     (state: RootState) => state.tenant,
   );
   const token = useSelector((state: RootState) => state.auth.token);
-  
+
   const [searchText, setSearchText] = useState('');
   const [filters] = useState<TenantFilters>({
     page: 1,
@@ -42,7 +42,7 @@ const TenantList = () => {
 
   // Lọc danh sách người thuê có contractStatus là "active"
   const activeTenants = useMemo(() => {
-    if (!tenants || tenants.length === 0) return [];
+    if (!tenants || tenants.length === 0) {return [];}
     console.log('Checking tenant contract statuses:');
     tenants.forEach(tenant => {
       console.log(`Tenant ${tenant.username} - contractStatus: ${tenant.contractStatus}`);
@@ -72,7 +72,7 @@ const TenantList = () => {
 
   // Hàm xử lý khi nhấn tìm kiếm
   const handleSearch = () => {
-   
+
   };
 
   // Render khi đang loading
@@ -87,7 +87,7 @@ const TenantList = () => {
           </View>
         </SafeAreaView>
       </View>
-    ); 
+    );
   }
 
   // Render khi có lỗi
@@ -98,9 +98,9 @@ const TenantList = () => {
         <SafeAreaView style={[styles.safeArea, {paddingTop: insets.top}]}>
           <HeaderWithBack title="Danh sách người thuê" />
           <View style={styles.container}>
-            <ErrorView 
-              error={error} 
-              onRetry={() => dispatch(fetchTenants({token: token || '', filters}))} 
+            <ErrorView
+              error={error}
+              onRetry={() => dispatch(fetchTenants({token: token || '', filters}))}
             />
           </View>
         </SafeAreaView>

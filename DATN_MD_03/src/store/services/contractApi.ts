@@ -25,6 +25,7 @@ export const createNewContract = async (
   data: CreateContractPayloadWithoutNotification,
 ) => {
   try {
+    console.log('Gọi API tạo hợp đồng mới với dữ liệu:', data);
     const response = await api.post('/contract/create', data);
     console.log('res tao hop dong', response);
     if (!response.data || !response.data.success) {
@@ -51,9 +52,9 @@ export const getMyContracts = async (params?: {
     const queryParams = new URLSearchParams();
 
     // Thêm tham số phân trang nếu có
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.status) queryParams.append('status', params.status);
+    if (params?.page) {queryParams.append('page', params.page.toString());}
+    if (params?.limit) {queryParams.append('limit', params.limit.toString());}
+    if (params?.status) {queryParams.append('status', params.status);}
 
     const url = `/contract/my-contracts${
       queryParams.toString() ? `?${queryParams.toString()}` : ''
@@ -349,7 +350,6 @@ export const updateTenantsApi = async (
     }
     return response.data;
   } catch (error: any) {
-    console.error(`Error updating tenants for contract ${contractId}:`, error);
     throw {
       message: error.response?.data?.message || error.message,
       status: error.response?.status,

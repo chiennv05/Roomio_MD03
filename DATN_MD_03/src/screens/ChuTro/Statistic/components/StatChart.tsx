@@ -15,6 +15,23 @@ interface StatChartProps {
 const StatChart = ({title, data, labels, color}: StatChartProps) => {
   const screenWidth = Dimensions.get('window').width - responsiveSpacing(40);
 
+  const MAX_POINTS = 5;
+  // Xử lý labels để format thành "MM/YYYY"
+  const processedLabels = (labels || []).map(label => {
+    if (typeof label === 'string' && label.includes('thg')) {
+      // Chuyển từ "thg 4 2025" thành "04/2025"
+      const parts = label.replace('thg ', '').split(' ');
+      if (parts.length === 2) {
+        const month = parts[0].padStart(2, '0');
+        const year = parts[1];
+        return `${month}/${year}`;
+      }
+    }
+    return label;
+  });
+  const displayLabels = processedLabels.slice(-MAX_POINTS);
+  const displayData = (data && data.length > 0 ? data : [0]).slice(-MAX_POINTS);
+
   const chartConfig = {
     backgroundGradientFrom: '#fff',
     backgroundGradientTo: '#fff',
@@ -30,7 +47,7 @@ const StatChart = ({title, data, labels, color}: StatChartProps) => {
       stroke: color,
     },
     propsForLabels: {
-      fontSize: 10,
+      fontSize: 11,
     },
   };
 
@@ -41,15 +58,15 @@ const StatChart = ({title, data, labels, color}: StatChartProps) => {
         <Text style={styles.chartTitle}>{title}</Text>
         <LineChart
           data={{
-            labels: labels || [],
+            labels: displayLabels,
             datasets: [
               {
-                data: data && data.length > 0 ? data : [0],
+                data: displayData,
               },
             ],
           }}
           width={screenWidth}
-          height={180}
+          height={220}
           chartConfig={chartConfig}
           bezier
           style={styles.chart}
@@ -57,6 +74,8 @@ const StatChart = ({title, data, labels, color}: StatChartProps) => {
           withOuterLines
           fromZero
           yAxisInterval={1}
+          yLabelsOffset={8}
+          xLabelsOffset={12}
         />
       </View>
     </View>

@@ -16,7 +16,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import {Colors} from '../theme/color';
 import {Fonts} from '../theme/fonts';
-import {responsiveSpacing, responsiveFont} from '../utils/responsive';
+import {responsiveSpacing, responsiveFont, SCREEN} from '../utils/responsive';
 
 interface CustomAlertModalProps {
   visible: boolean;
@@ -88,7 +88,6 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
               <View style={styles.content}>
                 <Text style={styles.title}>{title}</Text>
                 <Text style={styles.message}>{message}</Text>
-
                 {buttons && buttons.length > 0 && (
                   <View style={styles.buttonContainer}>
                     {buttons.map((btn, idx) => (
@@ -110,6 +109,7 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
                     ))}
                   </View>
                 )}
+
               </View>
             </TouchableOpacity>
           </Animated.View>
@@ -136,14 +136,16 @@ const styles = StyleSheet.create({
     borderRadius: responsiveSpacing(16),
     paddingHorizontal: responsiveSpacing(20),
     paddingVertical: responsiveSpacing(24),
-    width: '100%',
+    width: SCREEN.width * 0.9,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 6,
   },
-  content: {},
+  content: {
+    width: SCREEN.width * 0.8,
+  },
   title: {
     fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
@@ -152,7 +154,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   message: {
-    fontSize: responsiveFont(15),
+    fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.darkGray,
     textAlign: 'left',
@@ -161,11 +163,10 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
+    gap: responsiveSpacing(16),
     justifyContent: 'flex-end',
-    gap: responsiveSpacing(12),
   },
   button: {
-    paddingHorizontal: responsiveSpacing(16),
     paddingVertical: responsiveSpacing(8),
     borderRadius: responsiveSpacing(8),
     alignItems: 'center',

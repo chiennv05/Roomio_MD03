@@ -14,7 +14,7 @@ interface InvoiceCardProps {
 
 // Hàm định dạng ngày tháng
 const formatDateDisplay = (dateString: string, format: string = 'DD/MM/YYYY') => {
-    if (!dateString) return '';
+    if (!dateString) {return '';}
     try {
         const date = new Date(dateString);
         const day = date.getDate().toString().padStart(2, '0');
@@ -54,7 +54,7 @@ const getStatusColor = (status: string) => {
             return Colors.primaryGreen; // Xanh lá đậm
         case 'pending':
             return '#17A2B8'; // Xanh dương
-        case 'pending_confirmation': 
+        case 'pending_confirmation':
             return '#007BFF'; // Xanh dương đậm (đã đổi từ vàng)
         case 'issued':
             return '#FFC107'; // Vàng (đã đổi từ xanh dương đậm)
@@ -91,7 +91,7 @@ const getStatusText = (status: string) => {
 
 // Hàm xử lý hiển thị kỳ hóa đơn
 const formatPeriod = (period: string | { month: number; year: number } | undefined) => {
-    if (!period) return 'N/A';
+    if (!period) {return 'N/A';}
 
     if (typeof period === 'string') {
         // Nếu period là string, dùng formatDateDisplay
@@ -143,17 +143,17 @@ const getTenantName = (invoice: Invoice) => {
     const tenant = invoice.tenantId;
     if (tenant && typeof tenant === 'object') {
         // Ưu tiên sử dụng fullName nếu có
-        if (tenant.fullName) return tenant.fullName;
+        if (tenant.fullName) {return tenant.fullName;}
 
         // Nếu có name thì sử dụng
-        if (tenant.name) return tenant.name;
+        if (tenant.name) {return tenant.name;}
 
         // Nếu có displayName thì sử dụng
-        if (tenant.displayName) return tenant.displayName;
+        if (tenant.displayName) {return tenant.displayName;}
 
         // Nếu có email hoặc phone
-        if (tenant.email) return tenant.email;
-        if (tenant.phone) return tenant.phone;
+        if (tenant.email) {return tenant.email;}
+        if (tenant.phone) {return tenant.phone;}
     }
 
     // Nếu tenantId là string, tham chiếu đến hợp đồng để lấy thông tin
@@ -179,13 +179,13 @@ const getRoomInfo = (invoice: Invoice) => {
     // Kiểm tra nếu roomId là object
     if (invoice.roomId && typeof invoice.roomId === 'object') {
         // Ưu tiên sử dụng roomNumber nếu có
-        if (invoice.roomId.roomNumber) return invoice.roomId.roomNumber;
+        if (invoice.roomId.roomNumber) {return invoice.roomId.roomNumber;}
 
         // Hoặc sử dụng name nếu có
-        if (invoice.roomId.name) return invoice.roomId.name;
+        if (invoice.roomId.name) {return invoice.roomId.name;}
 
         // Hoặc sử dụng title nếu có
-        if (invoice.roomId.title) return invoice.roomId.title;
+        if (invoice.roomId.title) {return invoice.roomId.title;}
     }
 
     // Nếu roomId là string, tham chiếu đến hợp đồng để lấy thông tin
@@ -210,12 +210,12 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress, onEdit, onD
     // Stop propagation to prevent triggering the card's onPress when clicking buttons
     const handleEdit = (e: any) => {
         e.stopPropagation();
-        if (onEdit) onEdit(invoice);
+        if (onEdit) {onEdit(invoice);}
     };
 
     const handleDelete = (e: any) => {
         e.stopPropagation();
-        if (onDelete) onDelete(invoice);
+        if (onDelete) {onDelete(invoice);}
     };
 
     return (
@@ -229,15 +229,15 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress, onEdit, onD
                     <View
                         style={[
                             styles.statusBadge,
-                            { 
+                            {
                                 backgroundColor: getStatusColor(invoice.status) + '20',
                                 borderWidth: 1,
-                                borderColor: getStatusColor(invoice.status)
+                                borderColor: getStatusColor(invoice.status),
                             },
                         ]}>
                         <Text style={[
-                            styles.statusText, 
-                            { color: getStatusColor(invoice.status) }
+                            styles.statusText,
+                            { color: getStatusColor(invoice.status) },
                         ]}>{getStatusText(invoice.status)}</Text>
                     </View>
                 </View>
@@ -245,7 +245,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress, onEdit, onD
                 {/* Chỉ thêm phần hiển thị "Người ở cùng" nếu isRoommate là true */}
                 {invoice.isRoommate && (
                     <View style={styles.roommateBadge}>
-                        <Image 
+                        <Image
                             source={require('../../../assets/icons/icon_person.png')}
                             style={styles.roommateIcon}
                         />
@@ -297,7 +297,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress, onEdit, onD
                         </Text>
                     </View>
 
-                    
+
                 </View>
 
                 <View style={styles.footer}>
@@ -491,4 +491,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default InvoiceCard; 
+export default InvoiceCard;

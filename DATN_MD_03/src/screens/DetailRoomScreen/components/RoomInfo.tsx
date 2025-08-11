@@ -59,7 +59,7 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
       {/* Room Code */}
       <View style={styles.roomCodeContainer}>
         <View style={styles.roomCodeIcon}>
-          <Image 
+          <Image
             source={{ uri: Icons.IconHome }}
             style={styles.roomCodeIconImage}
           />
@@ -70,7 +70,7 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
       {/* Address */}
       <View style={styles.addressContainer}>
         <View style={styles.addressIcon}>
-          <Image 
+          <Image
             source={{ uri: Icons.IconLocation }}
             style={styles.addressIconImage}
           />
@@ -80,12 +80,12 @@ const RoomInfo: React.FC<RoomInfoProps> = ({
 
       {/* Map Button */}
       {onMapPress && (
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.mapButtonNew}
           onPress={onMapPress}
           activeOpacity={0.7}
         >
-          <Image 
+          <Image
             source={{ uri: Icons.IconMap }}
             style={styles.mapIconNew}
           />

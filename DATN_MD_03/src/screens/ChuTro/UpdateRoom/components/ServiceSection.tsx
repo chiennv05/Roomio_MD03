@@ -37,7 +37,7 @@ const ServiceSection: React.FC<ServiceSectionProps> = ({
   };
 
   const handleSaveModal = (item: ItemSeviceOptions) => {
-    if (!item) return;
+    if (!item) {return;}
     console.log(item);
 
     const isTemplateKhac = item.value === 'khac';
@@ -96,7 +96,7 @@ const ServiceSection: React.FC<ServiceSectionProps> = ({
       setCustomServices(prev => {
         // Tìm dịch vụ hiện có theo tên
         const existingIndex = prev.findIndex(i => i.name === customService.name);
-        
+
         if (existingIndex >= 0) {
           // Nếu đã tồn tại, thay thế
           const updated = [...prev];
@@ -155,4 +155,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ServiceSection; 
+export default ServiceSection;

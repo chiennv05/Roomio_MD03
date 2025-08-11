@@ -34,22 +34,22 @@ type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DetailR
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  
+
   // Get user info from Redux store
   const { user } = useSelector((state: RootState) => state.auth);
-  
+
   // Animation states
   const fadeAnim = useMemo(() => new Animated.Value(1), []);
   const scaleAnim = useMemo(() => new Animated.Value(1), []);
   const overlayAnim = useMemo(() => new Animated.Value(0), []); // Animation cho overlay
-  
+
   // Animation for room cards
   const animatedValues = useRef<Map<string, Animated.Value>>(new Map()).current;
   const viewableItems = useRef<Set<string>>(new Set()).current;
-  
+
   // Memoize static data
   const filters = useMemo(() => ['Khu vực', 'Khoảng giá', 'Diện tích', 'Nội thất', 'Tiện nghi'], []);
-  
+
   const [selectedFilters, setSelectedFilters] = useState<number[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<District[]>([]);
   const [priceRange, setPriceRange] = useState<{min: number, max: number} | null>(null);
@@ -89,10 +89,10 @@ const HomeScreen: React.FC = () => {
     visibleItems.forEach(({ item, isViewable }) => {
       if (item && item._id) {
         const animValue = getAnimatedValue(item._id);
-        
+
         if (isViewable && !viewableItems.has(item._id)) {
           viewableItems.add(item._id);
-          
+
           // Animate in with stagger effect
           Animated.timing(animValue, {
             toValue: 1,
@@ -102,7 +102,7 @@ const HomeScreen: React.FC = () => {
           }).start();
         } else if (!isViewable && viewableItems.has(item._id)) {
           viewableItems.delete(item._id);
-          
+
           // Optional: animate out when not viewable
           Animated.timing(animValue, {
             toValue: 0,
@@ -147,19 +147,19 @@ const HomeScreen: React.FC = () => {
 
   // Memoize hasNoFilters check
   const hasNoFilters = useMemo(() => {
-    return selectedAmenities.length === 0 && 
-           selectedFurniture.length === 0 && 
-           selectedRegions.length === 0 && 
-           !priceRange && 
+    return selectedAmenities.length === 0 &&
+           selectedFurniture.length === 0 &&
+           selectedRegions.length === 0 &&
+           !priceRange &&
            !areaRange;
   }, [selectedAmenities.length, selectedFurniture.length, selectedRegions.length, priceRange, areaRange]);
 
   // Memoize hasActiveFilters check
   const hasActiveFilters = useMemo(() => {
-    return selectedAmenities.length > 0 || 
-           selectedFurniture.length > 0 || 
-           selectedRegions.length > 0 || 
-           !!priceRange || 
+    return selectedAmenities.length > 0 ||
+           selectedFurniture.length > 0 ||
+           selectedRegions.length > 0 ||
+           !!priceRange ||
            !!areaRange;
   }, [selectedAmenities.length, selectedFurniture.length, selectedRegions.length, priceRange, areaRange]);
 
@@ -177,14 +177,14 @@ const HomeScreen: React.FC = () => {
 
     const filtered = rooms.filter(room => {
       const isValid = validateRoomByFilters(
-        room, 
-        selectedAmenities, 
-        selectedFurniture, 
+        room,
+        selectedAmenities,
+        selectedFurniture,
         regionsToFilter,
         priceRange || undefined,
         areaRange || undefined
       );
-      
+
       return isValid;
     });
 
@@ -195,30 +195,30 @@ const HomeScreen: React.FC = () => {
   // Build filters object - Memoized
   const buildFilters = useMemo((): RoomFilters => {
     const filters: RoomFilters = {};
-    
+
     if (priceRange) {
       filters.minPrice = priceRange.min;
       filters.maxPrice = priceRange.max;
     }
-    
+
     if (areaRange) {
       filters.minArea = areaRange.min;
       filters.maxArea = areaRange.max;
     }
-    
+
     if (selectedFurniture.length > 0) {
       filters.furniture = selectedFurniture;
     }
-    
+
     if (selectedAmenities.length > 0) {
       filters.amenities = selectedAmenities;
     }
-    
+
     if (selectedRegions.length > 0) {
       // Use districts array for filtering
       filters.districts = selectedRegions.map(region => region.name);
     }
-    
+
     return filters;
   }, [priceRange, areaRange, selectedFurniture, selectedAmenities, selectedRegions]);
 
@@ -285,7 +285,7 @@ const HomeScreen: React.FC = () => {
   // Animated Room Card Component
   const AnimatedRoomCard = useCallback(({ item }: { item: any }) => {
     const animValue = getAnimatedValue(item._id);
-    
+
     const translateY = animValue.interpolate({
       inputRange: [0, 1],
       outputRange: [50, 0], // Slide up from 50px below
@@ -314,8 +314,8 @@ const HomeScreen: React.FC = () => {
           },
         ]}
       >
-        <RoomCard 
-          item={item} 
+        <RoomCard
+          item={item}
           onPress={handleRoomPress}
         />
       </Animated.View>
@@ -339,7 +339,7 @@ const HomeScreen: React.FC = () => {
   // Header component for FlatList
   const ListHeaderComponent = useMemo(() => (
     <View>
-      <Header 
+      <Header
         searchValue={searchQuery}
         onChangeSearchText={setSearchQuery}
         onSearchSubmit={handleSearchSubmit}
@@ -369,21 +369,21 @@ const HomeScreen: React.FC = () => {
     setSearchQuery,
     handleSearchSubmit,
     handleNotificationPress,
-    handleUserPress, 
-    filters, 
-    selectedFilters, 
-    handleFilterSelect, 
-    handleClearAll, 
-    handleRegionSelect, 
-    selectedRegions, 
-    handlePriceRangeSelect, 
-    handleAreaSelect, 
-    priceRange, 
-    areaRange, 
-    handleFurnitureSelect, 
-    handleAmenitySelect, 
-    selectedFurniture, 
-    selectedAmenities
+    handleUserPress,
+    filters,
+    selectedFilters,
+    handleFilterSelect,
+    handleClearAll,
+    handleRegionSelect,
+    selectedRegions,
+    handlePriceRangeSelect,
+    handleAreaSelect,
+    priceRange,
+    areaRange,
+    handleFurnitureSelect,
+    handleAmenitySelect,
+    selectedFurniture,
+    selectedAmenities,
   ]);
 
   // Empty component
@@ -396,8 +396,8 @@ const HomeScreen: React.FC = () => {
     ) : (
       <EmptySearchAnimation
         title={hasActiveFilters ? 'Không tìm thấy phòng phù hợp' : 'Không có phòng nào'}
-        subtitle={hasActiveFilters 
-          ? 'Thử thay đổi bộ lọc để tìm kiếm phòng khác' 
+        subtitle={hasActiveFilters
+          ? 'Thử thay đổi bộ lọc để tìm kiếm phòng khác'
           : 'Hiện tại chưa có phòng nào được đăng'
         }
       />
@@ -415,13 +415,13 @@ const HomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <Animated.View 
+      <Animated.View
         style={[
           styles.container,
           {
             opacity: fadeAnim,
             transform: [{ scale: scaleAnim }],
-          }
+          },
         ]}
       >
         <FlatList
@@ -443,15 +443,15 @@ const HomeScreen: React.FC = () => {
           windowSize={10}
         />
       </Animated.View>
-      
+
       {/* Overlay để tạo hiệu ứng transition mượt mà */}
       {showSearchOverlay && (
-        <Animated.View 
+        <Animated.View
           style={[
             styles.searchOverlay,
             {
               opacity: overlayAnim,
-            }
+            },
           ]}
           pointerEvents="none"
         />

@@ -28,7 +28,7 @@ const ModalConfirmContract = ({
   setValue,
   onSubmit,
 }: Props) => {
-  if (!action) return null;
+  if (!action) {return null;}
 
   const isExtend = action === 'extend';
 

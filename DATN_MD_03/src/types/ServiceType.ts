@@ -11,4 +11,4 @@ export interface ServiceType {
   landlordId: string;
   createdAt?: string;
   updatedAt?: string;
-} 
+}

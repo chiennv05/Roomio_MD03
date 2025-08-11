@@ -25,7 +25,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.limeGreen,
     borderRadius: responsiveFont(50),
-    padding: responsiveSpacing(16),
     marginTop: responsiveSpacing(16),
   },
 
@@ -33,5 +32,6 @@ const styles = StyleSheet.create({
     color: Colors.black,
     fontSize: responsiveFont(16),
     fontWeight: 'bold',
+    paddingVertical: responsiveSpacing(12),
   },
 });

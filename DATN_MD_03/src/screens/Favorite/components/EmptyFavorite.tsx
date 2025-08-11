@@ -7,10 +7,10 @@ import {
 } from 'react-native';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
-import { 
-  responsiveFont, 
+import {
+  responsiveFont,
   responsiveIcon,
-  responsiveSpacing 
+  responsiveSpacing,
 } from '../../../utils/responsive';
 import { HeartAnimation } from '../../../components';
 
@@ -100,4 +100,4 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
   },
-}); 
+});

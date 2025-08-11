@@ -27,11 +27,11 @@ const Pagination: React.FC<PaginationProps> = ({
         disabled={!hasPrevPage}>
         <Text style={styles.pageButtonText}>Trước</Text>
       </TouchableOpacity>
-      
+
       <Text style={styles.pageText}>
         Trang {currentPage}/{totalPages}
       </Text>
-      
+
       <TouchableOpacity
         style={[styles.pageButton, !hasNextPage && styles.disabledButton]}
         onPress={() => onPageChange(currentPage + 1)}
@@ -73,4 +73,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Pagination; 
+export default Pagination;

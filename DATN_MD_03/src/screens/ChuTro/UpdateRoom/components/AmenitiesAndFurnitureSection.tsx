@@ -87,4 +87,4 @@ const AmenitiesAndFurnitureSection: React.FC<AmenitiesAndFurnitureSectionProps> 
   );
 };
 
-export default AmenitiesAndFurnitureSection; 
+export default AmenitiesAndFurnitureSection;

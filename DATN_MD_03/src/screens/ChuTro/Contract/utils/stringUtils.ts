@@ -7,7 +7,7 @@ export const processCoTenants = (coTenantsString: string): string[] => {
   if (!coTenantsString || coTenantsString.trim() === '') {
     return [];
   }
-  
+
   return coTenantsString
     .split(',')
     .map(item => item.trim())

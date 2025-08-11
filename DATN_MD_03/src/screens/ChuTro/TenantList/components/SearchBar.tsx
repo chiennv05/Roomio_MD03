@@ -79,4 +79,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SearchBar; 
+export default SearchBar;

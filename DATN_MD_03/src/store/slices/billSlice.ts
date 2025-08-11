@@ -14,7 +14,7 @@ import {
     saveInvoiceAsTemplate as saveInvoiceAsTemplateService,
     getInvoiceTemplates as getInvoiceTemplatesService,
     deleteInvoiceTemplate as deleteInvoiceTemplateService,
-    markInvoiceAsPaid as markInvoiceAsPaidService
+    markInvoiceAsPaid as markInvoiceAsPaidService,
 } from '../services/billService';
 
 // Tạo action để cập nhật hóa đơn trong store mà không cần gọi API
@@ -182,10 +182,10 @@ export const fetchRoommateInvoices = createAsyncThunk(
                 console.log('Marking invoice as roommate:', invoice._id || invoice.id);
                 return {
                     ...invoice,
-                    isRoommate: true // Đánh dấu rõ ràng là hóa đơn người ở cùng
+                    isRoommate: true, // Đánh dấu rõ ràng là hóa đơn người ở cùng
                 };
             }) || [];
-            
+
             console.log('THUNK: Processed', invoicesWithRoommate.length, 'roommate invoices');
 
             return {
@@ -298,7 +298,7 @@ export const updateInvoice = createAsyncThunk(
         token,
         invoiceId,
         updateData,
-        updateType = 'all' // 'basic' for dueDate/note, 'items' for items, 'all' for everything
+        updateType = 'all', // 'basic' for dueDate/note, 'items' for items, 'all' for everything
     }: {
         token: string;
         invoiceId: string;
@@ -320,7 +320,7 @@ export const addCustomInvoiceItem = createAsyncThunk(
     async ({
         token,
         invoiceId,
-        itemData
+        itemData,
     }: {
         token: string;
         invoiceId: string;
@@ -353,7 +353,7 @@ export const updateInvoiceItems = createAsyncThunk(
     async ({
         token,
         invoiceId,
-        items
+        items,
     }: {
         token: string;
         invoiceId: string;
@@ -387,7 +387,7 @@ export const deleteInvoiceItem = createAsyncThunk(
     async ({
         token,
         invoiceId,
-        itemId
+        itemId,
     }: {
         token: string;
         invoiceId: string;
@@ -413,7 +413,7 @@ export const saveInvoiceAsTemplate = createAsyncThunk(
     async ({
         token,
         invoiceId,
-        templateName
+        templateName,
     }: {
         token: string;
         invoiceId: string;
@@ -526,7 +526,7 @@ const billSlice = createSlice({
             state.deleteTemplateLoading = false;
             state.deleteTemplateSuccess = false;
             state.deleteTemplateError = null;
-        }
+        },
     },
     extraReducers: builder => {
         builder
@@ -567,16 +567,16 @@ const billSlice = createSlice({
             })
             .addCase(fetchRoommateInvoices.fulfilled, (state, action) => {
                 state.loading = false;
-                
+
                 // Kiểm tra và đảm bảo mỗi hóa đơn người ở cùng đều có isRoommate = true
                 // Thêm hậu tố "-roommate" vào _id và id để đảm bảo tính duy nhất
                 const roommateInvoices = action.payload.invoices.map(invoice => ({
                     ...invoice,
                     _id: invoice._id ? `${invoice._id}-roommate` : undefined,
                     id: invoice.id ? `${invoice.id}-roommate` : undefined,
-                    isRoommate: true // Luôn đảm bảo thuộc tính này được đặt
+                    isRoommate: true, // Luôn đảm bảo thuộc tính này được đặt
                 }));
-                
+
                 // Kiểm tra khi nối thêm dữ liệu mới (trang > 1)
                 if (action.meta.arg.page && action.meta.arg.page > 1) {
                     // Nối thêm dữ liệu mới vào danh sách hiện tại
@@ -627,9 +627,9 @@ const billSlice = createSlice({
                 // Đảm bảo hóa đơn của người ở cùng được đánh dấu đúng
                 state.roommateInvoice = {
                     ...action.payload,
-                    isRoommate: true
+                    isRoommate: true,
                 };
-                console.log("Roommate invoice details loaded:", state.roommateInvoice._id);
+                console.log('Roommate invoice details loaded:', state.roommateInvoice._id);
             })
             .addCase(fetchRoommateInvoiceDetails.rejected, (state, action) => {
                 state.loading = false;
@@ -930,7 +930,7 @@ export const {
     resetDeleteItemState,
     resetSaveTemplateState,
     resetTemplatesState,
-    resetDeleteTemplateState
+    resetDeleteTemplateState,
 } = billSlice.actions;
 
-export default billSlice.reducer; 
+export default billSlice.reducer;

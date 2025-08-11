@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
-import { 
-  responsiveFont, 
-  responsiveSpacing 
+import {
+  responsiveFont,
+  responsiveSpacing,
 } from '../../../utils/responsive';
 import { Room } from '../../../types/Room';
 import FavoriteRoomCard from './FavoriteRoomCard';
@@ -43,11 +43,11 @@ const FavoriteSearchResults: React.FC<FavoriteSearchResultsProps> = ({
     loadMore,
     reset,
     totalItems,
-    currentPage
+    currentPage,
   } = usePaginatedData({
     data: rooms,
     pageSize: 8, // Show 8 rooms initially, then load 8 more each time
-    initialPageCount: 1
+    initialPageCount: 1,
   });
 
   // Reset pagination when rooms data changes (new search)
@@ -68,10 +68,10 @@ const FavoriteSearchResults: React.FC<FavoriteSearchResultsProps> = ({
     visibleItems.forEach(({ item, isViewable }) => {
       if (item && item._id) {
         const animValue = getAnimatedValue(item._id);
-        
+
         if (isViewable && !viewableItems.has(item._id)) {
           viewableItems.add(item._id);
-          
+
           // Animate in with stagger effect
           Animated.timing(animValue, {
             toValue: 1,
@@ -81,7 +81,7 @@ const FavoriteSearchResults: React.FC<FavoriteSearchResultsProps> = ({
           }).start();
         } else if (!isViewable && viewableItems.has(item._id)) {
           viewableItems.delete(item._id);
-          
+
           // Optional: animate out when not viewable
           Animated.timing(animValue, {
             toValue: 0,
@@ -103,7 +103,7 @@ const FavoriteSearchResults: React.FC<FavoriteSearchResultsProps> = ({
   // Animated Room Card Component
   const AnimatedFavoriteRoomCard = useCallback(({ item }: { item: Room }) => {
     const animValue = getAnimatedValue(item._id || '');
-    
+
     const translateY = animValue.interpolate({
       inputRange: [0, 1],
       outputRange: [50, 0], // Slide up from 50px below
@@ -132,8 +132,8 @@ const FavoriteSearchResults: React.FC<FavoriteSearchResultsProps> = ({
           },
         ]}
       >
-        <FavoriteRoomCard 
-          item={item} 
+        <FavoriteRoomCard
+          item={item}
           onPress={onRoomPress}
         />
       </Animated.View>
@@ -168,11 +168,11 @@ const FavoriteSearchResults: React.FC<FavoriteSearchResultsProps> = ({
   const renderEmptyComponent = () => {
     // Check if this is a search result or general favorite list
     const isSearching = title.includes('Tìm kiếm trong yêu thích');
-    
+
     return (
       <EmptySearchAnimation
-        title={isSearching ? "Không tìm thấy phòng phù hợp" : "Chưa có phòng yêu thích"}
-        subtitle={isSearching ? "Thử thay đổi từ khóa tìm kiếm khác" : "Hãy thêm phòng vào danh sách yêu thích"}
+        title={isSearching ? 'Không tìm thấy phòng phù hợp' : 'Chưa có phòng yêu thích'}
+        subtitle={isSearching ? 'Thử thay đổi từ khóa tìm kiếm khác' : 'Hãy thêm phòng vào danh sách yêu thích'}
       />
     );
   };
@@ -207,7 +207,7 @@ const FavoriteSearchResults: React.FC<FavoriteSearchResultsProps> = ({
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.listContainer,
-          displayedData.length === 0 && styles.emptyListContainer
+          displayedData.length === 0 && styles.emptyListContainer,
         ]}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListFooterComponent={renderFooter}
@@ -289,4 +289,4 @@ const styles = StyleSheet.create({
   animatedCard: {
     marginBottom: responsiveSpacing(4),
   },
-}); 
+});

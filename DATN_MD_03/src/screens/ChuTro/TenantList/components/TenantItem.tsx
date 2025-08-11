@@ -29,15 +29,15 @@ type NavigationProp = StackNavigationProp<RootStackParamList, 'TenantDetail'>;
 const TenantItem: React.FC<TenantItemProps> = ({item}) => {
   const navigation = useNavigation<NavigationProp>();
   const [selectedTenant, setSelectedTenant] = useState<string | null>(null);
-  
+
   const roomNumber = item.room?.roomNumber || 'N/A';
   const tenantCount = item.tenantCount || 1;
   const price = item.monthlyRent ? item.monthlyRent.toLocaleString('vi-VN') : '0';
   const roomPhoto = item.room?.photo ? getImageUrl(item.room.photo) : null;
-  
+
   // Create tenant list with main tenant first, then coTenants (excluding duplicate main tenant)
   const coTenantsFiltered = (item.coTenants || []).filter(coTenant => coTenant._id !== item._id);
-  
+
   const allTenants = [
     {
       _id: item._id,
@@ -48,12 +48,12 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
       _id: coTenant._id,
       fullName: coTenant.fullName,
       isMainTenant: false,
-    }))
+    })),
   ];
 
   const handleViewDetail = () => {
     navigation.navigate('TenantDetail', {
-      tenantId: item._id
+      tenantId: item._id,
     });
   };
 
@@ -82,7 +82,7 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
             ]}
             onPress={() => handleAvatarPress(tenant.fullName)}>
             <View style={styles.avatarItemContainer}>
-              <TooltipBubble 
+              <TooltipBubble
                 text={tenant.fullName}
                 visible={selectedTenant === tenant.fullName}
               />
@@ -119,12 +119,12 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
             <Image source={{uri: Icons.IconRoom}} style={styles.infoIcon} />
             <Text style={styles.roomNumber}>{roomNumber}</Text>
           </View>
-          
+
           <View style={styles.infoRow}>
             <Image source={{uri: Icons.IconPersonDefaut}} style={styles.infoIcon} />
             <Text style={styles.infoText}>Số người: {tenantCount}</Text>
           </View>
-          
+
           <View style={styles.infoRow}>
             <Image source={{uri: Icons.IconMoney}} style={styles.infoIcon} />
             <Text style={styles.priceText}>{price}VNĐ/tháng</Text>

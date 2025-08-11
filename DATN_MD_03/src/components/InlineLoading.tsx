@@ -13,15 +13,15 @@ interface InlineLoadingProps {
 }
 
 const InlineLoading: React.FC<InlineLoadingProps> = ({
-  message = "Đang tải...",
+  message = 'Đang tải...',
   size = 'small',
   color = Colors.limeGreen,
-  style
+  style,
 }) => {
   return (
     <View style={[styles.container, style]}>
-      <LoadingAnimation 
-        size={size} 
+      <LoadingAnimation
+        size={size}
         color={color}
       />
       {message && (
@@ -46,4 +46,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default InlineLoading; 
+export default InlineLoading;

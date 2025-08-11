@@ -16,7 +16,7 @@ export const fetchFilterOptions = createAsyncThunk(
   async (_, {rejectWithValue}) => {
     try {
       const res = await getFilterOptions();
-      if (!res?.success) throw new Error(res?.message);
+      if (!res?.success) {throw new Error(res?.message);}
       return res.data;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Lấy dữ liệu filter thất bại');
@@ -53,4 +53,4 @@ const filterSlice = createSlice({
 });
 
 export const {clearFilterError} = filterSlice.actions;
-export default filterSlice.reducer; 
+export default filterSlice.reducer;

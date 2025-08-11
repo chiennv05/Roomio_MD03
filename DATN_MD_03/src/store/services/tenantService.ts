@@ -14,23 +14,23 @@ export const getTenants = async (
   try {
     // Xây dựng query string từ filters
     const queryParams = new URLSearchParams();
-    
+
     if (filters.page) {
       queryParams.append('page', filters.page.toString());
     }
-    
+
     if (filters.limit) {
       queryParams.append('limit', filters.limit.toString());
     }
-    
+
     if (filters.search && filters.search.trim() !== '') {
       queryParams.append('search', filters.search.trim());
     }
-    
+
     if (filters.status && filters.status !== '--') {
       queryParams.append('status', filters.status);
     }
-    
+
     const queryString = queryParams.toString();
     const url = `${API_CONFIG.BASE_URL}/landlord/tenants${
       queryString ? `?${queryString}` : ''
@@ -61,7 +61,7 @@ export const getTenants = async (
 export const getTenantDetails = async (token: string, tenantId: string): Promise<TenantDetailResponse> => {
   try {
     const url = `${API_CONFIG.BASE_URL}/landlord/tenants/${tenantId}`;
-    
+
     const response = await axios.get<TenantDetailResponse>(url, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -76,4 +76,4 @@ export const getTenantDetails = async (token: string, tenantId: string): Promise
     }
     throw new Error('Lỗi kết nối đến máy chủ');
   }
-}; 
+};

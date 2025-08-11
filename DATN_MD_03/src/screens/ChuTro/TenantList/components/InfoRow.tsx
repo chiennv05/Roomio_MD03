@@ -62,4 +62,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default InfoRow; 
+export default InfoRow;

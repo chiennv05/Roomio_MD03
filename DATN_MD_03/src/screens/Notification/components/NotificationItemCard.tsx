@@ -28,9 +28,9 @@ interface NotificationItemCardProps {
   id: string; // ID của thông báo
 }
 
-const NotificationItemCard: React.FC<NotificationItemCardProps> = ({ 
-  title, 
-  content, 
+const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
+  title,
+  content,
   time,
   date,
   isRead,
@@ -38,7 +38,7 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
   icon,
   onPress,
   onDelete,
-  id
+  id,
 }) => {
   // Tham chiếu đến Swipeable để có thể đóng sau khi xóa
   const swipeableRef = React.useRef<Swipeable>(null);
@@ -54,7 +54,7 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
 
   const getImageSource = () => {
     const iconSource = getStatusIcon();
-    if (!iconSource) return undefined;
+    if (!iconSource) {return undefined;}
     if (typeof iconSource === 'string') {
       return {uri: iconSource};
     }
@@ -138,19 +138,19 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
       friction={2}
       rightThreshold={40}
       overshootRight={false}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[
           styles.container,
           {
             backgroundColor: statusColors.cardBg,
-          }
+          },
         ]}
         onPress={onPress}
         activeOpacity={0.7}
-      > 
+      >
         {/* Icon trạng thái */}
         <View style={[styles.iconContainer]}>
-          <Image 
+          <Image
             source={getImageSource()}
             style={[styles.iconImage]}
             resizeMode="contain"
@@ -162,11 +162,11 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
           <Text style={styles.title} numberOfLines={1}>
             {title}
           </Text>
-          
+
           <Text style={styles.content} numberOfLines={2}>
             {content}
           </Text>
-          
+
           <Text style={styles.time}>{time}</Text>
         </View>
       </TouchableOpacity>
@@ -238,4 +238,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default NotificationItemCard; 
+export default NotificationItemCard;

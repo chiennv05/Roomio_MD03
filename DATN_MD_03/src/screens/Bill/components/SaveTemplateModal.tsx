@@ -21,14 +21,14 @@ interface SaveTemplateModalProps {
     maxLength?: number; // Độ dài tối đa cho tên mẫu
 }
 
-const SaveTemplateModal = ({ 
-    visible, 
-    onClose, 
-    onSave, 
-    loading, 
+const SaveTemplateModal = ({
+    visible,
+    onClose,
+    onSave,
+    loading,
     existingTemplateNames = [],
     saveError,
-    maxLength = 50 
+    maxLength = 50,
 }: SaveTemplateModalProps) => {
     const [templateName, setTemplateName] = useState('');
     const [error, setError] = useState('');
@@ -209,4 +209,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default SaveTemplateModal; 
+export default SaveTemplateModal;

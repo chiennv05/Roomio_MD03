@@ -76,8 +76,8 @@ const LogoutModal: React.FC<LogoutModalProps> = ({
   });
 
   const handleCancel = () => {
-    if (loading) return;
-    
+    if (loading) {return;}
+
     // Start close animation
     opacity.value = withTiming(0, { duration: 200 });
     scale.value = withTiming(0.3, { duration: 200 });
@@ -87,7 +87,7 @@ const LogoutModal: React.FC<LogoutModalProps> = ({
   };
 
   const handleConfirm = () => {
-    if (loading) return;
+    if (loading) {return;}
     onConfirm();
   };
 
@@ -99,7 +99,7 @@ const LogoutModal: React.FC<LogoutModalProps> = ({
       onRequestClose={handleCancel}
     >
       <Animated.View style={[styles.backdrop, backdropStyle]}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backdropTouchable}
           activeOpacity={1}
           onPress={handleCancel}
@@ -109,7 +109,7 @@ const LogoutModal: React.FC<LogoutModalProps> = ({
               {/* Header with icon */}
               <View style={styles.header}>
                 <View style={styles.iconContainer}>
-                  <Image 
+                  <Image
                     source={{ uri: Icons.IconOut }}
                     style={styles.iconImage}
                   />
@@ -136,12 +136,12 @@ const LogoutModal: React.FC<LogoutModalProps> = ({
                     Hủy
                   </Text>
                 </TouchableOpacity>
-                
+
                 <TouchableOpacity
                   style={[
-                    styles.button, 
+                    styles.button,
                     styles.confirmButton,
-                    loading && styles.disabledButton
+                    loading && styles.disabledButton,
                   ]}
                   onPress={handleConfirm}
                   activeOpacity={0.8}
@@ -261,4 +261,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LogoutModal; 
+export default LogoutModal;
