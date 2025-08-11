@@ -232,8 +232,13 @@ const DetailRoomScreen: React.FC = () => {
   }, [user, showAlert]);
 
   const handleSupportPress = useCallback(() => {
+    // Guest không được phép báo cáo phòng – hiển thị modal yêu cầu đăng nhập
+    if (!user) {
+      setShowLoginPrompt(true);
+      return;
+    }
     supportModalRef.current?.expand();
-  }, []);
+  }, [user]);
 
   const handleCloseLoginPrompt = useCallback(() => {
     setShowLoginPrompt(false);
