@@ -21,4 +21,8 @@ export const Images = {
     ios: 'image_cccd3',
     android: 'asset:/images/image_cccd_3.png',
   }),
+  ImageLogo: Platform.select({
+    ios: 'image_logo',
+    android: 'asset:/images/image_logo.png',
+  }),
 };
