@@ -121,7 +121,7 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
           </View>
 
           <View style={styles.infoRow}>
-            <Image source={{uri: Icons.IconPersonDefaut}} style={styles.infoIcon} />
+            <Image source={{uri: Icons.IconSoNguoi}} style={styles.infoIcon} />
             <Text style={styles.infoText}>Số người: {tenantCount}</Text>
           </View>
 
@@ -219,8 +219,8 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Regular,
-    color: Colors.textGray,
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
   },
   priceText: {
     fontSize: responsiveFont(16),
@@ -239,12 +239,12 @@ const styles = StyleSheet.create({
     width: responsiveSpacing(18),
     height: responsiveSpacing(18),
     marginRight: responsiveSpacing(8),
-    tintColor: Colors.textGray,
+    tintColor: Colors.darkGreen,
   },
   sectionTitle: {
     fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.textGray,
+    color: Colors.black,
   },
   avatarContainer: {
     flexDirection: 'row',
