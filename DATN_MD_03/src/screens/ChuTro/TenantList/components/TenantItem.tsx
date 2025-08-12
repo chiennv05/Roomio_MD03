@@ -117,7 +117,7 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
         <View style={styles.roomBasicInfo}>
           <View style={styles.roomNumberContainer}>
             <Image source={{uri: Icons.IconRoom}} style={styles.infoIcon} />
-            <Text style={styles.roomNumber}>{roomNumber}</Text>
+            <Text style={styles.roomNumber}>Phòng: {roomNumber}</Text>
           </View>
 
           <View style={styles.infoRow}>
@@ -126,7 +126,7 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
           </View>
 
           <View style={styles.infoRow}>
-            <Image source={{uri: Icons.IconMoney}} style={styles.infoIcon} />
+            <Image source={{uri: Icons.IconTienCoc}} style={styles.infoIcon} />
             <Text style={styles.priceText}>{price}VNĐ/tháng</Text>
           </View>
         </View>

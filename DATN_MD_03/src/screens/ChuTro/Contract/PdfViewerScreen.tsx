@@ -1,14 +1,6 @@
 import React, {useEffect, useState} from 'react';
-import {
-  View,
-  StyleSheet,
-  SafeAreaView,
-  Text,
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  StatusBar,
-} from 'react-native';
+import {View, StyleSheet, Text, ActivityIndicator, Alert, Dimensions, StatusBar} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import Pdf from 'react-native-pdf';
@@ -204,8 +196,8 @@ const PdfViewerScreen = () => {
     }
   };
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroud} />
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroud} translucent={false} />
       <View style={styles.headerContainer}>
         <UIHeader
           title="Xem hợp đồng PDF"
