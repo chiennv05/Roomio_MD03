@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  PermissionsAndroid,
+  Platform,
 } from 'react-native';
 import ProfileHeader from './components/ProfileHeader';
 import SettingSwitch from './components/SettingSwitch';
@@ -23,11 +25,12 @@ import {Fonts} from '../../theme/fonts';
 import {Icons} from '../../assets/icons';
 import {useDispatch, useSelector} from 'react-redux';
 import {logoutUser} from '../../store/slices/authSlice';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../types/route';
 import {RootState, AppDispatch} from '../../store';
 import {checkToken} from '../../utils/tokenCheck';
+import Geolocation from '@react-native-community/geolocation';
 
 export default function ProfileScreen() {
   const dispatch = useDispatch<AppDispatch>();
@@ -37,6 +40,40 @@ export default function ProfileScreen() {
   const loading = useSelector((state: RootState) => state.auth.loading);
   console.log(token);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [locationPermissionGranted, setLocationPermissionGranted] =
+    useState<boolean>(false);
+
+  // Check location permission and reflect on the switch
+  const checkPermission = useCallback(async () => {
+      try {
+        if (Platform.OS === 'android') {
+          const granted = await PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          );
+          setLocationPermissionGranted(granted);
+        } else {
+          // iOS: try to get current location; if permission denied, error.code === 1
+          Geolocation.getCurrentPosition(
+            () => setLocationPermissionGranted(true),
+            () => setLocationPermissionGranted(false),
+            {enableHighAccuracy: false, timeout: 5000, maximumAge: 1000},
+          );
+        }
+      } catch (e) {
+        setLocationPermissionGranted(false);
+      }
+  }, []);
+
+  useEffect(() => {
+    checkPermission();
+  }, [checkPermission]);
+
+  // Re-check whenever user returns to Profile
+  useFocusEffect(
+    useCallback(() => {
+      checkPermission();
+    }, [checkPermission]),
+  );
 
   // Check if user is guest (not logged in)
   const isGuest = !checkToken(token) || !user;
@@ -166,6 +203,8 @@ export default function ProfileScreen() {
             iconStat={Icons.IconsLocation}
             label="Vị trí"
             initialValue={false}
+            value={locationPermissionGranted}
+            disabled
           />
         </View>
 
