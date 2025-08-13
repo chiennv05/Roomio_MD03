@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -7,6 +7,9 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  PermissionsAndroid,
+  Platform,
+  Linking,
 } from 'react-native';
 import ProfileHeader from './components/ProfileHeader';
 import SettingSwitch from './components/SettingSwitch';
@@ -23,11 +26,12 @@ import {Fonts} from '../../theme/fonts';
 import {Icons} from '../../assets/icons';
 import {useDispatch, useSelector} from 'react-redux';
 import {logoutUser} from '../../store/slices/authSlice';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../types/route';
 import {RootState, AppDispatch} from '../../store';
 import {checkToken} from '../../utils/tokenCheck';
+import Geolocation from '@react-native-community/geolocation';
 
 export default function ProfileScreen() {
   const dispatch = useDispatch<AppDispatch>();
@@ -37,6 +41,105 @@ export default function ProfileScreen() {
   const loading = useSelector((state: RootState) => state.auth.loading);
   console.log(token);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [locationPermissionGranted, setLocationPermissionGranted] =
+    useState<boolean>(false);
+
+  // Check location permission and reflect on the switch
+  const checkPermission = useCallback(async (): Promise<boolean> => {
+    try {
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        );
+        setLocationPermissionGranted(granted);
+        return granted;
+      }
+      // iOS: wrap in promise to get boolean
+      const granted = await new Promise<boolean>(resolve => {
+        Geolocation.getCurrentPosition(
+          () => resolve(true),
+          () => resolve(false),
+          {enableHighAccuracy: false, timeout: 5000, maximumAge: 1000},
+        );
+      });
+      setLocationPermissionGranted(granted);
+      return granted;
+    } catch (e) {
+      setLocationPermissionGranted(false);
+      return false;
+    }
+  }, []);
+
+  useEffect(() => {
+    checkPermission();
+  }, [checkPermission]);
+
+  // Re-check whenever user returns to Profile
+  useFocusEffect(
+    useCallback(() => {
+      checkPermission();
+    }, [checkPermission]),
+  );
+
+  const requestPermission = useCallback(async (): Promise<boolean> => {
+    try {
+      if (Platform.OS === 'android') {
+        const result = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Quyền truy cập vị trí',
+            message:
+              'Ứng dụng cần truy cập vị trí của bạn để hiển thị phòng gần bạn.',
+            buttonPositive: 'Đồng ý',
+            buttonNegative: 'Từ chối',
+          },
+        );
+        return result === PermissionsAndroid.RESULTS.GRANTED;
+      }
+      // iOS: gọi getCurrentPosition để trigger prompt
+      return await new Promise<boolean>(resolve => {
+        Geolocation.getCurrentPosition(
+          () => resolve(true),
+          () => resolve(false),
+          {enableHighAccuracy: true, timeout: 10000, maximumAge: 1000},
+        );
+      });
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const handleToggleLocation = useCallback(
+    async (nextEnabled: boolean) => {
+      if (nextEnabled) {
+        const grantedNow = await checkPermission();
+        if (grantedNow) {
+          setLocationPermissionGranted(true);
+          return;
+        }
+        const granted = await requestPermission();
+        setLocationPermissionGranted(granted);
+        if (!granted) {
+          Alert.alert(
+            'Quyền vị trí bị từ chối',
+            'Bạn đã từ chối cấp quyền vị trí. Bạn có thể cấp lại trong Cài đặt.',
+          );
+        }
+      } else {
+        // Không thể thu hồi quyền trực tiếp từ app. Hướng dẫn mở cài đặt.
+        setLocationPermissionGranted(false);
+        Alert.alert(
+          'Tắt quyền vị trí',
+          'Để tắt hoàn toàn, vui lòng thu hồi quyền trong Cài đặt ứng dụng.',
+          [
+            {text: 'Để sau', style: 'cancel'},
+            {text: 'Mở Cài đặt', onPress: () => Linking.openSettings?.()},
+          ],
+        );
+      }
+    },
+    [checkPermission, requestPermission],
+  );
 
   // Check if user is guest (not logged in)
   const isGuest = !checkToken(token) || !user;
@@ -166,6 +269,8 @@ export default function ProfileScreen() {
             iconStat={Icons.IconsLocation}
             label="Vị trí"
             initialValue={false}
+            value={locationPermissionGranted}
+            onToggle={handleToggleLocation}
           />
         </View>
 

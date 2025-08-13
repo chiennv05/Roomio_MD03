@@ -44,7 +44,7 @@ export default function Login({setModal}: ModalProps) {
     dispatch(loginUser(user))
       .unwrap()
       .then(() => {
-        setModal(Icons.IconCheck, 'Đăng nhập thành công');
+        // Bỏ modal thông báo thành công, điều hướng thẳng
         if (redirectTo === 'DetailRoom' && roomId) {
           navigation.replace('DetailRoom', {roomId});
         } else {

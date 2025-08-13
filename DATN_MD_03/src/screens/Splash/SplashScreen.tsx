@@ -1,5 +1,5 @@
 import React, {useEffect, useRef} from 'react';
-import {StyleSheet, Text, View, Animated, Easing} from 'react-native';
+import {StyleSheet, Text, View, Animated, Easing, Image} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {RootStackParamList} from '../../types/route';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -15,6 +15,7 @@ import {Fonts} from '../../theme/fonts';
 import {responsiveFont, responsiveSpacing} from '../../utils/responsive';
 import {LoadingAnimation} from '../../components';
 import LinearGradient from 'react-native-linear-gradient';
+import {Images} from '../../assets/images';
 
 export default function SplashScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -24,6 +25,8 @@ export default function SplashScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
   const textAnim = useRef(new Animated.Value(0)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const glowRotate = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Start animations
@@ -51,7 +54,34 @@ export default function SplashScreen() {
         useNativeDriver: true,
       }),
     ]).start();
-  }, [fadeAnim, scaleAnim, textAnim]);
+
+    // Continuous subtle pulse and glow rotation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.04,
+          duration: 1200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ]),
+    ).start();
+
+    Animated.loop(
+      Animated.timing(glowRotate, {
+        toValue: 1,
+        duration: 10000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    ).start();
+  }, [fadeAnim, scaleAnim, textAnim, pulseAnim, glowRotate]);
 
   useEffect(() => {
     const loadUserSession = async () => {
@@ -99,30 +129,33 @@ export default function SplashScreen() {
   }, [dispatch, navigation]);
 
   return (
-    <LinearGradient
-      colors={['#ffffff', '#f8fff5', '#ffffff']}
-      style={styles.container}>
+    <LinearGradient colors={[Colors.limeGreen, Colors.limeGreen]} style={styles.container}>
       {/* App Logo/Brand */}
       <Animated.View
         style={[
           styles.logoContainer,
           {
             opacity: fadeAnim,
-            transform: [{scale: scaleAnim}],
+            transform: [{scale: Animated.multiply(scaleAnim, pulseAnim)}],
           },
         ]}>
         <View style={styles.logo}>
-          <View style={styles.logoIcon}>
-            <Text style={styles.logoText}>🏠</Text>
-          </View>
-          <Text style={styles.brandText}>Roomio</Text>
-          <Text style={styles.taglineText}>Find Your Perfect Room</Text>
+          <Animated.View
+            style={[
+              styles.glowBox,
+              {transform: [{rotate: glowRotate.interpolate({inputRange: [0, 1], outputRange: ['0deg', '360deg']})}]},
+            ]}
+          />
+          <Image source={{uri: Images.ImageRoomio as any}} style={styles.logoImage} resizeMode="contain" />
+          <Text style={styles.taglineText}>
+            Gọn gàng từng phòng{"\n"}rõ ràng từng đồng
+          </Text>
         </View>
       </Animated.View>
 
       {/* Loading Animation */}
       <Animated.View style={[styles.loadingContainer, {opacity: textAnim}]}>
-        <LoadingAnimation size="medium" color={Colors.limeGreen} />
+        <LoadingAnimation size="medium" color={Colors.dearkOlive} />
         <Text style={styles.loadingText}>Đang kiểm tra phiên đăng nhập...</Text>
       </Animated.View>
     </LinearGradient>
@@ -134,7 +167,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.limeGreen,
   },
   logoContainer: {
     alignItems: 'center',
@@ -143,47 +176,39 @@ const styles = StyleSheet.create({
   logo: {
     alignItems: 'center',
   },
-  logoIcon: {
-    width: responsiveFont(80),
-    height: responsiveFont(80),
-    backgroundColor: Colors.limeGreenLight,
-    borderRadius: responsiveFont(40),
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: responsiveSpacing(16),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8,
+  glowBox: {
+    position: 'absolute',
+    width: 300,
+    height: 300,
+    backgroundColor: 'rgba(255,255,255,0.45)',
+    borderRadius: 24,
+    transform: [{rotate: '14deg'}],
   },
-  logoText: {
-    fontSize: responsiveFont(40),
-  },
-  brandText: {
-    fontSize: responsiveFont(32),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.limeGreen,
-    letterSpacing: 2,
-    marginBottom: responsiveSpacing(8),
+  logoImage: {
+    width: 240,
+    height: 70,
+    marginBottom: responsiveSpacing(10),
   },
   taglineText: {
     fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Regular,
-    color: Colors.textGray,
+    color: Colors.dearkOlive,
     letterSpacing: 0.5,
+    textAlign: 'center',
   },
   loadingContainer: {
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    paddingHorizontal: responsiveSpacing(24),
+    paddingVertical: responsiveSpacing(14),
+    borderRadius: 16,
   },
   loadingText: {
-    marginTop: responsiveSpacing(20),
+    marginTop: responsiveSpacing(12),
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Regular,
-    color: Colors.textGray,
+    color: Colors.dearkOlive,
     textAlign: 'center',
+    fontWeight: '600',
   },
 });

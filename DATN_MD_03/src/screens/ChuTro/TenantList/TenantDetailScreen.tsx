@@ -6,8 +6,12 @@ import {
   ScrollView,
   SafeAreaView,
   StatusBar,
+  TouchableOpacity,
+  Animated,
+  Easing,
 } from 'react-native';
-import {useRoute, RouteProp} from '@react-navigation/native';
+import {useRoute, RouteProp, useNavigation, useFocusEffect} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useSelector, useDispatch} from 'react-redux';
 import {RootState, AppDispatch} from '../../../store';
@@ -21,16 +25,34 @@ import {Fonts} from '../../../theme/fonts';
 import {responsiveFont, scale} from '../../../utils/responsive';
 import {formatDate} from '../../../utils/formatDate';
 import HeaderWithBack from './components/HeaderWithBack';
+import LoadingAnimation from '../../../components/LoadingAnimation';
+
+const StatusBadge = ({text, type = 'success'}: {text: string; type?: 'success' | 'error' | 'neutral'}) => (
+  <View
+    style={[
+      styles.badge,
+      type === 'success' && {backgroundColor: Colors.limeGreen},
+      type === 'error' && {backgroundColor: Colors.error},
+      type === 'neutral' && styles.badgeNeutral,
+    ]}>
+    <Text style={[styles.badgeText, type === 'neutral' && styles.badgeNeutralText]}>{text}</Text>
+  </View>
+);
 
 const TenantDetailScreen = () => {
   const route = useRoute<RouteProp<RootStackParamList, 'TenantDetail'>>();
   const {tenantId} = route.params;
   const insets = useSafeAreaInsets();
+  const navigation =
+    useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const dispatch = useDispatch<AppDispatch>();
   const token = useSelector((state: RootState) => state.auth.token);
-  const {selectedTenant, activeContract, contractHistory, detailLoading} =
+  const {selectedTenant, activeContract, detailLoading} =
     useSelector((state: RootState) => state.tenant);
+
+  // Animated occupancy progress
+  const progressAnim = React.useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (token && tenantId) {
@@ -41,12 +63,38 @@ const TenantDetailScreen = () => {
     };
   }, [dispatch, token, tenantId]);
 
-  const renderInfoRow = (label: string, value: string | number) => (
+  useEffect(() => {
+    const max = activeContract?.contractInfo?.maxOccupancy || 1;
+    const count = activeContract?.contractInfo?.tenantCount || 0;
+    const target = Math.min(1, count / Math.max(1, max));
+    Animated.timing(progressAnim, {
+      toValue: target,
+      duration: 800,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [activeContract?.contractInfo?.tenantCount, activeContract?.contractInfo?.maxOccupancy, progressAnim]);
+
+  // Refetch khi màn hình quay lại để đồng bộ người ở cùng sau khi chỉnh sửa
+  useFocusEffect(
+    React.useCallback(() => {
+      if (token && tenantId) {
+        dispatch(fetchTenantDetails({token, tenantId}));
+      }
+      return undefined;
+    }, [dispatch, token, tenantId]),
+  );
+
+  const renderInfoRow = (
+    label: string,
+    value: string | number | undefined | null,
+  ) => (
     <View style={styles.infoRow}>
       <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
+      <Text style={styles.value}>{value ?? 'Không có'}</Text>
     </View>
   );
+
 
   if (!selectedTenant) {
     return (
@@ -72,16 +120,13 @@ const TenantDetailScreen = () => {
           backgroundColor={Colors.white}
         />
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Đang tải thông tin...</Text>
+          <LoadingAnimation />
         </View>
       </SafeAreaView>
     );
   }
 
-  // Lấy thông tin hợp đồng từ activeContract hoặc contractHistory
-  const latestContract =
-    activeContract ||
-    (contractHistory && contractHistory.length > 0 ? contractHistory[0] : null);
+  // Bỏ biến không dùng và sắp xếp lại thứ tự hiển thị theo yêu cầu
 
   return (
     <View style={styles.mainContainer}>
@@ -95,9 +140,60 @@ const TenantDetailScreen = () => {
         <ScrollView
           style={styles.container}
           showsVerticalScrollIndicator={false}>
-          {/* Thông tin người thuê chính */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Thông tin người thuê</Text>
+          {/* Tổng quan đẹp mắt: Phòng, sức chứa, số đang ở, chip thành viên */}
+          {activeContract && (
+            <View style={styles.summaryCard}>
+              <Text style={styles.summaryTitle}>Phòng {activeContract.contractInfo.roomNumber}</Text>
+              <Text style={styles.summarySubTitle}>
+                {activeContract.contractInfo.tenantCount}/{activeContract.contractInfo.maxOccupancy} người đang ở
+              </Text>
+              <View style={styles.progressContainer}>
+                <Animated.View
+                  style={[
+                    styles.progressFill,
+                    {
+                      width: progressAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0%', '100%'],
+                      }) as any,
+                    },
+                  ]}
+                />
+              </View>
+
+              <View style={styles.peopleRow}>
+                <View style={[styles.personChip, styles.representativeChip]}>
+                  <Text style={[styles.personInitial]}>
+                    {(selectedTenant.fullName || selectedTenant.username || 'N')
+                      .charAt(0)
+                      .toUpperCase()}
+                  </Text>
+                  <View style={styles.personInfo}>
+                    <Text style={[styles.personName, {color: Colors.white}]}>Đại diện: {selectedTenant.fullName || selectedTenant.username}</Text>
+                    <Text style={[styles.personMeta, {color: Colors.white}]}>SĐT {selectedTenant.phone}</Text>
+                  </View>
+                </View>
+
+                {activeContract.contractInfo.coTenants?.map((co: any, idx) => (
+                  <View key={`cotenant-${idx}`} style={styles.personChip}>
+                    <Text style={styles.personInitial}>{((co.fullName || co.username || 'N') as string).charAt(0).toUpperCase()}</Text>
+                    <View style={styles.personInfo}>
+                      <Text style={styles.personName}>{co.fullName || co.username || 'Không rõ'}</Text>
+                      <Text style={styles.personMeta}>{co.phone || 'SĐT: -'}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+          {/* Bỏ phần Thông tin phòng hiện tại theo yêu cầu */}
+
+          {/* 2) Thông tin người đại diện (người thuê chính) */}
+            <View style={[styles.section, styles.card]}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionAccent} />
+              <Text style={styles.sectionTitle}>Thông tin người đại diện</Text>
+            </View>
             {renderInfoRow('Họ tên:', selectedTenant.fullName)}
             {renderInfoRow('Tên đăng nhập:', selectedTenant.username)}
             {renderInfoRow('Số điện thoại:', selectedTenant.phone)}
@@ -105,141 +201,54 @@ const TenantDetailScreen = () => {
             {renderInfoRow('CCCD:', selectedTenant.identityNumber)}
             {renderInfoRow('Ngày sinh:', formatDate(selectedTenant.birthDate))}
             {renderInfoRow('Địa chỉ:', selectedTenant.address)}
-            {renderInfoRow(
-              'Trạng thái:',
-              selectedTenant.status === 'active'
-                ? 'Hoạt động'
-                : 'Không hoạt động',
-            )}
-            {renderInfoRow('Ngày tạo:', formatDate(selectedTenant.createdAt))}
+            {/* {renderInfoRow('Ngày tạo:', formatDate(selectedTenant.createdAt))} */}
           </View>
 
-          {/* Thông tin hợp đồng hiện tại */}
+          {/* 3) Thông tin người ở cùng phòng (có thể thêm/xóa) */}
           {activeContract && (
-            <>
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>
-                  Thông tin phòng hiện tại
-                </Text>
-                {renderInfoRow(
-                  'Số phòng:',
-                  activeContract.contractInfo.roomNumber,
-                )}
-                {renderInfoRow(
-                  'Diện tích:',
-                  `${activeContract.contractInfo.roomArea}m²`,
-                )}
-                {renderInfoRow(
-                  'Số người tối đa:',
-                  activeContract.contractInfo.maxOccupancy,
-                )}
-                {renderInfoRow(
-                  'Số người hiện tại:',
-                  activeContract.contractInfo.tenantCount,
-                )}
-                {renderInfoRow(
-                  'Địa chỉ:',
-                  activeContract.contractInfo.roomAddress,
-                )}
-                {renderInfoRow(
-                  'Tiền thuê hàng tháng:',
-                  `${activeContract.contractInfo.monthlyRent.toLocaleString()} VNĐ`,
-                )}
-                {renderInfoRow(
-                  'Ngày bắt đầu:',
-                  formatDate(activeContract.contractInfo.startDate),
-                )}
-                {renderInfoRow(
-                  'Ngày kết thúc:',
-                  formatDate(activeContract.contractInfo.endDate),
-                )}
+            <View style={[styles.section, styles.card]}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionAccent} />
+                <Text style={styles.sectionTitle}>Thông tin người ở cùng phòng</Text>
+                <View style={styles.headerRight}>
+                  <StatusBadge
+                    text={`${activeContract.contractInfo.coTenants?.length || 0} người`}
+                    type="neutral"
+                  />
+                </View>
               </View>
+              <TouchableOpacity
+                style={styles.primaryCta}
+                onPress={() => {
+                  navigation.navigate('UpdateTenant', {
+                    contractId: (activeContract as any)._id,
+                    existingTenants:
+                      activeContract.contractInfo.coTenants || [],
+                    maxOccupancy: activeContract.contractInfo.maxOccupancy,
+                  });
+                }}>
+                <Text style={styles.primaryCtaText}>Thêm / Xóa người ở cùng</Text>
+              </TouchableOpacity>
 
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Thông tin chủ trọ</Text>
-                {renderInfoRow(
-                  'Họ tên:',
-                  activeContract.contractInfo.landlordName,
-                )}
-                {renderInfoRow(
-                  'Số điện thoại:',
-                  activeContract.contractInfo.landlordPhone,
-                )}
-                {renderInfoRow(
-                  'CCCD:',
-                  activeContract.contractInfo.landlordIdentityNumber,
-                )}
-                {renderInfoRow(
-                  'Ngày sinh:',
-                  formatDate(activeContract.contractInfo.landlordBirthDate),
-                )}
-                {renderInfoRow(
-                  'Địa chỉ:',
-                  activeContract.contractInfo.landlordAddress || 'Không có',
-                )}
-              </View>
-
-              {/* Thông tin các người thuê cùng phòng */}
-              {activeContract.contractInfo.coTenants &&
-                activeContract.contractInfo.coTenants.length > 0 && (
-                  <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>
-                      Người thuê cùng phòng
-                    </Text>
-                    {activeContract.contractInfo.coTenants.map(
-                      (coTenant, index) => (
-                        <View key={index} style={styles.coTenantItem}>
-                          <Text style={styles.coTenantTitle}>
-                            Người thuê {index + 1}
-                          </Text>
-                          {renderInfoRow(
-                            'Tên đăng nhập:',
-                            coTenant.username || 'Không có',
-                          )}
-                          {renderInfoRow(
-                            'Email:',
-                            coTenant.email || 'Không có',
-                          )}
-                          {renderInfoRow(
-                            'Số điện thoại:',
-                            coTenant.phone || 'Không có',
-                          )}
-                          {renderInfoRow(
-                            'CCCD:',
-                            coTenant.identityNumber || 'Không có',
-                          )}
-                          {renderInfoRow(
-                            'Ngày sinh:',
-                            coTenant.birthDate
-                              ? formatDate(coTenant.birthDate)
-                              : 'Không có',
-                          )}
-                          {renderInfoRow(
-                            'Địa chỉ:',
-                            coTenant.address || 'Không có',
-                          )}
-                        </View>
-                      ),
-                    )}
+              {activeContract.contractInfo.coTenants?.map((coTenant, index) => (
+                <View key={index} style={styles.coTenantCard}>
+                  <View style={styles.coHeaderRow}>
+                    <View style={styles.coAvatar}>
+                      <Text style={styles.coAvatarText}>{((coTenant as any).fullName || coTenant.username || 'N').charAt(0).toUpperCase()}</Text>
+                    </View>
+                    <View style={styles.flex1}>
+                      <Text style={styles.coName}>{(coTenant as any).fullName || coTenant.username || 'Không rõ'}</Text>
+                      <Text style={styles.coSub}>{coTenant.phone || 'SĐT: -'}</Text>
+                    </View>
                   </View>
-                )}
-            </>
-          )}
-
-          {/* Lịch sử hợp đồng */}
-          {contractHistory && contractHistory.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Lịch sử hợp đồng</Text>
-              {contractHistory.map((contract, index) => (
-                <View key={contract._id} style={styles.contractHistoryItem}>
-                  <Text style={styles.contractTitle}>Hợp đồng {index + 1}</Text>
-                  {renderInfoRow('Số phòng:', contract.room?.roomNumber || 'Phòng đã bị xóa')}
-                  {renderInfoRow('Trạng thái:', contract.status)}
-                  {renderInfoRow('Tiền thuê:', `${contract.monthlyRent.toLocaleString()} VNĐ`)}
-                  {renderInfoRow('Ngày bắt đầu:', formatDate(contract.startDate))}
-                  {renderInfoRow('Ngày kết thúc:', formatDate(contract.endDate))}
-                  {renderInfoRow('Số người thuê:', contract.tenantCount)}
-                  {renderInfoRow('Ngày tạo:', formatDate(contract.createdAt))}
+                  <View style={styles.coDivider} />
+                  {renderInfoRow('Họ tên:', (coTenant as any).fullName || coTenant.username || 'Không có')}
+                  {renderInfoRow('Tên đăng nhập:', coTenant.username || 'Không có')}
+                  {renderInfoRow('Số điện thoại:', coTenant.phone || 'Không có')}
+                  {renderInfoRow('Email:', coTenant.email || 'Không có')}
+                  {renderInfoRow('CCCD:', coTenant.identityNumber || 'Không có')}
+                  {renderInfoRow('Ngày sinh:', coTenant.birthDate ? formatDate(coTenant.birthDate) : 'Không có')}
+                  {renderInfoRow('Địa chỉ:', coTenant.address || 'Không có')}
                 </View>
               ))}
             </View>
@@ -286,35 +295,192 @@ const styles = StyleSheet.create({
     paddingVertical: scale(20),
     marginTop: scale(0),
   },
+  summaryCard: {
+    backgroundColor: Colors.dearkOlive,
+    marginHorizontal: scale(0),
+    marginBottom: scale(12),
+    paddingHorizontal: scale(20),
+    paddingVertical: scale(20),
+    borderBottomLeftRadius: scale(16),
+    borderBottomRightRadius: scale(16),
+  },
+  summaryTitle: {
+    fontSize: responsiveFont(20),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.white,
+  },
+  summarySubTitle: {
+    marginTop: scale(6),
+    fontSize: responsiveFont(15),
+    color: Colors.white,
+  },
+  progressContainer: {
+    height: scale(10),
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    borderRadius: scale(6),
+    overflow: 'hidden',
+    marginTop: scale(12),
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: Colors.limeGreen,
+    borderRadius: scale(6),
+  },
+  peopleRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: scale(8),
+    marginTop: scale(12),
+  },
+  personChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    borderRadius: scale(20),
+    paddingVertical: scale(8),
+    paddingHorizontal: scale(12),
+    elevation: 1,
+  },
+  representativeChip: {
+    backgroundColor: Colors.darkGreen,
+  },
+  personInitial: {
+    width: scale(28),
+    height: scale(28),
+    borderRadius: scale(14),
+    backgroundColor: Colors.limeGreen,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    color: Colors.black,
+    fontFamily: Fonts.Roboto_Bold,
+    marginRight: scale(8),
+  },
+  personInfo: {
+    flexDirection: 'column',
+  },
+  personName: {
+    fontSize: responsiveFont(15),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+  },
+  personMeta: {
+    fontSize: responsiveFont(12),
+    color: Colors.textGray,
+  },
   sectionTitle: {
-    fontSize: responsiveFont(16),
+    fontSize: responsiveFont(19),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
     marginBottom: scale(16),
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: scale(12),
+    gap: scale(8),
+  },
+  headerRight: {
+    marginLeft: 'auto',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: scale(8),
+  },
+  sectionAccent: {
+    width: scale(6),
+    height: scale(20),
+    backgroundColor: Colors.limeGreen,
+    borderRadius: scale(4),
+  },
   infoRow: {
     flexDirection: 'row',
-    marginBottom: scale(12),
+    marginBottom: scale(14),
     alignItems: 'flex-start',
   },
-  label: {
+  card: {
+    backgroundColor: Colors.white,
+    borderRadius: scale(12),
+    elevation: 1,
+  },
+  highlightBox: {
+    marginTop: scale(8),
+    marginBottom: scale(8),
+    paddingVertical: scale(10),
+    paddingHorizontal: scale(12),
+    backgroundColor: '#F5FFF0',
+    borderRadius: scale(10),
+    borderWidth: 1,
+    borderColor: Colors.limeGreen,
+  },
+  highlightLabel: {
+    fontSize: responsiveFont(12),
+    color: Colors.darkGreen,
+    fontFamily: Fonts.Roboto_Medium,
+  },
+  highlightValue: {
+    marginTop: scale(4),
     fontSize: responsiveFont(16),
-    fontFamily: Fonts.Roboto_Regular,
-    color: Colors.textGray,
-    width: scale(150),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+  },
+  label: {
+    fontSize: responsiveFont(15),
+    fontFamily: Fonts.Roboto_Medium,
+    color: Colors.darkGray,
+    width: scale(130),
+    letterSpacing: 0.2,
   },
   value: {
-    fontSize: responsiveFont(16),
-    fontFamily: Fonts.Roboto_Regular,
+    fontSize: responsiveFont(17),
+    fontFamily: Fonts.Roboto_Medium,
     color: Colors.black,
     flex: 1,
-    lineHeight: scale(22),
+    lineHeight: scale(24),
+    letterSpacing: 0.15,
   },
   coTenantItem: {
     marginBottom: scale(16),
     paddingBottom: scale(12),
     borderBottomWidth: 1,
     borderBottomColor: Colors.lightGray,
+  },
+  coTenantCard: {
+    backgroundColor: Colors.white,
+    borderRadius: scale(12),
+    padding: scale(12),
+    marginBottom: scale(12),
+    borderWidth: 1,
+    borderColor: '#EFEFEF',
+  },
+  coHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: scale(8),
+  },
+  coAvatar: {
+    width: scale(36),
+    height: scale(36),
+    borderRadius: scale(18),
+    backgroundColor: Colors.limeGreen,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: scale(10),
+  },
+  coAvatarText: {
+    color: Colors.black,
+    fontFamily: Fonts.Roboto_Bold,
+  },
+  coName: {
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+  },
+  coSub: {
+    color: Colors.textGray,
+    fontSize: responsiveFont(12),
+  },
+  coDivider: {
+    height: 1,
+    backgroundColor: '#F0F0F0',
+    marginBottom: scale(8),
   },
   coTenantTitle: {
     fontSize: responsiveFont(14),
@@ -333,6 +499,48 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.darkGreen,
     marginBottom: scale(8),
+  },
+  flex1: {flex: 1},
+  badge: {
+    paddingHorizontal: scale(10),
+    paddingVertical: scale(6),
+    borderRadius: scale(20),
+  },
+  badgeText: {
+    fontSize: responsiveFont(12),
+    color: Colors.black,
+    fontFamily: Fonts.Roboto_Bold,
+  },
+  badgeNeutral: {
+    backgroundColor: Colors.limeGreenOpacityLight,
+    borderWidth: 1,
+    borderColor: Colors.limeGreen,
+  },
+  badgeNeutralText: {
+    color: Colors.darkGreen,
+  },
+  editButton: {
+    backgroundColor: Colors.limeGreenOpacityLight,
+    borderRadius: scale(16),
+    paddingHorizontal: scale(12),
+    paddingVertical: scale(6),
+  },
+  editButtonText: {
+    color: Colors.darkGreen,
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(12),
+  },
+  primaryCta: {
+    backgroundColor: Colors.limeGreen,
+    borderRadius: scale(24),
+    paddingVertical: scale(12),
+    alignItems: 'center',
+    marginBottom: scale(12),
+  },
+  primaryCtaText: {
+    color: Colors.black,
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(14),
   },
 });
 

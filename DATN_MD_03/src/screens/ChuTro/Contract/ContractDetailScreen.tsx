@@ -10,6 +10,7 @@ import {
   FlatList,
   StatusBar,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
@@ -68,6 +69,7 @@ const formatDateTime = (dateString: string) => {
 };
 
 const ContractDetailScreen = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'ContractDetail'>>();
   const dispatch = useDispatch<AppDispatch>();
@@ -228,7 +230,9 @@ const ContractDetailScreen = () => {
 
   // gia hạn hợp đồng
   const onExtendContract = () => {
-    if (!selectedContract) return;
+    if (!selectedContract) {
+      return;
+    }
     if (
       selectedContract.status !== 'pending_signature' &&
       selectedContract.status !== 'active'
@@ -293,7 +297,7 @@ const ContractDetailScreen = () => {
 
     try {
       if (action === 'extend') {
-        const months = parseInt(value.trim());
+        const months = parseInt(value.trim(), 10);
         if (isNaN(months) || months <= 0) {
           showError('Vui lòng nhập số tháng hợp lệ.', 'Lỗi', true);
           return;
@@ -330,7 +334,9 @@ const ContractDetailScreen = () => {
   };
 
   const handleUpdateTenant = () => {
-    if (!selectedContract) return;
+    if (!selectedContract) {
+      return;
+    }
     navigation.navigate('UpdateTenant', {
       contractId: selectedContract._id,
       existingTenants: selectedContract.contractInfo.coTenants || [],
@@ -341,7 +347,7 @@ const ContractDetailScreen = () => {
   // Hiển thị màn hình loading
   if (selectedContractLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, {paddingTop: insets.top}] }>
         <View style={styles.headerContainer}>
           <UIHeader
             title="Chi tiết hợp đồng"
@@ -369,7 +375,7 @@ const ContractDetailScreen = () => {
   // Hiển thị lỗi
   if (selectedContractError) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, {paddingTop: insets.top}] }>
         <View style={styles.headerContainer}>
           <UIHeader
             title="Chi tiết hợp đồng"
@@ -403,7 +409,7 @@ const ContractDetailScreen = () => {
   // Trường hợp không có dữ liệu
   if (!selectedContract) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, {paddingTop: insets.top}] }>
         <View style={styles.headerContainer}>
           <UIHeader
             title="Chi tiết hợp đồng"
@@ -511,7 +517,7 @@ const ContractDetailScreen = () => {
     contract.status === 'pending_approval';
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, {paddingTop: insets.top}] }>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
       <ScrollView
         style={styles.scrollView}
@@ -743,7 +749,7 @@ const ContractDetailScreen = () => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Lịch sử hợp đồng</Text>
             {contract.statusHistory.map((history, index) => {
-              const statusInfo = getContractStatusInfo(history.status);
+              const statusMeta = getContractStatusInfo(history.status);
               return (
                 <View key={history._id || index} style={styles.historyItem}>
                   <View style={styles.historyHeader}>
@@ -756,7 +762,7 @@ const ContractDetailScreen = () => {
                           styles.historyStatusText,
                           {color: Colors.white},
                         ]}>
-                        {statusInfo.label}
+                        {statusMeta.label}
                       </Text>
                     </View>
                   </View>
