@@ -1,16 +1,30 @@
 export type SubscriptionPlan = 'free' | 'basic' | 'pro' | 'vip' | string;
 
-export type SubscriptionStatus = 'active' | 'inactive' | 'expired' | string;
+export type SubscriptionStatus =
+  | 'pending'
+  | 'active'
+  | 'rejected'
+  | 'expired'
+  | 'cancelled'
+  | string;
+
+export interface BankSnapshot {
+  bankBin?: string;
+  accountNumber?: string;
+  bankName?: string;
+  accountHolder?: string;
+}
 
 export interface SubscriptionRecord {
   _id: string;
   userId: string;
   plan: SubscriptionPlan;
   status: SubscriptionStatus;
-  paymentMethod?: string;
+  paymentMethod?: 'bank_transfer' | string;
   expectedAmount?: number;
   transferNote?: string;
   qrUrl?: string;
+  bankSnapshot?: BankSnapshot;
   createdAt: string;
   updatedAt?: string;
   startAt?: string;
@@ -40,7 +54,7 @@ export interface SubscriptionPlanItem {
 // Dùng cho UI để hiển thị hướng chuyển gói: "from → to"
 export interface PlanRouteLabel {
   from: string; // ví dụ: 'Pro Plan'
-  to: string;   // ví dụ: 'Family'
+  to: string; // ví dụ: 'Family'
 }
 
 export interface BankInfo {
@@ -95,5 +109,3 @@ export interface SubscriptionState {
   // Lưu response gần nhất khi tạo yêu cầu nâng cấp để debug/hiển thị
   lastUpgradeRequest?: any;
 }
-
-
