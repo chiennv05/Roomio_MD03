@@ -3,10 +3,12 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-   <uses-permission android:name="android.permission.CAMERA" />
-   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-   <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
       android:name=".MainApplication"
       android:label="@string/app_name"
@@ -43,5 +45,25 @@
             <data android:scheme="https" android:host="roomio.app" />
         </intent-filter>
       </activity>
+
+      <!-- Receivers & Service for native background task -->
+      <receiver
+        android:name=".NotificationFetchReceiver"
+        android:enabled="true"
+        android:exported="false" />
+
+      <receiver
+        android:name=".BootReceiver"
+        android:enabled="true"
+        android:exported="true">
+        <intent-filter>
+          <action android:name="android.intent.action.BOOT_COMPLETED" />
+        </intent-filter>
+      </receiver>
+
+      <service
+        android:name=".NotificationFetchService"
+        android:enabled="true"
+        android:exported="false" />
     </application>
 </manifest>
