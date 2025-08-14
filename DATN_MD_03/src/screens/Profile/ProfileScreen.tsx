@@ -22,6 +22,7 @@ import {
   verticalScale,
 } from '../../utils/responsive';
 import {Colors} from '../../theme/color';
+import LinearGradient from 'react-native-linear-gradient';
 import {Fonts} from '../../theme/fonts';
 import {Icons} from '../../assets/icons';
 import {useDispatch, useSelector} from 'react-redux';
@@ -32,6 +33,7 @@ import {RootStackParamList} from '../../types/route';
 import {RootState, AppDispatch} from '../../store';
 import {checkToken} from '../../utils/tokenCheck';
 import Geolocation from '@react-native-community/geolocation';
+import {loadSubscriptions} from '../../store/slices/subscriptionSlice';
 
 export default function ProfileScreen() {
   const dispatch = useDispatch<AppDispatch>();
@@ -78,7 +80,11 @@ export default function ProfileScreen() {
   useFocusEffect(
     useCallback(() => {
       checkPermission();
-    }, [checkPermission]),
+      // Tải gói đăng ký khi quay lại màn hình
+      if (user?.role === 'chuTro' && token) {
+        dispatch(loadSubscriptions(token));
+      }
+    }, [checkPermission, dispatch, token, user?.role]),
   );
 
   const requestPermission = useCallback(async (): Promise<boolean> => {
@@ -146,6 +152,10 @@ export default function ProfileScreen() {
 
   // Check if user is landlord (chủ trọ)
   const isLandlord = user?.role === 'chuTro';
+  const currentSubscription = useSelector(
+    (state: RootState) => state.subscription.current,
+  );
+  const currentPlanLabel = (currentSubscription?.plan || '').toUpperCase();
 
   const handleShowLogoutModal = () => {
     setShowLogoutModal(true);
@@ -251,6 +261,10 @@ export default function ProfileScreen() {
     navigation.navigate('StatisticScreen');
   };
 
+  const handleGoSubscription = () => {
+    navigation.navigate('SubscriptionScreen');
+  };
+
   // Show normal profile screen for logged in users
   return (
     <SafeAreaView style={styles.container}>
@@ -273,6 +287,28 @@ export default function ProfileScreen() {
             onToggle={handleToggleLocation}
           />
         </View>
+
+        {isLandlord && (
+          <TouchableOpacity activeOpacity={0.9} onPress={handleGoSubscription}>
+            <LinearGradient
+              colors={['#BAFD00', '#A5F000']}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 1}}
+              style={styles.premiumCard}>
+              <View style={styles.premiumContent}>
+                <Text style={styles.premiumTitle}>Nâng cấp gói đăng ký</Text>
+                <Text style={styles.premiumSubtitle}>
+                  Mở khóa các tính năng nâng cao cho chủ trọ
+                </Text>
+              </View>
+              <View style={styles.premiumBadge}>
+                <Text style={styles.premiumBadgeText}>
+                  {currentPlanLabel || 'NÂNG CẤP'}
+                </Text>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
 
         <View style={styles.box}>
           <SettingItem
@@ -360,6 +396,46 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     paddingBottom: verticalScale(20),
     alignItems: 'center',
+  },
+  premiumCard: {
+    marginVertical: verticalScale(8),
+    borderRadius: 14,
+    paddingVertical: verticalScale(16),
+    paddingHorizontal: scale(16),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '90%',
+    alignSelf: 'center',
+  },
+  premiumContent: {
+    flex: 1,
+    paddingRight: scale(12),
+  },
+  premiumTitle: {
+    fontSize: responsiveFont(18),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+  },
+  premiumSubtitle: {
+    marginTop: verticalScale(4),
+    fontSize: responsiveFont(13),
+    fontFamily: Fonts.Roboto_Regular,
+    color: '#2b2b2b',
+  },
+  premiumBadge: {
+    backgroundColor: '#0f172a',
+    paddingHorizontal: scale(14),
+    paddingVertical: verticalScale(8),
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  premiumBadgeText: {
+    color: '#fff',
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(12),
+    letterSpacing: 0.5,
   },
   box: {
     backgroundColor: Colors.white,
