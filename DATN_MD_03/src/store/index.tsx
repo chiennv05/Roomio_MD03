@@ -10,6 +10,7 @@ import dashboardReducer from './slices/dashboardSlice';
 import supportReducer from './slices/supportSlice';
 import billReducer from './slices/billSlice';
 import locationReducer from './slices/locationSlice';
+import subscriptionReducer from './slices/subscriptionSlice';
 
 export const store = configureStore({
   reducer: {
@@ -24,6 +25,7 @@ export const store = configureStore({
     support: supportReducer,
     bill: billReducer,
     location: locationReducer,
+    subscription: subscriptionReducer,
   },
 });
 
