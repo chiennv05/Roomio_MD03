@@ -3,6 +3,7 @@ import {StyleSheet, Text, View, Image, TouchableOpacity} from 'react-native';
 import {Colors} from '../../../../theme/color';
 import {Fonts} from '../../../../theme/fonts';
 import {responsiveFont, responsiveSpacing} from '../../../../utils/responsive';
+import {API_CONFIG} from '../../../../configs';
 
 interface TopRoomCardProps {
   roomNumber: string;
@@ -25,21 +26,23 @@ const TopRoomCard = ({
   const formatMoney = (value: number) => {
     return value.toLocaleString('vi-VN');
   };
-
+  const baseUrl = `${API_CONFIG.BASE_URL}${photo}`;
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
       <View
         style={[styles.borderLeft, {backgroundColor: Colors.primaryGreen}]}
       />
-      <Image
-        source={
-          photo
-            ? {uri: photo}
-            : require('../../../../assets/images/image_backgroud_button.png')
-        }
-        style={styles.image}
-        resizeMode="cover"
-      />
+      <View style={styles.containerImage}>
+        <Image
+          source={
+            photo
+              ? {uri: baseUrl}
+              : require('../../../../assets/images/image_backgroud_button.png')
+          }
+          style={styles.image}
+          resizeMode="cover"
+        />
+      </View>
       <View style={styles.content}>
         <Text style={styles.roomNumber} numberOfLines={1}>
           Phòng {roomNumber}
@@ -88,10 +91,16 @@ const styles = StyleSheet.create({
     width: 5,
     height: '100%',
   },
-  image: {
-    width: 100,
-    height: 100,
+  containerImage: {
+    borderTopEndRadius: 12,
+    borderBottomEndRadius: 12,
+    overflow: 'hidden',
   },
+  image: {
+    width: responsiveSpacing(100),
+    height: responsiveSpacing(100),
+  },
+
   content: {
     flex: 1,
     padding: responsiveSpacing(12),

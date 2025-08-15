@@ -8,7 +8,8 @@ export type ContractStatus =
   | 'needs_resigning'
   | 'expired'
   | 'terminated'
-  | 'rejected';
+  | 'rejected'
+  | 'cancelled';
 
 export interface CoTenant {
   _id: string;
@@ -19,6 +20,7 @@ export interface CoTenant {
   birthDate: string | null;
   identityNumber: string;
   address: string;
+  fullName: string;
 }
 
 export interface ServiceFees {

@@ -11,7 +11,11 @@ import {
 import ProfileHeader from './components/ProfileHeader';
 import SettingSwitch from './components/SettingSwitch';
 import SettingItem from './components/SettingItem';
-import {GuestProfileAnimation, LogoutModal} from '../../components';
+import {
+  CustomAlertModal,
+  GuestProfileAnimation,
+  LogoutModal,
+} from '../../components';
 import {
   SCREEN,
   responsiveFont,
@@ -28,6 +32,8 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../types/route';
 import {RootState, AppDispatch} from '../../store';
 import {checkToken} from '../../utils/tokenCheck';
+import {checkProfileUser} from '../../store/services/authService';
+import {useCustomAlert} from '../../hooks/useCustomAlrert';
 
 export default function ProfileScreen() {
   const dispatch = useDispatch<AppDispatch>();
@@ -35,8 +41,13 @@ export default function ProfileScreen() {
   const token = useSelector((state: RootState) => state.auth.token);
   const user = useSelector((state: RootState) => state.auth.user);
   const loading = useSelector((state: RootState) => state.auth.loading);
-  console.log(token);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const {
+    alertConfig,
+    visible: alertVisible,
+    showConfirm,
+    hideAlert,
+  } = useCustomAlert();
 
   // Check if user is guest (not logged in)
   const isGuest = !checkToken(token) || !user;
@@ -99,9 +110,40 @@ export default function ProfileScreen() {
   };
 
   // Hàm xử lý khi nhấn vào "Quản lý hợp đồng"
-  const handleContractPress = () => {
+  const handleContractPress = async () => {
+    if (!token) {
+      showConfirm(
+        'Bạn cần đăng nhập để tiếp tục',
+        () => {
+          // Chuyển hướng tới màn hình đăng nhập
+          navigation.navigate('Login', {});
+        },
+        'Chưa đăng nhập',
+      );
+      return;
+    }
+
     if (isLandlord) {
-      // Nếu là chủ
+      const checkUser = await checkProfileUser(token);
+      if (!checkUser.data.profileComplete) {
+        showConfirm(
+          'Bạn cần cập nhật thông tin cá nhân trước khi quản lý hợp đồng',
+          () => {
+            navigation.navigate('PersonalInformation', {});
+          },
+          'Cập nhật thông tin',
+          [
+            {text: 'Hủy', onPress: hideAlert, style: 'cancel'},
+            {
+              text: 'Cập nhật ngay',
+              onPress: () => navigation.navigate('PersonalInformation', {}),
+              style: 'default',
+            },
+          ],
+        );
+        return;
+      }
+
       navigation.navigate('ContractManagement');
     } else {
       // Nếu là người thuê
@@ -140,13 +182,48 @@ export default function ProfileScreen() {
     );
   }
 
-  const handleGoLandlord = () => {
+  const handleGoLandlord = async () => {
+    if (!token) {
+      showConfirm(
+        'Bạn cần đăng nhập để tiếp tục',
+        () => {
+          // Chuyển hướng tới màn hình đăng nhập
+          navigation.navigate('Login', {});
+        },
+        'Chưa đăng nhập',
+      );
+      return;
+    }
+    const checkUser = await checkProfileUser(token);
+    if (!checkUser.data.profileComplete) {
+      showConfirm(
+        'Bạn cần cập nhật thông tin cá nhân trước khi quản lý hợp đồng',
+        () => {
+          navigation.navigate('PersonalInformation', {});
+        },
+        'Cập nhật thông tin',
+        [
+          {text: 'Hủy', onPress: hideAlert, style: 'cancel'},
+          {
+            text: 'Cập nhật ngay',
+            onPress: () => {
+              navigation.navigate('PersonalInformation', {});
+              hideAlert();
+            },
+            style: 'default',
+          },
+        ],
+      );
+      return;
+    }
     navigation.navigate('LandlordRoom');
   };
 
   const handleGoStatistic = () => {
     navigation.navigate('StatisticScreen');
   };
+
+  console.log('token', token);
 
   // Show normal profile screen for logged in users
   return (
@@ -235,6 +312,16 @@ export default function ProfileScreen() {
           <Text style={styles.button}>Đăng xuất</Text>
         </TouchableOpacity>
       </ScrollView>
+      {alertConfig && (
+        <CustomAlertModal
+          visible={alertVisible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          onClose={hideAlert}
+          type={alertConfig.type}
+          buttons={alertConfig.buttons}
+        />
+      )}
 
       <LogoutModal
         visible={showLogoutModal}

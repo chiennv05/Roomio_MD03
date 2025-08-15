@@ -1,13 +1,7 @@
-import React, {useState, useCallback} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-  Image,
-} from 'react-native';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import React, {useState, useCallback, useMemo} from 'react';
+import {View, Text, StyleSheet, TouchableOpacity, Image} from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useNavigation} from '@react-navigation/native';
 import {useDispatch} from 'react-redux';
 
 import {Colors} from '../../../theme/color';
@@ -26,30 +20,30 @@ import {updateTenants} from '../../../store/slices/contractSlice';
 import CustomAlertModal from '../../../components/CustomAlertModal';
 import {useCustomAlert} from '../../../hooks/useCustomAlrert';
 import {useAppSelector} from '../../../hooks';
-import {CoTenant} from '../../../types';
-import ItemButtonGreen from '../../../components/ItemButtonGreen';
-import ModalLoading from '../AddRoom/components/ModalLoading';
 
-interface Tenant {
-  username: string;
-}
+import ModalLoading from '../AddRoom/components/ModalLoading';
+import ItemCotenants from './components/ItemCotenants';
+import ItemHelpText from './components/ItemHelpText';
 
 const UpdateTenant = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const route = useRoute();
-  const {contractId, existingTenants, maxOccupancy} = route.params as {
-    contractId: string;
-    existingTenants: CoTenant[];
-    maxOccupancy: number;
-  };
 
   const dispatch = useDispatch<AppDispatch>();
-  const {selectedContractLoading} = useAppSelector(state => state.contract);
+  const {selectedContractLoading, selectedContract} = useAppSelector(
+    state => state.contract,
+  );
+  const cotenants = useMemo(() => {
+    return selectedContract?.contractInfo?.coTenants || [];
+  }, [selectedContract]);
 
-  const [tenants, setTenants] = useState<Tenant[]>(existingTenants || []);
+  const maxOccupancy = selectedContract?.contractInfo?.maxOccupancy || 0;
+
+  const contractId = selectedContract?._id || '';
+  const [usernameTenants, setUsernameTenants] = useState<string[]>(
+    cotenants.map(t => t.username),
+  );
   const [newUsername, setNewUsername] = useState('');
-  const [loading, setLoading] = useState(false);
-  console.log(maxOccupancy, 'maxOccupancy');
   const {
     alertConfig,
     visible: alertVisible,
@@ -59,131 +53,158 @@ const UpdateTenant = () => {
     showConfirm,
   } = useCustomAlert();
 
-  const handleAddTenant = () => {
-    const username = newUsername.trim();
+  const maxCoTenants = useMemo(
+    () => Math.max(0, maxOccupancy - 1),
+    [maxOccupancy],
+  );
+  const canAddMore = useMemo(
+    () => cotenants.length < maxCoTenants,
+    [cotenants.length, maxCoTenants],
+  );
+  const addBtnSize = responsiveIcon(40);
+  const inputWidth = useMemo(
+    () => SCREEN.width - scale(16) * 2 - scale(12) * 2 - addBtnSize - scale(12),
+    [addBtnSize],
+  );
+  const handleAddTenant = useCallback(async () => {
+    try {
+      const usernames = newUsername
+        .split(',') // tách theo dấu phẩy
+        .map(u => u.trim()) // bỏ khoảng trắng thừa
+        .filter(u => u.length > 0); // bỏ chuỗi rỗng
 
-    if (!username) {
-      showError('Vui lòng nhập username', 'Lỗi', true);
-      return;
-    }
+      if (usernames.length === 0) {
+        showError('Vui lòng nhập username', 'Lỗi', true);
+        return;
+      }
 
-    if (tenants.find(t => t.username === username)) {
-      showError('Username này đã tồn tại trong danh sách', 'Lỗi', true);
-      return;
-    }
+      // Check từng username
+      const repUsername = selectedContract?.tenantId.username;
+      if (repUsername && usernames.includes(repUsername)) {
+        showError(
+          `Username "${repUsername}" đang là người đại diện`,
+          'Lỗi',
+          true,
+        );
+        return;
+      }
 
-    // Validate số lượng người thuê phụ không vượt quá giới hạn
-    const maxCoTenants = maxOccupancy - 1; // trừ người đại diện
-    if (tenants.length >= maxCoTenants) {
-      showError(
-        ` Phòng này chỉ cho phép tối đa  ${maxOccupancy} người ở`,
-        'Vượt giới hạn',
-        true,
+      // 2) Check trùng với danh sách hiện tại
+      const duplicated = usernames.find(
+        u =>
+          usernameTenants.includes(u) || cotenants.some(t => t.username === u),
       );
-      return;
+      if (duplicated) {
+        showError(
+          `Username "${duplicated}" đã tồn tại trong danh sách`,
+          'Lỗi',
+          true,
+        );
+        return;
+      }
+
+      // Check giới hạn
+      if (usernameTenants.length + usernames.length > maxCoTenants) {
+        showError(
+          `Phòng này chỉ cho phép tối đa ${maxOccupancy} người ở`,
+          'Vượt giới hạn',
+          true,
+        );
+        return;
+      }
+
+      const newList = [...usernameTenants, ...usernames];
+      setUsernameTenants(newList);
+
+      const addTenant = await dispatch(
+        updateTenants({
+          contractId,
+          usernames: newList,
+          apply: true,
+        }),
+      ).unwrap();
+
+      if (addTenant.success) {
+        showSuccess('Thêm người ở cùng thành công', 'Thành công', true);
+      } else {
+        setUsernameTenants(usernameTenants);
+        showError(addTenant.message || 'Có lỗi xảy ra', 'Lỗi', true);
+      }
+
+      setNewUsername('');
+    } catch (error: any) {
+      setUsernameTenants(usernameTenants);
+      setNewUsername('');
+      showError(error, 'Lỗi', true);
     }
+  }, [
+    newUsername,
+    usernameTenants,
+    cotenants,
+    maxCoTenants,
+    dispatch,
+    contractId,
+    maxOccupancy,
+    showError,
+    showSuccess,
+    selectedContract?.tenantId.username,
+  ]);
 
-    setTenants(prev => [...prev, {username}]);
-    setNewUsername('');
-  };
+  // Hàm xử lý khi nhấn nút "Xóa"
+  const handleConfirmRemoveTenant = useCallback(
+    async (usernameToRemove: string) => {
+      const newList = usernameTenants.filter(t => t !== usernameToRemove);
 
+      try {
+        const result = await dispatch(
+          updateTenants({
+            contractId,
+            usernames: newList,
+            apply: true,
+          }),
+        ).unwrap();
+        if (result.success) {
+          setUsernameTenants(newList);
+          if (result.data?.status === 'needs_resigning') {
+            showSuccess(
+              'Xóa người ở cùng thành công. Hợp đồng cần ký lại, vui lòng thực hiện bước "Ký lại hợp đồng".',
+              'Thành công',
+              true,
+            );
+          } else {
+            showSuccess('Xóa người ở cùng thành công', 'Thành công', true);
+          }
+        } else {
+          showError(result.message || 'Có lỗi xảy ra', 'Lỗi', true);
+        }
+      } catch (error) {
+        console.error('❌ Lỗi khi xóa người thuê:', error);
+      }
+    },
+    [usernameTenants, dispatch, contractId, showSuccess, showError],
+  );
+
+  // Hàm chính hiển thị confirm
   const handleRemoveTenant = useCallback(
     (usernameToRemove: string) => {
       showConfirm(
         'Bạn có chắc chắn muốn xóa người thuê này?',
-        () => {
-          const newList = tenants.filter(t => t.username !== usernameToRemove);
-          setTenants(newList);
-        },
+        () => handleConfirmRemoveTenant(usernameToRemove),
         'Xác nhận',
         [
           {text: 'Hủy', onPress: hideAlert, style: 'cancel'},
           {
             text: 'Xóa',
-            onPress: () => {
-              const newList = tenants.filter(
-                t => t.username !== usernameToRemove,
-              );
-              setTenants(newList);
-              hideAlert();
-            },
+            onPress: () => handleConfirmRemoveTenant(usernameToRemove),
             style: 'destructive',
           },
         ],
       );
     },
-    [hideAlert, showConfirm, tenants],
+    [showConfirm, hideAlert, handleConfirmRemoveTenant],
   );
-
-  const handleSave = async () => {
-    const originalUsernames = existingTenants.map(t => t.username).sort();
-
-    const updatedUsernames = tenants.map(t => t.username).sort();
-
-    const hasChanges =
-      originalUsernames.length !== updatedUsernames.length ||
-      originalUsernames.some(
-        (username, index) => username !== updatedUsernames[index],
-      );
-    if (!hasChanges) {
-      showError(
-        'Danh sách người thuê không thay đổi.',
-        'Không có thay đổi',
-        true,
-      );
-      return;
-    }
-
-    try {
-      setLoading(true);
-      await dispatch(
-        updateTenants({
-          contractId,
-          tenants: tenants.map(t => t.username),
-        }),
-      ).unwrap();
-
-      showSuccess('Cập nhật thành công', 'Thành công', true);
-      setTimeout(() => navigation.goBack(), 1000);
-    } catch (err: any) {
-      showError(err.message || 'Có lỗi xảy ra khi cập nhật', 'Lỗi', true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const renderItem = ({item}: {item: Tenant}) => (
-    <View style={styles.usernameItem}>
-      <Text style={styles.usernameText}>@{item.username}</Text>
-      <TouchableOpacity
-        style={styles.removeButton}
-        onPress={() => handleRemoveTenant(item.username)}>
-        <Image
-          source={{uri: Icons.IconDelete}}
-          style={[styles.icon, {tintColor: 'red'}]}
-        />
-      </TouchableOpacity>
-    </View>
-  );
-
-  const handleCancelUpdate = () => {
-    showConfirm(
-      'Bạn có chắc chắn muốn hủy cập nhật?',
-      () => navigation.goBack(),
-      'Hủy cập nhật',
-      [
-        {text: 'Không', onPress: hideAlert, style: 'cancel'},
-        {
-          text: 'Có',
-          onPress: () => navigation.goBack(),
-          style: 'cancel',
-        },
-      ],
-    );
-  };
-
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {paddingTop: insets.top}]}>
       <UIHeader
         title="Cập nhật người thuê"
         iconLeft={Icons.IconArrowLeft}
@@ -191,37 +212,74 @@ const UpdateTenant = () => {
       />
 
       <View style={styles.content}>
-        <View style={styles.inputSection}>
-          <ItemInput
-            value={newUsername}
-            onChangeText={setNewUsername}
-            placeholder="Nhập username..."
-            width={SCREEN.width * 0.8}
-            editable={!selectedContractLoading}
-          />
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={handleAddTenant}
-            disabled={selectedContractLoading}>
-            <Image source={{uri: Icons.IconAdd}} style={styles.icon} />
-          </TouchableOpacity>
+        <View style={styles.summaryCard}>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryTitle}>Sức chứa</Text>
+            <View style={styles.counterBadge}>
+              <Text style={styles.counterText}>
+                {cotenants.length}/{Math.max(0, maxOccupancy - 1)} người ở cùng
+              </Text>
+            </View>
+          </View>
+          <View style={styles.progressContainer}>
+            <View
+              style={[
+                styles.progressFill,
+                {
+                  width: `${Math.min(
+                    100,
+                    (cotenants.length / Math.max(1, maxCoTenants)) * 100,
+                  )}%` as any,
+                },
+              ]}
+            />
+          </View>
+          <Text style={styles.summaryHint}>
+            Tối đa {maxOccupancy} người (bao gồm người đại diện)
+          </Text>
+        </View>
+        <View style={styles.inputCard}>
+          <View style={styles.inputSection}>
+            <ItemInput
+              value={newUsername}
+              onChangeText={setNewUsername}
+              placeholder="Nhập username..."
+              width={Math.max(scale(180), inputWidth)}
+              editable={!selectedContractLoading && canAddMore}
+            />
+            <TouchableOpacity
+              style={[styles.addFab, !canAddMore && styles.addButtonDisabled]}
+              onPress={handleAddTenant}
+              disabled={selectedContractLoading || !canAddMore}>
+              <Image
+                source={{uri: Icons.IconAdd}}
+                style={[styles.icon, !canAddMore && styles.iconDisabled]}
+              />
+            </TouchableOpacity>
+          </View>
+          {!canAddMore ? (
+            <Text style={styles.limitText}>Đã đạt số người ở cùng tối đa</Text>
+          ) : (
+            <ItemHelpText text="Bạn có thể thêm nhiều username cùng lúc. Ngăn cách mỗi tên bằng dấu phẩy." />
+          )}
         </View>
 
-        <Text style={styles.sectionTitle}>Danh sách người thuê</Text>
-        <FlatList
-          data={tenants}
-          keyExtractor={(item, index) => `tenant-${index}`}
-          renderItem={renderItem}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>Không có người thuê nào</Text>
-          }
-          contentContainerStyle={{paddingBottom: 16}}
-        />
+        <Text style={styles.sectionTitle}>Danh sách người ở cùng</Text>
+        {cotenants.length === 0 ? (
+          <Text style={styles.emptyText}>Chưa có người ở cùng</Text>
+        ) : (
+          <View style={styles.chipContainer}>
+            {cotenants.map((item, idx) => (
+              <ItemCotenants
+                key={`chip-${idx}`}
+                item={item}
+                onRemove={handleRemoveTenant}
+              />
+            ))}
+          </View>
+        )}
 
-        <ItemButtonGreen onPress={handleSave} title="Lưu" />
-        <ItemButtonGreen onPress={handleCancelUpdate} title="Hủy" />
-
-        <ModalLoading visible={loading} loading={true} />
+        <ModalLoading visible={selectedContractLoading} loading={true} />
       </View>
 
       {alertConfig && (
@@ -239,13 +297,56 @@ const UpdateTenant = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
+  container: {flex: 1, backgroundColor: Colors.white},
   content: {
     flex: 1,
     padding: scale(16),
+    backgroundColor: Colors.backgroud,
+  },
+  counterBadge: {
+    backgroundColor: Colors.limeGreenOpacityLight,
+    borderRadius: 16,
+    paddingHorizontal: scale(10),
+    paddingVertical: scale(6),
+  },
+  summaryCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#EFEFEF',
+    marginBottom: 12,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  summaryTitle: {
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+  },
+  summaryHint: {
+    marginTop: 6,
+    color: Colors.textGray,
+    fontFamily: Fonts.Roboto_Regular,
+    fontSize: scale(12),
+  },
+  progressContainer: {
+    height: 10,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: Colors.limeGreen,
+  },
+  counterText: {
+    color: Colors.darkGreen,
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: scale(12),
   },
   inputSection: {
     flexDirection: 'row',
@@ -253,81 +354,54 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 20,
   },
-  addButton: {
+  addFab: {
     backgroundColor: Colors.limeGreen,
-    width: responsiveIcon(48),
-    height: responsiveIcon(48),
-    borderRadius: 24,
+    width: responsiveIcon(40),
+    height: responsiveIcon(40),
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: responsiveSpacing(10),
+    marginLeft: responsiveSpacing(8),
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  icon: {
-    width: responsiveIcon(24),
-    height: responsiveIcon(24),
-  },
+  addButtonDisabled: {backgroundColor: Colors.gray200},
+  icon: {width: responsiveIcon(24), height: responsiveIcon(24)},
+  iconDisabled: {tintColor: Colors.grayLight},
   sectionTitle: {
     fontFamily: Fonts.Roboto_Bold,
     fontSize: scale(16),
     marginBottom: verticalScale(8),
   },
-  usernameItem: {
+  inputCard: {
     backgroundColor: Colors.white,
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    elevation: 1,
+    borderColor: '#EFEFEF',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-  },
-  usernameText: {
-    fontSize: 16,
-    color: Colors.primary,
-    fontWeight: '500',
-  },
-  removeButton: {
-    padding: 4,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 1,
   },
   emptyText: {
     textAlign: 'center',
     marginTop: verticalScale(20),
     color: Colors.textGray,
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: verticalScale(24),
-    marginBottom: verticalScale(20),
+  limitText: {
+    marginTop: 6,
+    color: Colors.red,
+    fontFamily: Fonts.Roboto_Regular,
+    fontSize: scale(12),
   },
-  button: {
-    flex: 1,
-    height: verticalScale(45),
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: scale(4),
-  },
-  cancelButton: {
-    backgroundColor: Colors.gray,
-  },
-  saveButton: {
-    backgroundColor: Colors.darkGreen,
-  },
-  disabledButton: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: Colors.white,
-    fontFamily: Fonts.Roboto_Bold,
-    fontSize: scale(16),
-  },
+  chipContainer: {flexWrap: 'wrap', gap: 8, width: SCREEN.width * 0.9},
 });
 
 export default UpdateTenant;

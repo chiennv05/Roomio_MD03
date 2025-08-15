@@ -3,24 +3,37 @@ import {Room} from '../../types';
 
 // api get danh sách bài đăng
 
-export const getLandlordRoomsService = async (token: string) => {
+export const getLandlordRoomsService = async ({
+  status = '',
+  approvalStatus = '',
+  page = 1,
+  limit = 10,
+}: {
+  status?: string;
+  approvalStatus?: string;
+  page?: number;
+  limit?: number;
+}) => {
   try {
     const response = await api.get('/landlord/rooms', {
-      headers: {
-        Authorization: `Bearer ${token}`,
+      params: {
+        status,
+        approvalStatus,
+        page,
+        limit,
       },
     });
+
     if (response.data.success === false) {
       throw new Error(response.data.message);
     }
-
     return response.data;
   } catch (error) {
     throw error;
   }
 };
+
 export const createLandlordRoomsService = async (room: Room) => {
-  console.log('room', room);
   try {
     const response = await api.post('/landlord/rooms', room);
     console.log(response);

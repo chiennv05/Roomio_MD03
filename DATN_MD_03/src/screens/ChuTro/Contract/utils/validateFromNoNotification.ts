@@ -22,7 +22,7 @@ export function validateContractFormNoNotification(
   }
 
   if (!form.contractTerm || form.contractTerm <= 0) {
-    errors.push('Thời hạn hợp đồng phải lớn hơn 0.');
+    errors.push('Thời hạn hợp đồng phải lớn hơn 0. Và phải là số.');
   }
 
   if (!form.rules || form.rules.trim() === '') {

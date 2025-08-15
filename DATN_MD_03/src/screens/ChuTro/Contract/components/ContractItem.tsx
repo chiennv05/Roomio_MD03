@@ -33,6 +33,15 @@ export const getContractStatusInfo = (status: string) => {
         textColor: Colors.dearkOlive,
         textColorLabel: Colors.darkGray,
       };
+    case 'cancelled':
+      return {
+        label: 'Đã hủy',
+        color: Colors.white,
+        backgroudColor: Colors.gray,
+        backgroudStatus: Colors.mediumGray,
+        textColor: Colors.dearkOlive,
+        textColorLabel: Colors.darkGray,
+      };
     case 'pending_approval':
       return {
         label: 'Chờ phê duyệt',

@@ -9,6 +9,9 @@ import {
   ActivityIndicator,
   FlatList,
   StatusBar,
+  Platform,
+  UIManager,
+  LayoutAnimation,
 } from 'react-native';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -67,6 +70,13 @@ const formatDateTime = (dateString: string) => {
   }/${date.getFullYear()} ${hours}:${minutes}`;
 };
 
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 const ContractDetailScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'ContractDetail'>>();
@@ -78,7 +88,6 @@ const ContractDetailScreen = () => {
   const {contractId} = route.params;
   const {onDeleteAllImages, onDeleteImage} =
     useContractImageActions(contractId);
-
   const {
     selectedContract,
     selectedContractLoading,
@@ -88,12 +97,17 @@ const ContractDetailScreen = () => {
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [isVisibleImage, setIsVisibleImage] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [showHistory, setShowHistory] = useState(false);
   useEffect(() => {
     dispatch(fetchContractDetail(contractId));
   }, [contractId, dispatch]);
 
   const handleGoBack = () => {
     navigation.goBack();
+  };
+  const toggleHistory = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setShowHistory(!showHistory);
   };
 
   const {
@@ -280,12 +294,29 @@ const ContractDetailScreen = () => {
       );
       return;
     }
+    if (selectedContract.status === 'cancelled') {
+      showError('Hợp đồng đã hủy không thể chấm dứt.', 'Không thể chấm dứt');
+      return;
+    }
+    if (selectedContract.status === 'expired') {
+      showError(
+        'Hợp đồng đã hết hạn không thể chấm dứt.',
+        'Không thể chấm dứt',
+      );
+      return;
+    }
+    if (selectedContract.status === 'needs_resigning') {
+      showError(
+        'Hợp đồng ở trạng thái Cần ký lại không thể chấm dứt.',
+        'Không thể chấm dứt',
+      );
+      return;
+    }
 
     setAction('terminate');
     setValue('');
     setShowModal(true);
   };
-
   const handleSubmit = async () => {
     if (!selectedContract) {
       return;
@@ -331,13 +362,104 @@ const ContractDetailScreen = () => {
 
   const handleUpdateTenant = () => {
     if (!selectedContract) return;
-    navigation.navigate('UpdateTenant', {
-      contractId: selectedContract._id,
-      existingTenants: selectedContract.contractInfo.coTenants || [],
-      maxOccupancy: selectedContract.contractInfo.maxOccupancy || 0,
-    });
+
+    const status = selectedContract.status;
+
+    // Các trạng thái bị cấm chỉnh
+    if (['expired', 'terminated', 'rejected', 'cancelled'].includes(status)) {
+      showError(
+        'Hợp đồng ở trạng thái không cho phép cập nhật người thuê.',
+        'Không thể cập nhật',
+      );
+      return;
+    }
+
+    // Các trường hợp còn lại
+    switch (status) {
+      case 'draft':
+        // Không hiện alert, đi thẳng sang màn quản lý
+        navigation.navigate('UpdateTenant');
+        break;
+
+      case 'pending_signature':
+      case 'pending_approval':
+        showConfirm(
+          'Hợp đồng đang chờ ký/chờ duyệt. Nếu bạn cập nhật người ở cùng, hệ thống sẽ xóa PDF và ảnh hiện có và chuyển trạng thái hợp đồng về nháp. Bạn có muốn tiếp tục không?',
+          () => navigation.navigate('UpdateTenant'),
+          'Xác nhận cập nhật',
+          [
+            {
+              text: 'Hủy',
+              onPress: hideAlert,
+              style: 'cancel',
+            },
+            {
+              text: 'Tiếp tục',
+              onPress: () => {
+                hideAlert();
+                navigation.navigate('UpdateTenant');
+              },
+              style: 'destructive',
+            },
+          ],
+        );
+        break;
+
+      case 'active':
+        showConfirm(
+          'Hợp đồng đang hiệu lực. Nếu bạn cập nhật người ở cùng, hệ thống sẽ xóa PDF và ảnh hiện có và chuyển trạng thái hợp đồng về ký lại. Bạn có muốn tiếp tục không?',
+          () => navigation.navigate('UpdateTenant'),
+          'Xác nhận cập nhật',
+          [
+            {
+              text: 'Hủy',
+              onPress: hideAlert,
+              style: 'cancel',
+            },
+            {
+              text: 'Tiếp tục',
+              onPress: () => {
+                hideAlert();
+                navigation.navigate('UpdateTenant');
+              },
+              style: 'destructive',
+            },
+          ],
+        );
+        break;
+
+      case 'needs_resigning':
+        showConfirm(
+          'Hợp đồng đang ở trạng thái ký lại. Mọi thay đổi sẽ tạo lại PDF mới và vẫn giữ trạng thái ký lại.  Bạn có muốn tiếp tục không?',
+          () => navigation.navigate('UpdateTenant'),
+          'Xác nhận cập nhật',
+          [
+            {
+              text: 'Hủy',
+              onPress: hideAlert,
+              style: 'cancel',
+            },
+            {
+              text: 'Tiếp tục',
+              onPress: () => {
+                hideAlert();
+                navigation.navigate('UpdateTenant');
+              },
+              style: 'destructive',
+            },
+          ],
+        );
+        break;
+
+      default:
+        showError(
+          'Trạng thái hợp đồng không xác định, không thể cập nhật.',
+          'Lỗi trạng thái',
+        );
+        break;
+    }
   };
-  console.log(selectedContract);
+  console.log('contract', selectedContract);
   // Hiển thị màn hình loading
   if (selectedContractLoading) {
     return (
@@ -448,10 +570,15 @@ const ContractDetailScreen = () => {
   const imageList = contract.signedContractImages || [];
 
   const handleDeleteContract = async () => {
-    const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
+    const allowedStatuses = [
+      'draft',
+      'pending_signature',
+      'pending_approval',
+      'cancelled',
+    ];
     if (!allowedStatuses.includes(contract?.status)) {
       showError(
-        'Chỉ có thể xóa hợp đồng ở trạng thái nháp, chờ ký hoặc chờ duyệt.',
+        'Chỉ có thể xóa hợp đồng ở trạng thái nháp, chờ ký , đã hủy , hoặc chờ duyệt.',
         'Không thể xóa',
         true,
       );
@@ -508,8 +635,8 @@ const ContractDetailScreen = () => {
   const statusInfo = getContractStatusInfo(contract.status);
   const canUploadImages =
     contract.status === 'pending_signature' ||
-    contract.status === 'pending_approval';
-
+    contract.status === 'pending_approval' ||
+    contract.status === 'needs_resigning';
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
@@ -741,29 +868,36 @@ const ContractDetailScreen = () => {
         {/* Lịch sử trạng thái */}
         {contract.statusHistory && contract.statusHistory.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Lịch sử hợp đồng</Text>
-            {contract.statusHistory.map((history, index) => {
-              const statusInfo = getContractStatusInfo(history.status);
-              return (
-                <View key={history._id || index} style={styles.historyItem}>
-                  <View style={styles.historyHeader}>
-                    <Text style={styles.historyDate}>
-                      {formatDateTime(history.date)}
-                    </Text>
-                    <View style={[styles.historyStatus]}>
-                      <Text
-                        style={[
-                          styles.historyStatusText,
-                          {color: Colors.white},
-                        ]}>
-                        {statusInfo.label}
+            <ItemTitle
+              title="Lịch sử hợp đồng"
+              icon={showHistory ? Icons.IconArrowDown : Icons.IconArrowRight}
+              onPress={toggleHistory}
+              iconHeight={showHistory ? 14 : 24}
+              iconWidth={showHistory ? 24 : 14}
+            />
+            {showHistory &&
+              contract.statusHistory.map((history, index) => {
+                const statusInfo = getContractStatusInfo(history.status);
+                return (
+                  <View key={history._id || index} style={styles.historyItem}>
+                    <View style={styles.historyHeader}>
+                      <Text style={styles.historyDate}>
+                        {formatDateTime(history.date)}
                       </Text>
+                      <View style={styles.historyStatus}>
+                        <Text
+                          style={[
+                            styles.historyStatusText,
+                            {color: Colors.white},
+                          ]}>
+                          {statusInfo.label}
+                        </Text>
+                      </View>
                     </View>
+                    <Text style={styles.historyNote}>{history.note}</Text>
                   </View>
-                  <Text style={styles.historyNote}>{history.note}</Text>
-                </View>
-              );
-            })}
+                );
+              })}
           </View>
         )}
 
@@ -803,7 +937,10 @@ const ContractDetailScreen = () => {
         </TouchableOpacity>
 
         <View style={styles.bottomSpace} />
-        <ModalLoading loading={true} visible={generatingPDF} />
+        <ModalLoading
+          loading={true}
+          visible={generatingPDF || uploadingImages}
+        />
         <ModalShowImageContract
           visible={isVisibleImage}
           images={imageList}

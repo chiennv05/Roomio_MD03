@@ -1,4 +1,5 @@
 import api from '../../api/api';
+import {clearFormDataFromStorage} from '../../screens/ChuTro/AddRoom/utils/asyncStorageUtils';
 import {
   CreateContractPayload,
   CreateContractPayloadWithoutNotification,
@@ -11,9 +12,14 @@ export const createContractFromNotification = async (
 ) => {
   try {
     const response = await api.post('/contract/create-from-notification', data);
+    console.log(response);
+    if (!response.data || !response.data.success) {
+      throw new Error(
+        response.data?.message || 'Tạo hợp đồng không thành công',
+      );
+    }
     return response.data;
   } catch (error: any) {
-    console.error('Error creating contract from notification:', error);
     throw {
       message: error.response?.data?.message || error.message,
       status: error.response?.status,
@@ -52,13 +58,20 @@ export const getMyContracts = async (params?: {
     const queryParams = new URLSearchParams();
 
     // Thêm tham số phân trang nếu có
-    if (params?.page) {queryParams.append('page', params.page.toString());}
-    if (params?.limit) {queryParams.append('limit', params.limit.toString());}
-    if (params?.status) {queryParams.append('status', params.status);}
+    if (params?.page) {
+      queryParams.append('page', params.page.toString());
+    }
+    if (params?.limit) {
+      queryParams.append('limit', params.limit.toString());
+    }
+    if (params?.status) {
+      queryParams.append('status', params.status);
+    }
 
     const url = `/contract/my-contracts${
       queryParams.toString() ? `?${queryParams.toString()}` : ''
     }`;
+
     const response = await api.get(url);
     return response.data;
   } catch (error: any) {
@@ -90,7 +103,6 @@ export const getContractDetail = async (contractId: string) => {
 // Tạo file PDF hợp đồng
 export const generateContractPDF = async (contractId: string) => {
   try {
-    console.log(`Gọi API tạo PDF cho hợp đồng: ${contractId}`);
     const response = await api.post(`/contract/${contractId}/generate-pdf`);
 
     // Kiểm tra cấu trúc dữ liệu trả về
@@ -127,7 +139,6 @@ export const uploadSignedContractImage = async (
 ) => {
   try {
     const url = `/contract/${contractId}/upload-signed?append=${append}`;
-
     const response = await api.post(url, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -135,10 +146,8 @@ export const uploadSignedContractImage = async (
       timeout: 30000,
     });
 
-    console.log('Upload response:', response.data);
-
     if (!response.data) {
-      throw new Error('API không trả về dữ liệu');
+      throw new Error('Upload không thành công , vui lòng thử lại !');
     }
     if (!response.data.success) {
       throw new Error(response.data.message || 'Upload thất bại');
@@ -146,12 +155,7 @@ export const uploadSignedContractImage = async (
 
     return response.data;
   } catch (error: any) {
-    console.error(
-      `Error uploading signed images for contract ${contractId}:`,
-      error,
-    );
     if (error.response) {
-      console.error('Server error response:', error.response.data);
       throw new Error(error.response.data?.message || 'Lỗi từ server');
     } else if (error.request) {
       throw new Error('Lỗi kết nối mạng');
@@ -313,6 +317,8 @@ export const deleteSignedImage = async (
         fileName,
       )}`,
     );
+
+    console.log('response', response);
     if (!response.data || !response.data.success) {
       throw new Error(
         response.data?.message || 'Xóa ảnh hợp đồng không thành công',
@@ -335,14 +341,15 @@ export const deleteSignedImage = async (
 export const updateTenantsApi = async (
   contractId: string,
   usernames: string[],
+  apply: boolean,
 ) => {
-  console.log(usernames, 'Usernames to update');
   try {
-    const response = await api.put(`/contract/${contractId}/co-tenants`, {
+    const response = await api.post(`/contract/${contractId}/co-tenants`, {
       usernames: usernames,
-      skipResigning: true,
+      apply: apply,
     });
-    console.log('res', response.data);
+
+    console.log('log res api', response);
     if (!response.data || !response.data.success) {
       throw new Error(
         response.data?.message || 'Cập nhật người thuê không thành công',
@@ -353,6 +360,28 @@ export const updateTenantsApi = async (
     throw {
       message: error.response?.data?.message || error.message,
       status: error.response?.status,
+    };
+  }
+};
+
+export const getCoTenantsContract = async (contractId: string) => {
+  try {
+    const response = await api.get(`/contract/${contractId}/co-tenants`);
+
+    if (!response.data || !response.data.success) {
+      throw new Error(
+        response.data?.message || 'Không lấy được danh sách người dùng',
+      );
+    }
+
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      `Error updating co-tenants for contract ${contractId}:`,
+      error,
+    );
+    throw {
+      message: error.response?.data?.message || error.message,
     };
   }
 };
@@ -371,6 +400,24 @@ export const deleteContractApi = async (contractId: string) => {
     throw {
       message: error.response?.data?.message || error.message,
       status: error.response?.status,
+    };
+  }
+};
+
+export const resignContract = async (contractId: string) => {
+  try {
+    const response = await api.post(`/contract/${contractId}/resign`);
+    console.log('response', response);
+    if (!response.data || !response.data.success) {
+      throw new Error(
+        response.data?.message || 'Đã xảy ra lỗi khi từ chối hợp đồng',
+      );
+    }
+    return response.data;
+  } catch (error: any) {
+    console.error(`Error resigning contract ${contractId}:`, error);
+    throw {
+      message: error.response?.data?.message || error.message,
     };
   }
 };

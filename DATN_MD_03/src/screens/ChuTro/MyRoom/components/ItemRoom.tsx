@@ -102,11 +102,14 @@ const ItemRoom: React.FC<RoomCardProps> = ({item, onPress, index}) => {
           </Text>
 
           <View style={styles.detailContainer}>
-            <Image source={{uri: Icons.IconLocationGray}} style={styles.icon} />
+            <Image source={{uri: Icons.IconRoomOutline}} style={styles.icon} />
             <Text style={styles.detail}>Số phòng: {item.roomNumber}</Text>
           </View>
           <View style={styles.detailContainer}>
-            <Image source={{uri: Icons.IconLocationGray}} style={styles.icon} />
+            <Image
+              source={{uri: Icons.IconLocationGray}}
+              style={styles.iconLoaction}
+            />
             <Text
               style={[styles.detail, {width: SCREEN.width * 0.8}]}
               numberOfLines={1}
@@ -232,6 +235,12 @@ const styles = StyleSheet.create({
     marginRight: responsiveSpacing(12),
     marginTop: responsiveSpacing(2),
   },
+  iconLoaction: {
+    width: moderateScale(16),
+    height: moderateScale(16),
+    marginRight: responsiveSpacing(12),
+    marginTop: responsiveSpacing(2),
+  },
   detail: {
     color: Colors.gray60,
     fontSize: responsiveFont(14),
@@ -239,14 +248,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   containerStatus: {
-    width: moderateScale(120),
-    height: moderateScale(40),
     borderRadius: moderateScale(20),
     backgroundColor: Colors.limeGreen,
     position: 'absolute',
     zIndex: 1000,
-    top: -responsiveSpacing(10),
-    right: 20,
+    top: responsiveSpacing(10),
+    right: responsiveSpacing(28),
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -254,6 +261,8 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(18),
     color: Colors.black,
     fontFamily: Fonts.Roboto_Regular,
+    paddingHorizontal: responsiveSpacing(20),
+    paddingVertical: responsiveSpacing(8),
   },
   containerViewAndArea: {
     flexDirection: 'row',

@@ -1,5 +1,5 @@
 import {createSlice, createAsyncThunk, PayloadAction} from '@reduxjs/toolkit';
-import {Room} from '../../types';
+import {Pagination, Room} from '../../types';
 import {
   createLandlordRoomsService,
   getLandlordRoomsService,
@@ -14,6 +14,7 @@ interface LandlordRoomState {
   loading: boolean;
   error: string | null;
   success: boolean;
+  pagination: Pagination | null;
 }
 
 const initialState: LandlordRoomState = {
@@ -22,14 +23,33 @@ const initialState: LandlordRoomState = {
   loading: false,
   error: null,
   success: false,
+  pagination: null,
 };
 
 // ✅ GET danh sách phòng
 export const getLandlordRooms = createAsyncThunk(
   'landlordRooms/getLandlordRooms',
-  async (token: string, {rejectWithValue}) => {
+  async (
+    {
+      status = '',
+      approvalStatus = '',
+      page = 1,
+      limit = 10,
+    }: {
+      status?: string;
+      approvalStatus?: string;
+      page?: number;
+      limit?: number;
+    },
+    {rejectWithValue},
+  ) => {
     try {
-      const res = await getLandlordRoomsService(token);
+      const res = await getLandlordRoomsService({
+        status,
+        approvalStatus,
+        page,
+        limit,
+      });
       if (!res?.success) {
         return rejectWithValue(res?.message || 'Thất bại');
       }
@@ -118,6 +138,7 @@ const landlordRoomsSlice = createSlice({
       .addCase(getLandlordRooms.fulfilled, (state, action) => {
         state.loading = false;
         state.rooms = action.payload.rooms || [];
+        state.pagination = action.payload.pagination;
       })
       .addCase(
         getLandlordRooms.rejected,

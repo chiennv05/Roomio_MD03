@@ -9,6 +9,7 @@ import {
   NativeSyntheticEvent,
   SafeAreaView,
   StatusBar,
+  RefreshControl,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -34,49 +35,81 @@ import {LoadingAnimation} from '../../../components';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
+import Pagination from '../Contract/components/Pagination'; // tùy đường dẫn của bạn
 
 export default function MyRoomScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const dispatch = useDispatch<AppDispatch>();
-  const {rooms, loading} = useSelector(
-    (state: RootState) => state.landlordRooms,
+
+  const {rooms, loading, pagination} = useSelector(
+    (state: RootState) => state.landlordRooms as any,
   );
   const {user} = useSelector((state: RootState) => state.auth);
 
   const [searchText, setSearchText] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
 
+  // pagination state
+  const [page, setPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+
+  // animated filter
   const scrollOffset = useRef(0);
-  const filterHeight = useSharedValue(50); // Chiều cao ban đầu
-  const filterOpacity = useSharedValue(1); // Để mượt hơn
+  const filterHeight = useSharedValue(50);
+  const filterOpacity = useSharedValue(1);
 
-  const animatedFilterStyle = useAnimatedStyle(() => {
-    return {
-      height: withTiming(filterHeight.value, {duration: 200}),
-      opacity: withTiming(filterOpacity.value, {duration: 200}),
-    };
-  });
+  const animatedFilterStyle = useAnimatedStyle(() => ({
+    height: withTiming(filterHeight.value, {duration: 200}),
+    opacity: withTiming(filterOpacity.value, {duration: 200}),
+  }));
 
+  // Load rooms từ server (gọi API) - stable với useCallback
+  const loadRooms = useCallback(
+    async ({
+      pageToLoad = page,
+      limit = itemsPerPage,
+      status = selectedFilter,
+    }: {pageToLoad?: number; limit?: number; status?: string} = {}) => {
+      if (!user?.auth_token) return;
+      const statusToSend = status === 'all' ? '' : status;
+      // debug: kiểm tra payload gửi
+      console.log('[MyRoomScreen] loadRooms ->', {
+        page: pageToLoad,
+        limit,
+        status: statusToSend,
+      });
+      await dispatch(
+        // getLandlordRooms thunk should accept an object with token & params
+        getLandlordRooms({
+          token: user.auth_token,
+          status: statusToSend,
+          approvalStatus: '',
+          page: pageToLoad,
+          limit,
+        } as any),
+      );
+    },
+    [dispatch, user?.auth_token, page, itemsPerPage, selectedFilter],
+  );
+
+  // Gọi load khi user.token, selectedFilter hoặc page thay đổi
   useEffect(() => {
-    if (!user?.auth_token) {
-      return;
-    }
-    dispatch(getLandlordRooms(user.auth_token));
-  }, [dispatch, user?.auth_token]);
+    loadRooms({pageToLoad: page, limit: itemsPerPage, status: selectedFilter});
+    // reset to page 1 when filter changed handled below
+  }, [loadRooms, page, selectedFilter, itemsPerPage]);
 
+  // scroll behavior: ẩn/hiện filter
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const currentOffset = event.nativeEvent.contentOffset.y;
       const direction = currentOffset > scrollOffset.current ? 'down' : 'up';
-
       if (direction === 'down') {
         filterHeight.value = 0;
         filterOpacity.value = 0;
       } else {
-        filterHeight.value = 50; // hoặc bao nhiêu bạn muốn
+        filterHeight.value = 50;
         filterOpacity.value = 1;
       }
-
       scrollOffset.current = currentOffset;
     },
     [filterHeight, filterOpacity],
@@ -84,14 +117,17 @@ export default function MyRoomScreen() {
 
   const handleClickFilter = useCallback((value: string) => {
     setSelectedFilter(value);
+    setPage(1); // khi đổi filter, load lại từ trang 1
   }, []);
 
+  // local filtering/search on current page data
   const filteredRooms = useMemo(() => {
-    return rooms.filter(room => {
+    return (rooms || []).filter((room: any) => {
       const matchFilter =
         selectedFilter === 'all' || room.status === selectedFilter;
-      const matchSearch = room.roomNumber
-        ?.toLowerCase()
+      const matchSearch = room?.roomNumber
+        ?.toString()
+        .toLowerCase()
         .includes(searchText.toLowerCase());
       return matchFilter && matchSearch;
     });
@@ -104,12 +140,36 @@ export default function MyRoomScreen() {
     [navigation],
   );
 
-  const handleGoback = () => {
-    navigation.goBack();
-  };
-  const handleAddRoom = () => {
-    navigation.navigate('AddRooom', {});
-  };
+  const handleGoback = () => navigation.goBack();
+  const handleAddRoom = () => navigation.navigate('AddRooom', {});
+
+  // stable page change handler for Pagination
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      if (newPage < 1) return;
+      if (pagination?.totalPages && newPage > pagination.totalPages) return;
+      setPage(newPage);
+    },
+    [pagination?.totalPages],
+  );
+
+  // refresh pull-to-refresh
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    setPage(1);
+    await loadRooms({
+      pageToLoad: 1,
+      limit: itemsPerPage,
+      status: selectedFilter,
+    });
+    setRefreshing(false);
+  }, [loadRooms, itemsPerPage, selectedFilter]);
+
+  // debug pagination from store
+  useEffect(() => {
+    console.log('[MyRoomScreen] pagination ->', pagination);
+  }, [pagination]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -125,28 +185,22 @@ export default function MyRoomScreen() {
           iconLeft={Icons.IconArrowLeft}
         />
 
-        {/* Tìm kiếm */}
+        {/* Search */}
         <View style={styles.conatinerSearch}>
           <ItemInput
-            placeholder="Tìm bài viết đã đăng"
+            placeholder="Tìm phòng trọ đã đăng"
             value={searchText}
             onChangeText={setSearchText}
             editable={true}
-            width={SCREEN.width * 0.8}
+            width={SCREEN.width * 0.9}
           />
-          <TouchableOpacity style={styles.styleButton}>
-            <Image
-              source={{uri: Icons.IconSeachBlack}}
-              style={styles.styleIcon}
-            />
-          </TouchableOpacity>
         </View>
 
-        {/* Filter - Animated */}
+        {/* Animated filter */}
         <Animated.View style={[styles.conatinerFilter, animatedFilterStyle]}>
           <FlatList
             keyExtractor={(_, index) => index.toString()}
-            horizontal={true}
+            horizontal
             showsHorizontalScrollIndicator={false}
             data={ALL_ROOM_STATUSES}
             renderItem={({item, index}) => (
@@ -160,11 +214,12 @@ export default function MyRoomScreen() {
           />
         </Animated.View>
 
-        {/* Danh sách phòng */}
+        {/* Rooms list */}
         <View style={styles.containerListRooms}>
-          {loading && (
+          {loading && !refreshing ? (
             <LoadingAnimation size="medium" color={Colors.limeGreen} />
-          )}
+          ) : null}
+
           <FlatList
             data={filteredRooms}
             horizontal={false}
@@ -179,8 +234,28 @@ export default function MyRoomScreen() {
                 index={index}
               />
             )}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={[Colors.limeGreen]}
+                tintColor={Colors.limeGreen}
+              />
+            }
+            ListFooterComponent={
+              // show pagination if server reports more than one page (or total>itemsPerPage)
+              pagination &&
+              (pagination.total > itemsPerPage || pagination.totalPages > 1) ? (
+                <Pagination
+                  currentPage={pagination.page}
+                  totalPages={pagination.totalPages}
+                  onPageChange={handlePageChange}
+                />
+              ) : null
+            }
           />
         </View>
+
         <TouchableOpacity style={styles.buttonAddRoom} onPress={handleAddRoom}>
           <Image source={{uri: Icons.IconAdd}} style={styles.styleIcon} />
         </TouchableOpacity>
@@ -215,7 +290,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 5,
   },
-
   styleIcon: {
     width: responsiveIcon(24),
     height: responsiveIcon(24),
@@ -229,6 +303,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    width: SCREEN.width, // ensure list uses full width so footer centered
   },
   buttonAddRoom: {
     position: 'absolute',

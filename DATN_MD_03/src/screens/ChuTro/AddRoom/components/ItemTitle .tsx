@@ -13,15 +13,29 @@ interface TitleProps {
   title: string;
   icon?: string;
   onPress?: () => void;
+  iconWidth?: number;
+  iconHeight?: number;
 }
 
-const ItemTitle = ({title, icon, onPress}: TitleProps) => {
+const ItemTitle = ({
+  title,
+  icon,
+  onPress,
+  iconWidth = 24,
+  iconHeight = 24,
+}: TitleProps) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.textTitle}>{title} </Text>
+      <Text style={styles.textTitle}>{title}</Text>
       {icon && (
         <TouchableOpacity onPress={onPress}>
-          <Image source={{uri: icon}} style={styles.styleIcon} />
+          <Image
+            source={{uri: icon}}
+            style={{
+              width: responsiveIcon(iconWidth),
+              height: responsiveIcon(iconHeight),
+            }}
+          />
         </TouchableOpacity>
       )}
     </View>
@@ -43,9 +57,5 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Bold,
     fontWeight: '700',
     color: Colors.black,
-  },
-  styleIcon: {
-    width: responsiveIcon(24),
-    height: responsiveIcon(24),
   },
 });

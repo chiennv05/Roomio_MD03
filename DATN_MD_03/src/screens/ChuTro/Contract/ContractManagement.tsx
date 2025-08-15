@@ -103,6 +103,7 @@ const ContractManagement = () => {
   const handleGoAddContract = () => {
     navigation.navigate('AddContractNoNotification');
   };
+  console.log('contract', contracts);
   return (
     <SafeAreaView style={styles.container}>
       <UIHeader
@@ -156,15 +157,16 @@ const ContractManagement = () => {
                   tintColor={Colors.darkGreen}
                 />
               }
+              ListFooterComponent={
+                pagination && pagination.totalPages > 1 ? (
+                  <Pagination
+                    currentPage={pagination.page}
+                    totalPages={pagination.totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                ) : null
+              }
             />
-
-            {pagination && (
-              <Pagination
-                currentPage={pagination.page}
-                totalPages={pagination.totalPages}
-                onPageChange={handlePageChange}
-              />
-            )}
           </>
         )}
       </View>

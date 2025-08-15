@@ -36,7 +36,9 @@ import ItemService from '../AddRoom/components/ItemService';
 import ItemOptions from '../AddRoom/components/ItemOptions';
 import ModalLoading from '../AddRoom/components/ModalLoading';
 import ModalService from '../AddRoom/components/ModalService';
-import LocationModal from '../AddRoom/components/LocationModal';
+import LocationModal, {
+  SelectedAddressNew,
+} from '../AddRoom/components/LocationModal';
 import {CustomService} from '../../../types';
 import {useCustomAlert} from '../../../hooks/useCustomAlrert';
 import CustomAlertModal from '../../../components/CustomAlertModal';
@@ -62,7 +64,6 @@ export default function UpdateRoom() {
   const route = useRoute<any>() as UpdateRoomRouteProp;
   const {item} = route.params;
   const dispatch = useDispatch<AppDispatch>();
-  console.log('item room', item);
 
   const {
     alertConfig,
@@ -447,10 +448,10 @@ export default function UpdateRoom() {
     setVisibleLocationModal(true);
   };
 
-  const handleSelectLocation = (item: SelectedAddress) => {
-    const fullProvinceName = item.province?.name || '';
-    const districtName = item.district?.name || '';
-    const wardName = item.ward?.name || '';
+  const handleSelectLocation = (item: SelectedAddressNew) => {
+    const fullProvinceName = item.province?.province_name || '';
+    const districtName = item.district?.district_name || '';
+    const wardName = item.ward?.ward_name || '';
     const provinceName = fullProvinceName.replace(/^Tỉnh\s|^Thành phố\s/i, '');
 
     const fullAddress = [provinceName, districtName, wardName]
@@ -511,10 +512,6 @@ export default function UpdateRoom() {
       electricity: servicePrices.electricity || 0,
       water: servicePrices.water || 0,
     };
-
-    console.log('Current servicePrices before update:', servicePrices);
-    console.log('Final service prices:', finalServicePrices);
-    console.log('Current customServices:', customServices);
 
     const updatedRoom: Room = {
       roomNumber: roomNumber,

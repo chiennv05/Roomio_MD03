@@ -17,7 +17,6 @@ interface FilterProps {
 }
 
 const ItemFilter = ({item, isSelected, onPress, index}: FilterProps) => {
-  console.log('hho');
   return (
     <TouchableOpacity
       style={StyleSheet.flatten([
@@ -36,10 +35,7 @@ export default React.memo(ItemFilter);
 const styles = StyleSheet.create({
   containerBase: {
     marginHorizontal: scale(5),
-    paddingHorizontal: responsiveSpacing(10),
-    paddingVertical: responsiveSpacing(10),
     borderRadius: scale(25),
-    minWidth: 100,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -54,5 +50,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.black,
+    paddingVertical: responsiveSpacing(8),
+    paddingHorizontal: responsiveSpacing(24),
   },
 });

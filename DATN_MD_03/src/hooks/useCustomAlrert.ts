@@ -53,9 +53,8 @@ export const useCustomAlert = () => {
       title,
       message,
       type: 'success',
-      buttons: [{text: 'OK', onPress: hideAlert}],
       autoHide,
-      autoHideTimeout: 2000,
+      autoHideTimeout: 5000,
     });
   };
 
@@ -69,7 +68,7 @@ export const useCustomAlert = () => {
       message,
       type: 'error',
       autoHide,
-      autoHideTimeout: 2000,
+      autoHideTimeout: 5000,
     });
   };
 

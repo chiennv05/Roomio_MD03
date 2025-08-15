@@ -5,9 +5,11 @@ import {
   SafeAreaView,
   Text,
   ActivityIndicator,
-  Alert,
   Dimensions,
   StatusBar,
+  PermissionsAndroid,
+  Platform,
+  ToastAndroid,
 } from 'react-native';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -21,8 +23,10 @@ import {Icons} from '../../../assets/icons';
 import {API_CONFIG} from '../../../configs';
 import {UIHeader} from '../MyRoom/components';
 import RNFS from 'react-native-fs';
-import {PermissionsAndroid, Platform, ToastAndroid} from 'react-native';
 import Share from 'react-native-share';
+import {useCustomAlert} from '../../../hooks/useCustomAlrert';
+import {CustomAlertModal} from '../../../components';
+import {Alert} from 'react-native';
 
 type PdfViewerRouteProp = RouteProp<RootStackParamList, 'PdfViewer'>;
 type PdfViewerNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -30,8 +34,16 @@ type PdfViewerNavigationProp = StackNavigationProp<RootStackParamList>;
 const PdfViewerScreen = () => {
   const navigation = useNavigation<PdfViewerNavigationProp>();
   const route = useRoute<PdfViewerRouteProp>();
-  const {pdfUrl} = route.params;
+  const {
+    alertConfig,
+    visible: alertVisible,
+    hideAlert,
+    showSuccess,
+    showError,
+    showConfirm,
+  } = useCustomAlert();
 
+  const {pdfUrl} = route.params;
   const [isLoading, setIsLoading] = useState(true);
   const [pdfLink, setPdfLink] = useState<string | null>(null);
 
@@ -44,7 +56,14 @@ const PdfViewerScreen = () => {
   ): Promise<string | null> => {
     try {
       const fullUrl = `${API_CONFIG.BASE_URL}${relativeUrl}`;
-      const response = await fetch(fullUrl, {method: 'HEAD'});
+      console.log('link pdf', fullUrl);
+      const response = await fetch(fullUrl, {
+        method: 'HEAD',
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
+      });
 
       if (
         response.ok &&
@@ -54,6 +73,7 @@ const PdfViewerScreen = () => {
       }
       return null;
     } catch (error) {
+      console.warn('getValidPdfUrl error', error);
       return null;
     }
   };
@@ -65,22 +85,21 @@ const PdfViewerScreen = () => {
       if (url) {
         setPdfLink(url);
       } else {
-        Alert.alert('Lỗi', 'Không thể tải file PDF.');
+        Alert.alert('Không thể tải file PDF.', 'Lỗi');
       }
       setIsLoading(false);
     };
     loadPdf();
-  }, [pdfUrl]);
+  }, [pdfUrl]); // pdfUrl từ route param
 
   const handleDownloadPdf = async () => {
     try {
-      // Check if we have a valid PDF URL
       if (!pdfLink) {
-        Alert.alert('Lỗi', 'Không có file PDF để tải xuống.');
+        showError('Không có file PDF để tải xuống.', 'Lỗi');
         return;
       }
 
-      // Create a filename from the URL or use a default name
+      // Create filename
       let filename = 'contract.pdf';
       if (pdfLink.includes('/')) {
         const parts = pdfLink.split('/');
@@ -90,19 +109,10 @@ const PdfViewerScreen = () => {
         }
       }
 
-      // Handle permissions based on platform and Android version
+      // Permissions (Android < 10)
       if (Platform.OS === 'android') {
-        // Get Android version
         const androidVersion = Platform.Version;
-
-        // For Android 10+ (API 29+), we don't need WRITE_EXTERNAL_STORAGE for app's download directory
-        if (androidVersion >= 29) {
-          // No permission needed, just continue with download
-          console.log(
-            'Android 10+, no explicit permission needed for app directory',
-          );
-        } else {
-          // For older Android versions, request permission
+        if (androidVersion < 29) {
           try {
             const granted = await PermissionsAndroid.request(
               PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
@@ -116,56 +126,75 @@ const PdfViewerScreen = () => {
             );
 
             if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-              Alert.alert(
-                'Thông báo',
+              showError(
                 'Bạn cần cấp quyền truy cập bộ nhớ để tải file PDF.',
+                'Thông báo',
               );
               return;
             }
           } catch (err) {
-            console.warn(err);
-            // Continue anyway - some devices may have issues with the permission API
+            console.warn('permission request error', err);
+            // tiếp tục cố gắng tải — có thiết bị gặp lỗi API permission
           }
+        } else {
+          console.log(
+            'Android 10+ (API 29+): không cần WRITE_EXTERNAL_STORAGE cho thư mục app',
+          );
         }
       }
 
-      // Set download path based on platform
-      let downloadPath;
+      // Set download path
+      let downloadPath: string;
       if (Platform.OS === 'ios') {
         downloadPath = `${RNFS.DocumentDirectoryPath}/${filename}`;
       } else {
-        // For Android, try to use Download directory directly
         downloadPath = `${RNFS.DownloadDirectoryPath}/${filename}`;
       }
 
-      console.log('Downloading to path:', downloadPath);
+      // Hiện alert download (không tự ẩn)
+      showSuccess('Đang tải xuống PDF...', 'Thông báo', false);
 
-      // Show download starting message
-      Alert.alert('Thông báo', 'Đang tải xuống PDF...');
+      // Nếu muốn đảm bảo không dùng file cũ khi đặt cùng tên, xóa file cũ nếu tồn tại
+      try {
+        const exists = await RNFS.exists(downloadPath);
+        if (exists) {
+          try {
+            await RNFS.unlink(downloadPath);
+            console.log('Deleted old file before download:', downloadPath);
+          } catch (unlinkErr) {
+            console.warn('unlink error', unlinkErr);
+          }
+        }
+      } catch (existsErr) {
+        console.warn('RNFS.exists error', existsErr);
+      }
 
-      // Download the file
       const {promise} = RNFS.downloadFile({
         fromUrl: pdfLink,
         toFile: downloadPath,
         background: true,
         discretionary: true,
         progress: res => {
-          const progress = (res.bytesWritten / res.contentLength) * 100;
+          // Optional: bạn có thể cập nhật progress state nếu cần
+          const progress = res.contentLength
+            ? (res.bytesWritten / res.contentLength) * 100
+            : 0;
           console.log(`Download progress: ${progress.toFixed(2)}%`);
         },
       });
 
       const result = await promise;
 
+      // Ẩn alert "Đang tải" trước khi show kết quả
+      hideAlert();
+
       if (result.statusCode === 200) {
-        // Download successful
         if (Platform.OS === 'android') {
           ToastAndroid.show('Tải xuống thành công', ToastAndroid.LONG);
         } else {
-          Alert.alert('Thành công', 'File PDF đã được tải xuống.');
+          showSuccess('File PDF đã được tải xuống.', 'Thành công');
         }
 
-        // Optionally share the file
         const shareOptions = {
           title: 'Chia sẻ file PDF',
           message: 'Chia sẻ hợp đồng',
@@ -173,36 +202,44 @@ const PdfViewerScreen = () => {
           type: 'application/pdf',
         };
 
-        try {
-          // Ask if user wants to open the file
-          Alert.alert(
-            'Thành công',
-            'File PDF đã được tải xuống. Bạn có muốn mở file không?',
-            [
-              {
-                text: 'Không',
-                style: 'cancel',
+        // Dùng showConfirm với nút tuỳ chỉnh "Không" / "Mở file"
+        showConfirm(
+          'File PDF đã được tải xuống. Bạn có muốn mở file không?',
+          () => {}, // onConfirm không dùng vì ta truyền customButtons
+          'Thành công',
+          [
+            {
+              text: 'Không',
+              onPress: () => {
+                hideAlert();
               },
-              {
-                text: 'Mở file',
-                onPress: () => Share.open(shareOptions),
+              style: 'cancel',
+            },
+            {
+              text: 'Mở file',
+              onPress: async () => {
+                try {
+                  await Share.open(shareOptions);
+                } catch (shareErr) {
+                  console.error('Share open error', shareErr);
+                } finally {
+                  hideAlert();
+                }
               },
-            ],
-          );
-        } catch (shareError) {
-          console.error('Error sharing file:', shareError);
-        }
-      } else {
-        Alert.alert(
-          'Lỗi',
-          'Không thể tải xuống file PDF. Vui lòng thử lại sau.',
+              style: 'default',
+            },
+          ],
         );
+      } else {
+        showError('Không thể tải xuống file PDF. Vui lòng thử lại sau.', 'Lỗi');
       }
     } catch (error) {
       console.error('Download error:', error);
-      Alert.alert('Lỗi', 'Đã xảy ra lỗi khi tải xuống file PDF.');
+      hideAlert(); // ẩn nếu đang hiển thị cảnh báo trước đó
+      showError('Đã xảy ra lỗi khi tải xuống file PDF.', 'Lỗi');
     }
   };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroud} />
@@ -226,12 +263,12 @@ const PdfViewerScreen = () => {
 
         {!isLoading && pdfLink && (
           <Pdf
-            source={{uri: pdfLink, cache: true}}
+            source={{uri: pdfLink, cache: false}}
             style={styles.pdf}
             onLoadComplete={() => setIsLoading(false)}
             onError={() => {
-              Alert.alert('Lỗi', 'Không thể hiển thị PDF.');
               setIsLoading(false);
+              showError('Không thể hiển thị PDF.', 'Lỗi');
             }}
             trustAllCerts={false}
             enablePaging
@@ -239,6 +276,17 @@ const PdfViewerScreen = () => {
           />
         )}
       </View>
+
+      {alertConfig && (
+        <CustomAlertModal
+          visible={alertVisible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          onClose={hideAlert}
+          type={alertConfig.type}
+          buttons={alertConfig.buttons}
+        />
+      )}
     </SafeAreaView>
   );
 };
