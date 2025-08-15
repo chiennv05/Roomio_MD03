@@ -43,10 +43,14 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
   onMarkAsRead,
   onDeleteNotification,
 }) => {
-  if (!notifications || notifications.length === 0) {return null;}
+  if (!notifications || notifications.length === 0) {
+    return null;
+  }
 
   const handleNotificationPress = (notification: FormattedNotification) => {
-    if (!notification.isRead && onMarkAsRead) {
+    // Luôn gọi callback để mở chi tiết/điều hướng,
+    // nếu chưa đọc thì slice sẽ tự đánh dấu đã đọc bên trong
+    if (onMarkAsRead) {
       onMarkAsRead(notification);
     }
   };
@@ -58,7 +62,9 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
   };
 
   const renderFooter = () => {
-    if (!loadingMore) {return null;}
+    if (!loadingMore) {
+      return null;
+    }
     return (
       <View
         style={{
