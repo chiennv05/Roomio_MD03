@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -7,6 +7,9 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  PermissionsAndroid,
+  Platform,
+  Linking,
 } from 'react-native';
 import ProfileHeader from './components/ProfileHeader';
 import SettingSwitch from './components/SettingSwitch';
@@ -23,17 +26,21 @@ import {
   verticalScale,
 } from '../../utils/responsive';
 import {Colors} from '../../theme/color';
+import LinearGradient from 'react-native-linear-gradient';
 import {Fonts} from '../../theme/fonts';
 import {Icons} from '../../assets/icons';
 import {useDispatch, useSelector} from 'react-redux';
 import {logoutUser} from '../../store/slices/authSlice';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../types/route';
 import {RootState, AppDispatch} from '../../store';
 import {checkToken} from '../../utils/tokenCheck';
 import {checkProfileUser} from '../../store/services/authService';
 import {useCustomAlert} from '../../hooks/useCustomAlrert';
+
+import Geolocation from '@react-native-community/geolocation';
+import {loadSubscriptions} from '../../store/slices/subscriptionSlice';
 
 export default function ProfileScreen() {
   const dispatch = useDispatch<AppDispatch>();
@@ -48,12 +55,119 @@ export default function ProfileScreen() {
     showConfirm,
     hideAlert,
   } = useCustomAlert();
+  const [locationPermissionGranted, setLocationPermissionGranted] =
+    useState<boolean>(false);
+
+  // Check location permission and reflect on the switch
+  const checkPermission = useCallback(async (): Promise<boolean> => {
+    try {
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        );
+        setLocationPermissionGranted(granted);
+        return granted;
+      }
+      // iOS: wrap in promise to get boolean
+      const granted = await new Promise<boolean>(resolve => {
+        Geolocation.getCurrentPosition(
+          () => resolve(true),
+          () => resolve(false),
+          {enableHighAccuracy: false, timeout: 5000, maximumAge: 1000},
+        );
+      });
+      setLocationPermissionGranted(granted);
+      return granted;
+    } catch (e) {
+      setLocationPermissionGranted(false);
+      return false;
+    }
+  }, []);
+
+  useEffect(() => {
+    checkPermission();
+  }, [checkPermission]);
+
+  // Re-check whenever user returns to Profile
+  useFocusEffect(
+    useCallback(() => {
+      checkPermission();
+      // Tải gói đăng ký khi quay lại màn hình
+      if (user?.role === 'chuTro' && token) {
+        dispatch(loadSubscriptions(token));
+      }
+    }, [checkPermission, dispatch, token, user?.role]),
+  );
+
+  const requestPermission = useCallback(async (): Promise<boolean> => {
+    try {
+      if (Platform.OS === 'android') {
+        const result = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Quyền truy cập vị trí',
+            message:
+              'Ứng dụng cần truy cập vị trí của bạn để hiển thị phòng gần bạn.',
+            buttonPositive: 'Đồng ý',
+            buttonNegative: 'Từ chối',
+          },
+        );
+        return result === PermissionsAndroid.RESULTS.GRANTED;
+      }
+      // iOS: gọi getCurrentPosition để trigger prompt
+      return await new Promise<boolean>(resolve => {
+        Geolocation.getCurrentPosition(
+          () => resolve(true),
+          () => resolve(false),
+          {enableHighAccuracy: true, timeout: 10000, maximumAge: 1000},
+        );
+      });
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const handleToggleLocation = useCallback(
+    async (nextEnabled: boolean) => {
+      if (nextEnabled) {
+        const grantedNow = await checkPermission();
+        if (grantedNow) {
+          setLocationPermissionGranted(true);
+          return;
+        }
+        const granted = await requestPermission();
+        setLocationPermissionGranted(granted);
+        if (!granted) {
+          Alert.alert(
+            'Quyền vị trí bị từ chối',
+            'Bạn đã từ chối cấp quyền vị trí. Bạn có thể cấp lại trong Cài đặt.',
+          );
+        }
+      } else {
+        // Không thể thu hồi quyền trực tiếp từ app. Hướng dẫn mở cài đặt.
+        setLocationPermissionGranted(false);
+        Alert.alert(
+          'Tắt quyền vị trí',
+          'Để tắt hoàn toàn, vui lòng thu hồi quyền trong Cài đặt ứng dụng.',
+          [
+            {text: 'Để sau', style: 'cancel'},
+            {text: 'Mở Cài đặt', onPress: () => Linking.openSettings?.()},
+          ],
+        );
+      }
+    },
+    [checkPermission, requestPermission],
+  );
 
   // Check if user is guest (not logged in)
   const isGuest = !checkToken(token) || !user;
 
   // Check if user is landlord (chủ trọ)
   const isLandlord = user?.role === 'chuTro';
+  const currentSubscription = useSelector(
+    (state: RootState) => state.subscription.current,
+  );
+  const currentPlanLabel = (currentSubscription?.plan || '').toUpperCase();
 
   const handleShowLogoutModal = () => {
     setShowLogoutModal(true);
@@ -222,8 +336,9 @@ export default function ProfileScreen() {
   const handleGoStatistic = () => {
     navigation.navigate('StatisticScreen');
   };
-
-  console.log('token', token);
+  const handleGoSubscription = () => {
+    navigation.navigate('SubscriptionScreen');
+  };
 
   // Show normal profile screen for logged in users
   return (
@@ -243,8 +358,32 @@ export default function ProfileScreen() {
             iconStat={Icons.IconsLocation}
             label="Vị trí"
             initialValue={false}
+            value={locationPermissionGranted}
+            onToggle={handleToggleLocation}
           />
         </View>
+
+        {isLandlord && (
+          <TouchableOpacity activeOpacity={0.9} onPress={handleGoSubscription}>
+            <LinearGradient
+              colors={['#BAFD00', '#A5F000']}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 1}}
+              style={styles.premiumCard}>
+              <View style={styles.premiumContent}>
+                <Text style={styles.premiumTitle}>Nâng cấp gói đăng ký</Text>
+                <Text style={styles.premiumSubtitle}>
+                  Mở khóa các tính năng nâng cao cho chủ trọ
+                </Text>
+              </View>
+              <View style={styles.premiumBadge}>
+                <Text style={styles.premiumBadgeText}>
+                  {currentPlanLabel || 'NÂNG CẤP'}
+                </Text>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
 
         <View style={styles.box}>
           <SettingItem
@@ -342,6 +481,46 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     paddingBottom: verticalScale(20),
     alignItems: 'center',
+  },
+  premiumCard: {
+    marginVertical: verticalScale(8),
+    borderRadius: 14,
+    paddingVertical: verticalScale(16),
+    paddingHorizontal: scale(16),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '90%',
+    alignSelf: 'center',
+  },
+  premiumContent: {
+    flex: 1,
+    paddingRight: scale(12),
+  },
+  premiumTitle: {
+    fontSize: responsiveFont(18),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+  },
+  premiumSubtitle: {
+    marginTop: verticalScale(4),
+    fontSize: responsiveFont(13),
+    fontFamily: Fonts.Roboto_Regular,
+    color: '#2b2b2b',
+  },
+  premiumBadge: {
+    backgroundColor: '#0f172a',
+    paddingHorizontal: scale(14),
+    paddingVertical: verticalScale(8),
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  premiumBadgeText: {
+    color: '#fff',
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(12),
+    letterSpacing: 0.5,
   },
   box: {
     backgroundColor: Colors.white,

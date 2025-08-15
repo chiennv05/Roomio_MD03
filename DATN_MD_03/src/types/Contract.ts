@@ -29,8 +29,8 @@ export interface ServiceFees {
 }
 
 export interface ServiceFeeConfig {
-  electricity: string;
-  water: string;
+  electricity: 'perRoom' | 'perPerson' | 'perUsage';
+  water: 'perRoom' | 'perPerson' | 'perUsage';
 }
 
 export interface ContractInfo {
@@ -41,12 +41,13 @@ export interface ContractInfo {
   tenantIdentityNumber: string;
   tenantEmail: string;
   tenantBirthDate: string;
-  tenantAddress: string;
+  tenantAddress?: string;
   landlordName: string;
   landlordPhone: string;
   landlordIdentityNumber: string;
-  landlordBirthDate: string;
-  landlordAddress: string;
+  landlordBirthDate?: string;
+  landlordAddress?: string;
+  propertyDocument?: string;
   roomNumber: string;
   roomAddress: string;
   roomArea: number;
@@ -67,85 +68,32 @@ export interface ContractInfo {
 
 export interface ContractApproval {
   approved: boolean;
-  approvedBy: string;
-  approvedAt: string;
-  notes: string;
-  rejectionReason: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  notes?: string;
+  rejectionReason?: string;
 }
 
 export interface StatusHistoryItem {
-  _id: string;
+  _id?: string;
   status: ContractStatus;
   date: string;
-  note: string;
+  note?: string;
 }
-// // ====== Interface chính của Hợp đồng ======
-// export interface Contract {
-//   _id?: string;
-//   roomId:
-//     | string
-//     | {
-//         _id: string;
-//         roomNumber: string;
-//         photos: string[];
-//         location: {
-//           coordinates: {
-//             type: string;
-//             coordinates: number[];
-//           };
-//           servicePrices: {
-//             electricity: number;
-//             water: number;
-//           };
-//           servicePriceConfig: {
-//             electricity: string;
-//             water: string;
-//           };
-//           addressText: string;
-//           province: string;
-//           district: string;
-//           ward: string;
-//           street: string;
-//           houseNo: string;
-//           customServices: Array<{
-//             name: string;
-//             price: number;
-//             priceType: string;
-//             description: string;
-//             _id: string;
-//           }>;
-//           _id: string;
-//         };
-//       }; // ID phòng thuê hoặc object thông tin phòng
-//   tenantId:
-//     | string
-//     | {
-//         _id: string;
-//         username: string;
-//         fullName: string;
-//         phone: string;
-//       }; // ID người thuê hoặc object thông tin người thuê
-//   landlordId:
-//     | string
-//     | {
-//         _id: string;
-//         username: string;
-//         fullName: string;
-//         phone: string;
-//       }; // ID chủ phòng hoặc object thông tin chủ phòng
-//   contractInfo: ContractInfo; // Chi tiết hợp đồng
-//   status: ContractStatus; // Trạng thái hiện tại
-//   previousStatus?: ContractStatus; // Trạng thái trước đó (nếu có)
-//   updateHistory: UpdateHistoryItem[]; // Lịch sử cập nhật
-//   contractPdfUrl?: string; // Link file PDF hợp đồng
-//   contractPdfUrlFilename?: string; // Tên file PDF
-//   signedContractImages?: string[]; // Ảnh hợp đồng đã ký (nếu có)
-//   approval?: ContractApproval; // Thông tin duyệt
-//   statusHistory: StatusHistoryItem[]; // Lịch sử trạng thái
-//   createdAt?: string; // Ngày tạo
-//   updatedAt?: string; // Ngày cập nhật cuối
-//   sourceNotificationId?: string; // ID thông báo nguồn (nếu có)
-// }
+
+export interface UpdateHistoryItem {
+  date: string;
+  action:
+    | 'created'
+    | 'signed'
+    | 'approved'
+    | 'resigned'
+    | 'updated'
+    | 'terminated'
+    | 'expired';
+  userId?: string;
+  note?: string;
+}
 
 export interface RoomLocation {
   coordinates: {
@@ -186,17 +134,18 @@ export interface Contract {
   tenantId: UserInfo;
   landlordId: UserInfo;
   status: ContractStatus;
-  contractPdfUrl: string;
-  contractPdfUrlFilename: string;
-  signedContractImages: string[];
-  statusHistory: StatusHistoryItem[];
-  sourceNotificationId: string;
-  updateHistory: any[]; // Nếu có định dạng cụ thể, bạn có thể khai báo chi tiết hơn
+  previousStatus?: ContractStatus;
+  contractPdfUrl?: string;
+  contractPdfUrlFilename?: string;
+  signedContractImages?: string[];
+  statusHistory?: StatusHistoryItem[];
+  updateHistory?: UpdateHistoryItem[];
+  sourceNotificationId?: string;
   createdAt: string;
   updatedAt: string;
-  __v: number;
-  previousStatus?: ContractStatus;
+  __v?: number;
 }
+
 export type CreateContractPayload = {
   notificationId: string;
   contractTerm: number; // số tháng

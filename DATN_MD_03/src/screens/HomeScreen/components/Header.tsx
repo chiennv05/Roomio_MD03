@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useMemo, useRef} from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,11 @@ import {
   TouchableOpacity,
   StatusBar,
   TextInput,
+  Animated,
+  Easing,
 } from 'react-native';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../store';
+import {useSelector, useDispatch} from 'react-redux';
+import {RootState, AppDispatch} from '../../../store';
 import { Icons } from '../../../assets/icons';
 import {
   responsiveFont,
@@ -35,7 +37,9 @@ const Header: React.FC<HeaderProps> = ({
   onSearchSubmit,
 }) => {
   // Get user info from Redux store
+  const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
+  const { unreadCount } = useSelector((state: RootState) => state.notification);
 
   // Get display name and avatar
   const displayName = user?.username || 'Guest';
@@ -48,6 +52,72 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const avatarLetter = getAvatarLetter(displayName);
+
+  // Bell animation (wiggle) and badge pulse
+  const bellAnim = useRef(new Animated.Value(0)).current;
+  const badgeScale = useRef(new Animated.Value(0)).current;
+  const previousUnreadRef = useRef<number>(unreadCount);
+  const token = user?.auth_token;
+
+  // Lazy import to avoid static circular dep at top-level
+  // NOTE: using require inline inside effect to avoid hook dep warning
+
+  // Fetch notifications to populate unread count when header mounts or user changes
+  useEffect(() => {
+    if (token) {
+      const { fetchNotifications } = require('../../../store/slices/notificationSlice');
+      dispatch(fetchNotifications({ token, page: 1, limit: 20 }));
+    }
+  }, [dispatch, token]);
+
+  const triggerBellShake = useMemo(() => {
+    return () => {
+      bellAnim.setValue(0);
+      Animated.sequence([
+        Animated.timing(bellAnim, { toValue: 1, duration: 80, easing: Easing.linear, useNativeDriver: true }),
+        Animated.timing(bellAnim, { toValue: -1, duration: 160, easing: Easing.linear, useNativeDriver: true }),
+        Animated.timing(bellAnim, { toValue: 1, duration: 160, easing: Easing.linear, useNativeDriver: true }),
+        Animated.timing(bellAnim, { toValue: 0, duration: 100, easing: Easing.linear, useNativeDriver: true }),
+      ]).start();
+    };
+  }, [bellAnim]);
+
+  const triggerBadgePulse = useMemo(() => {
+    return () => {
+      badgeScale.setValue(0);
+      Animated.sequence([
+        Animated.spring(badgeScale, { toValue: 1, friction: 5, tension: 120, useNativeDriver: true }),
+        Animated.timing(badgeScale, { toValue: 0.9, duration: 120, useNativeDriver: true }),
+        Animated.spring(badgeScale, { toValue: 1, friction: 5, tension: 120, useNativeDriver: true }),
+      ]).start();
+    };
+  }, [badgeScale]);
+
+  // Occasional shake every ~25s when there are unread notifications
+  useEffect(() => {
+    if (!unreadCount) {return;}
+    const id = setInterval(() => {
+      triggerBellShake();
+    }, 25000);
+    return () => clearInterval(id);
+  }, [unreadCount, triggerBellShake]);
+
+  // Animate on unread count increase (new notifications)
+  useEffect(() => {
+    const prev = previousUnreadRef.current;
+    if (typeof prev === 'number' && unreadCount > prev) {
+      triggerBellShake();
+      triggerBadgePulse();
+    }
+    previousUnreadRef.current = unreadCount;
+  }, [unreadCount, triggerBellShake, triggerBadgePulse]);
+
+  const rotate = bellAnim.interpolate({
+    inputRange: [-1, 0, 1],
+    outputRange: ['-15deg', '0deg', '15deg'],
+  });
+  const badgeTransform = { transform: [{ scale: badgeScale.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) }] } as any;
+  const unreadDisplay = unreadCount > 99 ? '99+' : unreadCount?.toString();
 
   return (
     <>
@@ -72,11 +142,19 @@ const Header: React.FC<HeaderProps> = ({
           <TouchableOpacity
             style={styles.notificationButton}
             onPress={onNotificationPress}
+            activeOpacity={0.8}
           >
-            <Image
-              source={{ uri: Icons.IconNotification }}
-              style={styles.notificationIcon}
-            />
+            <Animated.View style={{ transform: [{ rotate }] }}>
+              <Image
+                source={{ uri: Icons.IconNotification }}
+                style={styles.notificationIcon}
+              />
+            </Animated.View>
+            {!!unreadCount && unreadCount > 0 && (
+              <Animated.View style={[styles.badgeContainer, badgeTransform]}>
+                <Text style={styles.badgeText}>{unreadDisplay}</Text>
+              </Animated.View>
+            )}
           </TouchableOpacity>
         </View>
         {/* Thay thế searchRow bằng TextInput */}
@@ -184,11 +262,31 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+    position: 'relative',
   },
   notificationIcon: {
     width: responsiveIcon(25),
     height: responsiveIcon(25),
     tintColor: '#333',
+  },
+  badgeContainer: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    minWidth: responsiveIcon(20),
+    height: responsiveIcon(20),
+    borderRadius: responsiveIcon(10),
+    backgroundColor: Colors.red,
+    paddingHorizontal: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: Colors.white,
+  },
+  badgeText: {
+    color: Colors.white,
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(10),
   },
   searchRow: {
     flexDirection: 'row',

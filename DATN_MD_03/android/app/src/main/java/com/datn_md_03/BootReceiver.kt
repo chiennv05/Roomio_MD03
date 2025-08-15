@@ -1,0 +1,15 @@
+package com.datn_md_03
+
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+
+class BootReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent?) {
+        if (Intent.ACTION_BOOT_COMPLETED == intent?.action) {
+            // Reschedule alarm after device reboot
+            SchedulerModule.scheduleRepeating(context)
+        }
+    }
+}
+

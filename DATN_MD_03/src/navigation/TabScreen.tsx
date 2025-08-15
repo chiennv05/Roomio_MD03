@@ -54,6 +54,8 @@ import CCCDScanning from '../screens/Profile/CCCDScanning';
 import RoomStatisticScreen from '../screens/ChuTro/Statistic/RoomStatisticScreen';
 import RevenueStatisticScreen from '../screens/ChuTro/Statistic/RevenueStatisticScreen';
 import ContractStatisticScreen from '../screens/ChuTro/Statistic/ContractStatisticScreen';
+import SubscriptionScreen from '../screens/ChuTro/Subscription/SubscriptionScreen';
+import SubscriptionPaymentScreen from '../screens/ChuTro/Subscription/SubscriptionPaymentScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -309,6 +311,8 @@ export default function TabScreen() {
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
+          <Stack.Screen name="SubscriptionScreen" component={SubscriptionScreen} />
+          <Stack.Screen name="SubscriptionPayment" component={SubscriptionPaymentScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

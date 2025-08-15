@@ -70,4 +70,6 @@ export type RootStackParamList = {
     roomId?: string;
   };
   CCCDScanning: {redirectTo?: string; roomId?: string};
+  SubscriptionScreen: undefined;
+  SubscriptionPayment: undefined;
 };

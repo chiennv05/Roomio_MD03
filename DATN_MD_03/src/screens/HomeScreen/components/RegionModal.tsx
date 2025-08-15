@@ -15,6 +15,9 @@ import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfi
 import { Icons } from '../../../assets/icons';
 import { Colors } from '../../../theme/color';
 import { responsiveFont, responsiveSpacing, moderateScale } from '../../../utils/responsive';
+import {useDispatch, useSelector} from 'react-redux';
+import {AppDispatch, RootState} from '../../../store';
+import {fetchCities, fetchDistricts as fetchDistrictsThunk} from '../../../store/slices/locationSlice';
 
 interface City {
   name: string;
@@ -42,22 +45,22 @@ const RegionModal: React.FC<RegionModalProps> = ({
   selectedRegions,
 }) => {
   const insets = useSafeAreaInsets();
-  const [cities, setCities] = useState<City[]>([]);
+  const dispatch = useDispatch<AppDispatch>();
+  const {cities, districtsByCity, loading} = useSelector((s: RootState) => s.location);
   const [districts, setDistricts] = useState<District[]>([]);
-  const [loading, setLoading] = useState(false);
   const [tempSelected, setTempSelected] = useState<District[]>([]);
   const [currentView, setCurrentView] = useState<'cities' | 'districts'>('cities');
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
-  const [citiesFetched, setCitiesFetched] = useState(false);
   const [districtsCache, setDistrictsCache] = useState<{[cityCode: number]: District[]}>({});
 
-  // Fetch cities only once when modal opens
+  // Load cities when modal opens (chỉ gọi nếu cache rỗng)
   useEffect(() => {
-    if (visible && !citiesFetched) {
-      fetchCities();
-      setCitiesFetched(true);
+    if (visible) {
+      if (!cities || cities.length === 0) {
+        dispatch(fetchCities());
+      }
     }
-  }, [visible, citiesFetched]);
+  }, [visible, cities, dispatch]);
 
   // Reset modal state when opening
   useEffect(() => {
@@ -68,61 +71,27 @@ const RegionModal: React.FC<RegionModalProps> = ({
     }
   }, [visible, selectedRegions]);
 
-  const fetchCities = async () => {
-    console.log('call');
-    setLoading(true);
-    try {
-      const response = await fetch('https://provinces.open-api.vn/api/');
-      const data = await response.json();
-      // Filter to only include the 3 main cities
-      const mainCities = data.filter((province: any) => {
-        return province.code === 1 ||  // Thành phố Hà Nội
-               province.code === 48 || // Thành phố Đà Nẵng
-               province.code === 79;   // Thành phố Hồ Chí Minh
-      });
-      const cityList: City[] = mainCities.map((city: any) => ({
-        name: city.name,
-        code: city.code,
-      }));
-      setCities(cityList);
-    } catch (error) {
-      Alert.alert('Lỗi', 'Không thể tải danh sách thành phố');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchDistricts = async (cityCode: number, cityName: string) => {
-    // Check if districts for this city are already cached
+    // Ưu tiên cache nội bộ modal, nếu không có thì kiểm tra cache Redux
     if (districtsCache[cityCode] && districtsCache[cityCode].length > 0) {
-      console.log('call cache');
       setDistricts(districtsCache[cityCode]);
       return;
     }
+    const cachedRedux = districtsByCity[cityCode];
+    if (cachedRedux && cachedRedux.length > 0) {
+      setDistricts(cachedRedux);
+      setDistrictsCache(prev => ({...prev, [cityCode]: cachedRedux}));
+      return;
+    }
 
-    setLoading(true);
     try {
-      const response = await fetch(`https://provinces.open-api.vn/api/p/${cityCode}?depth=2`);
-      const data = await response.json();
-      // Get districts from the selected city
-      const districtList = data.districts || [];
-      const mappedDistricts: District[] = districtList.map((district: any) => ({
-        name: district.name,
-        code: district.code,
-        cityCode: cityCode,
-        cityName: cityName,
-      }));
-
-      setDistricts(mappedDistricts);
-      // Cache the districts for this city
-      setDistrictsCache(prev => ({
-        ...prev,
-        [cityCode]: mappedDistricts,
-      }));
+      const result = await dispatch(
+        fetchDistrictsThunk({provinceCode: cityCode, provinceName: cityName}),
+      ).unwrap();
+      setDistricts(result.districts);
+      setDistrictsCache(prev => ({...prev, [cityCode]: result.districts}));
     } catch (error) {
       Alert.alert('Lỗi', 'Không thể tải danh sách quận/huyện');
-    } finally {
-      setLoading(false);
     }
   };
 

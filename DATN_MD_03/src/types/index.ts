@@ -1,6 +1,6 @@
 export * from './User';
 export * from './Room';
-export {
+export type {
   ContractStatus,
   CoTenant,
   ServiceFees,
@@ -11,10 +11,10 @@ export {
   RoomLocation,
   UserInfo,
   Contract,
-  type CreateContractPayload,
-  type CreateContractPayloadWithoutNotification,
-  type ContractTenantResponse,
-  type UpdateContractPayload,
+  CreateContractPayload,
+  CreateContractPayloadWithoutNotification,
+  ContractTenantResponse,
+  UpdateContractPayload,
 } from './Contract';
 export * from './Bill';
 export * from './Notification';
@@ -23,3 +23,4 @@ export * from './Support';
 export * from './Wishlist';
 export * from './Filter';
 export * from './ServiceType';
+export * from './Subscription';

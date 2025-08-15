@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {
   View,
   Text,
@@ -22,10 +22,27 @@ interface Props {
   iconStat?: ImageSourcePropType | string;
   label: string;
   initialValue: boolean;
+  // Optional controlled value. If provided, the switch will be controlled by parent
+  value?: boolean;
+  // Callback when user toggles the switch
+  onToggle?: (nextEnabled: boolean) => void;
+  disabled?: boolean;
 }
 
-export default function SettingSwitch({iconStat, label, initialValue}: Props) {
-  const [isEnabled, setIsEnabled] = useState(initialValue);
+export default function SettingSwitch({
+  iconStat,
+  label,
+  initialValue,
+  value,
+  onToggle,
+  disabled = false,
+}: Props) {
+  const [internalEnabled, setInternalEnabled] = useState(initialValue);
+  const displayEnabled = useMemo(
+    () => (typeof value === 'boolean' ? value : internalEnabled),
+    [value, internalEnabled],
+  );
+
   const animatedValue = useState(new Animated.Value(initialValue ? 1 : 0))[0];
 
   const getImageSource = () => {
@@ -36,16 +53,21 @@ export default function SettingSwitch({iconStat, label, initialValue}: Props) {
     return iconStat;
   };
 
-  const toggleSwitch = () => {
-    const newValue = !isEnabled;
-    setIsEnabled(newValue);
-
-    // Smooth animation
+  useEffect(() => {
     Animated.timing(animatedValue, {
-      toValue: newValue ? 1 : 0,
-      duration: 500, // Animation duration (ms)
+      toValue: displayEnabled ? 1 : 0,
+      duration: 300,
       useNativeDriver: false,
     }).start();
+  }, [displayEnabled, animatedValue]);
+
+  const toggleSwitch = () => {
+    const next = !displayEnabled;
+    if (onToggle) {
+      onToggle(next);
+    } else {
+      setInternalEnabled(next);
+    }
   };
 
   return (
@@ -54,7 +76,7 @@ export default function SettingSwitch({iconStat, label, initialValue}: Props) {
         {iconStat && <Image source={getImageSource()} style={styles.icon} />}
         <Text style={styles.label}>{label}</Text>
       </View>
-      <TouchableOpacity onPress={toggleSwitch} style={styles.switchContainer}>
+      <TouchableOpacity onPress={toggleSwitch} disabled={disabled} style={styles.switchContainer}>
         <Animated.View
           style={[
             styles.switchTrack,

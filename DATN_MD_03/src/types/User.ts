@@ -1,26 +1,29 @@
 export type Role = 'chuTro' | 'nguoiThue' | 'admin';
 export type UserStatus = 'active' | 'locked';
 
+// Lưu ý: FE sẽ giữ auth_token là string để tương thích code hiện tại
 export interface User {
   _id?: string;
   username: string;
   passwordHash: string;
   role: Role;
   fullName: string;
-  birthDate: string;
+  birthDate?: string | null;
   email: string;
-  phone: string;
+  phone?: string;
   status: UserStatus;
-  identityNumber: string;
-  address: string;
-  auth_token: string | null;
-  invalidTokens: string[];
-  stats: {
+  identityNumber?: string;
+  address?: string;
+  avatar?: string;
+  auth_token?: string | null;
+  invalidTokens?: string[];
+  stats?: {
     totalRooms?: number;
     rentedRooms?: number;
     totalRevenue?: number;
     totalContracts?: number;
-    lastActivity?: string;
+    lastActive?: string; // theo backend
+    lastActivity?: string; // giữ tương thích cũ
   };
   createdAt?: string;
   updatedAt?: string;
@@ -37,7 +40,6 @@ export interface RegisterPayload {
   username: string;
   email: string;
   password: string;
-
   role: string;
 }
 

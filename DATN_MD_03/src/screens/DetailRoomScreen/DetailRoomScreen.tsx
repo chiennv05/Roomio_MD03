@@ -6,7 +6,6 @@ import {
   Text,
   TouchableOpacity,
   StatusBar,
-  Alert,
 } from 'react-native';
 import {useRoute, RouteProp, useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
@@ -70,8 +69,12 @@ const DetailRoomScreen: React.FC = () => {
   const [alertModal, setAlertModal] = useState({
     visible: false,
     message: '',
+    title: undefined as string | undefined,
     type: 'error' as 'error' | 'success' | 'warning' | 'info',
   });
+  const [alertButtons, setAlertButtons] = useState<
+    Array<{text: string; onPress: () => void; style?: 'default' | 'cancel' | 'destructive'}> | undefined
+  >(undefined);
 
   const {roomId} = route.params;
 
@@ -145,12 +148,28 @@ const DetailRoomScreen: React.FC = () => {
     (
       message: string,
       type: 'error' | 'success' | 'warning' | 'info' = 'error',
+      title?: string,
+      buttons?: Array<{ text: string; onPress: () => void; style?: 'default' | 'cancel' | 'destructive' }>,
     ) => {
+      const defaultTitle =
+        title || (type === 'success' ? 'Thành công' : type === 'error' ? 'Lỗi' : 'Thông báo');
       setAlertModal({
         visible: true,
         message,
+        title: defaultTitle,
         type,
       });
+      if (buttons && buttons.length > 0) {
+        setAlertButtons(buttons);
+      } else {
+        setAlertButtons([
+          {
+            text: 'OK',
+            onPress: () => setAlertModal(prev => ({...prev, visible: false})),
+            style: 'default',
+          },
+        ]);
+      }
     },
     [],
   );
@@ -213,8 +232,13 @@ const DetailRoomScreen: React.FC = () => {
   }, [user, showAlert]);
 
   const handleSupportPress = useCallback(() => {
+    // Guest không được phép báo cáo phòng – hiển thị modal yêu cầu đăng nhập
+    if (!user) {
+      setShowLoginPrompt(true);
+      return;
+    }
     supportModalRef.current?.expand();
-  }, []);
+  }, [user]);
 
   const handleCloseLoginPrompt = useCallback(() => {
     setShowLoginPrompt(false);
@@ -348,24 +372,28 @@ const DetailRoomScreen: React.FC = () => {
         return;
       }
       if (message.trim().length === 0) {
-        Alert.alert('Bạn cần viết nội dung yêu cầu ');
+        showAlert('Bạn cần viết nội dung yêu cầu', 'warning');
         return;
       }
       try {
         const response = await rentRequets(roomId, user?.auth_token, message);
         if (response.success) {
-          Alert.alert('Thành công', response.message);
+          showAlert(
+            response.message || 'Đã gửi yêu cầu thuê phòng thành công',
+            'success',
+            'Thành công'
+          );
           bookingModalRef.current?.close();
         } else {
           console.log(response.message);
-          Alert.alert('Thất bại', 'Gửi yêu cầu thất bại');
+          showAlert('Gửi yêu cầu thất bại', 'error', 'Thất bại');
           bookingModalRef.current?.close();
         }
       } catch (error) {
         console.log('Erro', error);
       }
     },
-    [user?.auth_token, roomId],
+    [user?.auth_token, roomId, showAlert],
   );
 
   const handlUpdateProfile = useCallback(() => {
@@ -516,9 +544,11 @@ const DetailRoomScreen: React.FC = () => {
           {/* Custom Alert Modal */}
           <CustomAlertModal
             visible={alertModal.visible}
+            title={alertModal.title}
             message={alertModal.message}
             type={alertModal.type}
             onClose={hideAlert}
+            buttons={alertButtons}
           />
         </View>
       </GestureHandlerRootView>
@@ -543,6 +573,8 @@ const DetailRoomScreen: React.FC = () => {
     alertModal.visible,
     alertModal.message,
     alertModal.type,
+    alertModal.title,
+    alertButtons,
     hideAlert,
     supportModalRef,
     bookingModalRef,

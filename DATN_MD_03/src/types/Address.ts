@@ -27,3 +27,22 @@ export interface SelectedAddress {
   district?: District;
   ward?: Ward;
 }
+
+// Danh sách mã thành phố chính dùng trong app (Hà Nội, Đà Nẵng, TP.HCM)
+export type MainCityCode = '01' | '48' | '79';
+export const MAIN_CITY_CODES: readonly MainCityCode[] = ['01', '48', '79'] as const;
+export const MAIN_CITY_ORDER: readonly MainCityCode[] = MAIN_CITY_CODES;
+
+// Kiểu dữ liệu response thô từ API location
+export interface RawProvince {
+  _id: string;
+  code: string; // mã tỉnh/thành (chuỗi)
+  name: string;
+  level: string; // ví dụ: "Thành phố Trung ương" | "Tỉnh"
+}
+
+export interface RawDistrict {
+  code: string; // mã quận/huyện (chuỗi)
+  name: string;
+  level: string; // ví dụ: "Quận" | "Huyện" | "Thị xã"
+}

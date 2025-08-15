@@ -9,8 +9,13 @@ import {
 } from '../../../utils/responsive';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
+import {RootState} from '../../../store';
 export default function ProfileHeader() {
-  const nguoiDung = useSelector((state: any) => state.auth.user);
+  const nguoiDung = useSelector((state: RootState) => state.auth.user);
+  const currentPlan = useSelector(
+    (state: RootState) => state.subscription.current?.plan,
+  );
+  const planLabel = (currentPlan || '').toUpperCase();
 
   return (
     <ContainerLinearGradent>
@@ -27,6 +32,9 @@ export default function ProfileHeader() {
                 '?'
               ).toUpperCase()}
             </Text>
+          </View>
+          <View style={styles.planBadge}>
+            <Text style={styles.planBadgeText}>{planLabel || 'FREE'}</Text>
           </View>
         </View>
         <Text style={styles.email}>{nguoiDung?.email || 'Chưa có email'}</Text>
@@ -51,6 +59,7 @@ const styles = StyleSheet.create({
   },
   avatarWrapper: {
     marginVertical: verticalScale(10),
+    position: 'relative',
   },
   avatar: {
     width: responsiveFont(100),
@@ -69,6 +78,23 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(40),
     color: Colors.white,
     fontFamily: Fonts.Roboto_Bold,
+  },
+  planBadge: {
+    position: 'absolute',
+    right: -responsiveFont(10),
+    bottom: 0,
+    backgroundColor: '#0f172a',
+    paddingHorizontal: responsiveFont(10),
+    paddingVertical: responsiveFont(6) / 2,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  planBadgeText: {
+    color: '#fff',
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(12),
+    letterSpacing: 0.5,
   },
   email: {
     color: Colors.dearkOlive,

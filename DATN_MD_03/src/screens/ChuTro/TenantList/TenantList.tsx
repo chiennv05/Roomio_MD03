@@ -18,6 +18,7 @@ import {TenantFilters} from '../../../types/Tenant';
 
 // Import các component tái sử dụng
 import HeaderWithBack from './components/HeaderWithBack';
+import {useFocusEffect} from '@react-navigation/native';
 import TenantItem from './components/TenantItem';
 import SearchBar from './components/SearchBar';
 import {LoadingView, ErrorView} from './components/LoadingAndError';
@@ -56,6 +57,16 @@ const TenantList = () => {
       dispatch(fetchTenants({token, filters}));
     }
   }, [dispatch, token, filters]);
+
+  // Refetch khi màn danh sách focus trở lại (sau khi cập nhật ở màn chi tiết/UpdateTenant)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (token) {
+        dispatch(fetchTenants({token, filters}));
+      }
+      return undefined;
+    }, [dispatch, token, filters]),
+  );
 
   // Log state để debug
   console.log('TenantList state:', {

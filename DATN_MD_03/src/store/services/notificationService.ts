@@ -1,21 +1,30 @@
 import api from '../../api/api';
-import { NotificationResponse } from '../../types/Notification';
+import {
+  NotificationResponse,
+  NotificationStatus,
+  NotificationType,
+} from '../../types/Notification';
 
 export const getNotifications = async (
   token: string,
   page: number = 1,
-  limit: number = 20
+  limit: number = 20,
+  options?: {status?: NotificationStatus; type?: NotificationType},
 ): Promise<NotificationResponse> => {
   try {
     const params = new URLSearchParams();
     params.append('page', page.toString());
     params.append('limit', limit.toString());
+    if (options?.status) params.append('status', options.status);
+    if (options?.type) params.append('type', options.type);
 
     const headers = {
       Authorization: `Bearer ${token}`,
     };
 
-    const response = await api.get(`/notification?${params.toString()}`, { headers });
+    const response = await api.get(`/notification?${params.toString()}`, {
+      headers,
+    });
     return response.data;
   } catch (error: any) {
     throw {
@@ -27,14 +36,18 @@ export const getNotifications = async (
 
 export const markNotificationAsRead = async (
   notificationId: string,
-  token: string
+  token: string,
 ): Promise<any> => {
   try {
     const headers = {
       Authorization: `Bearer ${token}`,
     };
 
-    const response = await api.patch(`/notification/${notificationId}/read`, {}, { headers });
+    const response = await api.patch(
+      `/notification/${notificationId}/read`,
+      {},
+      {headers},
+    );
     return response.data;
   } catch (error: any) {
     throw {
@@ -44,13 +57,15 @@ export const markNotificationAsRead = async (
   }
 };
 
-export const markAllNotificationsAsRead = async (token: string): Promise<any> => {
+export const markAllNotificationsAsRead = async (
+  token: string,
+): Promise<any> => {
   try {
     const headers = {
       Authorization: `Bearer ${token}`,
     };
 
-    const response = await api.patch('/notification/mark-all-read', {}, { headers });
+    const response = await api.patch('/notification/read-all', {}, {headers});
     return response.data;
   } catch (error: any) {
     throw {
@@ -62,14 +77,16 @@ export const markAllNotificationsAsRead = async (token: string): Promise<any> =>
 
 export const deleteNotification = async (
   notificationId: string,
-  token: string
+  token: string,
 ): Promise<any> => {
   try {
     const headers = {
       Authorization: `Bearer ${token}`,
     };
 
-    const response = await api.delete(`/notification/${notificationId}`, { headers });
+    const response = await api.delete(`/notification/${notificationId}`, {
+      headers,
+    });
     return response.data;
   } catch (error: any) {
     throw {

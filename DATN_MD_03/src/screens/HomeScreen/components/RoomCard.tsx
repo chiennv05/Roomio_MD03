@@ -118,7 +118,7 @@ const RoomCard: React.FC<RoomCardProps> = ({ item, onPress }) => {
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Image source={{ uri: Icons.IconHome }} style={styles.icon} />
               <Text style={styles.infoText} numberOfLines={1}>
-                   Mã:  {item.roomNumber}
+                   Phòng:  {item.roomNumber}
               </Text>
             </View>
             <Text style={styles.separator}>|</Text>

@@ -75,7 +75,9 @@ export const checkProfile = createAsyncThunk(
         throw new Error(res.message);
       }
       const {user} = res.data;
-      const newToken = user.auth_token.token;
+      const newToken =
+        user?.auth_token?.token ??
+        (typeof user?.auth_token === 'string' ? user.auth_token : token);
       const mapUser = mapApiUserToUser(user);
 
       return {token: newToken, mapUser};
