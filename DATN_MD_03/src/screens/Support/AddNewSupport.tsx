@@ -20,6 +20,20 @@ import {Fonts} from '../../theme/fonts';
 import {responsiveFont, responsiveSpacing, scale} from '../../utils/responsive';
 import ItemButton from '../LoginAndRegister/components/ItemButton';
 
+// Hàm xác định mức ưu tiên theo loại yêu cầu (module-scope, dùng được ở mọi nơi)
+function computePriority(cat: SupportCategory): SupportPriority {
+  switch (cat) {
+    case 'goiDangKy':
+    case 'kyThuat':
+    case 'thanhToan':
+      return 'cao';
+    case 'hopDong':
+      return 'trungBinh';
+    default:
+      return 'thap';
+  }
+}
+
 type AddNewSupportScreenProps = StackNavigationProp<
   RootStackParamList,
   'AddNewSupport'
@@ -30,10 +44,13 @@ const AddNewSupport: React.FC = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState<SupportCategory>('kyThuat');
-  const [priority, setPriority] = useState<SupportPriority>('trungBinh');
+  const [priority, setPriority] = useState<SupportPriority>(
+    computePriority('kyThuat'),
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
-  const [isPriorityOpen, setIsPriorityOpen] = useState(false);
+  // Bỏ lựa chọn mức độ ưu tiên của người dùng: luôn tự động
+  // const [isPriorityOpen, setIsPriorityOpen] = useState(false);
 
   // Danh sách category
   const categories = [
@@ -165,7 +182,9 @@ const AddNewSupport: React.FC = () => {
                       category === item.value && styles.selectedItem,
                     ]}
                     onPress={() => {
-                      setCategory(item.value as SupportCategory);
+                      const selected = item.value as SupportCategory;
+                      setCategory(selected);
+                      setPriority(computePriority(selected));
                       setIsCategoryOpen(false);
                     }}>
                     <Text
@@ -182,42 +201,17 @@ const AddNewSupport: React.FC = () => {
           </View>
 
           <View style={styles.dropdownContainer}>
-            <TouchableOpacity
-              style={styles.dropdown}
-              onPress={() => setIsPriorityOpen(!isPriorityOpen)}>
+            {/* Ưu tiên tự động theo loại, hiển thị chỉ đọc */}
+            <View style={[styles.dropdown, {opacity: 0.7}]}>
               <Text style={styles.dropdownText}>
                 {getPriorityLabel(priority)}
               </Text>
               <Image
                 source={require('../../assets/icons/icon_arrowdown.png')}
-                style={styles.arrowIcon}
+                style={[styles.arrowIcon, {opacity: 0.3}]}
                 resizeMode="contain"
               />
-            </TouchableOpacity>
-            {isPriorityOpen && (
-              <View style={styles.dropdownList}>
-                {priorities.map((item, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={[
-                      styles.dropdownItem,
-                      priority === item.value && styles.selectedItem,
-                    ]}
-                    onPress={() => {
-                      setPriority(item.value as SupportPriority);
-                      setIsPriorityOpen(false);
-                    }}>
-                    <Text
-                      style={[
-                        styles.dropdownItemText,
-                        priority === item.value && styles.selectedItemText,
-                      ]}>
-                      {item.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
+            </View>
           </View>
         </View>
 
