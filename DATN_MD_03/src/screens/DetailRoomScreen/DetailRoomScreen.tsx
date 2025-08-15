@@ -111,6 +111,7 @@ const DetailRoomScreen: React.FC = () => {
       furniture: roomDetail.furniture || [],
       ownerName: roomDetail.owner?.fullName || 'Chủ trọ',
       ownerPhone: roomDetail.owner?.phone || 'Chưa có SĐT',
+      ownerAvatar: roomDetail.owner?.avatar || '',
       description: roomDetail.description || 'Mô tả phòng trọ...',
       currentRoomId: roomDetail._id,
       district: roomDetail.location?.district,
@@ -475,6 +476,7 @@ const DetailRoomScreen: React.FC = () => {
 
               <View style={styles.divider} />
               <OwnerInfo
+                avatar={roomDetailData.ownerAvatar}
                 name={roomDetailData.ownerName}
                 phone={roomDetailData.ownerPhone}
               />

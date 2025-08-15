@@ -11,6 +11,7 @@ import {
   Easing,
 } from 'react-native';
 import {useSelector, useDispatch} from 'react-redux';
+import LinearGradient from 'react-native-linear-gradient';
 import {RootState, AppDispatch} from '../../../store';
 import { Icons } from '../../../assets/icons';
 import {
@@ -40,6 +41,7 @@ const Header: React.FC<HeaderProps> = ({
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const { unreadCount } = useSelector((state: RootState) => state.notification);
+  const avatar = user?.avatar;
 
   // Get display name and avatar
   const displayName = user?.username || 'Guest';
@@ -129,9 +131,15 @@ const Header: React.FC<HeaderProps> = ({
             onPress={onUserPress}
             activeOpacity={0.7}
           >
-            <View style={styles.avatarContainer}>
-              <Text style={styles.avatarText}>{avatarLetter}</Text>
-            </View>
+            {avatar ? (
+              <Image source={{uri: avatar}} style={styles.avatarContainer} />
+            ) : (
+              <LinearGradient
+                colors={['#7B9EFF', '#9B7BFF']}
+                style={styles.avatarContainer}>
+                <Text style={styles.avatarText}>{avatarLetter}</Text>
+              </LinearGradient>
+            )}
             <View style={styles.userText}>
               <Text style={styles.label}>
                 {isGuest ? 'Chào mừng bạn' : 'Xin chào'}
@@ -206,9 +214,9 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderWidth: 0.6,
     borderColor: 'rgba(0, 0, 0, 0.1)',
-    marginRight: responsiveSpacing(12),
-    paddingVertical: responsiveSpacing(8),
-    paddingHorizontal: responsiveSpacing(4),
+    // marginRight: responsiveSpacing(10),
+    paddingVertical: responsiveSpacing(2),
+    paddingHorizontal: responsiveSpacing(2),
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -219,9 +227,9 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   avatarContainer: {
-    width: responsiveIcon(50),
-    height: responsiveIcon(50),
-    borderRadius: responsiveIcon(25),
+    width: responsiveIcon(66),
+    height: responsiveIcon(66),
+    borderRadius: responsiveIcon(33),
     marginRight: responsiveSpacing(12),
     backgroundColor: Colors.limeGreen,
     justifyContent: 'center',

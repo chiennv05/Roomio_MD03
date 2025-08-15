@@ -5,7 +5,6 @@ import {
   Text,
   View,
   TouchableOpacity,
-  Alert,
   ScrollView,
   PermissionsAndroid,
   Platform,
@@ -34,6 +33,7 @@ import {RootState, AppDispatch} from '../../store';
 import {checkToken} from '../../utils/tokenCheck';
 import Geolocation from '@react-native-community/geolocation';
 import {loadSubscriptions} from '../../store/slices/subscriptionSlice';
+import CustomAlertModal from '../../components/CustomAlertModal';
 
 export default function ProfileScreen() {
   const dispatch = useDispatch<AppDispatch>();
@@ -45,6 +45,19 @@ export default function ProfileScreen() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [locationPermissionGranted, setLocationPermissionGranted] =
     useState<boolean>(false);
+
+  // Alert modal state
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    type: 'info' as 'error' | 'success' | 'warning' | 'info',
+    buttons: [] as Array<{
+      text: string;
+      onPress: () => void;
+      style?: 'default' | 'cancel' | 'destructive';
+    }>,
+  });
 
   // Check location permission and reflect on the switch
   const checkPermission = useCallback(async (): Promise<boolean> => {
@@ -126,22 +139,42 @@ export default function ProfileScreen() {
         const granted = await requestPermission();
         setLocationPermissionGranted(granted);
         if (!granted) {
-          Alert.alert(
-            'Quyền vị trí bị từ chối',
-            'Bạn đã từ chối cấp quyền vị trí. Bạn có thể cấp lại trong Cài đặt.',
-          );
+          setAlertConfig({
+            visible: true,
+            title: 'Quyền vị trí bị từ chối',
+            message: 'Bạn đã từ chối cấp quyền vị trí. Bạn có thể cấp lại trong Cài đặt.',
+            type: 'warning',
+            buttons: [{
+              text: 'Đóng',
+              style: 'default',
+              onPress: () => setAlertConfig(prev => ({...prev, visible: false})),
+            }],
+          });
         }
       } else {
         // Không thể thu hồi quyền trực tiếp từ app. Hướng dẫn mở cài đặt.
         setLocationPermissionGranted(false);
-        Alert.alert(
-          'Tắt quyền vị trí',
-          'Để tắt hoàn toàn, vui lòng thu hồi quyền trong Cài đặt ứng dụng.',
-          [
-            {text: 'Để sau', style: 'cancel'},
-            {text: 'Mở Cài đặt', onPress: () => Linking.openSettings?.()},
+        setAlertConfig({
+          visible: true,
+          title: 'Tắt quyền vị trí',
+          message: 'Để tắt hoàn toàn, vui lòng thu hồi quyền trong Cài đặt ứng dụng.',
+          type: 'info',
+          buttons: [
+            {
+              text: 'Để sau',
+              style: 'cancel',
+              onPress: () => setAlertConfig(prev => ({...prev, visible: false})),
+            },
+            {
+              text: 'Mở Cài đặt',
+              style: 'default',
+              onPress: () => {
+                setAlertConfig(prev => ({...prev, visible: false}));
+                Linking.openSettings?.();
+              },
+            },
           ],
-        );
+        });
       }
     },
     [checkPermission, requestPermission],
@@ -189,17 +222,20 @@ export default function ProfileScreen() {
 
   const hanleUpdateProfile = () => {
     if (!checkToken(token)) {
-      Alert.alert(
-        'Thông báo',
-        'Bạn cần đăng nhập để sử dụng chức năng này',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.replace('Login', {}), // Chuyển sang màn Login
+      setAlertConfig({
+        visible: true,
+        title: 'Thông báo',
+        message: 'Bạn cần đăng nhập để sử dụng chức năng này',
+        type: 'info',
+        buttons: [{
+          text: 'OK',
+          style: 'default',
+          onPress: () => {
+            setAlertConfig(prev => ({...prev, visible: false}));
+            navigation.replace('Login', {});
           },
-        ],
-        {cancelable: false},
-      );
+        }],
+      });
       return;
     }
     navigation.navigate('PersonalInformation', {});
@@ -228,17 +264,20 @@ export default function ProfileScreen() {
   };
   const handleNavigateToBill = () => {
     if (!checkToken(token)) {
-      Alert.alert(
-        'Thông báo',
-        'Bạn cần đăng nhập để sử dụng chức năng này',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('Login', {}),
+      setAlertConfig({
+        visible: true,
+        title: 'Thông báo',
+        message: 'Bạn cần đăng nhập để sử dụng chức năng này',
+        type: 'info',
+        buttons: [{
+          text: 'OK',
+          style: 'default',
+          onPress: () => {
+            setAlertConfig(prev => ({...prev, visible: false}));
+            navigation.navigate('Login', {});
           },
-        ],
-        {cancelable: false},
-      );
+        }],
+      });
       return;
     }
     navigation.navigate('Bill');
@@ -382,6 +421,16 @@ export default function ProfileScreen() {
         onCancel={handleCancelLogout}
         onConfirm={handleConfirmLogout}
         loading={loading}
+      />
+
+      {/* Custom Alert Modal */}
+      <CustomAlertModal
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertConfig(prev => ({...prev, visible: false}))}
       />
     </SafeAreaView>
   );

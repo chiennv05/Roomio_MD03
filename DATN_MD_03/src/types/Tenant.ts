@@ -10,6 +10,7 @@ export interface CoTenant {
   identityNumber: string;
   birthDate: string | null;
   isRegistered: boolean;
+  avatar?: string;
 }
 
 export interface TenantRoom {
@@ -33,6 +34,7 @@ export interface Tenant {
   room: TenantRoom;
   tenantCount: number;
   coTenants: CoTenant[];
+  avatar?: string;
 }
 
 export interface TenantDetail {
@@ -46,6 +48,7 @@ export interface TenantDetail {
   identityNumber: string;
   phone: string;
   address: string;
+  avatar?: string;
 }
 
 export interface ContractHistoryItem {

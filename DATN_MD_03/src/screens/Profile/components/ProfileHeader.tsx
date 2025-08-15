@@ -1,5 +1,6 @@
 import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import {View, Text, StyleSheet, Image} from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import ContainerLinearGradent from '../../../components/ContainerLinearGradent';
 import {useSelector} from 'react-redux';
 import {
@@ -16,6 +17,9 @@ export default function ProfileHeader() {
     (state: RootState) => state.subscription.current?.plan,
   );
   const planLabel = (currentPlan || '').toUpperCase();
+  const isLandlord = nguoiDung?.role === 'chuTro';
+  const avatar = nguoiDung?.avatar;
+  const firstLetter = (nguoiDung?.fullName?.[0] || nguoiDung?.username?.[0] || '?').toUpperCase();
 
   return (
     <ContainerLinearGradent>
@@ -24,18 +28,20 @@ export default function ProfileHeader() {
           {nguoiDung?.fullName || nguoiDung?.username || 'Chưa có tên'}
         </Text>
         <View style={styles.avatarWrapper}>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>
-              {(
-                nguoiDung?.fullName?.[0] ||
-                nguoiDung?.username?.[0] ||
-                '?'
-              ).toUpperCase()}
-            </Text>
-          </View>
-          <View style={styles.planBadge}>
-            <Text style={styles.planBadgeText}>{planLabel || 'FREE'}</Text>
-          </View>
+          {avatar ? (
+            <Image source={{uri: avatar}} style={styles.avatar} />
+          ) : (
+            <LinearGradient
+              colors={['#7B9EFF', '#9B7BFF']}
+              style={styles.avatarCircle}>
+              <Text style={styles.avatarText}>{firstLetter}</Text>
+            </LinearGradient>
+          )}
+          {isLandlord && (
+            <View style={styles.planBadge}>
+              <Text style={styles.planBadgeText}>{planLabel || 'FREE'}</Text>
+            </View>
+          )}
         </View>
         <Text style={styles.email}>{nguoiDung?.email || 'Chưa có email'}</Text>
       </View>
@@ -65,6 +71,8 @@ const styles = StyleSheet.create({
     width: responsiveFont(100),
     height: responsiveFont(100),
     borderRadius: responsiveFont(90),
+    borderWidth: 3,
+    borderColor: Colors.white,
   },
   avatarCircle: {
     width: responsiveFont(100),
