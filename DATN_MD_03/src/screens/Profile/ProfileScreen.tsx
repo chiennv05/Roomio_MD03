@@ -34,12 +34,20 @@ import {RootState, AppDispatch} from '../../store';
 import {checkToken} from '../../utils/tokenCheck';
 import Geolocation from '@react-native-community/geolocation';
 import {loadSubscriptions} from '../../store/slices/subscriptionSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {requestNotificationPermission} from '../Notification/services/NativeNotifier';
+import {
+  startPolling,
+  stopPolling,
+} from '../Notification/services/NotificationPoller';
 
 export default function ProfileScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const token = useSelector((state: RootState) => state.auth.token);
   const user = useSelector((state: RootState) => state.auth.user);
+  const [notifEnabled, setNotifEnabled] = useState<boolean>(true);
+
   const loading = useSelector((state: RootState) => state.auth.loading);
   console.log(token);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -64,12 +72,32 @@ export default function ProfileScreen() {
           {enableHighAccuracy: false, timeout: 5000, maximumAge: 1000},
         );
       });
+      // Load notification toggle from storage on mount
+      useEffect(() => {
+        (async () => {
+          try {
+            const enabled =
+              (await AsyncStorage.getItem('notif:enabled')) === '1';
+            setNotifEnabled(enabled);
+          } catch {}
+        })();
+      }, []);
+
       setLocationPermissionGranted(granted);
       return granted;
     } catch (e) {
       setLocationPermissionGranted(false);
       return false;
     }
+  }, []);
+  // Load notification toggle from storage on mount (correct hook position)
+  useEffect(() => {
+    (async () => {
+      try {
+        const enabled = (await AsyncStorage.getItem('notif:enabled')) === '1';
+        setNotifEnabled(enabled);
+      } catch {}
+    })();
   }, []);
 
   useEffect(() => {
@@ -114,6 +142,25 @@ export default function ProfileScreen() {
       return false;
     }
   }, []);
+
+  // Toggle notification from Profile
+  const handleToggleNotification = useCallback(
+    async (nextEnabled: boolean) => {
+      try {
+        setNotifEnabled(nextEnabled);
+        await AsyncStorage.setItem('notif:enabled', nextEnabled ? '1' : '0');
+        if (nextEnabled) {
+          await requestNotificationPermission();
+          if (token) {
+            startPolling(token, 5_000);
+          }
+        } else {
+          stopPolling();
+        }
+      } catch (e) {}
+    },
+    [token],
+  );
 
   const handleToggleLocation = useCallback(
     async (nextEnabled: boolean) => {
@@ -277,7 +324,9 @@ export default function ProfileScreen() {
           <SettingSwitch
             iconStat={Icons.IconsNotification}
             label="Thông báo"
-            initialValue={true}
+            initialValue={false}
+            value={notifEnabled}
+            onToggle={handleToggleNotification}
           />
           <SettingSwitch
             iconStat={Icons.IconsLocation}

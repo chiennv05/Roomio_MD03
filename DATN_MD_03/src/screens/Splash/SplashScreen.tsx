@@ -16,6 +16,7 @@ import {responsiveFont, responsiveSpacing} from '../../utils/responsive';
 import {LoadingAnimation} from '../../components';
 import LinearGradient from 'react-native-linear-gradient';
 import {Images} from '../../assets/images';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SplashScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -84,9 +85,19 @@ export default function SplashScreen() {
   }, [fadeAnim, scaleAnim, textAnim, pulseAnim, glowRotate]);
 
   useEffect(() => {
+    const checkNotificationPermission = async () => {
+      try {
+        const asked = await AsyncStorage.getItem('notif:asked');
+        return asked === '1';
+      } catch {
+        return false;
+      }
+    };
+
     const loadUserSession = async () => {
       try {
         const session = await getUserSession();
+        const hasAskedNotification = await checkNotificationPermission();
 
         if (session) {
           const {token, expire} = session;
@@ -104,17 +115,34 @@ export default function SplashScreen() {
                 'Role:',
                 result.payload?.mapUser?.role,
               );
-              navigation.replace('UITab');
+              // Check if we need to show notification permission screen
+              if (!hasAskedNotification) {
+                navigation.replace('NotificationPermission');
+              } else {
+                navigation.replace('UITab');
+              }
             } else {
               await clearUserSession();
-              navigation.replace('UITab');
+              if (!hasAskedNotification) {
+                navigation.replace('NotificationPermission');
+              } else {
+                navigation.replace('UITab');
+              }
             }
           } else {
             await clearUserSession();
-            navigation.replace('UITab');
+            if (!hasAskedNotification) {
+              navigation.replace('NotificationPermission');
+            } else {
+              navigation.replace('UITab');
+            }
           }
         } else {
-          navigation.replace('UITab');
+          if (!hasAskedNotification) {
+            navigation.replace('NotificationPermission');
+          } else {
+            navigation.replace('UITab');
+          }
         }
       } catch (error) {
         console.error('Error loading session:', error);
@@ -129,7 +157,9 @@ export default function SplashScreen() {
   }, [dispatch, navigation]);
 
   return (
-    <LinearGradient colors={[Colors.limeGreen, Colors.limeGreen]} style={styles.container}>
+    <LinearGradient
+      colors={[Colors.limeGreen, Colors.limeGreen]}
+      style={styles.container}>
       {/* App Logo/Brand */}
       <Animated.View
         style={[
@@ -143,12 +173,25 @@ export default function SplashScreen() {
           <Animated.View
             style={[
               styles.glowBox,
-              {transform: [{rotate: glowRotate.interpolate({inputRange: [0, 1], outputRange: ['0deg', '360deg']})}]},
+              {
+                transform: [
+                  {
+                    rotate: glowRotate.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0deg', '360deg'],
+                    }),
+                  },
+                ],
+              },
             ]}
           />
-          <Image source={{uri: Images.ImageRoomio as any}} style={styles.logoImage} resizeMode="contain" />
+          <Image
+            source={{uri: Images.ImageRoomio as any}}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
           <Text style={styles.taglineText}>
-            Gọn gàng từng phòng{"\n"}rõ ràng từng đồng
+            Gọn gàng từng phòng{'\n'}rõ ràng từng đồng
           </Text>
         </View>
       </Animated.View>

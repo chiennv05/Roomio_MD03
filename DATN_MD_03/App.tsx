@@ -14,6 +14,8 @@ import {
 } from './src/screens/Notification/services/NotificationPoller';
 import {RootState} from './src/store';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 function Bootstrapper() {
   const token = useSelector((state: RootState) => state.auth.token);
 
@@ -23,13 +25,24 @@ function Bootstrapper() {
   }, []);
 
   useEffect(() => {
-    // Start/stop foreground polling based on auth token
-    if (token) {
-      startPolling(token, 30_000); // poll every 30s
-      return () => stopPolling();
-    } else {
-      stopPolling();
-    }
+    // Start/stop foreground polling based on auth token & user preference
+    (async () => {
+      try {
+        const enabled = (await AsyncStorage.getItem('notif:enabled')) === '1';
+        if (token && enabled) {
+          startPolling(token, 5_000); // poll every ~5s
+          return () => stopPolling();
+        } else {
+          stopPolling();
+        }
+      } catch {
+        if (token) {
+          startPolling(token, 5_000);
+        } else {
+          stopPolling();
+        }
+      }
+    })();
   }, [token]);
 
   return <TabScreen />;

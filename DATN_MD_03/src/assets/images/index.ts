@@ -25,4 +25,8 @@ export const Images = {
     ios: 'image_logo',
     android: 'asset:/images/image_logo.png',
   }),
+  ImageNotification: Platform.select({
+    ios: 'image_notification',
+    android: 'asset:/images/image_notification.png',
+  }),
 };

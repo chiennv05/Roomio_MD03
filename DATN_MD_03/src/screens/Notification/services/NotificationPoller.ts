@@ -24,6 +24,14 @@ async function setDeliveredSet(s: Set<string>) {
 }
 
 export async function pollOnce(token: string) {
+  // Tôn trọng tùy chọn người dùng về bật/tắt thông báo
+  try {
+    const enabled = (await AsyncStorage.getItem('notif:enabled')) === '1';
+    if (!enabled) {
+      return;
+    }
+  } catch {}
+
   const res = await getNotifications(token, 1, 50);
   const list = res?.data?.notifications || [];
   const delivered = await getDeliveredSet();

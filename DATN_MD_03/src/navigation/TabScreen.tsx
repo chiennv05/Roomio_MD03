@@ -15,6 +15,7 @@ import ResetPassWord from '../screens/LoginAndRegister/ResetPassWord';
 
 import DetailRoomScreen from '../screens/DetailRoomScreen/DetailRoomScreen';
 import NotificationScreen from '../screens/Notification/NotificationScreen';
+import NotificationPermissionScreen from '../screens/Notification/NotificationPermissionScreen';
 import TenantList from '../screens/ChuTro/TenantList/TenantList';
 import TenantDetailScreen from '../screens/ChuTro/TenantList/TenantDetailScreen';
 import ContractTenantsScreen from '../screens/ChuTro/ContractManagement/ContractTenantsScreen';
@@ -122,6 +123,13 @@ export default function TabScreen() {
           />
           <Stack.Screen name="ResetPassWord" component={ResetPassWord} />
           <Stack.Screen name="Notification" component={NotificationScreen} />
+          <Stack.Screen
+            name="NotificationPermission"
+            component={NotificationPermissionScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
           <Stack.Screen
             name="PersonalInformation"
             component={PersonalInformation}
@@ -311,8 +319,14 @@ export default function TabScreen() {
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
-          <Stack.Screen name="SubscriptionScreen" component={SubscriptionScreen} />
-          <Stack.Screen name="SubscriptionPayment" component={SubscriptionPaymentScreen} />
+          <Stack.Screen
+            name="SubscriptionScreen"
+            component={SubscriptionScreen}
+          />
+          <Stack.Screen
+            name="SubscriptionPayment"
+            component={SubscriptionPaymentScreen}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </>
