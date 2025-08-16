@@ -685,4 +685,32 @@ export const Icons = {
     ios: 'icon_arrow_right_green',
     android: 'asset:/icons/icon_arrow_right_green.png',
   }),
+  IconCamera: Platform.select({
+    ios: 'camera',
+    android: 'asset:/icons/camera.png',
+  }),
+  IconLocationHome: Platform.select({
+    ios: 'location_home',
+    android: 'asset:/icons/location_home.png',
+  }),
+  IconPhone: Platform.select({
+    ios: 'phone',
+    android: 'asset:/icons/phone.png',
+  }),
+  IconEmail: Platform.select({
+    ios: 'icon_email',
+    android: 'asset:/icons/icon_email.png',
+  }),
+  IconBirthDate: Platform.select({
+    ios: 'birthdate',
+    android: 'asset:/icons/birthdate.png',
+  }),
+  IconCCCD: Platform.select({
+    ios: 'cccd',
+    android: 'asset:/icons/cccd.png',
+  }),
+  IconGallery: Platform.select({
+    ios: 'icon_gallery',
+    android: 'asset:/icons/icon_gallery.png',
+  }),
 };

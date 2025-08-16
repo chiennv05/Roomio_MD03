@@ -362,6 +362,7 @@ const PersonalInformation = React.memo(() => {
         <QuickStatsCards
           email={email}
           username={username}
+          isVerified={!!identityNumber}
         />
 
         {identityNumber ? (
@@ -377,20 +378,20 @@ const PersonalInformation = React.memo(() => {
               </View>
               <View style={styles.fieldContainer}>
                 <InfoField
-                  icon={Icons.IconContract}
+                  icon={Icons.IconCCCD}
                   iconBgColor="#E3F2FD"
                   label="Số CMND/CCCD"
                   value={identityNumber}
                 />
                 <InfoField
-                  icon={Icons.IconCalendar}
+                  icon={Icons.IconBirthDate}
                   iconBgColor="#FCE4EC"
                   label="Ngày sinh"
                   value={birthDate ? formatDate(birthDate) : undefined}
                 />
 
                 <InfoField
-                  icon={Icons.IconLocationGreen}
+                  icon={Icons.IconLocationHome}
                   iconBgColor="#FFF3E0"
                   label="Địa chỉ thường trú"
                   value={address || 'Chưa cập nhật'}
@@ -407,7 +408,7 @@ const PersonalInformation = React.memo(() => {
               </View>
               <View style={styles.fieldContainer}>
                 <EditableInfoField
-                  icon={Icons.IconFluentPersonRegular}
+                  icon={Icons.IconPhone}
                   iconBgColor="#E8F5E9"
                   label="SỐ ĐIỆN THOẠI"
                   value={phone}
@@ -417,7 +418,7 @@ const PersonalInformation = React.memo(() => {
                   }}
                 />
                 <EditableInfoField
-                  icon={Icons.IconNotification}
+                  icon={Icons.IconEmail}
                   iconBgColor="#E3F2FD"
                   label="EMAIL"
                   value={email}
@@ -447,7 +448,7 @@ const PersonalInformation = React.memo(() => {
               </View>
               <View style={styles.fieldContainer}>
                 <EditableInfoField
-                  icon={Icons.IconFluentPersonRegular}
+                  icon={Icons.IconPhone}
                   iconBgColor="#E8F5E9"
                   label="SỐ ĐIỆN THOẠI"
                   value={phone}
@@ -457,7 +458,7 @@ const PersonalInformation = React.memo(() => {
                   }}
                 />
                 <EditableInfoField
-                  icon={Icons.IconNotification}
+                  icon={Icons.IconEmail}
                   iconBgColor="#E3F2FD"
                   label="EMAIL"
                   value={email}
@@ -476,44 +477,44 @@ const PersonalInformation = React.memo(() => {
                   style={styles.sectionGradientIndicator} />
                 <Text style={styles.sectionTitle}>Thông tin định danh</Text>
                                   <View style={styles.lockedBadge}>
-                    <Image source={{uri: Icons.IconRemove}} style={styles.lockBadgeIcon} />
+                    <Image source={{uri: Icons.IconWarning}} style={styles.lockBadgeIcon} />
                     <Text style={styles.lockedBadgeText}>Cần xác thực</Text>
                   </View>
               </View>
               <View style={styles.fieldContainer}>
                 <View style={styles.blurredField}>
                   <View style={styles.blurredIconContainer}>
-                    <Image source={{uri: Icons.IconContract}} style={styles.blurredIcon} />
+                    <Image source={{uri: Icons.IconCCCD}} style={styles.blurredIcon} />
                   </View>
                   <View style={styles.blurredContent}>
                     <Text style={styles.blurredLabel}>SỐ CMND/CCCD</Text>
                     <View style={styles.blurredValue}>
                       <Text style={styles.blurredText}>••••••••••••</Text>
-                      <Image source={{uri: Icons.IconRemove}} style={styles.miniLockIcon} />
+                      <Image source={{uri: Icons.IconWarning}} style={styles.miniLockIcon} />
                     </View>
                   </View>
                 </View>
                 <View style={styles.blurredField}>
                   <View style={styles.blurredIconContainer}>
-                    <Image source={{uri: Icons.IconCalendar}} style={styles.blurredIcon} />
+                    <Image source={{uri: Icons.IconBirthDate}} style={styles.blurredIcon} />
                   </View>
                   <View style={styles.blurredContent}>
                     <Text style={styles.blurredLabel}>NGÀY SINH</Text>
                     <View style={styles.blurredValue}>
                       <Text style={styles.blurredText}>••/••/••••</Text>
-                      <Image source={{uri: Icons.IconRemove}} style={styles.miniLockIcon} />
+                      <Image source={{uri: Icons.IconWarning}} style={styles.miniLockIcon} />
                     </View>
                   </View>
                 </View>
                 <View style={styles.blurredField}>
                   <View style={styles.blurredIconContainer}>
-                    <Image source={{uri: Icons.IconLocationGreen}} style={styles.blurredIcon} />
+                    <Image source={{uri: Icons.IconLocationHome}} style={styles.blurredIcon} />
                   </View>
                   <View style={styles.blurredContent}>
                     <Text style={styles.blurredLabel}>ĐỊA CHỈ THƯỜNG TRÚ</Text>
                     <View style={styles.blurredValue}>
                       <Text style={styles.blurredText}>•••••••••••••••••</Text>
-                      <Image source={{uri: Icons.IconRemove}} style={styles.miniLockIcon} />
+                      <Image source={{uri: Icons.IconWarning}} style={styles.miniLockIcon} />
                     </View>
                   </View>
                 </View>
@@ -580,6 +581,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     backgroundColor: '#F4F4F4',
+    marginTop: verticalScale(-20),
   },
   contentContainer: {
     paddingTop: verticalScale(5),  // Giảm padding top để gần hơn

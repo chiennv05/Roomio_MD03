@@ -161,7 +161,7 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.white,
-    borderRadius: responsiveSpacing(16),
+    borderRadius: responsiveSpacing(20),
     padding: responsiveSpacing(16),
     marginBottom: responsiveSpacing(16),
     elevation: 3,
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     backgroundColor: Colors.darkGreen,
-    borderRadius: responsiveSpacing(12),
+    borderRadius: responsiveSpacing(20),
     paddingVertical: responsiveSpacing(14),
     paddingHorizontal: responsiveSpacing(20),
     flexDirection: 'row',

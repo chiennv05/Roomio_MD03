@@ -69,7 +69,7 @@ const InfoField: React.FC<InfoFieldProps> = ({
       {isLocked && (
         <View style={styles.lockedBadge}>
           <Image
-            source={{uri: Icons.IconLock}}
+            source={{uri: Icons.IconWarning}}
             style={styles.lockedIcon}
           />
         </View>
@@ -131,12 +131,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   label: {
-    fontSize: responsiveFont(12),
-    color: Colors.mediumGray,
+    fontSize: responsiveFont(13),
+    color: Colors.gray60,
     fontFamily: Fonts.Roboto_Regular,
     marginBottom: scale(4),
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.2,
   },
   value: {
     fontSize: responsiveFont(15),

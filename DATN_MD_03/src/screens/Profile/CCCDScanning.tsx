@@ -350,7 +350,7 @@ export default function CCCDScanning() {
                 onPress={handlePickFromLibrary}>
                 <View style={styles.sideButtonContent}>
                   <Image
-                    source={{uri: Icons.IconAdd}}
+                    source={{uri: Icons.IconGallery}}
                     style={styles.sideButtonIcon}
                   />
                 </View>
@@ -624,11 +624,11 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 8,
   },
   instructionCard: {
-    marginTop: responsiveSpacing(30),
+    marginTop: responsiveSpacing(12),
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     borderRadius: responsiveSpacing(12),
     paddingVertical: responsiveSpacing(16),
-    paddingHorizontal: responsiveSpacing(20),
+    paddingHorizontal: responsiveSpacing(57),
     borderWidth: 1,
     borderColor: 'rgba(186, 253, 0, 0.3)',
   },

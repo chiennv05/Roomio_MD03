@@ -71,10 +71,10 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = React.memo(({
         )}
         <TouchableOpacity style={styles.cameraButton} onPress={onChangeAvatar}>
           <LinearGradient
-            colors={['#BAFD00', '#9FE600']}
+            colors={['#17190F', '#17190F']}
             style={styles.cameraGradient}>
             <Image
-              source={{uri: Icons.IconEditWhite}}
+              source={{uri: Icons.IconCamera}}
               style={styles.cameraIcon}
             />
           </LinearGradient>
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   cameraIcon: {
     width: scale(16),
     height: scale(16),
-    tintColor: Colors.white,
+    tintColor: Colors.limeGreen,
   },
   userName: {
     fontSize: responsiveFont(24),
