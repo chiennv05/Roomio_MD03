@@ -9,6 +9,7 @@ import {
   responsiveSpacing,
   SCREEN,
 } from '../../../../utils/responsive';
+import {Images} from '../../../../assets/images';
 
 interface ItemCotenantsProps {
   item: CoTenant;
@@ -16,27 +17,37 @@ interface ItemCotenantsProps {
 }
 
 const ItemCotenants: React.FC<ItemCotenantsProps> = ({item, onRemove}) => {
+  const avatarSource = item.avatar || Images.ImageAvatarDefault;
   return (
-    <TouchableOpacity
-      style={styles.chip}
-      onLongPress={() => onRemove(item.username)}
-      activeOpacity={0.85}>
-      <View style={styles.containerContent}>
-        <Text style={styles.chipText}>Username: {item.username}</Text>
-        <Text style={styles.chipText}>Tên: {item.fullName}</Text>
-        <Text style={styles.chipText}>Email: {item.email}</Text>
-        <Text style={styles.chipText}>
-          Số điện thoại: {item.identityNumber}
-        </Text>
+    <View style={styles.chip}>
+      <View style={styles.titleContainer}>
+        <Image source={{uri: avatarSource}} style={styles.imageAvater} />
+        <View style={styles.conainerNameandFullName}>
+          <Text style={styles.textFullName}>{item.fullName}</Text>
+          <Text style={styles.textUsername}>@{item.username}</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.chipRemove}
+          onPress={() => onRemove(item.username)}
+          hitSlop={{top: 8, right: 8, bottom: 8, left: 8}}>
+          <Image
+            source={{uri: Icons.IconTrashCanRed}}
+            style={styles.chipRemoveIcon}
+          />
+        </TouchableOpacity>
       </View>
 
-      <TouchableOpacity
-        style={styles.chipRemove}
-        onPress={() => onRemove(item.username)}
-        hitSlop={{top: 8, right: 8, bottom: 8, left: 8}}>
-        <Image source={{uri: Icons.IconDelete}} style={styles.chipRemoveIcon} />
-      </TouchableOpacity>
-    </TouchableOpacity>
+      <View style={styles.containerContent}>
+        <View style={styles.containerTextRow}>
+          <Text style={styles.textLabel}>Email : </Text>
+          <Text style={styles.textUsername}>{item.email}</Text>
+        </View>
+        <View style={styles.containerTextRow}>
+          <Text style={styles.textLabel}>Số điện thoại : </Text>
+          <Text style={styles.textUsername}>{item.phone}</Text>
+        </View>
+      </View>
+    </View>
   );
 };
 
@@ -44,16 +55,11 @@ export default React.memo(ItemCotenants);
 
 const styles = StyleSheet.create({
   chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F7FAF2',
-    borderWidth: 1,
-    borderColor: '#E6F0D8',
-    paddingHorizontal: responsiveSpacing(12),
-    paddingVertical: responsiveSpacing(8),
-    borderRadius: responsiveSpacing(22),
+    width: SCREEN.width,
+    backgroundColor: Colors.white,
+    paddingHorizontal: responsiveSpacing(20),
+    paddingVertical: responsiveSpacing(16),
     marginBottom: responsiveSpacing(8),
-    width: SCREEN.width * 0.9,
   },
   chipText: {
     color: Colors.darkGreen,
@@ -61,11 +67,48 @@ const styles = StyleSheet.create({
   },
   chipRemove: {marginLeft: 8},
   chipRemoveIcon: {
-    width: responsiveIcon(24),
-    height: responsiveIcon(24),
-    tintColor: 'red',
+    width: responsiveIcon(32),
+    height: responsiveIcon(32),
   },
   containerContent: {
+    width: SCREEN.width,
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  imageAvater: {
+    width: responsiveIcon(66),
+    height: responsiveIcon(66),
+    borderRadius: responsiveIcon(66) / 2,
+    marginRight: responsiveSpacing(12),
+  },
+  textFullName: {
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveIcon(20),
+    color: Colors.black,
+    fontWeight: '700',
+    marginBottom: responsiveSpacing(4),
+  },
+  conainerNameandFullName: {
     flex: 1,
+  },
+  textUsername: {
+    fontFamily: Fonts.Roboto_Regular,
+    fontSize: responsiveIcon(16),
+    color: Colors.dearkOlive,
+    fontWeight: '400',
+  },
+  containerTextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: responsiveSpacing(8),
+  },
+  textLabel: {
+    fontFamily: Fonts.Roboto_Regular,
+    fontSize: responsiveIcon(16),
+    color: Colors.darkGray,
+    fontWeight: '400',
+    width: responsiveSpacing(120),
   },
 });

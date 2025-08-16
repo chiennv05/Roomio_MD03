@@ -1,5 +1,4 @@
 import api from '../../api/api';
-import {clearFormDataFromStorage} from '../../screens/ChuTro/AddRoom/utils/asyncStorageUtils';
 import {
   CreateContractPayload,
   CreateContractPayloadWithoutNotification,
@@ -12,7 +11,6 @@ export const createContractFromNotification = async (
 ) => {
   try {
     const response = await api.post('/contract/create-from-notification', data);
-    console.log(response);
     if (!response.data || !response.data.success) {
       throw new Error(
         response.data?.message || 'Tạo hợp đồng không thành công',
@@ -53,6 +51,7 @@ export const getMyContracts = async (params?: {
   page?: number;
   limit?: number;
   status?: string;
+  roomName?: string;
 }) => {
   try {
     const queryParams = new URLSearchParams();
@@ -67,6 +66,9 @@ export const getMyContracts = async (params?: {
     if (params?.status) {
       queryParams.append('status', params.status);
     }
+    if (params?.roomName) {
+      queryParams.append('roomName', params.roomName);
+    }
 
     const url = `/contract/my-contracts${
       queryParams.toString() ? `?${queryParams.toString()}` : ''
@@ -75,7 +77,6 @@ export const getMyContracts = async (params?: {
     const response = await api.get(url);
     return response.data;
   } catch (error: any) {
-    console.error('Error fetching user contracts:', error);
     throw {
       message: error.response?.data?.message || error.message,
       status: error.response?.status,
@@ -88,7 +89,7 @@ export const getContractDetail = async (contractId: string) => {
   try {
     // Gọi đúng endpoint API
     const response = await api.get(`/contract/${contractId}`);
-
+    console.log('chi tiệt hợp đồng', response);
     // Trả về response đúng như API
     return response.data;
   } catch (error: any) {

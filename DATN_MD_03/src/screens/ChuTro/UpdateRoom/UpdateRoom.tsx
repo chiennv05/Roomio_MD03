@@ -42,7 +42,6 @@ import LocationModal, {
 import {CustomService} from '../../../types';
 import {useCustomAlert} from '../../../hooks/useCustomAlrert';
 import CustomAlertModal from '../../../components/CustomAlertModal';
-import {SelectedAddress} from '../../../types/Address';
 import ImagePicker from 'react-native-image-crop-picker';
 import {
   deleteRoomPhoto,
@@ -449,9 +448,9 @@ export default function UpdateRoom() {
   };
 
   const handleSelectLocation = (item: SelectedAddressNew) => {
-    const fullProvinceName = item.province?.province_name || '';
-    const districtName = item.district?.district_name || '';
-    const wardName = item.ward?.ward_name || '';
+    const fullProvinceName = item.province?.name || '';
+    const districtName = item.district?.name || '';
+    const wardName = item.ward?.name || '';
     const provinceName = fullProvinceName.replace(/^Tỉnh\s|^Thành phố\s/i, '');
 
     const fullAddress = [provinceName, districtName, wardName]

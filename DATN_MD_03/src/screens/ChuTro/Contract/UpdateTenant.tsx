@@ -9,6 +9,7 @@ import {Fonts} from '../../../theme/fonts';
 import {Icons} from '../../../assets/icons';
 import {ItemInput, UIHeader} from '../MyRoom/components';
 import {
+  responsiveFont,
   responsiveIcon,
   responsiveSpacing,
   scale,
@@ -60,11 +61,6 @@ const UpdateTenant = () => {
   const canAddMore = useMemo(
     () => cotenants.length < maxCoTenants,
     [cotenants.length, maxCoTenants],
-  );
-  const addBtnSize = responsiveIcon(40);
-  const inputWidth = useMemo(
-    () => SCREEN.width - scale(16) * 2 - scale(12) * 2 - addBtnSize - scale(12),
-    [addBtnSize],
   );
   const handleAddTenant = useCallback(async () => {
     try {
@@ -238,13 +234,16 @@ const UpdateTenant = () => {
             Tối đa {maxOccupancy} người (bao gồm người đại diện)
           </Text>
         </View>
+        <View style={styles.containerTextLabel}>
+          <Text style={styles.sectionTitle}>Thêm người ở cùng</Text>
+        </View>
         <View style={styles.inputCard}>
           <View style={styles.inputSection}>
             <ItemInput
               value={newUsername}
               onChangeText={setNewUsername}
               placeholder="Nhập username..."
-              width={Math.max(scale(180), inputWidth)}
+              width={SCREEN.width * 0.8}
               editable={!selectedContractLoading && canAddMore}
             />
             <TouchableOpacity
@@ -263,8 +262,9 @@ const UpdateTenant = () => {
             <ItemHelpText text="Bạn có thể thêm nhiều username cùng lúc. Ngăn cách mỗi tên bằng dấu phẩy." />
           )}
         </View>
-
-        <Text style={styles.sectionTitle}>Danh sách người ở cùng</Text>
+        <View style={styles.containerTextLabel}>
+          <Text style={styles.sectionTitle}>Danh sách người ở cùng</Text>
+        </View>
         {cotenants.length === 0 ? (
           <Text style={styles.emptyText}>Chưa có người ở cùng</Text>
         ) : (
@@ -300,7 +300,6 @@ const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: Colors.white},
   content: {
     flex: 1,
-    padding: scale(16),
     backgroundColor: Colors.backgroud,
   },
   counterBadge: {
@@ -309,12 +308,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: scale(10),
     paddingVertical: scale(6),
   },
+  containerTextLabel: {
+    width: SCREEN.width,
+    backgroundColor: Colors.white,
+  },
   summaryCard: {
     backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#EFEFEF',
+    padding: responsiveSpacing(16),
     marginBottom: 12,
   },
   summaryRow: {
@@ -326,6 +326,7 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
+    fontSize: responsiveFont(16),
   },
   summaryHint: {
     marginTop: 6,
@@ -351,7 +352,6 @@ const styles = StyleSheet.create({
   inputSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
     marginBottom: 20,
   },
   addFab: {
@@ -375,20 +375,15 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Bold,
     fontSize: scale(16),
     marginBottom: verticalScale(8),
+    color: Colors.black,
+    marginStart: responsiveSpacing(20),
+    marginTop: responsiveSpacing(16),
   },
   inputCard: {
     backgroundColor: Colors.white,
-    borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 12,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#EFEFEF',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 1,
   },
   emptyText: {
     textAlign: 'center',

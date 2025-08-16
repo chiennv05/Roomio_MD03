@@ -685,4 +685,8 @@ export const Icons = {
     ios: 'icon_arrow_right_green',
     android: 'asset:/icons/icon_arrow_right_green.png',
   }),
+  IconTrashCanRed: Platform.select({
+    ios: 'icon_trash_can_red',
+    android: 'asset:/icons/icon_trash_can_red.png',
+  }),
 };

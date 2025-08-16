@@ -6,12 +6,11 @@ import {
   ScrollView,
   SafeAreaView,
   StatusBar,
-  TouchableOpacity,
   Animated,
   Easing,
+  Image,
 } from 'react-native';
-import {useRoute, RouteProp, useNavigation, useFocusEffect} from '@react-navigation/native';
-import {StackNavigationProp} from '@react-navigation/stack';
+import {useRoute, RouteProp, useFocusEffect} from '@react-navigation/native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useSelector, useDispatch} from 'react-redux';
 import {RootState, AppDispatch} from '../../../store';
@@ -27,7 +26,13 @@ import {formatDate} from '../../../utils/formatDate';
 import HeaderWithBack from './components/HeaderWithBack';
 import LoadingAnimation from '../../../components/LoadingAnimation';
 
-const StatusBadge = ({text, type = 'success'}: {text: string; type?: 'success' | 'error' | 'neutral'}) => (
+const StatusBadge = ({
+  text,
+  type = 'success',
+}: {
+  text: string;
+  type?: 'success' | 'error' | 'neutral';
+}) => (
   <View
     style={[
       styles.badge,
@@ -35,7 +40,10 @@ const StatusBadge = ({text, type = 'success'}: {text: string; type?: 'success' |
       type === 'error' && {backgroundColor: Colors.error},
       type === 'neutral' && styles.badgeNeutral,
     ]}>
-    <Text style={[styles.badgeText, type === 'neutral' && styles.badgeNeutralText]}>{text}</Text>
+    <Text
+      style={[styles.badgeText, type === 'neutral' && styles.badgeNeutralText]}>
+      {text}
+    </Text>
   </View>
 );
 
@@ -43,17 +51,15 @@ const TenantDetailScreen = () => {
   const route = useRoute<RouteProp<RootStackParamList, 'TenantDetail'>>();
   const {tenantId} = route.params;
   const insets = useSafeAreaInsets();
-  const navigation =
-    useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const dispatch = useDispatch<AppDispatch>();
   const token = useSelector((state: RootState) => state.auth.token);
-  const {selectedTenant, activeContract, detailLoading} =
-    useSelector((state: RootState) => state.tenant);
+  const {selectedTenant, activeContract, detailLoading} = useSelector(
+    (state: RootState) => state.tenant,
+  );
 
   // Animated occupancy progress
   const progressAnim = React.useRef(new Animated.Value(0)).current;
-
   useEffect(() => {
     if (token && tenantId) {
       dispatch(fetchTenantDetails({token, tenantId}));
@@ -73,7 +79,11 @@ const TenantDetailScreen = () => {
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
-  }, [activeContract?.contractInfo?.tenantCount, activeContract?.contractInfo?.maxOccupancy, progressAnim]);
+  }, [
+    activeContract?.contractInfo?.tenantCount,
+    activeContract?.contractInfo?.maxOccupancy,
+    progressAnim,
+  ]);
 
   // Refetch khi màn hình quay lại để đồng bộ người ở cùng sau khi chỉnh sửa
   useFocusEffect(
@@ -94,7 +104,6 @@ const TenantDetailScreen = () => {
       <Text style={styles.value}>{value ?? 'Không có'}</Text>
     </View>
   );
-
 
   if (!selectedTenant) {
     return (
@@ -143,9 +152,12 @@ const TenantDetailScreen = () => {
           {/* Tổng quan đẹp mắt: Phòng, sức chứa, số đang ở, chip thành viên */}
           {activeContract && (
             <View style={styles.summaryCard}>
-              <Text style={styles.summaryTitle}>Phòng {activeContract.contractInfo.roomNumber}</Text>
+              <Text style={styles.summaryTitle}>
+                Phòng {activeContract.contractInfo.roomNumber}
+              </Text>
               <Text style={styles.summarySubTitle}>
-                {activeContract.contractInfo.tenantCount}/{activeContract.contractInfo.maxOccupancy} người đang ở
+                {activeContract.contractInfo.tenantCount}/
+                {activeContract.contractInfo.maxOccupancy} người đang ở
               </Text>
               <View style={styles.progressContainer}>
                 <Animated.View
@@ -163,23 +175,54 @@ const TenantDetailScreen = () => {
 
               <View style={styles.peopleRow}>
                 <View style={[styles.personChip, styles.representativeChip]}>
-                  <Text style={[styles.personInitial]}>
-                    {(selectedTenant.fullName || selectedTenant.username || 'N')
-                      .charAt(0)
-                      .toUpperCase()}
-                  </Text>
+                  {selectedTenant.avatar ? (
+                    <Image
+                      source={{uri: selectedTenant.avatar}}
+                      style={styles.avtCotenaant}
+                    />
+                  ) : (
+                    <Text style={[styles.personInitial]}>
+                      {(
+                        selectedTenant.fullName ||
+                        selectedTenant.username ||
+                        'N'
+                      )
+                        .charAt(0)
+                        .toUpperCase()}
+                    </Text>
+                  )}
                   <View style={styles.personInfo}>
-                    <Text style={[styles.personName, {color: Colors.white}]}>Đại diện: {selectedTenant.fullName || selectedTenant.username}</Text>
-                    <Text style={[styles.personMeta, {color: Colors.white}]}>SĐT {selectedTenant.phone}</Text>
+                    <Text style={[styles.personName, {color: Colors.white}]}>
+                      Đại diện:{' '}
+                      {selectedTenant.fullName || selectedTenant.username}
+                    </Text>
+                    <Text style={[styles.personMeta, {color: Colors.white}]}>
+                      SĐT {selectedTenant.phone}
+                    </Text>
                   </View>
                 </View>
 
                 {activeContract.contractInfo.coTenants?.map((co: any, idx) => (
                   <View key={`cotenant-${idx}`} style={styles.personChip}>
-                    <Text style={styles.personInitial}>{((co.fullName || co.username || 'N') as string).charAt(0).toUpperCase()}</Text>
+                    {co.avatar ? (
+                      <Image
+                        source={{uri: co.avatar}}
+                        style={styles.avtCotenaant}
+                      />
+                    ) : (
+                      <Text style={styles.personInitial}>
+                        {((co.fullName || co.username || 'N') as string)
+                          .charAt(0)
+                          .toUpperCase()}
+                      </Text>
+                    )}
                     <View style={styles.personInfo}>
-                      <Text style={styles.personName}>{co.fullName || co.username || 'Không rõ'}</Text>
-                      <Text style={styles.personMeta}>{co.phone || 'SĐT: -'}</Text>
+                      <Text style={styles.personName}>
+                        {co.fullName || co.username || 'Không rõ'}
+                      </Text>
+                      <Text style={styles.personMeta}>
+                        {co.phone || 'SĐT: -'}
+                      </Text>
                     </View>
                   </View>
                 ))}
@@ -189,7 +232,7 @@ const TenantDetailScreen = () => {
           {/* Bỏ phần Thông tin phòng hiện tại theo yêu cầu */}
 
           {/* 2) Thông tin người đại diện (người thuê chính) */}
-            <View style={[styles.section, styles.card]}>
+          <View style={[styles.section, styles.card]}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionAccent} />
               <Text style={styles.sectionTitle}>Thông tin người đại diện</Text>
@@ -209,45 +252,85 @@ const TenantDetailScreen = () => {
             <View style={[styles.section, styles.card]}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionAccent} />
-                <Text style={styles.sectionTitle}>Thông tin người ở cùng phòng</Text>
+                <Text style={styles.sectionTitle}>
+                  Thông tin người ở cùng phòng
+                </Text>
                 <View style={styles.headerRight}>
                   <StatusBadge
-                    text={`${activeContract.contractInfo.coTenants?.length || 0} người`}
+                    text={`${
+                      activeContract.contractInfo.coTenants?.length || 0
+                    } người`}
                     type="neutral"
                   />
                 </View>
               </View>
-              <TouchableOpacity
-                style={styles.primaryCta}
-                onPress={() => {
-                  navigation.navigate('UpdateTenant', {
-                    contractId: (activeContract as any)._id,
-                    existingTenants:
-                      activeContract.contractInfo.coTenants || [],
-                    maxOccupancy: activeContract.contractInfo.maxOccupancy,
-                  });
-                }}>
-                <Text style={styles.primaryCtaText}>Thêm / Xóa người ở cùng</Text>
-              </TouchableOpacity>
 
               {activeContract.contractInfo.coTenants?.map((coTenant, index) => (
                 <View key={index} style={styles.coTenantCard}>
                   <View style={styles.coHeaderRow}>
-                    <View style={styles.coAvatar}>
-                      <Text style={styles.coAvatarText}>{((coTenant as any).fullName || coTenant.username || 'N').charAt(0).toUpperCase()}</Text>
+                    <View
+                      style={[
+                        styles.coAvatar,
+                        {
+                          backgroundColor: coTenant.avatar
+                            ? Colors.white
+                            : Colors.limeGreen,
+                        },
+                      ]}>
+                      {coTenant.avatar ? (
+                        <Image
+                          source={{uri: coTenant.avatar}}
+                          style={styles.avtCotenaant}
+                        />
+                      ) : (
+                        <Text style={styles.coAvatarText}>
+                          {(
+                            (coTenant as any).fullName ||
+                            coTenant.username ||
+                            'N'
+                          )
+                            .charAt(0)
+                            .toUpperCase()}
+                        </Text>
+                      )}
                     </View>
                     <View style={styles.flex1}>
-                      <Text style={styles.coName}>{(coTenant as any).fullName || coTenant.username || 'Không rõ'}</Text>
-                      <Text style={styles.coSub}>{coTenant.phone || 'SĐT: -'}</Text>
+                      <Text style={styles.coName}>
+                        {(coTenant as any).fullName ||
+                          coTenant.username ||
+                          'Không rõ'}
+                      </Text>
+                      <Text style={styles.coSub}>
+                        {coTenant.phone || 'SĐT: -'}
+                      </Text>
                     </View>
                   </View>
                   <View style={styles.coDivider} />
-                  {renderInfoRow('Họ tên:', (coTenant as any).fullName || coTenant.username || 'Không có')}
-                  {renderInfoRow('Tên đăng nhập:', coTenant.username || 'Không có')}
-                  {renderInfoRow('Số điện thoại:', coTenant.phone || 'Không có')}
+                  {renderInfoRow(
+                    'Họ tên:',
+                    (coTenant as any).fullName ||
+                      coTenant.username ||
+                      'Không có',
+                  )}
+                  {renderInfoRow(
+                    'Tên đăng nhập:',
+                    coTenant.username || 'Không có',
+                  )}
+                  {renderInfoRow(
+                    'Số điện thoại:',
+                    coTenant.phone || 'Không có',
+                  )}
                   {renderInfoRow('Email:', coTenant.email || 'Không có')}
-                  {renderInfoRow('CCCD:', coTenant.identityNumber || 'Không có')}
-                  {renderInfoRow('Ngày sinh:', coTenant.birthDate ? formatDate(coTenant.birthDate) : 'Không có')}
+                  {renderInfoRow(
+                    'CCCD:',
+                    coTenant.identityNumber || 'Không có',
+                  )}
+                  {renderInfoRow(
+                    'Ngày sinh:',
+                    coTenant.birthDate
+                      ? formatDate(coTenant.birthDate)
+                      : 'Không có',
+                  )}
                   {renderInfoRow('Địa chỉ:', coTenant.address || 'Không có')}
                 </View>
               ))}
@@ -460,7 +543,6 @@ const styles = StyleSheet.create({
     width: scale(36),
     height: scale(36),
     borderRadius: scale(18),
-    backgroundColor: Colors.limeGreen,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: scale(10),
@@ -541,6 +623,12 @@ const styles = StyleSheet.create({
     color: Colors.black,
     fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(14),
+  },
+  avtCotenaant: {
+    width: scale(36),
+    height: scale(36),
+    borderRadius: scale(18),
+    marginRight: scale(8),
   },
 });
 

@@ -46,6 +46,7 @@ export interface TenantDetail {
   identityNumber: string;
   phone: string;
   address: string;
+  avatar: string | null;
 }
 
 export interface ContractHistoryItem {

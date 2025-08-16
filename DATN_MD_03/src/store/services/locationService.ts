@@ -1,5 +1,12 @@
 import api from '../../api/api';
-import {Province, District, MAIN_CITY_CODES, RawDistrict, RawProvince} from '../../types/Address';
+import {
+  Province,
+  District,
+  MAIN_CITY_CODES,
+  RawDistrict,
+  RawProvince,
+  Ward,
+} from '../../types/Address';
 
 // API endpoints: sử dụng BASE_URL từ configs để dễ đổi IP duy nhất
 import {API_CONFIG} from '../../configs';
@@ -9,7 +16,7 @@ const BASE_LOCATION_URL = `${API_CONFIG.BASE_URL}/api/locations`;
 
 export async function fetchCitiesOnly(): Promise<Province[]> {
   const url = `${BASE_LOCATION_URL}/provinces`;
-  const res = await api.get<RawProvince[]>(url, { timeout: 8000 });
+  const res = await api.get<RawProvince[]>(url, {timeout: 8000});
 
   if ('isError' in res) {
     throw {message: res.message, status: res.status};
@@ -31,7 +38,10 @@ export async function fetchCitiesOnly(): Promise<Province[]> {
     // Sắp xếp theo thứ tự mong muốn
     .sort((a, b) => {
       const order = MAIN_CITY_CODES as readonly string[];
-      return order.indexOf(String(a.code).padStart(2, '0')) - order.indexOf(String(b.code).padStart(2, '0'));
+      return (
+        order.indexOf(String(a.code).padStart(2, '0')) -
+        order.indexOf(String(b.code).padStart(2, '0'))
+      );
     });
 
   return provinces;
@@ -43,7 +53,7 @@ export async function fetchDistrictsByProvince(
 ): Promise<District[]> {
   const codeStr = String(provinceCode).padStart(2, '0');
   const url = `${BASE_LOCATION_URL}/provinces/${codeStr}/districts`;
-  const res = await api.get<RawDistrict[]>(url, { timeout: 8000 });
+  const res = await api.get<RawDistrict[]>(url, {timeout: 8000});
 
   if ('isError' in res) {
     throw {message: res.message, status: res.status};
@@ -58,5 +68,28 @@ export async function fetchDistrictsByProvince(
 
   return districts;
 }
+export async function fetchWardsByDistrict(
+  districtCode: number,
+): Promise<Ward[]> {
+  const codeStr = String(districtCode).padStart(3, '0');
+  console.log('fetchWardsByDistrict codeStr:', codeStr);
+  const url = `${BASE_LOCATION_URL}/districts/${codeStr}/wards`;
+  console.log(url);
+  const res = await api.get<Ward[]>(url, {timeout: 8000});
 
+  if ('isError' in res) {
+    throw {message: res.message, status: res.status};
+  }
 
+  console.log('res', res);
+
+  const wards = (res.data || []).map<Ward>(w => ({
+    name: w.name,
+    code: Number(w.code),
+    division_type: w.division_type,
+    codename: w.codename,
+    district_code: districtCode,
+  }));
+
+  return wards;
+}

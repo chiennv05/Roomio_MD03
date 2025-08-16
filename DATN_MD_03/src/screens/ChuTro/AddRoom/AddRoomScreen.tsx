@@ -393,7 +393,9 @@ export default function AddRoomScreen() {
 
   //modal add
   const handleSaveModal = (item: ItemSeviceOptions) => {
-    if (!item) {return;}
+    if (!item) {
+      return;
+    }
 
     const isTemplateKhac = item.value === 'khac';
     const isNew = isTemplateKhac || item.id === undefined || item.id === 3;
@@ -465,7 +467,9 @@ export default function AddRoomScreen() {
     setItemServiceEdit(undefined);
   };
   const handleDeleteService = (item: ItemSeviceOptions) => {
-    if (!item) {return;}
+    if (!item) {
+      return;
+    }
 
     showConfirm(
       `Bạn có chắc chắn muốn xóa dịch vụ "${item.label}" không?`,
@@ -672,9 +676,9 @@ export default function AddRoomScreen() {
     setVisibleLocationModal(false);
   };
   const handleSelectLocation = (item: SelectedAddressNew) => {
-    const fullProvinceName = item.province?.province_name || '';
-    const districtName = item.district?.district_name || '';
-    const wardName = item.ward?.ward_name || '';
+    const fullProvinceName = item.province?.name || '';
+    const districtName = item.district?.name || '';
+    const wardName = item.ward?.name || '';
     const provinceName = fullProvinceName.replace(/^Tỉnh\s|^Thành phố\s/i, '');
     // Ghép địa chỉ đầy đủ
     const fullAddress = [provinceName, districtName, wardName]

@@ -802,7 +802,7 @@ const ContractDetailScreen = () => {
           />
           <InfoRow
             label="Địa chỉ"
-            value={contract.contractInfo.tenantAddress}
+            value={contract.contractInfo.tenantAddress || 'Chưa cập nhật'}
           />
         </View>
 

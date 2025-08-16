@@ -35,11 +35,13 @@ export const getLandlordRooms = createAsyncThunk(
       approvalStatus = '',
       page = 1,
       limit = 10,
+      roomName = '',
     }: {
       status?: string;
       approvalStatus?: string;
       page?: number;
       limit?: number;
+      roomName?: string;
     },
     {rejectWithValue},
   ) => {
@@ -49,6 +51,7 @@ export const getLandlordRooms = createAsyncThunk(
         approvalStatus,
         page,
         limit,
+        roomName,
       });
       if (!res?.success) {
         return rejectWithValue(res?.message || 'Thất bại');
@@ -66,7 +69,6 @@ export const createLandlordRoom = createAsyncThunk(
   async (room: Room, {rejectWithValue}) => {
     try {
       const res = await createLandlordRoomsService(room);
-      console.log(res);
       return res.data.room; // Giả sử API trả về room data trong trường hợp thành công
     } catch (err: any) {
       return rejectWithValue(err.message || 'Tạo phòng thất bại');
@@ -93,7 +95,6 @@ export const updateLandlordRoom = createAsyncThunk(
   async ({roomId, room}: {roomId: string; room: Room}, {rejectWithValue}) => {
     try {
       const res = await updateLandlordRoomService(roomId, room);
-      console.log(`Cập nhật phòng với ID ${roomId}:`, res.data);
       return res.data;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Lỗi cập nhật phòng');

@@ -1,6 +1,7 @@
 import React from 'react';
-import {View, Text, StyleSheet, Switch} from 'react-native';
+import {View, Text, StyleSheet} from 'react-native';
 import {CustomService} from '../../../../types';
+import Switch from './Switch';
 
 interface Props {
   service: CustomService;
@@ -11,7 +12,7 @@ interface Props {
 const ServiceItem: React.FC<Props> = ({service, enabled, onToggle}) => {
   return (
     <View style={styles.container}>
-      <Switch value={enabled} onValueChange={() => onToggle(service)} />
+      <Switch value={enabled} onToggle={() => onToggle(service)} />
       <View style={{flex: 1}}>
         <Text style={styles.name}>
           {service.name} - {service.price.toLocaleString()}đ (

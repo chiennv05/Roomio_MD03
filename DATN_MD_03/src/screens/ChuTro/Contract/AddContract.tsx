@@ -44,7 +44,7 @@ export default function AddContract() {
   } = useCustomAlert();
 
   // State variables
-  const [contractTerm, setContractTerm] = useState<number>(12);
+  const [contractTerm, setContractTerm] = useState<string>('');
   const [startDate, setStartDate] = useState('');
   const [rules, setRules] = useState('Hạn thu tiền quá 5 ngày sẽ bị phạt');
   const [additionalTerms, setAdditionalTerms] = useState(
@@ -67,7 +67,7 @@ export default function AddContract() {
 
   const handleContractTermConfirm = (selectedDate: Date) => {
     const months = calculateContractTermFromNow(selectedDate);
-    setContractTerm(months);
+    setContractTerm(months.toString());
     setContractTermDate(selectedDate);
     setOpenContractTermPicker(false);
   };
@@ -81,7 +81,7 @@ export default function AddContract() {
 
   const handleAddContract = () => {
     const formData: ContractFormData = {
-      contractTerm,
+      contractTerm: Number(contractTerm),
       startDate,
       rules: cleanString(rules),
       additionalTerms: cleanString(additionalTerms),
@@ -169,11 +169,10 @@ export default function AddContract() {
         <ItemInput
           placeholder="Thời hạn hợp đồng (tháng)"
           value={contractTerm.toString()}
-          onChangeText={text => setContractTerm(Number(text))}
+          onChangeText={text => setContractTerm(text)}
           editable={true}
           keyboardType="numeric"
         />
-        <ItemHelpText text="Nhập thời hạn hợp đồng bằng số tháng. Ví dụ: '12' cho 1 năm." />
         {/* Start Date Input with DatePicker */}
         <ItemInput
           placeholder="Ngày bắt đầu"
@@ -182,8 +181,6 @@ export default function AddContract() {
           editable={false}
           onPress={() => setOpenStartDatePicker(true)}
         />
-
-        <ItemHelpText text="Chọn ngày bắt đầu hợp đồng. Ngày này sẽ được sử dụng để tính thời hạn hợp đồng." />
 
         <ItemInput
           placeholder="Người cùng thuê (cách nhau bằng dấu phẩy)"
@@ -272,7 +269,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   buttonContainer: {
-    marginTop: responsiveSpacing(60),
+    marginTop: responsiveSpacing(20),
     paddingBottom: responsiveSpacing(20),
   },
 

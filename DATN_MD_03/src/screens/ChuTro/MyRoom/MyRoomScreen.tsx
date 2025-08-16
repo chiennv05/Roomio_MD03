@@ -1,12 +1,10 @@
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   View,
   FlatList,
   Image,
   StyleSheet,
   TouchableOpacity,
-  NativeScrollEvent,
-  NativeSyntheticEvent,
   SafeAreaView,
   StatusBar,
   RefreshControl,
@@ -31,30 +29,60 @@ import {ALL_ROOM_STATUSES} from './constants/roomStatus';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../../store';
 import {getLandlordRooms} from '../../../store/slices/landlordRoomsSlice';
-import {LoadingAnimation} from '../../../components';
+import {CustomAlertModal, LoadingAnimation} from '../../../components';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
-import Pagination from '../Contract/components/Pagination'; // tùy đường dẫn của bạn
+import EmptyRoom from './components/EmptyRoom';
+import {useCustomAlert} from '../../../hooks/useCustomAlrert';
+import {
+  loadPlans,
+  loadSubscriptions,
+} from '../../../store/slices/subscriptionSlice';
 
 export default function MyRoomScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const dispatch = useDispatch<AppDispatch>();
-
+  const [loadingMore, setLoadingMore] = useState(false);
+  const token = useSelector((s: RootState) => s.auth.token);
   const {rooms, loading, pagination} = useSelector(
-    (state: RootState) => state.landlordRooms as any,
+    (state: RootState) => state.landlordRooms,
+  );
+  const {
+    alertConfig,
+    visible: alertVisible,
+    hideAlert,
+    showConfirm,
+  } = useCustomAlert();
+  const {total} = useSelector(
+    (state: RootState) => state.landlordRooms.pagination || {total: 0},
   );
   const {user} = useSelector((state: RootState) => state.auth);
 
   const [searchText, setSearchText] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
 
+  useEffect(() => {
+    dispatch(loadPlans());
+    if (token) {
+      dispatch(loadSubscriptions(token));
+    }
+  }, [dispatch, token]);
+  const subscription = useSelector((state: RootState) => state.subscription);
+
+  // Key plan hiện tại (string hoặc undefined)
+  const currentPlanKey = subscription.current?.plan ?? 'free';
+  // Lấy object plan đầy đủ
+  const currentPlanItem = subscription.plans.find(
+    p => p.key === currentPlanKey,
+  );
+
+  // Nếu không tìm thấy thì fallback Free
+  const effectivePlan =
+    currentPlanItem ?? subscription.plans.find(p => p.key === 'free') ?? null;
   // pagination state
   const [page, setPage] = useState(1);
   const [itemsPerPage] = useState(10);
-
-  // animated filter
-  const scrollOffset = useRef(0);
   const filterHeight = useSharedValue(50);
   const filterOpacity = useSharedValue(1);
 
@@ -72,12 +100,6 @@ export default function MyRoomScreen() {
     }: {pageToLoad?: number; limit?: number; status?: string} = {}) => {
       if (!user?.auth_token) return;
       const statusToSend = status === 'all' ? '' : status;
-      // debug: kiểm tra payload gửi
-      console.log('[MyRoomScreen] loadRooms ->', {
-        page: pageToLoad,
-        limit,
-        status: statusToSend,
-      });
       await dispatch(
         // getLandlordRooms thunk should accept an object with token & params
         getLandlordRooms({
@@ -86,10 +108,18 @@ export default function MyRoomScreen() {
           approvalStatus: '',
           page: pageToLoad,
           limit,
+          roomName: searchText,
         } as any),
       );
     },
-    [dispatch, user?.auth_token, page, itemsPerPage, selectedFilter],
+    [
+      page,
+      itemsPerPage,
+      selectedFilter,
+      user?.auth_token,
+      dispatch,
+      searchText,
+    ],
   );
 
   // Gọi load khi user.token, selectedFilter hoặc page thay đổi
@@ -98,40 +128,10 @@ export default function MyRoomScreen() {
     // reset to page 1 when filter changed handled below
   }, [loadRooms, page, selectedFilter, itemsPerPage]);
 
-  // scroll behavior: ẩn/hiện filter
-  const handleScroll = useCallback(
-    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const currentOffset = event.nativeEvent.contentOffset.y;
-      const direction = currentOffset > scrollOffset.current ? 'down' : 'up';
-      if (direction === 'down') {
-        filterHeight.value = 0;
-        filterOpacity.value = 0;
-      } else {
-        filterHeight.value = 50;
-        filterOpacity.value = 1;
-      }
-      scrollOffset.current = currentOffset;
-    },
-    [filterHeight, filterOpacity],
-  );
-
   const handleClickFilter = useCallback((value: string) => {
     setSelectedFilter(value);
     setPage(1); // khi đổi filter, load lại từ trang 1
   }, []);
-
-  // local filtering/search on current page data
-  const filteredRooms = useMemo(() => {
-    return (rooms || []).filter((room: any) => {
-      const matchFilter =
-        selectedFilter === 'all' || room.status === selectedFilter;
-      const matchSearch = room?.roomNumber
-        ?.toString()
-        .toLowerCase()
-        .includes(searchText.toLowerCase());
-      return matchFilter && matchSearch;
-    });
-  }, [rooms, selectedFilter, searchText]);
 
   const handleClickItemRooms = useCallback(
     (id: string) => {
@@ -139,19 +139,37 @@ export default function MyRoomScreen() {
     },
     [navigation],
   );
-
   const handleGoback = () => navigation.goBack();
-  const handleAddRoom = () => navigation.navigate('AddRooom', {});
+  const handleAddRoom = () => {
+    if (effectivePlan && total >= effectivePlan.maxActiveRooms) {
+      showConfirm(
+        `Bạn đã đạt giới hạn ${effectivePlan.maxActiveRooms} phòng trong gói ${effectivePlan.name}. Vui lòng nâng cấp gói để thêm phòng mới.`,
+        () => {
+          navigation.navigate('SubscriptionScreen');
+          hideAlert();
+        },
+        'Giới hạn phòng',
+        [
+          {
+            text: 'Nâng cấp',
+            onPress: () => {
+              navigation.navigate('SubscriptionScreen');
+              hideAlert();
+            },
+            style: 'default',
+          },
+          {
+            text: 'Hủy',
+            onPress: () => hideAlert(),
+            style: 'cancel',
+          },
+        ],
+      );
+      return;
+    }
 
-  // stable page change handler for Pagination
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      if (newPage < 1) return;
-      if (pagination?.totalPages && newPage > pagination.totalPages) return;
-      setPage(newPage);
-    },
-    [pagination?.totalPages],
-  );
+    navigation.navigate('AddRooom', {});
+  };
 
   // refresh pull-to-refresh
   const [refreshing, setRefreshing] = useState(false);
@@ -166,10 +184,27 @@ export default function MyRoomScreen() {
     setRefreshing(false);
   }, [loadRooms, itemsPerPage, selectedFilter]);
 
-  // debug pagination from store
-  useEffect(() => {
-    console.log('[MyRoomScreen] pagination ->', pagination);
-  }, [pagination]);
+  const loadMoreRooms = useCallback(async () => {
+    if (loadingMore || loading) return; // đang load thì bỏ qua
+    if (pagination && page >= pagination.totalPages) return; // hết dữ liệu rồi
+
+    setLoadingMore(true);
+    await loadRooms({
+      pageToLoad: page + 1,
+      limit: itemsPerPage,
+      status: selectedFilter,
+    });
+    setPage(prev => prev + 1);
+    setLoadingMore(false);
+  }, [
+    loadingMore,
+    loading,
+    pagination,
+    page,
+    itemsPerPage,
+    selectedFilter,
+    loadRooms,
+  ]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -216,17 +251,9 @@ export default function MyRoomScreen() {
 
         {/* Rooms list */}
         <View style={styles.containerListRooms}>
-          {loading && !refreshing ? (
-            <LoadingAnimation size="medium" color={Colors.limeGreen} />
-          ) : null}
-
           <FlatList
-            data={filteredRooms}
-            horizontal={false}
-            showsVerticalScrollIndicator={false}
+            data={rooms}
             keyExtractor={(_, index) => index.toString()}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
             renderItem={({item, index}) => (
               <ItemRoom
                 item={item}
@@ -234,6 +261,13 @@ export default function MyRoomScreen() {
                 index={index}
               />
             )}
+            ListEmptyComponent={
+              <EmptyRoom
+                loading={loading && !refreshing}
+                isSearching={!!searchText}
+                isFiltering={selectedFilter !== 'all'}
+              />
+            }
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -242,15 +276,11 @@ export default function MyRoomScreen() {
                 tintColor={Colors.limeGreen}
               />
             }
+            onEndReached={loadMoreRooms}
+            onEndReachedThreshold={0.5}
             ListFooterComponent={
-              // show pagination if server reports more than one page (or total>itemsPerPage)
-              pagination &&
-              (pagination.total > itemsPerPage || pagination.totalPages > 1) ? (
-                <Pagination
-                  currentPage={pagination.page}
-                  totalPages={pagination.totalPages}
-                  onPageChange={handlePageChange}
-                />
+              loadingMore ? (
+                <LoadingAnimation size="small" color={Colors.limeGreen} />
               ) : null
             }
           />
@@ -260,6 +290,16 @@ export default function MyRoomScreen() {
           <Image source={{uri: Icons.IconAdd}} style={styles.styleIcon} />
         </TouchableOpacity>
       </View>
+      {alertConfig && (
+        <CustomAlertModal
+          visible={alertVisible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          onClose={hideAlert}
+          type={alertConfig.type}
+          buttons={alertConfig.buttons}
+        />
+      )}
     </SafeAreaView>
   );
 }

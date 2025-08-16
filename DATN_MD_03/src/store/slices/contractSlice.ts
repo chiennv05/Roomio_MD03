@@ -51,7 +51,12 @@ const initialState: ContractState = {
 export const fetchMyContracts = createAsyncThunk(
   'contract/fetchMyContracts',
   async (
-    params: {page?: number; limit?: number; status?: string} = {},
+    params: {
+      page?: number;
+      limit?: number;
+      status?: string;
+      roomName?: string;
+    } = {},
     {rejectWithValue},
   ) => {
     try {
@@ -367,9 +372,18 @@ const contractSlice = createSlice({
       })
       .addCase(fetchMyContracts.fulfilled, (state, action) => {
         state.loading = false;
-        state.contracts = action.payload.contracts;
+
+        if (action.payload.pagination.page === 1) {
+          // Nếu là trang đầu tiên thì reset
+          state.contracts = action.payload.contracts;
+        } else {
+          // Nếu load tiếp thì nối vào
+          state.contracts = [...state.contracts, ...action.payload.contracts];
+        }
+
         state.pagination = action.payload.pagination;
       })
+
       .addCase(fetchMyContracts.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;

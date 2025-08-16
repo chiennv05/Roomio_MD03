@@ -82,16 +82,23 @@ const ItemRoom: React.FC<RoomCardProps> = ({item, onPress, index}) => {
           </View>
 
           {images.length > 1 && (
-            <View style={styles.dotsContainer}>
-              {images.map((_, idx) => (
-                <View
-                  key={idx}
-                  style={[
-                    styles.dot,
-                    currentImageIndex === idx && styles.activeDot,
-                  ]}
-                />
-              ))}
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBars}>
+                {images.map((_, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.progressBar,
+                      {
+                        backgroundColor:
+                          index === currentImageIndex
+                            ? '#BAFD00'
+                            : 'rgba(255, 255, 255, 0.4)',
+                      },
+                    ]}
+                  />
+                ))}
+              </View>
             </View>
           )}
         </View>
@@ -152,7 +159,7 @@ const styles = StyleSheet.create({
   },
   carouselContainer: {
     position: 'relative',
-    paddingTop: responsiveSpacing(12),
+    paddingTop: responsiveSpacing(16),
     paddingBottom: responsiveSpacing(1),
   },
   carouselItemContainer: {
@@ -172,47 +179,38 @@ const styles = StyleSheet.create({
   },
   priceOverlay: {
     position: 'absolute',
-    bottom: responsiveSpacing(36),
-    left: responsiveSpacing(20),
-    backgroundColor: Colors.limeGreen,
-    paddingHorizontal: responsiveSpacing(12),
-    paddingVertical: responsiveSpacing(8),
-    borderRadius: moderateScale(10),
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    bottom: responsiveSpacing(30),
+    left: responsiveSpacing(7),
+    paddingHorizontal: responsiveSpacing(10),
+    paddingVertical: responsiveSpacing(6),
+    borderRadius: moderateScale(8),
   },
   priceOverlayText: {
-    color: Colors.black,
+    color: Colors.limeGreen,
+    fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(14),
-    fontWeight: 'bold',
+    fontWeight: '700',
+    letterSpacing: -0.3,
   },
-  dotsContainer: {
+  progressContainer: {
     position: 'absolute',
-    bottom: responsiveSpacing(14),
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
+    bottom: responsiveSpacing(16),
+    left: responsiveSpacing(20),
+    right: responsiveSpacing(20),
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  dot: {
-    width: moderateScale(8),
-    height: moderateScale(8),
-    borderRadius: moderateScale(4),
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    marginHorizontal: responsiveSpacing(3),
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.1)',
+  progressBars: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    gap: responsiveSpacing(4),
   },
-  activeDot: {
-    backgroundColor: Colors.limeGreen,
-    width: moderateScale(28),
-    borderRadius: moderateScale(4),
-    borderColor: Colors.limeGreen,
+  progressBar: {
+    flex: 1,
+    height: moderateScale(4),
+    borderRadius: moderateScale(2),
   },
   info: {
     padding: responsiveSpacing(10),
@@ -253,7 +251,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: 1000,
     top: responsiveSpacing(10),
-    right: responsiveSpacing(28),
+    right: responsiveSpacing(32),
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -21,6 +21,7 @@ export interface CoTenant {
   identityNumber: string;
   address: string;
   fullName: string;
+  avatar: string;
 }
 
 export interface ServiceFees {

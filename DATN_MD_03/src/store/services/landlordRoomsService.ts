@@ -8,11 +8,13 @@ export const getLandlordRoomsService = async ({
   approvalStatus = '',
   page = 1,
   limit = 10,
+  roomName = '',
 }: {
   status?: string;
   approvalStatus?: string;
   page?: number;
   limit?: number;
+  roomName?: string;
 }) => {
   try {
     const response = await api.get('/landlord/rooms', {
@@ -21,9 +23,10 @@ export const getLandlordRoomsService = async ({
         approvalStatus,
         page,
         limit,
+        roomName,
       },
     });
-
+    console.log(response);
     if (response.data.success === false) {
       throw new Error(response.data.message);
     }
@@ -36,17 +39,13 @@ export const getLandlordRoomsService = async ({
 export const createLandlordRoomsService = async (room: Room) => {
   try {
     const response = await api.post('/landlord/rooms', room);
-    console.log(response);
 
     if (!response.data.success) {
       throw new Error(response.data.message || 'Tạo phòng thất bại');
     }
-
-    console.log(response);
     return response.data;
   } catch (error: any) {
     // Nếu muốn log lỗi chi tiết:
-    console.error('Lỗi khi tạo phòng:', error.response?.data || error.message);
     throw error;
   }
 };
@@ -64,10 +63,6 @@ export const getLandlordRoomDetailService = async (roomId: string) => {
 
     return response.data;
   } catch (error: any) {
-    console.error(
-      'Lỗi khi lấy chi tiết phòng:',
-      error.response?.data || error.message,
-    );
     throw error;
   }
 };
