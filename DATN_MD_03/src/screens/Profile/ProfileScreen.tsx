@@ -280,7 +280,10 @@ export default function ProfileScreen() {
           style: 'default',
           onPress: () => {
             setAlertConfig(prev => ({...prev, visible: false}));
-            navigation.replace('Login', {});
+            navigation.reset({
+              index: 0,
+              routes: [{name: 'Login', params: {}}]
+            });
           },
         }],
       });
