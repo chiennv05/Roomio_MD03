@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.darkGreen,
   },
   iconContainer: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     width: '100%',
   },
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     borderRadius: scale(12),
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: scale(12),
+    marginBottom: scale(12),
     flexShrink: 0,
   },
   usernameIconCircle: {
@@ -123,17 +123,19 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(13),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.gray60,
-    marginBottom: scale(4),
+    marginBottom: scale(8),
     letterSpacing: 0.2,
+    textAlign: 'center',
   },
   textContainer: {
-    flex: 1,
+    alignItems: 'center',
     minWidth: 0,
   },
   statValue: {
     fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.dearkOlive,
+    textAlign: 'center',
   },
   usernameValue: {
     color: Colors.darkGreen,
