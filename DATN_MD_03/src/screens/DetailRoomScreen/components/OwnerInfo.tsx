@@ -8,7 +8,7 @@ import { responsiveSpacing, responsiveFont } from '../../../utils/responsive';
 interface OwnerInfoProps {
   avatar?: string;
   name: string;
-  phone: string;
+  phone: string; // Giờ sẽ hiển thị "Bài đã đăng: X" thay vì số điện thoại
 }
 
 const OwnerInfo: React.FC<OwnerInfoProps> = ({ avatar, name, phone }) => {
