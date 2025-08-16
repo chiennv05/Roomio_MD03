@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { Colors } from '../../../theme/color';
 import { Fonts } from '../../../theme/fonts';
 import { responsiveSpacing, responsiveFont } from '../../../utils/responsive';
@@ -10,7 +11,7 @@ interface OwnerInfoProps {
   phone: string;
 }
 
-const OwnerInfo: React.FC<OwnerInfoProps> = ({ name, phone }) => {
+const OwnerInfo: React.FC<OwnerInfoProps> = ({ avatar, name, phone }) => {
   // Create avatar letter from first letter of name
   const getAvatarLetter = (ownerName: string) => {
     if (!ownerName || ownerName === 'Chủ trọ') {return 'C';}
@@ -22,9 +23,15 @@ const OwnerInfo: React.FC<OwnerInfoProps> = ({ name, phone }) => {
   return (
     <View style={styles.container}>
       <View style={styles.ownerRow}>
-        <View style={styles.avatarCircle}>
-          <Text style={styles.avatarText}>{avatarLetter}</Text>
-        </View>
+        {avatar ? (
+          <Image source={{uri: avatar}} style={styles.avatar} />
+        ) : (
+          <LinearGradient
+            colors={['#7B9EFF', '#9B7BFF']}
+            style={styles.avatarCircle}>
+            <Text style={styles.avatarText}>{avatarLetter}</Text>
+          </LinearGradient>
+        )}
         <View style={styles.nameContainer}>
           <Text style={styles.ownerName}>{name}</Text>
           <Text style={styles.phoneNumber}>{phone}</Text>

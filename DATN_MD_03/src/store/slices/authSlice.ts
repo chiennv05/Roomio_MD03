@@ -10,6 +10,7 @@ import {
 import EncryptedStorage from 'react-native-encrypted-storage';
 import {storeUserSession} from '../services/storageService';
 import {mapApiUserToUser} from '../../utils/mapApiToUser';
+import api from '../../api/api';
 
 const initialState: AuthState = {
   loading: false,
@@ -39,7 +40,9 @@ export const loginUser = createAsyncThunk(
     try {
       const res = await login(data);
       console.log('response', res);
-      if (!res?.success) throw new Error(res?.message);
+      if (!res?.success) {
+        throw new Error(res?.message);
+      }
       const {token, user} = res.data;
       const mapUser = mapApiUserToUser(user, token);
       await storeUserSession(token);
@@ -110,6 +113,144 @@ export const updateProfile = createAsyncThunk(
       return user;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Update profile failed');
+    }
+  },
+);
+
+// Thêm action mới để cập nhật avatar
+export const updateAvatar = createAsyncThunk(
+  'auth/updateAvatar',
+  async (
+    {
+      token,
+      imageUri,
+    }: {
+      token: string;
+      imageUri: string;
+    },
+    {rejectWithValue},
+  ) => {
+    try {
+      console.log('Starting avatar upload with URI:', imageUri);
+
+      const formData = new FormData();
+      formData.append('avatar', {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: `avatar_${Date.now()}.jpg`,
+      } as any);
+
+            const response = await api.post('/user/profile/avatar-file', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log('Avatar upload response:', response.data);
+
+      // Kiểm tra response structure và xử lý các trường hợp
+      if (!response?.data) {
+        throw new Error('Invalid response from server');
+      }
+
+      // Nếu response là string (lỗi từ server)
+      if (typeof response.data === 'string') {
+        throw new Error(response.data);
+      }
+
+      // Kiểm tra success flag
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Upload failed');
+      }
+
+      // Kiểm tra user data
+      const user = response.data.data?.user;
+      if (!user) {
+        console.error('Could not find user in response:', response.data);
+        throw new Error('Could not update avatar - invalid response format');
+      }
+
+      // Extract new token if available
+      const newToken = user.auth_token?.token || token;
+      
+      // Map user data và return với avatar mới
+      const mapUser = mapApiUserToUser(user, newToken);
+      
+      // Store new token if it was updated
+      if (newToken !== token) {
+        await storeUserSession(newToken);
+      }
+      
+      return { user: mapUser, token: newToken };
+        } catch (err: any) {
+      console.error('Avatar upload error:', err);
+      console.error('Error response:', err.response?.data);
+
+      // Xử lý error response một cách an toàn
+      let errorMessage = 'Không thể cập nhật ảnh đại diện';
+
+      if (err.message) {
+        // Nếu là lỗi từ việc kiểm tra response
+        errorMessage = err.message;
+      } else if (err.response) {
+        // Nếu có response từ server
+        if (typeof err.response.data === 'string') {
+          errorMessage = err.response.data;
+        } else if (err.response.data?.message) {
+          errorMessage = err.response.data.message;
+        }
+
+        // Xử lý HTTP status codes
+        switch (err.response.status) {
+          case 413:
+            errorMessage = 'Ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn';
+            break;
+          case 401:
+            errorMessage = 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại';
+            break;
+          case 400:
+            errorMessage = err.response.data?.message || 'Yêu cầu không hợp lệ';
+            break;
+          case 500:
+            errorMessage = 'Lỗi máy chủ. Vui lòng thử lại sau';
+            break;
+        }
+      }
+
+      return rejectWithValue(errorMessage);
+    }
+  },
+);
+
+// Thêm action mới để cập nhật chỉ phone hoặc email
+export const updatePhoneEmail = createAsyncThunk(
+  'auth/updatePhoneEmail',
+  async (
+    {
+      token,
+      data,
+    }: {
+      token: string;
+      data: {
+        phone?: string;
+        email?: string;
+      };
+    },
+    {rejectWithValue},
+  ) => {
+    try {
+      const response = await api.put('/user/profile', data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      // API trả về response.data.data.user
+      const user = response.data.data.user;
+      const mapUser = mapApiUserToUser(user);
+      return mapUser;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || err.message || 'Update failed');
     }
   },
 );
@@ -203,6 +344,38 @@ const authSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(updateProfile.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+
+      // Cập nhật avatar
+      .addCase(updateAvatar.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateAvatar.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+        // Update token if it was refreshed
+        if (action.payload.token) {
+          state.token = action.payload.token;
+        }
+      })
+      .addCase(updateAvatar.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // Cập nhật phone/email
+      .addCase(updatePhoneEmail.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updatePhoneEmail.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(updatePhoneEmail.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.payload as string;
       });
   },

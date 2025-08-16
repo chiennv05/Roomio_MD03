@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import TooltipBubble from './TooltipBubble';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -43,11 +44,13 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
       _id: item._id,
       fullName: item.fullName,
       isMainTenant: true,
+      avatar: item.avatar,
     },
     ...coTenantsFiltered.map(coTenant => ({
       _id: coTenant._id,
       fullName: coTenant.fullName,
       isMainTenant: false,
+      avatar: coTenant.avatar,
     })),
   ];
 
@@ -78,7 +81,7 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
             key={`${tenant._id}-${index}`}
             style={[
               styles.avatarWrapper,
-              {marginLeft: index > 0 ? responsiveSpacing(-15) : 0},
+              index > 0 && styles.avatarWrapperOverlap,
             ]}
             onPress={() => handleAvatarPress(tenant.fullName)}>
             <View style={styles.avatarItemContainer}>
@@ -86,11 +89,17 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
                 text={tenant.fullName}
                 visible={selectedTenant === tenant.fullName}
               />
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {getInitials(tenant.fullName)}
-                </Text>
-              </View>
+              {tenant.avatar ? (
+                <Image source={{uri: tenant.avatar}} style={styles.avatarImage} />
+              ) : (
+                <LinearGradient
+                  colors={['#7B9EFF', '#9B7BFF']}
+                  style={styles.avatar}>
+                  <Text style={styles.avatarText}>
+                    {getInitials(tenant.fullName)}
+                  </Text>
+                </LinearGradient>
+              )}
             </View>
           </TouchableOpacity>
         ))}
@@ -152,7 +161,7 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.white,
-    borderRadius: responsiveSpacing(16),
+    borderRadius: responsiveSpacing(20),
     padding: responsiveSpacing(16),
     marginBottom: responsiveSpacing(16),
     elevation: 3,
@@ -267,6 +276,9 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     backgroundColor: Colors.white,
   },
+  avatarWrapperOverlap: {
+    marginLeft: responsiveSpacing(-15),
+  },
   avatar: {
     width: responsiveSpacing(50),
     height: responsiveSpacing(50),
@@ -275,6 +287,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  avatarImage: {
+    width: responsiveSpacing(50),
+    height: responsiveSpacing(50),
+    borderRadius: responsiveSpacing(25),
+  },
   avatarText: {
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Bold,
@@ -282,7 +299,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     backgroundColor: Colors.darkGreen,
-    borderRadius: responsiveSpacing(12),
+    borderRadius: responsiveSpacing(20),
     paddingVertical: responsiveSpacing(14),
     paddingHorizontal: responsiveSpacing(20),
     flexDirection: 'row',

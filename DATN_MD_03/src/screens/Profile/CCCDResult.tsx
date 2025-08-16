@@ -4,7 +4,6 @@ import {
   StyleSheet,
   Text,
   StatusBar,
-  Alert,
   ScrollView,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -21,9 +20,11 @@ import {
   verticalScale,
 } from '../../utils/responsive';
 import {Colors} from '../../theme/color';
-import {Icons} from '../../assets/icons';
 import ItemButtonGreen from '../../components/ItemButtonGreen';
-import {ItemInput, UIHeader} from '../ChuTro/MyRoom/components';
+import {ItemInput} from '../ChuTro/MyRoom/components';
+import {HeaderWithBack} from '../../components';
+import LinearGradient from 'react-native-linear-gradient';
+import CustomAlertModal from '../../components/CustomAlertModal';
 
 interface CCCDData {
   identityNumber: string;
@@ -46,7 +47,19 @@ export default function CCCDResult() {
 
   const [cccdData, setCccdData] = useState<CCCDData | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('');
+
+  // Alert modal state
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: '',
+    message: '',
+    type: 'info' as 'error' | 'success' | 'warning' | 'info',
+    buttons: [] as Array<{
+      text: string;
+      onPress: () => void;
+      style?: 'default' | 'cancel' | 'destructive';
+    }>,
+  });
 
   useEffect(() => {
     if (rawData) {
@@ -61,7 +74,6 @@ export default function CCCDResult() {
           address: user.address || '',
           gender: user.gender || '',
         });
-        setPhoneNumber(user.phone || '');
       }
     }
   }, [rawData, user]);
@@ -80,9 +92,9 @@ export default function CCCDResult() {
           const month = dobString.substring(2, 4);
           const year = dobString.substring(4, 8);
           parsedDate = new Date(
-            parseInt(year),
-            parseInt(month) - 1,
-            parseInt(day),
+            parseInt(year, 10),
+            parseInt(month, 10) - 1,
+            parseInt(day, 10),
           );
         }
 
@@ -96,25 +108,47 @@ export default function CCCDResult() {
 
         setCccdData(parsed);
       } else {
-        Alert.alert('Lỗi', 'Mã QR không hợp lệ hoặc không đúng định dạng.');
+        setAlertConfig({
+          visible: true,
+          title: 'Lỗi',
+          message: 'Mã QR không hợp lệ hoặc không đúng định dạng.',
+          type: 'error',
+          buttons: [{
+            text: 'Đóng',
+            style: 'default',
+            onPress: () => setAlertConfig(prev => ({...prev, visible: false})),
+          }],
+        });
       }
     } catch (error) {
       console.error('Parse CCCD data error:', error);
-      Alert.alert('Lỗi', 'Không thể đọc thông tin từ CCCD.');
+      setAlertConfig({
+        visible: true,
+        title: 'Lỗi',
+        message: 'Không thể đọc thông tin từ CCCD.',
+        type: 'error',
+        buttons: [{
+          text: 'Đóng',
+          style: 'default',
+          onPress: () => setAlertConfig(prev => ({...prev, visible: false})),
+        }],
+      });
     }
   };
 
   const handleUpdateProfile = async () => {
     if (!cccdData || !token) {
-      Alert.alert('Lỗi', 'Không có thông tin để cập nhật.');
-      return;
-    }
-    if (!phoneNumber.trim()) {
-      Alert.alert('Lỗi', 'Số điện thoại không được để trống.');
-      return;
-    }
-    if (phoneNumber.length !== 10) {
-      Alert.alert('Lỗi', 'Số điện thoại phải có 10 chữ số.');
+      setAlertConfig({
+        visible: true,
+        title: 'Lỗi',
+        message: 'Không có thông tin để cập nhật.',
+        type: 'error',
+        buttons: [{
+          text: 'Đóng',
+          style: 'default',
+          onPress: () => setAlertConfig(prev => ({...prev, visible: false})),
+        }],
+      });
       return;
     }
 
@@ -123,7 +157,7 @@ export default function CCCDResult() {
       identityNumber: cccdData.identityNumber,
       address: cccdData.address,
       birthDate: cccdData.birthDate.toISOString(),
-      phone: phoneNumber,
+      phone: user?.phone || '', // Sử dụng phone hiện tại từ user
     };
 
     console.log('Updating profile with data:', updatedData);
@@ -139,16 +173,22 @@ export default function CCCDResult() {
             identityNumber: cccdData.identityNumber,
             address: cccdData.address,
             birthDate: cccdData.birthDate.toISOString(),
-            phone: phoneNumber,
+            phone: user?.phone || '',
           },
         }),
       ).unwrap();
 
       if (success) {
-        Alert.alert('Thành công', 'Đã cập nhật thông tin từ CCCD thành công!', [
-          {
+        setAlertConfig({
+          visible: true,
+          title: 'Xác thực thành công',
+          message: 'Tài khoản của bạn đã được xác thực CCCD thành công!',
+          type: 'success',
+          buttons: [{
             text: 'OK',
+            style: 'default',
             onPress: () => {
+              setAlertConfig(prev => ({...prev, visible: false}));
               if (redirectTo === 'DetailRoom' && roomId) {
                 navigation.reset({
                   index: 0,
@@ -158,20 +198,28 @@ export default function CCCDResult() {
                 navigation.replace('PersonalInformation', {});
               }
             },
-          },
-        ]);
+          }],
+        });
       }
     } catch (error) {
       console.error('Update profile error:', error);
-      Alert.alert('Lỗi', 'Không thể cập nhật thông tin. Vui lòng thử lại.');
+      setAlertConfig({
+        visible: true,
+        title: 'Lỗi',
+        message: 'Không thể cập nhật thông tin. Vui lòng thử lại.',
+        type: 'error',
+        buttons: [{
+          text: 'Đóng',
+          style: 'default',
+          onPress: () => setAlertConfig(prev => ({...prev, visible: false})),
+        }],
+      });
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const handleRetake = () => {
-    navigation.goBack();
-  };
+
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('vi-VN');
@@ -179,32 +227,47 @@ export default function CCCDResult() {
 
   if (!cccdData) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <View style={styles.mainContainer}>
+        <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+        <LinearGradient
+          colors={['#BAFD00', '#F4F4F4']}
+          start={{x: 0, y: 0}}
+          end={{x: 0, y: 1}}
+          style={styles.gradientHeader}>
+          <SafeAreaView edges={['top']}>
+            <HeaderWithBack
+              title="Xác thực CCCD"
+              backgroundColor="transparent"
+            />
+          </SafeAreaView>
+        </LinearGradient>
         <View style={styles.loadingContainer}>
           <Text>Đang xử lý...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#BAFD00"
-        translucent={false}
-      />
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}>
-          {/* Header */}
-          <UIHeader
-            iconLeft={Icons.IconArrowLeft}
-            onPressLeft={handleRetake}
-            title="Cập nhật thông tin "
+    <View style={styles.mainContainer}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <LinearGradient
+        colors={['#BAFD00', '#F4F4F4']}
+        start={{x: 0, y: 0}}
+        end={{x: 0, y: 1}}
+        style={styles.gradientHeader}>
+        <SafeAreaView edges={['top']}>
+          <HeaderWithBack
+            title={user?.identityNumber ? 'Thông tin CCCD' : 'Xác thực CCCD'}
+            backgroundColor="transparent"
           />
+        </SafeAreaView>
+      </LinearGradient>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}>
 
           <View style={styles.content}>
             {/* Information Fields */}
@@ -246,35 +309,39 @@ export default function CCCDResult() {
                 onChangeText={() => {}}
               />
             </View>
-            <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Số điện thoại</Text>
-              <ItemInput
-                value={phoneNumber}
-                placeholder="Số điện thoại"
-                editable={true}
-                onChangeText={setPhoneNumber}
-                keyboardType="phone-pad"
-              />
-            </View>
           </View>
-        </ScrollView>
+      </ScrollView>
 
-        {/* Bottom Button */}
+      {/* Bottom Button */}
+      {!user?.identityNumber && (
         <View style={styles.bottomContainer}>
           <ItemButtonGreen
-            title={isUpdating ? 'Đang cập nhật...' : 'Cập nhật thông tin'}
+            title={isUpdating ? 'Đang xác thực...' : 'Xác nhận và xác thực'}
             onPress={handleUpdateProfile}
           />
         </View>
-      </SafeAreaView>
-    </>
+      )}
+
+      {/* Custom Alert Modal */}
+      <CustomAlertModal
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertConfig(prev => ({...prev, visible: false}))}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  mainContainer: {
     flex: 1,
-    backgroundColor: '#BAFD00',
+    backgroundColor: Colors.white,
+  },
+  gradientHeader: {
+    paddingBottom: verticalScale(15),
   },
   scrollView: {
     flex: 1,
