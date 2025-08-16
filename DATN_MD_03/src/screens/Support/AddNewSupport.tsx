@@ -12,7 +12,9 @@ import {
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
+import {useSelector} from 'react-redux';
 import {RootStackParamList} from '../../types/route';
+import {RootState} from '../../store';
 import {supportService} from '../../store/services/supportService';
 import {SupportCategory, SupportPriority} from '../../types/Support';
 import {Colors} from '../../theme/color';
@@ -41,6 +43,10 @@ type AddNewSupportScreenProps = StackNavigationProp<
 
 const AddNewSupport: React.FC = () => {
   const navigation = useNavigation<AddNewSupportScreenProps>();
+
+  // Lấy thông tin user từ Redux store
+  const user = useSelector((state: RootState) => state.auth.user);
+
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [category, setCategory] = useState<SupportCategory>('kyThuat');
@@ -52,14 +58,35 @@ const AddNewSupport: React.FC = () => {
   // Bỏ lựa chọn mức độ ưu tiên của người dùng: luôn tự động
   // const [isPriorityOpen, setIsPriorityOpen] = useState(false);
 
-  // Danh sách category
-  const categories = [
+  // Kiểm tra xem user có phải là chủ trọ không
+  const isLandlord = user?.role === 'chuTro';
+
+  // Danh sách category - chỉ hiển thị "Gói đăng ký" cho chủ trọ
+  const allCategories = [
     {value: 'kyThuat' as SupportCategory, label: 'Kỹ thuật'},
     {value: 'thanhToan' as SupportCategory, label: 'Thanh toán'},
     {value: 'hopDong' as SupportCategory, label: 'Hợp đồng'},
     {value: 'goiDangKy' as SupportCategory, label: 'Gói đăng ký'},
     {value: 'khac' as SupportCategory, label: 'Khác'},
   ];
+
+  // Lọc categories dựa trên role của user
+  const categories = allCategories.filter(cat => {
+    // Nếu không phải chủ trọ, loại bỏ "goiDangKy"
+    if (!isLandlord && cat.value === 'goiDangKy') {
+      return false;
+    }
+    return true;
+  });
+
+  // Đảm bảo category mặc định hợp lệ cho role hiện tại
+  React.useEffect(() => {
+    // Nếu user không phải chủ trọ và đang chọn "goiDangKy", chuyển về "kyThuat"
+    if (!isLandlord && category === 'goiDangKy') {
+      setCategory('kyThuat');
+      setPriority(computePriority('kyThuat'));
+    }
+  }, [isLandlord, category]);
 
   // Danh sách priority
   const priorities = [
