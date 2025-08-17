@@ -1580,10 +1580,7 @@ const EditInvoiceScreen = () => {
             result.isEditable = true;
             result.canEditDescription = true;
             result.canEditUnitPrice = true;
-            // Kiểm tra nếu có priceType là perUsage thì cho phép chỉnh sửa meter readings
-            if (priceType === 'perUsage') {
-                result.canEditMeterReadings = true;
-            }
+            result.canEditMeterReadings = true;
             return result;
         }
 
@@ -1594,10 +1591,6 @@ const EditInvoiceScreen = () => {
             result.canEditDescription = true;
             result.canEditQuantity = true;
             result.canEditUnitPrice = true;
-            // Kiểm tra nếu có priceType là perUsage thì cho phép chỉnh sửa meter readings
-            if (priceType === 'perUsage') {
-                result.canEditMeterReadings = true;
-            }
             return result;
         }
 
