@@ -30,6 +30,8 @@ const RoomCard: React.FC<RoomCardProps> = ({room}) => {
       style={styles.container}
       onPress={handleNavigateToDetail}
       activeOpacity={0.8}>
+      
+      {/* Image Container */}
       {room.photos && room.photos.length > 0 ? (
         <View style={styles.imageContainer}>
           <Image
@@ -47,13 +49,20 @@ const RoomCard: React.FC<RoomCardProps> = ({room}) => {
           />
         </View>
       )}
+
+      {/* Info Container */}
       <View style={styles.infoContainer}>
-        <Text style={styles.name} numberOfLines={2}>
+        {/* Title */}
+        <Text style={styles.title} numberOfLines={2}>
           {room.description || 'Phòng trọ'}
         </Text>
+        
+        {/* Price */}
         <Text style={styles.price}>
-          Từ {(room.rentPrice || 0).toLocaleString('vi-VN')}đ/tháng
+          {(room.rentPrice || 0).toLocaleString('vi-VN')}đ/tháng
         </Text>
+        
+        {/* Location */}
         <View style={styles.locationRow}>
           <Image
             source={{uri: Icons.IconLocation}}
@@ -63,13 +72,15 @@ const RoomCard: React.FC<RoomCardProps> = ({room}) => {
             {room.location?.addressText || 'Đang cập nhật địa chỉ'}
           </Text>
         </View>
-        <View style={styles.statsRow}>
+        
+        {/* Area */}
+        <View style={styles.areaRow}>
           <Image
             source={{uri: Icons.IconArea}}
-            style={styles.statsIcon}
+            style={styles.areaIcon}
           />
-          <Text style={styles.statsText}>
-            Diện tích: {room.area || 0}m²
+          <Text style={styles.areaText}>
+            {room.area || 0}m²
           </Text>
         </View>
       </View>
@@ -81,15 +92,25 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     backgroundColor: Colors.white,
-    borderRadius: responsiveSpacing(12),
-    padding: responsiveSpacing(12),
-    marginBottom: responsiveSpacing(16),
+    borderRadius: responsiveSpacing(16),
+    padding: responsiveSpacing(16),
+    marginHorizontal: responsiveSpacing(0), // Bỏ margin horizontal vì đã có trong bottomContainer
+    marginBottom: responsiveSpacing(0),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   imageContainer: {
     width: responsiveSpacing(80),
     height: responsiveSpacing(80),
-    borderRadius: responsiveSpacing(8),
+    borderRadius: responsiveSpacing(12),
     overflow: 'hidden',
+    backgroundColor: Colors.lightGray,
   },
   image: {
     width: '100%',
@@ -101,25 +122,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   placeholderIcon: {
-    width: responsiveIcon(32),
-    height: responsiveIcon(32),
+    width: responsiveIcon(40),
+    height: responsiveIcon(40),
     tintColor: Colors.darkGray,
   },
   infoContainer: {
     flex: 1,
     marginLeft: responsiveSpacing(12),
+    justifyContent: 'flex-start',
   },
-  name: {
-    fontSize: responsiveFont(14),
+  title: {
+    fontSize: responsiveFont(15),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
     marginBottom: responsiveSpacing(4),
+    lineHeight: responsiveFont(18),
   },
   price: {
-    fontSize: responsiveFont(14),
+    fontSize: responsiveFont(15),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.darkGreen,
-    marginBottom: responsiveSpacing(4),
+    color: '#4CAF50', // Green color giống trong hình
+    marginBottom: responsiveSpacing(6),
   },
   locationRow: {
     flexDirection: 'row',
@@ -127,29 +150,37 @@ const styles = StyleSheet.create({
     marginBottom: responsiveSpacing(4),
   },
   locationIcon: {
-    width: responsiveIcon(16),
-    height: responsiveIcon(16),
-    tintColor: Colors.darkGreen,
+    width: responsiveIcon(12),
+    height: responsiveIcon(12),
+    tintColor: '#666666',
     marginRight: responsiveSpacing(4),
   },
   locationText: {
     flex: 1,
     fontSize: responsiveFont(12),
-    color: Colors.textGray,
+    color: '#666666',
+    fontFamily: Fonts.Roboto_Regular,
   },
-  statsRow: {
+  areaRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: responsiveSpacing(0),
   },
-  statsIcon: {
-    width: responsiveIcon(16),
-    height: responsiveIcon(16),
-    tintColor: Colors.darkGreen,
+  areaIcon: {
+    width: responsiveIcon(12),
+    height: responsiveIcon(12),
+    tintColor: '#666666',
     marginRight: responsiveSpacing(4),
   },
-  statsText: {
+  areaText: {
     fontSize: responsiveFont(12),
-    color: Colors.textGray,
+    color: '#666666',
+    fontFamily: Fonts.Roboto_Regular,
+  },
+  roomCountText: {
+    fontSize: responsiveFont(12),
+    color: '#666666',
+    fontFamily: Fonts.Roboto_Regular,
   },
 });
 

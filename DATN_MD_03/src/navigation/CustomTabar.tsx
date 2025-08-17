@@ -11,6 +11,7 @@ import {Icons} from '../assets/icons';
 import {
   responsiveFont,
   responsiveIcon,
+  responsiveSpacing,
   SCREEN,
   verticalScale,
 } from '../utils/responsive';
@@ -82,14 +83,19 @@ export default function CustomTabar({state, navigation}: BottomTabBarProps) {
 
 const styles = StyleSheet.create({
   container: {
-    width: SCREEN.width,
+    width: SCREEN.width - responsiveSpacing(20),
     flexDirection: 'row',
     backgroundColor: Colors.dearkOlive,
     height: verticalScale(70),
-    borderRadius: 30,
+    borderRadius: responsiveSpacing(40),
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: verticalScale(10),
+    alignSelf: 'center',
+    position: 'absolute',
+    bottom: verticalScale(5),
+    left: responsiveSpacing(10),
+    right: responsiveSpacing(10),
   },
   tab: {
     flex: 1,

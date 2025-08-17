@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
   },
   myLocationButton: {
     position: 'absolute',
-    bottom: responsiveSpacing(200),
+    bottom: responsiveSpacing(260),
     right: responsiveSpacing(16),
     width: responsiveIcon(40),
     height: responsiveIcon(40),
@@ -337,20 +337,21 @@ const styles = StyleSheet.create({
     tintColor: Colors.darkGreen,
   },
   bottomContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: Colors.white,
-    borderTopLeftRadius: responsiveSpacing(20),
-    borderTopRightRadius: responsiveSpacing(20),
-    padding: responsiveSpacing(16),
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: -2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-  },
+  position: 'absolute',
+  top: 670,
+  bottom: 0,
+  left: 20,
+  right: 20,
+  backgroundColor: 'transparent', // Đổi từ Colors.white thành transparent
+  borderTopLeftRadius: 0, // Bỏ borderRadius
+  borderTopRightRadius: 0, // Bỏ borderRadius
+  padding: 0, // Bỏ padding
+  shadowColor: 'transparent', // Bỏ shadow
+  shadowOffset: {width: 0, height: 0},
+  shadowOpacity: 0,
+  shadowRadius: 0,
+  elevation: 0,
+},
   customMarker: {
     alignItems: 'center',
   },
