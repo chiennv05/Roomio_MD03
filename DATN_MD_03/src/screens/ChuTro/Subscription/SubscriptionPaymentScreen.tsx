@@ -15,7 +15,6 @@ import {RootStackParamList} from '../../../types/route';
 import {createSubscriptionUpgrade} from '../../../store/slices/subscriptionSlice';
 import {Icons} from '../../../assets/icons';
 import RNFS from 'react-native-fs';
-import Share from 'react-native-share';
 import CustomAlertModal from '../../../components/CustomAlertModal';
 
 export default function SubscriptionPaymentScreen() {
