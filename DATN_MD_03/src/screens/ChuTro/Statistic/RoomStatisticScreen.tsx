@@ -36,7 +36,6 @@ const RoomStatisticScreen = () => {
   const {user} = useSelector((state: RootState) => state.auth);
   const {data, loading} = useSelector((state: RootState) => state.dashboard);
   const [refreshing, setRefreshing] = useState(false);
-
   const statusBarHeight =
     Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
 

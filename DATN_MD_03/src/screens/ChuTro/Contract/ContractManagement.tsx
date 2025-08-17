@@ -26,8 +26,7 @@ import {AppDispatch, RootState} from '../../../store';
 import {fetchMyContracts} from '../../../store/slices/contractSlice';
 import ContractItem from './components/ContractItem';
 import EmptyContract from './components/EmptyContract';
-import Pagination from './components/Pagination';
-import {UIHeader} from '../MyRoom/components';
+import {ItemInput, UIHeader} from '../MyRoom/components';
 import FilterStatusItem from './components/FilterStatusItem';
 import {filterOptionsContract} from './utils/filterContract';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -41,21 +40,24 @@ const ContractManagement = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [searchText, setSearchText] = useState('');
   const {contracts, pagination, loading} = useSelector(
     (state: RootState) => state.contract,
   );
 
-  // Load contracts với params truyền vào
+  // Load contracts
   const loadContracts = useCallback(
     async ({
       page = currentPage,
       limit = itemsPerPage,
       status = selectedFilter,
+      roomName = searchText,
     }: {
       page?: number;
       limit?: number;
       status?: string;
+      roomName?: string;
     }) => {
       const statusToSend = status === 'all' ? undefined : status;
       await dispatch(
@@ -63,40 +65,48 @@ const ContractManagement = () => {
           page,
           limit,
           status: statusToSend,
+          roomName,
         }),
       );
     },
-    [dispatch, currentPage, itemsPerPage, selectedFilter],
+    [currentPage, itemsPerPage, selectedFilter, searchText, dispatch],
   );
 
   // Gọi load khi filter hoặc page thay đổi
   useEffect(() => {
-    loadContracts({page: currentPage, status: selectedFilter});
-  }, [selectedFilter, currentPage, loadContracts]); // thiếu 'loadContracts'
+    loadContracts({
+      page: currentPage,
+      status: selectedFilter,
+      roomName: searchText,
+    });
+  }, [selectedFilter, currentPage, loadContracts, searchText]);
 
   // Kéo để làm mới
   const onRefresh = async () => {
     setRefreshing(true);
-    setCurrentPage(1); // reset về trang đầu
+    setCurrentPage(1);
     await loadContracts({page: 1, status: selectedFilter});
     setRefreshing(false);
   };
 
-  // Chọn filter
+  // Load thêm khi scroll tới cuối
+  const loadMoreContracts = async () => {
+    if (loadingMore || loading) return;
+    if (pagination && currentPage >= pagination.totalPages) return;
+
+    setLoadingMore(true);
+    const nextPage = currentPage + 1;
+    await loadContracts({page: nextPage, status: selectedFilter});
+    setCurrentPage(nextPage);
+    setLoadingMore(false);
+  };
+
   const handleClickFilter = useCallback((value: string) => {
     setSelectedFilter(value);
     setCurrentPage(1);
   }, []);
 
-  // Chuyển trang
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handleGoBack = () => {
-    navigation.goBack();
-  };
-
+  const handleGoBack = () => navigation.goBack();
   const handleGoContractDetail = (contractId: string) => {
     navigation.navigate('ContractDetail', {contractId});
   };
@@ -111,10 +121,21 @@ const ContractManagement = () => {
         onPressLeft={handleGoBack}
       />
 
+      <View style={styles.conatinerSearch}>
+        <ItemInput
+          placeholder="Tìm hợp đồng theo tên phòng"
+          value={searchText}
+          onChangeText={setSearchText}
+          editable={true}
+          width={SCREEN.width * 0.9}
+        />
+      </View>
+
+      {/* Filter */}
       <View style={styles.conatinerFilter}>
         <FlatList
           keyExtractor={(_, index) => index.toString()}
-          horizontal={true}
+          horizontal
           showsHorizontalScrollIndicator={false}
           data={filterOptionsContract}
           renderItem={({item, index}) => (
@@ -127,47 +148,41 @@ const ContractManagement = () => {
           )}
         />
       </View>
-      <View style={styles.containerListRooms}>
-        {loading && !refreshing ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.darkGreen} />
-          </View>
-        ) : contracts.length === 0 ? (
-          <EmptyContract />
-        ) : (
-          <>
-            <FlatList
-              data={contracts}
-              keyExtractor={(_, index) => index.toString()}
-              renderItem={({item, index}) => (
-                <ContractItem
-                  key={index}
-                  contract={item}
-                  onPress={handleGoContractDetail}
-                />
-              )}
-              contentContainerStyle={styles.contractList}
-              showsVerticalScrollIndicator={false}
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={onRefresh}
-                  colors={[Colors.darkGreen]}
-                  tintColor={Colors.darkGreen}
-                />
-              }
-            />
 
-            {pagination && (
-              <Pagination
-                currentPage={pagination.page}
-                totalPages={pagination.totalPages}
-                onPageChange={handlePageChange}
+      {/* Danh sách hợp đồng */}
+      <View style={{flex: 1}}>
+        <FlatList
+          data={contracts}
+          keyExtractor={(_, index) => index.toString()}
+          renderItem={({item}) => (
+            <ContractItem contract={item} onPress={handleGoContractDetail} />
+          )}
+          contentContainerStyle={styles.contractList}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[Colors.darkGreen]}
+              tintColor={Colors.darkGreen}
+            />
+          }
+          onEndReached={loadMoreContracts}
+          onEndReachedThreshold={0.5}
+          ListEmptyComponent={!loading ? <EmptyContract /> : null}
+          ListFooterComponent={
+            loadingMore ? (
+              <ActivityIndicator
+                size="small"
+                color={Colors.darkGreen}
+                style={{marginVertical: 10}}
               />
-            )}
-          </>
-        )}
+            ) : null
+          }
+        />
       </View>
+
+      {/* Nút thêm hợp đồng */}
       <TouchableOpacity
         style={styles.buttonAddRoom}
         onPress={handleGoAddContract}>
@@ -248,6 +263,14 @@ const styles = StyleSheet.create({
   styleIcon: {
     width: responsiveIcon(24),
     height: responsiveIcon(24),
+  },
+
+  conatinerSearch: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: SCREEN.width * 0.9,
+    marginTop: responsiveSpacing(10),
   },
 });
 

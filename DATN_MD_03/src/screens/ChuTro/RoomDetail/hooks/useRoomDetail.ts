@@ -39,8 +39,24 @@ export const useRoomDetail = (roomId: string) => {
       );
       return;
     }
+
     if (selectedRoom) {
-      navigation.navigate('UpdateRoomScreen', {item: selectedRoom});
+      if (selectedRoom.approvalStatus === 'choDuyet') {
+        navigation.navigate('UpdateRoomScreen', {item: selectedRoom});
+        return;
+      }
+      showConfirm(
+        'Cập nhật phòng sẽ:\n' +
+          ' - Chuyển sang trạng thái "Chờ duyệt" và ẩn khỏi trang chủ\n' +
+          ' - Xóa hợp đồng "Nháp"\n' +
+          ' - Hủy hợp đồng "Chờ ký" hoặc "Chờ duyệt"\n' +
+          'Bạn có muốn tiếp tục không?',
+        () => {
+          hideAlert();
+          navigation.navigate('UpdateRoomScreen', {item: selectedRoom});
+        },
+        'Xác nhận cập nhật',
+      );
     }
   };
 
@@ -55,7 +71,13 @@ export const useRoomDetail = (roomId: string) => {
     }
 
     showConfirm(
-      'Bạn có chắc chắn muốn xóa phòng này không? Hành động này không thể hoàn tác.',
+      'Xóa phòng sẽ xóa tất cả các hợp đồng có trạng thái:\n' +
+        ' - Bản nháp\n' +
+        ' - Chờ ký\n' +
+        ' - Chờ phê duyệt\n' +
+        ' - Đã hủy\n' +
+        ' - Bị từ chối\n' +
+        'Bạn có muốn tiếp tục không?',
       async () => {
         try {
           await dispatch(deleteLandlordRoom(roomId)).unwrap();

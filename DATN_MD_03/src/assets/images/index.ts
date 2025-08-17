@@ -29,4 +29,8 @@ export const Images = {
     ios: 'image_notification',
     android: 'asset:/images/image_notification.png',
   }),
+  ImageAvatarDefault: Platform.select({
+    ios: 'image_avata_defaut',
+    android: 'asset:/images/image_avata_defaut.jpg',
+  }),
 };

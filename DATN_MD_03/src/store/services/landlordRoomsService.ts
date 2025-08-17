@@ -3,37 +3,49 @@ import {Room} from '../../types';
 
 // api get danh sách bài đăng
 
-export const getLandlordRoomsService = async (token: string) => {
+export const getLandlordRoomsService = async ({
+  status = '',
+  approvalStatus = '',
+  page = 1,
+  limit = 10,
+  roomName = '',
+}: {
+  status?: string;
+  approvalStatus?: string;
+  page?: number;
+  limit?: number;
+  roomName?: string;
+}) => {
   try {
     const response = await api.get('/landlord/rooms', {
-      headers: {
-        Authorization: `Bearer ${token}`,
+      params: {
+        status,
+        approvalStatus,
+        page,
+        limit,
+        roomName,
       },
     });
+    console.log(response);
     if (response.data.success === false) {
       throw new Error(response.data.message);
     }
-
     return response.data;
   } catch (error) {
     throw error;
   }
 };
+
 export const createLandlordRoomsService = async (room: Room) => {
-  console.log('room', room);
   try {
     const response = await api.post('/landlord/rooms', room);
-    console.log(response);
 
     if (!response.data.success) {
       throw new Error(response.data.message || 'Tạo phòng thất bại');
     }
-
-    console.log(response);
     return response.data;
   } catch (error: any) {
     // Nếu muốn log lỗi chi tiết:
-    console.error('Lỗi khi tạo phòng:', error.response?.data || error.message);
     throw error;
   }
 };
@@ -51,10 +63,6 @@ export const getLandlordRoomDetailService = async (roomId: string) => {
 
     return response.data;
   } catch (error: any) {
-    console.error(
-      'Lỗi khi lấy chi tiết phòng:',
-      error.response?.data || error.message,
-    );
     throw error;
   }
 };

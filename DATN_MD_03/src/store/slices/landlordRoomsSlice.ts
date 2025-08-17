@@ -1,5 +1,5 @@
 import {createSlice, createAsyncThunk, PayloadAction} from '@reduxjs/toolkit';
-import {Room} from '../../types';
+import {Pagination, Room} from '../../types';
 import {
   createLandlordRoomsService,
   getLandlordRoomsService,
@@ -14,6 +14,7 @@ interface LandlordRoomState {
   loading: boolean;
   error: string | null;
   success: boolean;
+  pagination: Pagination | null;
 }
 
 const initialState: LandlordRoomState = {
@@ -22,14 +23,36 @@ const initialState: LandlordRoomState = {
   loading: false,
   error: null,
   success: false,
+  pagination: null,
 };
 
 // ✅ GET danh sách phòng
 export const getLandlordRooms = createAsyncThunk(
   'landlordRooms/getLandlordRooms',
-  async (token: string, {rejectWithValue}) => {
+  async (
+    {
+      status = '',
+      approvalStatus = '',
+      page = 1,
+      limit = 10,
+      roomName = '',
+    }: {
+      status?: string;
+      approvalStatus?: string;
+      page?: number;
+      limit?: number;
+      roomName?: string;
+    },
+    {rejectWithValue},
+  ) => {
     try {
-      const res = await getLandlordRoomsService(token);
+      const res = await getLandlordRoomsService({
+        status,
+        approvalStatus,
+        page,
+        limit,
+        roomName,
+      });
       if (!res?.success) {
         return rejectWithValue(res?.message || 'Thất bại');
       }
@@ -46,7 +69,6 @@ export const createLandlordRoom = createAsyncThunk(
   async (room: Room, {rejectWithValue}) => {
     try {
       const res = await createLandlordRoomsService(room);
-      console.log(res);
       return res.data.room; // Giả sử API trả về room data trong trường hợp thành công
     } catch (err: any) {
       return rejectWithValue(err.message || 'Tạo phòng thất bại');
@@ -73,7 +95,6 @@ export const updateLandlordRoom = createAsyncThunk(
   async ({roomId, room}: {roomId: string; room: Room}, {rejectWithValue}) => {
     try {
       const res = await updateLandlordRoomService(roomId, room);
-      console.log(`Cập nhật phòng với ID ${roomId}:`, res.data);
       return res.data;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Lỗi cập nhật phòng');
@@ -118,6 +139,7 @@ const landlordRoomsSlice = createSlice({
       .addCase(getLandlordRooms.fulfilled, (state, action) => {
         state.loading = false;
         state.rooms = action.payload.rooms || [];
+        state.pagination = action.payload.pagination;
       })
       .addCase(
         getLandlordRooms.rejected,

@@ -41,7 +41,6 @@ import {
 } from '../Notification/services/NotificationPoller';
 import CustomAlertModal from '../../components/CustomAlertModal';
 
-
 export default function ProfileScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -190,13 +189,17 @@ export default function ProfileScreen() {
           setAlertConfig({
             visible: true,
             title: 'Quyền vị trí bị từ chối',
-            message: 'Bạn đã từ chối cấp quyền vị trí. Bạn có thể cấp lại trong Cài đặt.',
+            message:
+              'Bạn đã từ chối cấp quyền vị trí. Bạn có thể cấp lại trong Cài đặt.',
             type: 'warning',
-            buttons: [{
-              text: 'Đóng',
-              style: 'default',
-              onPress: () => setAlertConfig(prev => ({...prev, visible: false})),
-            }],
+            buttons: [
+              {
+                text: 'Đóng',
+                style: 'default',
+                onPress: () =>
+                  setAlertConfig(prev => ({...prev, visible: false})),
+              },
+            ],
           });
         }
       } else {
@@ -205,13 +208,15 @@ export default function ProfileScreen() {
         setAlertConfig({
           visible: true,
           title: 'Tắt quyền vị trí',
-          message: 'Để tắt hoàn toàn, vui lòng thu hồi quyền trong Cài đặt ứng dụng.',
+          message:
+            'Để tắt hoàn toàn, vui lòng thu hồi quyền trong Cài đặt ứng dụng.',
           type: 'info',
           buttons: [
             {
               text: 'Để sau',
               style: 'cancel',
-              onPress: () => setAlertConfig(prev => ({...prev, visible: false})),
+              onPress: () =>
+                setAlertConfig(prev => ({...prev, visible: false})),
             },
             {
               text: 'Mở Cài đặt',
@@ -275,14 +280,16 @@ export default function ProfileScreen() {
         title: 'Thông báo',
         message: 'Bạn cần đăng nhập để sử dụng chức năng này',
         type: 'info',
-        buttons: [{
-          text: 'OK',
-          style: 'default',
-          onPress: () => {
-            setAlertConfig(prev => ({...prev, visible: false}));
-            navigation.replace('Login', {});
+        buttons: [
+          {
+            text: 'OK',
+            style: 'default',
+            onPress: () => {
+              setAlertConfig(prev => ({...prev, visible: false}));
+              navigation.replace('Login', {});
+            },
           },
-        }],
+        ],
       });
       return;
     }
@@ -317,14 +324,16 @@ export default function ProfileScreen() {
         title: 'Thông báo',
         message: 'Bạn cần đăng nhập để sử dụng chức năng này',
         type: 'info',
-        buttons: [{
-          text: 'OK',
-          style: 'default',
-          onPress: () => {
-            setAlertConfig(prev => ({...prev, visible: false}));
-            navigation.navigate('Login', {});
+        buttons: [
+          {
+            text: 'OK',
+            style: 'default',
+            onPress: () => {
+              setAlertConfig(prev => ({...prev, visible: false}));
+              navigation.navigate('Login', {});
+            },
           },
-        }],
+        ],
       });
       return;
     }

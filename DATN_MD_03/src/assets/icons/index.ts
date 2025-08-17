@@ -15,8 +15,8 @@ export const Icons = {
     android: 'asset:/icons/icon_wifi.png',
   }),
   IconArrowDown: Platform.select({
-    ios: 'icon_arrowdown',
-    android: 'asset:/icons/icon_arrowdown.png',
+    ios: 'icon_arrrow_down',
+    android: 'asset:/icons/icon_arrrow_down.png',
   }),
   IconRemoveFilter: Platform.select({
     ios: 'icon_removefilter',
@@ -391,8 +391,8 @@ export const Icons = {
     android: 'asset:/icons/icon_union.png',
   }),
   IconRoomOutline: Platform.select({
-    ios: 'icon_room_outline',
-    android: 'asset:/icons/icon_room_outline.png',
+    ios: 'icon_room_ouline',
+    android: 'asset:/icons/icon_room_ouline.png',
   }),
   IconViewLight: Platform.select({
     ios: 'icon_view_light',
@@ -712,5 +712,9 @@ export const Icons = {
   IconGallery: Platform.select({
     ios: 'icon_gallery',
     android: 'asset:/icons/icon_gallery.png',
+  }),
+  IconTrashCanRed: Platform.select({
+    ios: 'icon_trash_can_red',
+    android: 'asset:/icons/icon_trash_can_red.png',
   }),
 };

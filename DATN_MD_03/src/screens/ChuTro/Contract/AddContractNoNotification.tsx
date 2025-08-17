@@ -25,6 +25,7 @@ import {createNewContractThunk} from '../../../store/slices/contractSlice';
 import CustomAlertModal from '../../../components/CustomAlertModal';
 import {useCustomAlert} from '../../../hooks/useCustomAlrert';
 import {StackNavigationProp} from '@react-navigation/stack';
+import ItemHelpText from './components/ItemHelpText';
 
 export default function AddContractNoNotification() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -36,7 +37,7 @@ export default function AddContractNoNotification() {
   const [roomName, setRoomName] = useState<string>('');
   const [maxOccupancy, setMaxOccupancy] = useState<number>(0);
   const [tenantUsername, setTenantUsername] = useState<string>('');
-  const [contractTerm, setContractTerm] = useState<number>(12);
+  const [contractTerm, setContractTerm] = useState<string>('');
   const [startDate, setStartDate] = useState('');
   const [rules, setRules] = useState('Hạn thu tiền quá 5 ngày sẽ bị phạt');
   const [additionalTerms, setAdditionalTerms] = useState(
@@ -56,7 +57,7 @@ export default function AddContractNoNotification() {
     setRoomName('');
     setMaxOccupancy(0);
     setTenantUsername('');
-    setContractTerm(12);
+    setContractTerm('');
     setStartDate('');
     setRules('Hạn thu tiền quá 5 ngày sẽ bị phạt');
     setAdditionalTerms(
@@ -92,8 +93,11 @@ export default function AddContractNoNotification() {
     const cleanedAdditionalTerms = cleanString(additionalTerms);
     const cleanedCoTenants = cleanString(coTenants);
 
+    // Chuyển contractTerm sang số
+    const contractTermNumber = Number(contractTerm);
+
     const formData: ContractFormDataNoNotification = {
-      contractTerm,
+      contractTerm: contractTermNumber,
       startDate,
       rules: cleanedRules,
       additionalTerms: cleanedAdditionalTerms,
@@ -102,17 +106,25 @@ export default function AddContractNoNotification() {
     };
 
     const validation = validateContractFormNoNotification(formData);
-
     if (!validation.isValid) {
       showError(validation.errors.join('\n'), 'Lỗi xác thực');
       return;
     }
 
-    const tenantsArray = processCoTenants(cleanedCoTenants);
+    // Xử lý danh sách người ở cùng
+    const tenantsArray = processCoTenants(cleanedCoTenants).map(name =>
+      name.trim(),
+    );
 
-    if (tenantsArray.includes(tenantUsername.trim())) {
+    // Kiểm tra trùng lặp trong danh sách người ở cùng
+    const duplicates = tenantsArray.filter(
+      (name, index) => tenantsArray.indexOf(name) !== index,
+    );
+    if (duplicates.length > 0) {
       showError(
-        'Tên người đại diện không được xuất hiện trong danh sách người cùng thuê',
+        `Danh sách người cùng thuê có tên bị trùng: ${[
+          ...new Set(duplicates),
+        ].join(', ')}`,
         'Lỗi',
       );
       return;
@@ -121,12 +133,13 @@ export default function AddContractNoNotification() {
     const contractData: CreateContractPayloadWithoutNotification = {
       roomId,
       tenantUsername,
-      contractTerm,
+      contractTerm: contractTermNumber,
       startDate,
       rules: cleanedRules,
       additionalTerms: cleanedAdditionalTerms,
       coTenants: tenantsArray,
     };
+
     dispatch(createNewContractThunk(contractData))
       .unwrap()
       .then(() => {
@@ -189,8 +202,8 @@ export default function AddContractNoNotification() {
         />
         <ItemInput
           placeholder="Thời hạn hợp đồng (tháng)"
-          value={contractTerm.toString()}
-          onChangeText={text => setContractTerm(Number(text))}
+          value={contractTerm}
+          onChangeText={text => setContractTerm(text)}
           editable={true}
           keyboardType="numeric"
         />
@@ -231,9 +244,7 @@ export default function AddContractNoNotification() {
           onChangeText={setCoTenants} // Đơn giản hơn
           editable={true}
         />
-        <Text style={styles.helperText}>
-          Nếu không có người cùng thuê, bạn có thể để trống.
-        </Text>
+        <ItemHelpText text="Nhập username người cùng thuê, cách nhau bằng dấu phẩy. Ví dụ: 'nguoiThue1, nguoiThue2 ..' . Nếu không có, hãy để trống." />
         <View style={styles.conatinerButton}>
           <ItemButtonConfirm
             title="Tạo hợp đồng"

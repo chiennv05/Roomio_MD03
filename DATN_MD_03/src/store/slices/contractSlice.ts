@@ -12,7 +12,9 @@ import {
   extendContract,
   terminateContract,
   updateTenantsApi,
-  deleteContractApi, // <-- import API deleteContract
+  deleteContractApi,
+  resignContract,
+  getCoTenantsContract, // <-- import API deleteContract
 } from '../services/contractApi';
 import {
   Contract,
@@ -49,7 +51,12 @@ const initialState: ContractState = {
 export const fetchMyContracts = createAsyncThunk(
   'contract/fetchMyContracts',
   async (
-    params: {page?: number; limit?: number; status?: string} = {},
+    params: {
+      page?: number;
+      limit?: number;
+      status?: string;
+      roomName?: string;
+    } = {},
     {rejectWithValue},
   ) => {
     try {
@@ -139,7 +146,8 @@ export const uploadContractImages = createAsyncThunk(
       if (
         !selectedContract ||
         (selectedContract.status !== 'pending_signature' &&
-          selectedContract.status !== 'pending_approval')
+          selectedContract.status !== 'pending_approval' &&
+          selectedContract.status !== 'needs_resigning')
       ) {
         return rejectWithValue(
           'Chỉ có thể upload ảnh khi hợp đồng đang chờ ký hoặc chờ phê duyệt',
@@ -194,7 +202,7 @@ export const updateContractFrom = createAsyncThunk(
 );
 // Thêm vào đầu file, bên dưới các import hiện tại
 export const deleteAllSignedImages = createAsyncThunk<
-  {success: boolean; message: string},
+  {success: boolean; message: string; status: any},
   string,
   {rejectValue: string; state: any}
 >(
@@ -212,7 +220,7 @@ export const deleteAllSignedImages = createAsyncThunk<
 );
 
 export const deleteSignedImageThunk = createAsyncThunk<
-  {success: boolean; message: string; fileName: string},
+  {success: boolean; message: string; fileName: string; status: any},
   {contractId: string; fileName: string},
   {rejectValue: string; state: any}
 >(
@@ -222,6 +230,7 @@ export const deleteSignedImageThunk = createAsyncThunk<
     // kiểm tra trạng thái nếu cần
     try {
       const response = await deleteSignedImage(contractId, fileName);
+
       return {...response, fileName};
     } catch (err: any) {
       return rejectWithValue(err.message || 'Xóa ảnh thất bại');
@@ -264,11 +273,19 @@ export const terminateContractThunk = createAsyncThunk<
 export const updateTenants = createAsyncThunk(
   'contract/updateTenants',
   async (
-    {contractId, tenants}: {contractId: string; tenants: string[]},
+    {
+      contractId,
+      usernames,
+      apply,
+    }: {
+      contractId: string;
+      usernames: string[];
+      apply: boolean;
+    },
     {rejectWithValue},
   ) => {
     try {
-      const response = await updateTenantsApi(contractId, tenants);
+      const response = await updateTenantsApi(contractId, usernames, apply);
       console.log(' response  redux tenants:', response);
       if (!response.success) {
         return rejectWithValue(
@@ -306,6 +323,34 @@ export const deleteContract = createAsyncThunk(
   },
 );
 
+export const resignContractThunk = createAsyncThunk(
+  'contracts/resignContract',
+  async (contractId: string, {rejectWithValue}) => {
+    try {
+      const data = await resignContract(contractId);
+      console.log('data redux', data);
+      return data;
+    } catch (error: any) {
+      return rejectWithValue(error);
+    }
+  },
+);
+
+// store/slices/contractSlice.ts
+export const fetchCoTenants = createAsyncThunk(
+  'contract/fetchCoTenants',
+  async (contractId: string, {rejectWithValue}) => {
+    try {
+      const res = await getCoTenantsContract(contractId);
+      return res.data; // hoặc res.coTenants tùy backend trả về
+    } catch (err: any) {
+      return rejectWithValue(
+        err.message || 'Không thể lấy danh sách người ở cùng',
+      );
+    }
+  },
+);
+
 const contractSlice = createSlice({
   name: 'contract',
   initialState,
@@ -327,9 +372,18 @@ const contractSlice = createSlice({
       })
       .addCase(fetchMyContracts.fulfilled, (state, action) => {
         state.loading = false;
-        state.contracts = action.payload.contracts;
+
+        if (action.payload.pagination.page === 1) {
+          // Nếu là trang đầu tiên thì reset
+          state.contracts = action.payload.contracts;
+        } else {
+          // Nếu load tiếp thì nối vào
+          state.contracts = [...state.contracts, ...action.payload.contracts];
+        }
+
         state.pagination = action.payload.pagination;
       })
+
       .addCase(fetchMyContracts.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
@@ -423,15 +477,23 @@ const contractSlice = createSlice({
         state.error = action.payload as string;
       }) // cập nhật hợp đồng
       .addCase(updateContractFrom.fulfilled, (state, action) => {
-        const updatedContract = action.payload;
-        console.log('Updated contract in reducer:', updatedContract);
+        const updatedContract = {
+          ...action.payload,
+          roomId:
+            state.selectedContract?.roomId ||
+            state.contracts.find(c => c._id === action.payload._id)?.roomId ||
+            action.payload.roomId,
+        };
 
-        // Cập nhật selectedContract nếu nó chính là contract đang sửa
+        // Cập nhật selectedContract nếu nó trùng với contract được sửa
         if (
           state.selectedContract &&
           state.selectedContract._id === updatedContract._id
         ) {
-          state.selectedContract = updatedContract;
+          state.selectedContract = {
+            ...updatedContract,
+            roomId: state.selectedContract.roomId, // Giữ nguyên roomId hiện tại
+          };
         }
 
         // Cập nhật trong danh sách contracts (nếu tồn tại)
@@ -439,7 +501,10 @@ const contractSlice = createSlice({
           c => c._id === updatedContract._id,
         );
         if (index !== -1) {
-          state.contracts[index] = updatedContract;
+          state.contracts[index] = {
+            ...updatedContract,
+            roomId: state.contracts[index].roomId, // Giữ nguyên roomId hiện tại
+          };
         }
       })
       .addCase(updateContractFrom.rejected, (state, action) => {
@@ -468,9 +533,11 @@ const contractSlice = createSlice({
       })
       .addCase(deleteAllSignedImages.fulfilled, (state, action) => {
         state.uploadingImages = false;
+
         // 1. Xóa hết mảng ảnh trong selectedContract
         if (state.selectedContract) {
           state.selectedContract.signedContractImages = [];
+          state.selectedContract.status = action.payload.status; // Cập nhật status nếu cần
         }
         // 2. Cập nhật trong list contracts nếu cần
         const idxAll = state.contracts.findIndex(
@@ -493,12 +560,13 @@ const contractSlice = createSlice({
       .addCase(deleteSignedImageThunk.fulfilled, (state, action) => {
         state.uploadingImages = false;
         const {contractId, fileName} = action.meta.arg;
+        const {status} = action.payload; // Lấy status mới từ API
 
         const matchFileName = (url: string) => {
           return url.split('/').pop() === fileName;
         };
 
-        // 1. Loại ảnh khỏi selectedContract
+        // 1. Loại ảnh & cập nhật status trong selectedContract
         if (
           state.selectedContract &&
           state.selectedContract._id === contractId &&
@@ -508,9 +576,10 @@ const contractSlice = createSlice({
             state.selectedContract.signedContractImages.filter(
               imgUrl => !matchFileName(imgUrl),
             );
+          state.selectedContract.status = status; // ✅ cập nhật status mới
         }
 
-        // 2. Loại ảnh khỏi danh sách contracts
+        // 2. Loại ảnh & cập nhật status trong danh sách contracts
         const idx = state.contracts.findIndex(c => c._id === contractId);
         if (
           idx !== -1 &&
@@ -519,8 +588,10 @@ const contractSlice = createSlice({
           state.contracts[idx].signedContractImages = state.contracts[
             idx
           ].signedContractImages.filter(imgUrl => !matchFileName(imgUrl));
+          state.contracts[idx].status = status; // ✅ cập nhật status mới
         }
       })
+
       .addCase(deleteSignedImageThunk.rejected, (state, action) => {
         state.uploadingImages = false;
         state.error = action.payload as string;
@@ -573,39 +644,43 @@ const contractSlice = createSlice({
       })
       .addCase(updateTenants.fulfilled, (state, action) => {
         state.selectedContractLoading = false;
-        const {contractId, coTenants, tenantCount, status, needsResigning} =
-          action.payload;
+        const {contractId, data} = action.payload;
+        const {coTenants, tenantCount, status} = data;
+
+        console.log('Cập nhật thông tin người thuê 1:', coTenants);
 
         // Cập nhật trong danh sách contracts
         const contractIndex = state.contracts.findIndex(
           contract => contract._id === contractId,
         );
         if (contractIndex !== -1) {
-          // Kiểm tra xem contract có contractInfo không
           if (state.contracts[contractIndex].contractInfo) {
             state.contracts[contractIndex].contractInfo.coTenants = coTenants;
             state.contracts[contractIndex].contractInfo.tenantCount =
               tenantCount;
           }
           state.contracts[contractIndex].status = status;
+          state.contracts[contractIndex].signedContractImages = []; // Xóa ảnh cũ
+          state.contracts[contractIndex].contractPdfUrl = data.contractPdfUrl; // Cập nhật URL PDF
         }
 
-        // Cập nhật selectedContract với null check
+        // Cập nhật selectedContract
         if (
           state.selectedContract &&
           state.selectedContract._id === contractId
         ) {
-          // Kiểm tra xem selectedContract có contractInfo không
           if (state.selectedContract.contractInfo) {
             state.selectedContract.contractInfo.coTenants = coTenants;
             state.selectedContract.contractInfo.tenantCount = tenantCount;
           }
           state.selectedContract.status = status;
+          state.selectedContract.signedContractImages = []; // Xóa ảnh cũ
+          state.selectedContract.contractPdfUrl = data.contractPdfUrl; // Xóa ảnh cũ
         }
       })
+
       .addCase(updateTenants.rejected, (state, action) => {
         state.selectedContractLoading = false;
-        state.selectedContractError = action.payload as string;
       })
       // Xóa hợp đồng
       .addCase(deleteContract.pending, state => {
@@ -632,6 +707,36 @@ const contractSlice = createSlice({
       .addCase(deleteContract.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      .addCase(resignContractThunk.pending, state => {
+        state.selectedContractLoading = true;
+        state.selectedContractError = null;
+      })
+      .addCase(resignContractThunk.fulfilled, (state, action) => {
+        state.selectedContractLoading = false;
+        const {contract} = action.payload;
+
+        // Cập nhật danh sách contracts
+        const contractIndex = state.contracts.findIndex(
+          c => c._id === contract._id,
+        );
+        if (contractIndex !== -1) {
+          state.contracts[contractIndex].status = contract.status;
+          state.contracts[contractIndex].signedContractImages = []; // Xóa ảnh cũ
+        }
+
+        // Cập nhật selectedContract
+        if (
+          state.selectedContract &&
+          state.selectedContract._id === contract._id
+        ) {
+          state.selectedContract.status = contract.status;
+          state.selectedContract.signedContractImages = []; // Xóa ảnh cũ
+        }
+      })
+      .addCase(resignContractThunk.rejected, (state, action) => {
+        state.selectedContractLoading = false;
+        state.selectedContractError = action.payload as string;
       });
   },
 });

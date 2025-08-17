@@ -34,7 +34,7 @@ export default function RoomDetail() {
     alertVisible,
     hideAlert,
   } = useRoomDetail(roomId);
-
+  console.log('object', selectedRoom);
   if (loading) {
     return (
       <View style={styles.safeArea}>

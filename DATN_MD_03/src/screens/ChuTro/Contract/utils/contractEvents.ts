@@ -142,7 +142,7 @@ export const handleGalleryUpload = async (
   try {
     const selectedImages = await ImagePicker.openPicker({
       multiple: true,
-      maxFiles: 3,
+      maxFiles: 5,
       mediaType: 'photo',
       includeBase64: false,
       includeExif: false,
@@ -240,7 +240,8 @@ export const handlePickImages = (
   if (
     !selectedContract ||
     (selectedContract.status !== 'pending_signature' &&
-      selectedContract.status !== 'pending_approval')
+      selectedContract.status !== 'pending_approval' &&
+      selectedContract.status !== 'needs_resigning')
   ) {
     if (customAlert) {
       customAlert.showError(

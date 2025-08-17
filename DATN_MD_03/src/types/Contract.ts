@@ -12,15 +12,16 @@ export type ContractStatus =
   | 'cancelled';
 
 export interface CoTenant {
-  _id?: string;
-  userId?: string;
-  username?: string;
-  fullName?: string;
-  phone?: string;
-  email?: string;
-  birthDate?: string | null;
-  identityNumber?: string;
-  address?: string;
+  _id: string;
+  userId: string;
+  username: string;
+  phone: string;
+  email: string;
+  birthDate: string | null;
+  identityNumber: string;
+  address: string;
+  fullName: string;
+  avatar: string;
 }
 
 export interface ServiceFees {

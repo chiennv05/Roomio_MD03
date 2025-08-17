@@ -9,13 +9,22 @@ import {
   ActivityIndicator,
   FlatList,
   Alert,
+  Platform,
+  UIManager,
+  LayoutAnimation,
 } from 'react-native';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
-import {scale, verticalScale, responsiveFont} from '../../../utils/responsive';
+import {
+  scale,
+  verticalScale,
+  responsiveFont,
+  moderateScale,
+  responsiveSpacing,
+} from '../../../utils/responsive';
 import {Icons} from '../../../assets/icons';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../../store';
@@ -28,6 +37,7 @@ import ModalShowImageContract from '../../ChuTro/Contract/components/ModalShowIm
 import ItemTitle from '../../ChuTro/AddRoom/components/ItemTitle ';
 import {getContractStatusInfo} from '../../ChuTro/Contract/components/ContractItem';
 import ItemImage from './components/ItemImage';
+import ItemButtonGreen from '../../../components/ItemButtonGreen';
 
 // Format tiền tệ
 const formatCurrency = (amount: number) => {
@@ -50,6 +60,13 @@ const formatDateTime = (dateString: string) => {
   }/${date.getFullYear()} ${hours}:${minutes}`;
 };
 
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
 const ContractDetailLesseeScreen = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route =
@@ -63,10 +80,14 @@ const ContractDetailLesseeScreen = () => {
 
   const [isVisibleImage, setIsVisibleImage] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [showHistory, setShowHistory] = useState(false);
   useEffect(() => {
     dispatch(fetchContractDetail(contractId));
   }, [contractId, dispatch]);
-
+  const toggleHistory = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setShowHistory(!showHistory);
+  };
   const handleGoBack = () => {
     navigation.goBack();
   };
@@ -174,8 +195,13 @@ const ContractDetailLesseeScreen = () => {
         <View style={styles.statusContainer}>
           <Text style={styles.sectionTitle}>Trạng thái hợp đồng</Text>
           <View
-            style={[styles.statusBadge, {backgroundColor: statusInfo.color}]}>
-            <Text style={styles.statusText}>{statusInfo.label}</Text>
+            style={[
+              styles.statusBadge,
+              {backgroundColor: statusInfo.backgroudStatus},
+            ]}>
+            <Text style={[styles.statusText, {color: statusInfo.color}]}>
+              {statusInfo.label}
+            </Text>
           </View>
         </View>
 
@@ -302,7 +328,7 @@ const ContractDetailLesseeScreen = () => {
           />
           <InfoRow
             label="Địa chỉ"
-            value={contract.contractInfo.tenantAddress}
+            value={contract.contractInfo.tenantAddress || ''}
           />
         </View>
 
@@ -363,29 +389,32 @@ const ContractDetailLesseeScreen = () => {
         {/* Lịch sử trạng thái */}
         {contract.statusHistory && contract.statusHistory.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Lịch sử hợp đồng</Text>
-            {contract.statusHistory.map((history, index) => {
-              const statusInfo = getContractStatusInfo(history.status);
-              return (
-                <View key={history._id || index} style={styles.historyItem}>
-                  <View style={styles.historyHeader}>
-                    <Text style={styles.historyDate}>
-                      {formatDateTime(history.date)}
-                    </Text>
-                    <View
-                      style={[
-                        styles.historyStatus,
-                        {backgroundColor: statusInfo.color},
-                      ]}>
-                      <Text style={styles.historyStatusText}>
-                        {statusInfo.label}
+            <ItemTitle
+              title="Lịch sử hợp đồng"
+              icon={showHistory ? Icons.IconArrowDown : Icons.IconArrowRight}
+              onPress={toggleHistory}
+              iconHeight={showHistory ? 14 : 24}
+              iconWidth={showHistory ? 24 : 14}
+            />
+            {showHistory &&
+              contract.statusHistory.map((history, index) => {
+                const statusInfo = getContractStatusInfo(history.status);
+                return (
+                  <View key={history._id || index} style={styles.historyItem}>
+                    <View style={styles.historyHeader}>
+                      <Text style={styles.historyDate}>
+                        {formatDateTime(history.date)}
                       </Text>
+                      <View style={[styles.historyStatus]}>
+                        <Text style={styles.historyStatusText}>
+                          {statusInfo.label}
+                        </Text>
+                      </View>
                     </View>
+                    <Text style={styles.historyNote}>{history.note}</Text>
                   </View>
-                  <Text style={styles.historyNote}>{history.note}</Text>
-                </View>
-              );
-            })}
+                );
+              })}
           </View>
         )}
 
@@ -404,10 +433,9 @@ const ContractDetailLesseeScreen = () => {
         </View>
 
         {/* Nút xem PDF */}
-        <TouchableOpacity style={styles.pdfButton} onPress={onViewPDF}>
-          <Text style={styles.pdfButtonText}>Xem Hợp đồng PDF</Text>
-        </TouchableOpacity>
-
+        <View style={styles.pdfButton}>
+          <ItemButtonGreen onPress={onViewPDF} title="Xem Hợp đồng PDF" />
+        </View>
         <View style={styles.bottomSpace} />
         <ModalShowImageContract
           visible={isVisibleImage}
@@ -473,14 +501,15 @@ const styles = StyleSheet.create({
     lineHeight: verticalScale(22),
   },
   statusBadge: {
-    paddingHorizontal: scale(12),
-    paddingVertical: verticalScale(4),
-    borderRadius: 12,
+    borderRadius: moderateScale(20),
   },
   statusText: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(14),
     color: Colors.white,
+    paddingHorizontal: responsiveSpacing(12),
+    paddingVertical: responsiveSpacing(8),
+    fontWeight: '500',
   },
   loadingContainer: {
     flex: 1,
@@ -518,12 +547,12 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   pdfButton: {
-    backgroundColor: Colors.darkGreen,
     marginHorizontal: scale(16),
     marginTop: verticalScale(16),
     paddingVertical: verticalScale(12),
     borderRadius: 8,
     alignItems: 'center',
+    width: '100%',
   },
   disabledButton: {
     backgroundColor: Colors.gray,
@@ -581,6 +610,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: scale(8),
     paddingVertical: verticalScale(2),
     borderRadius: 10,
+    backgroundColor: Colors.mediumGray,
   },
   historyStatusText: {
     fontFamily: Fonts.Roboto_Regular,

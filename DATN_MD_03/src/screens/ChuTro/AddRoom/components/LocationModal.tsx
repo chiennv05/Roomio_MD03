@@ -15,24 +15,14 @@ import {
   responsiveSpacing,
   moderateScale,
 } from '../../../../utils/responsive';
+import {District, Province, Ward} from '../../../../types/Address';
+import {
+  fetchCitiesOnly,
+  fetchDistrictsByProvince,
+  fetchWardsByDistrict,
+} from '../../../../store/services/locationService';
 
 // ==== INTERFACES ====
-interface Province {
-  province_id: string;
-  province_name: string;
-}
-
-interface District {
-  district_id: string;
-  district_name: string;
-  province_id: string;
-}
-
-interface Ward {
-  ward_id: string;
-  ward_name: string;
-  district_id: string;
-}
 
 export interface SelectedAddressNew {
   province?: Province;
@@ -74,9 +64,9 @@ const LocationModal: React.FC<LocationModalProps> = ({
   const fetchProvinces = async () => {
     setLoading(true);
     try {
-      const res = await fetch('https://api.vnappmob.com/api/v2/province/');
-      const data = await res.json();
-      setProvinces(data.results || []);
+      const res = await fetchCitiesOnly();
+      console.log('res', res);
+      setProvinces(res);
     } catch {
       Alert.alert('Lỗi', 'Không thể tải danh sách tỉnh/thành phố');
     } finally {
@@ -87,11 +77,8 @@ const LocationModal: React.FC<LocationModalProps> = ({
   const fetchDistricts = async (provinceId: string) => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `https://api.vnappmob.com/api/v2/province/district/${provinceId}`,
-      );
-      const data = await res.json();
-      setDistricts(data.results || []);
+      const res = await fetchDistrictsByProvince(Number(provinceId));
+      setDistricts(res || []);
     } catch {
       Alert.alert('Lỗi', 'Không thể tải danh sách quận/huyện');
     } finally {
@@ -102,11 +89,10 @@ const LocationModal: React.FC<LocationModalProps> = ({
   const fetchWards = async (districtId: string) => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `https://api.vnappmob.com/api/v2/province/ward/${districtId}`,
-      );
-      const data = await res.json();
-      setWards(data.results || []);
+      console.log('districtId:', districtId);
+      const res = await fetchWardsByDistrict(Number(districtId));
+      console.log('Wards fetched:', res);
+      setWards(res || []);
     } catch {
       Alert.alert('Lỗi', 'Không thể tải danh sách phường/xã');
     } finally {
@@ -119,14 +105,14 @@ const LocationModal: React.FC<LocationModalProps> = ({
     setTempSelected({province});
     setDistricts([]);
     setWards([]);
-    fetchDistricts(province.province_id);
+    fetchDistricts(province.code.toString());
     setCurrentStep('district');
   };
 
   const handleDistrictSelect = (district: District) => {
     setTempSelected(prev => ({...prev, district}));
     setWards([]);
-    fetchWards(district.district_id);
+    fetchWards(district.code.toString());
     setCurrentStep('ward');
   };
 
@@ -188,11 +174,9 @@ const LocationModal: React.FC<LocationModalProps> = ({
 
   const renderBreadcrumb = () => {
     const breadcrumbs: string[] = [];
-    if (tempSelected.province)
-      breadcrumbs.push(tempSelected.province.province_name);
-    if (tempSelected.district)
-      breadcrumbs.push(tempSelected.district.district_name);
-    if (tempSelected.ward) breadcrumbs.push(tempSelected.ward.ward_name);
+    if (tempSelected.province) breadcrumbs.push(tempSelected.province.name);
+    if (tempSelected.district) breadcrumbs.push(tempSelected.district.name);
+    if (tempSelected.ward) breadcrumbs.push(tempSelected.ward.name);
 
     return breadcrumbs.length > 0 ? (
       <View style={styles.breadcrumb}>
@@ -238,8 +222,7 @@ const LocationModal: React.FC<LocationModalProps> = ({
                   index
                 }
                 renderItem={({item}: {item: any}) => {
-                  const name =
-                    item.province_name || item.district_name || item.ward_name;
+                  const name = item.name || item.name || item.name;
                   return (
                     <TouchableOpacity
                       style={styles.listItem}

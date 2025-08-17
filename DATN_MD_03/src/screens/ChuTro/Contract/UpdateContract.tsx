@@ -1,12 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
+import {StyleSheet, Text, ScrollView, View} from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
@@ -24,10 +17,11 @@ import {
   responsiveSpacing,
   SCREEN,
 } from '../../../utils/responsive';
-import {useAppSelector} from '../../../hooks';
 import {Fonts} from '../../../theme/fonts';
 import {useCustomAlert} from '../../../hooks/useCustomAlrert';
 import CustomAlertModal from '../../../components/CustomAlertModal';
+import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
+import ModalLoading from '../AddRoom/components/ModalLoading';
 
 export default function UpdateContract() {
   const {
@@ -43,7 +37,7 @@ export default function UpdateContract() {
   const {contract} = route.params as {contract: Contract};
   const customServiceRoom = contract?.roomId?.location?.customServices || [];
   const dispatch = useDispatch<AppDispatch>();
-  const {selectedContractLoading} = useAppSelector(state => state.contract);
+
   const [rules, setRules] = useState(contract?.contractInfo?.rules || '');
   const [additionalTerms, setAdditionalTerms] = useState(
     contract?.contractInfo?.additionalTerms || '',
@@ -224,89 +218,82 @@ export default function UpdateContract() {
         {
           text: 'Có',
           onPress: () => navigation.goBack(),
-          style: 'cancel',
+          style: 'default',
         },
       ],
     );
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.containerScroll}>
-      <UIHeader
-        title="Cập nhật hợp đồng"
-        iconLeft={Icons.IconArrowLeft}
-        onPressLeft={handleCancelUpdate}
-      />
-
-      <Text style={styles.label}>Nội quy</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Nhập nội quy"
-        value={rules}
-        onChangeText={setRules}
-      />
-
-      <Text style={styles.label}>Điều khoản bổ sung</Text>
-      <ItemInput
-        placeholder="Mô tả"
-        value={additionalTerms}
-        onChangeText={setAdditionalTerms}
-        editable={true}
-        height={moderateScale(100)}
-        borderRadius={10}
-      />
-
-      <Text style={styles.label}>Dịch vụ bổ sung</Text>
-      {!Array.isArray(customServiceRoom) ? (
-        <Text style={styles.noServicesText}>Dịch vụ không hợp lệ</Text>
-      ) : customServiceRoom.length === 0 ? (
-        <Text style={styles.noServicesText}>Không có dịch vụ nào</Text>
-      ) : (
-        customServiceRoom.map(service => (
-          <ServiceItem
-            key={service?.name ?? Math.random().toString()} // fallback nếu name undefined
-            service={service}
-            enabled={isServiceEnabled(service)}
-            onToggle={toggleService}
-          />
-        ))
-      )}
-
-      <TouchableOpacity
-        style={[
-          styles.button,
-          isUpdated || selectedContractLoading ? styles.buttonDisabled : {},
-        ]}
-        onPress={handleUpdate}
-        disabled={isUpdated || selectedContractLoading}>
-        {selectedContractLoading ? (
-          <ActivityIndicator color={Colors.white} />
-        ) : (
-          <Text style={styles.buttonText}>
-            {isUpdated ? 'Đã cập nhật thành công' : 'Cập nhật hợp đồng'}
-          </Text>
-        )}
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.button, {marginTop: responsiveSpacing(10)}]}
-        onPress={handleCancelUpdate}
-        disabled={isUpdated || selectedContractLoading}>
-        <Text style={styles.buttonText}>Hủy bỏ cập nhật</Text>
-      </TouchableOpacity>
-      {alertConfig && (
-        <CustomAlertModal
-          visible={alertVisible}
-          title={alertConfig.title}
-          message={alertConfig.message}
-          onClose={hideAlert}
-          type={alertConfig.type}
-          buttons={alertConfig.buttons}
+    <View style={styles.container}>
+      <ScrollView
+        style={styles.containerScrollview}
+        contentContainerStyle={styles.containerScroll}
+        showsVerticalScrollIndicator={false}>
+        <UIHeader
+          title="Cập nhật hợp đồng"
+          iconLeft={Icons.IconArrowLeft}
+          onPressLeft={handleCancelUpdate}
         />
-      )}
-    </ScrollView>
+
+        <Text style={styles.label}>Nội quy</Text>
+        <ItemInput
+          placeholder="Điều khoản nội quy"
+          value={rules}
+          height={moderateScale(100)}
+          onChangeText={setRules}
+          editable={true}
+          borderRadius={10}
+        />
+
+        <Text style={styles.label}>Điều khoản bổ sung</Text>
+        <ItemInput
+          placeholder="Mô tả"
+          value={additionalTerms}
+          onChangeText={setAdditionalTerms}
+          editable={true}
+          height={moderateScale(100)}
+          borderRadius={10}
+        />
+
+        <Text style={styles.label}>Dịch vụ bổ sung</Text>
+        {!Array.isArray(customServiceRoom) ? (
+          <Text style={styles.noServicesText}>Dịch vụ không hợp lệ</Text>
+        ) : customServiceRoom.length === 0 ? (
+          <Text style={styles.noServicesText}>Không có dịch vụ nào</Text>
+        ) : (
+          customServiceRoom.map(service => (
+            <ServiceItem
+              key={service?.name ?? Math.random().toString()} // fallback nếu name undefined
+              service={service}
+              enabled={isServiceEnabled(service)}
+              onToggle={toggleService}
+            />
+          ))
+        )}
+
+        {alertConfig && (
+          <CustomAlertModal
+            visible={alertVisible}
+            title={alertConfig.title}
+            message={alertConfig.message}
+            onClose={hideAlert}
+            type={alertConfig.type}
+            buttons={alertConfig.buttons}
+          />
+        )}
+
+        <ModalLoading loading={true} visible={isUpdated} />
+      </ScrollView>
+      <View style={styles.containerButton}>
+        <ItemButtonConfirm
+          icon={Icons.IconDelete}
+          title="Cập nhật hợp đồng"
+          onPress={handleUpdate}
+          onPressIcon={handleCancelUpdate}
+        />
+      </View>
+    </View>
   );
 }
 
@@ -314,6 +301,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
+    alignItems: 'center',
+  },
+  containerScrollview: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    marginBottom: responsiveSpacing(100),
   },
   containerScroll: {
     paddingBottom: responsiveSpacing(50),
@@ -380,4 +373,12 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   // Tenant management styles
+
+  containerButton: {
+    position: 'absolute',
+    bottom: responsiveSpacing(30),
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
 });
