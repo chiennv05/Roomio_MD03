@@ -90,7 +90,7 @@ export default function Register({setModal}: ModalProps) {
       <ItemInput
         value={usename}
         onChangeText={setUsename}
-        placeholder={'Username'}
+        placeholder={'Tài khoản'}
         isPass={false}
         editable={true}
       />
@@ -118,7 +118,7 @@ export default function Register({setModal}: ModalProps) {
       <Text style={styles.textCondition}>
         Bằng việc nhấn vào xác nhận, bạn đồng ý với
         <Text style={styles.textConditionGreen}> điều khoản và điều kiện </Text>
-        của Romio
+        của Roomio
       </Text>
 
       <ItemButtonConfirm

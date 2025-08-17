@@ -57,7 +57,7 @@ export default function LoginAndRegister() {
             style={styles.styleImageRoomio}
             resizeMode="contain"
           />
-          <Text style={styles.textStart}>Bắt đầu cùng ROMIO ngay</Text>
+          <Text style={styles.textStart}>Bắt đầu cùng ROOMIO ngay</Text>
           <Text style={styles.textTitle}>
             Đăng nhập để Roomio đồng hành cùng bạn để tìm nơi ở lý tưởng một
             cách dễ dàng
