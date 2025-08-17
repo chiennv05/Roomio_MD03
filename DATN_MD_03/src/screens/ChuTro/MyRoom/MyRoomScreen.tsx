@@ -39,6 +39,7 @@ import {
   loadPlans,
   loadSubscriptions,
 } from '../../../store/slices/subscriptionSlice';
+import {checkProfileUser} from '../../../store/services/authService';
 
 export default function MyRoomScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -48,6 +49,7 @@ export default function MyRoomScreen() {
   const {rooms, loading, pagination} = useSelector(
     (state: RootState) => state.landlordRooms,
   );
+
   const {
     alertConfig,
     visible: alertVisible,
@@ -140,7 +142,33 @@ export default function MyRoomScreen() {
     [navigation],
   );
   const handleGoback = () => navigation.goBack();
-  const handleAddRoom = () => {
+  const handleAddRoom = async () => {
+    if (!token) {
+      return;
+    }
+    const checkUser = await checkProfileUser(token);
+    if (!checkUser.data.profileComplete) {
+      showConfirm(
+        'Bạn cần cập nhật thông tin cá nhân trước khi quản lý hợp đồng',
+        () => {
+          navigation.navigate('PersonalInformation', {});
+          hideAlert();
+        },
+        'Cập nhật thông tin',
+        [
+          {text: 'Hủy', onPress: hideAlert, style: 'cancel'},
+          {
+            text: 'Cập nhật ngay',
+            onPress: () => {
+              navigation.navigate('PersonalInformation', {});
+              hideAlert();
+            },
+            style: 'default',
+          },
+        ],
+      );
+      return;
+    }
     if (effectivePlan && total >= effectivePlan.maxActiveRooms) {
       showConfirm(
         `Bạn đã đạt giới hạn ${effectivePlan.maxActiveRooms} phòng trong gói ${effectivePlan.name}. Vui lòng nâng cấp gói để thêm phòng mới.`,
