@@ -25,7 +25,14 @@ import 'react-native-gesture-handler';
 
 import PersonalInformation from '../screens/Profile/PersonalInformation';
 import MyRoomScreen from '../screens/ChuTro/MyRoom/MyRoomScreen';
+import BillScreen from '../screens/Bill/BillScreen';
+import BillDetailScreen from '../screens/Bill/BillDetailScreen';
+import RoommateInvoiceDetailScreen from '../screens/Bill/RoommateInvoiceDetailScreen';
+import CreateInvoiceScreen from '../screens/Bill/CreateInvoiceScreen';
+import EditInvoiceScreen from '../screens/Bill/EditInvoiceScreen';
+import InvoiceTemplatesScreen from '../screens/Bill/InvoiceTemplatesScreen';
 import AddRoomScreen from '../screens/ChuTro/AddRoom/AddRoomScreen';
+
 import ContractManagement from '../screens/ChuTro/Contract/ContractManagement';
 import ContractDetailScreen from '../screens/ChuTro/Contract/ContractDetailScreen';
 import AddContract from '../screens/ChuTro/Contract/AddContract';
@@ -33,20 +40,13 @@ import PdfViewerScreen from '../screens/ChuTro/Contract/PdfViewerScreen';
 import MapScreen from '../screens/ChuTro/AddRoom/MapScreen';
 import RoomDetail from '../screens/ChuTro/RoomDetail/RoomDetail';
 import UpdateRoom from '../screens/ChuTro/UpdateRoom/UpdateRoom';
-import UpdateContract from '../screens/ChuTro/Contract/UpdateContract';
+// import UpdateContract from '../screens/ChuTro/Contract/UpdateContract';
+// <<<<<<< HEAD
 import PolicyTerms from '../screens/PolicyTerms/PolicyTerms';
-import StatisticScreen from '../screens/ChuTro/Statistic/StatisticScreen';
-import SupportScreen from '../screens/Support/SupportScreen';
-import AddNewSupport from '../screens/Support/AddNewSupport';
-import SupportDetail from '../screens/Support/SupportDetail';
-import UpdateSupport from '../screens/Support/UpdateSupport';
-import BillScreen from '../screens/Bill/BillScreen';
-import BillDetailScreen from '../screens/Bill/BillDetailScreen';
-import RoommateInvoiceDetailScreen from '../screens/Bill/RoommateInvoiceDetailScreen';
-import CreateInvoiceScreen from '../screens/Bill/CreateInvoiceScreen';
-import EditInvoiceScreen from '../screens/Bill/EditInvoiceScreen';
-import InvoiceTemplatesScreen from '../screens/Bill/InvoiceTemplatesScreen';
+// // >>>>>>> origin/chien
+
 import AddContractNoNotification from '../screens/ChuTro/Contract/AddContractNoNotification';
+
 import ContractLessee from '../screens/NguoiThue/Contract/ContractLessee';
 import ContractDetailLesseeScreen from '../screens/NguoiThue/Contract/ContractDetailLesseeScreen';
 import UpdateTenant from '../screens/ChuTro/Contract/UpdateTenant';
@@ -135,13 +135,6 @@ export default function TabScreen() {
             component={PersonalInformation}
           />
           <Stack.Screen
-            name="TenantList"
-            component={TenantList}
-            options={{
-              ...TransitionPresets.SlideFromRightIOS,
-            }}
-          />
-          <Stack.Screen
             name="Bill"
             component={BillScreen}
             options={{
@@ -149,8 +142,8 @@ export default function TabScreen() {
             }}
           />
           <Stack.Screen
-            name="TenantDetail"
-            component={TenantDetailScreen}
+            name="TenantList"
+            component={TenantList}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}
@@ -163,8 +156,8 @@ export default function TabScreen() {
             }}
           />
           <Stack.Screen
-            name="ContractTenants"
-            component={ContractTenantsScreen}
+            name="TenantDetail"
+            component={TenantDetailScreen}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}
@@ -197,6 +190,14 @@ export default function TabScreen() {
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
+          <Stack.Screen
+            name="ContractTenants"
+            component={ContractTenantsScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+
           <Stack.Screen name="LandlordRoom" component={MyRoomScreen} />
           <Stack.Screen name="AddRooom" component={AddRoomScreen} />
 
@@ -224,37 +225,27 @@ export default function TabScreen() {
           />
           <Stack.Screen name="DetailRoomLandlord" component={RoomDetail} />
           <Stack.Screen name="UpdateRoomScreen" component={UpdateRoom} />
-          <Stack.Screen name="SupportScreen" component={SupportScreen} />
-          <Stack.Screen name="AddNewSupport" component={AddNewSupport} />
-          <Stack.Screen
-            name="SupportDetail"
-            component={SupportDetail}
-            options={{
-              ...TransitionPresets.SlideFromRightIOS,
-            }}
-          />
           <Stack.Screen name="AddContract" component={AddContract} />
-          <Stack.Screen
+          {/* <Stack.Screen
             name="UpdateContract"
             component={UpdateContract}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}
-          />
+          /> */}
           <Stack.Screen
-            name="UpdateSupport"
-            component={UpdateSupport}
-            options={{
-              ...TransitionPresets.SlideFromRightIOS,
-            }}
-          />
-          <Stack.Screen
+            // <<<<<<< HEAD
+            // name="PolicyTerms"
+            // component={PolicyTerms}
+            // =======
             name="AddContractNoNotification"
             component={AddContractNoNotification}
+            // {/* >>>>>>> origin/ton */}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
+
           <Stack.Screen
             name="PolicyTerms"
             component={PolicyTerms}
@@ -276,7 +267,7 @@ export default function TabScreen() {
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
-          <Stack.Screen name="StatisticScreen" component={StatisticScreen} />
+          {/* <Stack.Screen name="StatisticScreen" component={StatisticScreen} /> */}
           <Stack.Screen
             name="RoomStatisticScreen"
             component={RoomStatisticScreen}

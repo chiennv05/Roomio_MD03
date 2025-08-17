@@ -390,6 +390,8 @@ export const Icons = {
     ios: 'icon_union',
     android: 'asset:/icons/icon_union.png',
   }),
+
+
   IconRoomOutline: Platform.select({
     ios: 'icon_room_ouline',
     android: 'asset:/icons/icon_room_ouline.png',
@@ -666,6 +668,7 @@ export const Icons = {
   IconDownLoad: Platform.select({
     ios: 'icon_download',
     android: 'asset:/icons/icon_download.png',
+
   }),
   IconCalendar: Platform.select({
     ios: 'icon_calendar',
@@ -684,6 +687,11 @@ export const Icons = {
   IconArrowRightGreen: Platform.select({
     ios: 'icon_arrow_right_green',
     android: 'asset:/icons/icon_arrow_right_green.png',
+
+  }),
+  IconSaveTemplate: Platform.select({
+    ios: 'icon_save_template',
+    android: 'asset:/icons/icon_save_template.png',
   }),
   IconCamera: Platform.select({
     ios: 'camera',

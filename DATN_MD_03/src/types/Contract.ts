@@ -1,4 +1,4 @@
-import {CustomService} from './Room';
+import { CustomService } from './Room';
 
 export type ContractStatus =
   | 'draft'
@@ -74,6 +74,7 @@ export interface ContractApproval {
   notes?: string;
   rejectionReason?: string;
 }
+
 
 export interface StatusHistoryItem {
   _id?: string;

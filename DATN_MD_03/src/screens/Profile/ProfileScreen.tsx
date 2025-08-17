@@ -247,7 +247,8 @@ export default function ProfileScreen() {
   const handleConfirmLogout = async () => {
     if (!token) {
       setShowLogoutModal(false);
-      navigation.navigate('Login', {});
+
+      navigation.replace('Login', {});
       return;
     }
 
@@ -260,11 +261,14 @@ export default function ProfileScreen() {
       // Dù có lỗi API, vẫn logout local và navigate
       setShowLogoutModal(false);
       navigation.navigate('Login', {});
+
     }
   };
 
   const handleLogin = () => {
+
     navigation.replace('Login', {});
+
   };
 
   const hanleUpdateProfile = () => {
@@ -314,6 +318,7 @@ export default function ProfileScreen() {
   const handleSupportPress = () => {
     navigation.navigate('SupportScreen');
   };
+
   const handleNavigateToBill = () => {
     if (!checkToken(token)) {
       setAlertConfig({
@@ -335,7 +340,22 @@ export default function ProfileScreen() {
       return;
     }
     navigation.navigate('Bill');
-  };
+
+  }
+
+  // // Hàm xử lý khi nhấn vào "Danh sách người thuê"
+  // const handleTenantListPress = () => {
+  //   // Chuyển đến màn hình TenantList
+  //   navigation.navigate('TenantList');
+  // };
+
+  // // Hàm xử lý khi nhấn vào "Quản lý hợp đồng"
+  // const handleContractPress = () => {
+  //   // Chuyển đến màn hình ContractManagement
+  //   navigation.navigate('ContractManagement');
+  //   // >>>>>>> origin/chien
+
+  // };
 
   // Show guest screen if not logged in
   if (isGuest) {
@@ -424,6 +444,8 @@ export default function ProfileScreen() {
             iconEnd={Icons.IconNext}
             onPress={handleNavigateToBill}
           />
+
+
 
           {/* Chỉ hiển thị các tùy chọn cho chủ trọ nếu user có role là chuTro */}
           {isLandlord && (

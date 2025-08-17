@@ -1,3 +1,4 @@
+
 export const formatDate = (dateString: string | undefined): string => {
   if (!dateString) {return 'Chưa có';}
 
@@ -14,6 +15,7 @@ export const formatDate = (dateString: string | undefined): string => {
     console.error('Error formatting date:', error);
     return 'Lỗi định dạng ngày';
   }
+
 };
 // export const formatDate = (input: string | undefined | null) => {
 //   if (!input) {
