@@ -347,12 +347,12 @@ const styles = StyleSheet.create({
   },
   buttonAddRoom: {
     position: 'absolute',
-    bottom: responsiveSpacing(20),
+    bottom: responsiveSpacing(60),
     right: responsiveSpacing(20),
-    width: responsiveIcon(44),
-    height: responsiveIcon(44),
+    width: responsiveIcon(56),
+    height: responsiveIcon(56),
     backgroundColor: Colors.limeGreen,
-    borderRadius: responsiveIcon(44) / 2,
+    borderRadius: responsiveIcon(56) / 2,
     padding: responsiveSpacing(12),
     shadowColor: Colors.black,
     shadowOffset: {

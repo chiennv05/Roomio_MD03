@@ -5,9 +5,10 @@ import {Fonts} from '../../../../theme/fonts';
 import {
   responsiveFont,
   scale,
+  SCREEN,
   verticalScale,
 } from '../../../../utils/responsive';
-import {Icons} from '../../../../assets/icons';
+import {Images} from '../../../../assets/images';
 
 interface EmptyRoomProps {
   loading?: boolean;
@@ -45,7 +46,7 @@ const EmptyRoom: React.FC<EmptyRoomProps> = ({
 
   return (
     <View style={styles.container}>
-      <Image source={{uri: Icons.IconRoomOutline}} style={styles.icon} />
+      <Image source={{uri: Images.ImageRoomOutline}} style={styles.icon} />
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
     </View>
@@ -60,24 +61,26 @@ const styles = StyleSheet.create({
     padding: scale(20),
   },
   icon: {
-    width: scale(80),
-    height: scale(80),
+    width: scale(160),
+    height: scale(160),
     tintColor: Colors.gray150,
     marginBottom: verticalScale(16),
   },
   title: {
-    fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(18),
-    color: Colors.textGray,
+    fontFamily: Fonts.Roboto_Medium,
+    fontSize: responsiveFont(20),
+    color: Colors.black,
     marginBottom: verticalScale(8),
     textAlign: 'center',
+    fontWeight: '700',
   },
   description: {
     fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(14),
-    color: Colors.textGray,
+    fontSize: responsiveFont(16),
+    color: Colors.gray60,
     textAlign: 'center',
     lineHeight: verticalScale(22),
+    width: SCREEN.width * 0.7,
   },
 });
 

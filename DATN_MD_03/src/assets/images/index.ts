@@ -33,4 +33,8 @@ export const Images = {
     ios: 'image_avata_defaut',
     android: 'asset:/images/image_avata_defaut.jpg',
   }),
+  ImageRoomOutline: Platform.select({
+    ios: 'image_room_outline',
+    android: 'asset:/images/image_room_outline.png',
+  }),
 };
