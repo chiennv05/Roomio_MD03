@@ -66,12 +66,12 @@ export default function Login({setModal}: ModalProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.textTitle}>
-        Vui lòng thêm các thông tin dưới đây để đăng nhập vào App Romio nhé
+        Vui lòng thêm các thông tin dưới đây để đăng nhập vào App Roomio nhé
       </Text>
       <ItemInput
         value={usename}
         onChangeText={setUsename}
-        placeholder={'Username'}
+        placeholder={'Tài Khoản'}
         isPass={false}
         editable={true}
       />
@@ -88,7 +88,7 @@ export default function Login({setModal}: ModalProps) {
       <Text style={styles.textCondition}>
         Bằng việc nhấn vào xác nhận, bạn đồng ý với
         <Text style={styles.textConditionGreen}> điều khoản và điều kiện </Text>
-        của Romio
+        của Roomio
       </Text>
       <ItemButtonConfirm
         onPress={hanleLogin}
