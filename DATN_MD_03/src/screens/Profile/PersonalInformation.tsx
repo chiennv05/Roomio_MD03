@@ -379,20 +379,20 @@ const PersonalInformation = React.memo(() => {
               <View style={styles.fieldContainer}>
                 <InfoField
                   icon={Icons.IconCCCD}
-                  iconBgColor="#E3F2FD"
+                  iconBgColor= {Colors.backgroud}
                   label="Số CMND/CCCD"
                   value={identityNumber}
                 />
                 <InfoField
                   icon={Icons.IconBirthDate}
-                  iconBgColor="#FCE4EC"
+                  iconBgColor= {Colors.backgroud}
                   label="Ngày sinh"
                   value={birthDate ? formatDate(birthDate) : undefined}
                 />
 
                 <InfoField
                   icon={Icons.IconLocationHome}
-                  iconBgColor="#FFF3E0"
+                  iconBgColor= {Colors.backgroud}
                   label="Địa chỉ thường trú"
                   value={address || 'Chưa cập nhật'}
                 />
@@ -409,7 +409,7 @@ const PersonalInformation = React.memo(() => {
               <View style={styles.fieldContainer}>
                 <EditableInfoField
                   icon={Icons.IconPhone}
-                  iconBgColor="#E8F5E9"
+                  iconBgColor= {Colors.backgroud}
                   label="SỐ ĐIỆN THOẠI"
                   value={phone}
                   onPress={() => {
@@ -419,7 +419,7 @@ const PersonalInformation = React.memo(() => {
                 />
                 <EditableInfoField
                   icon={Icons.IconEmail}
-                  iconBgColor="#E3F2FD"
+                  iconBgColor= {Colors.backgroud}
                   label="EMAIL"
                   value={email}
                   onPress={() => {

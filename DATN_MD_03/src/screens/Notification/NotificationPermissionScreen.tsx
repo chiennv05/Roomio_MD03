@@ -5,10 +5,11 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Animated,
   Easing,
+  StatusBar,
 } from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {Images} from '../../assets/images';
 import {Colors} from '../../theme/color';
 import {
@@ -205,7 +206,8 @@ export default function NotificationPermissionScreen() {
     <LinearGradient
       colors={['#f8f9fa', '#e9ecef', '#f8f9fa']}
       style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
         <Animated.View
           style={[
             styles.content,

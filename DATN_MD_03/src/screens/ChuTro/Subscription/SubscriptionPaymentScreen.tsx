@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {View, StyleSheet, Text, Image, TouchableOpacity, ScrollView, StatusBar} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {useDispatch, useSelector} from 'react-redux';
@@ -14,6 +14,8 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
 import {createSubscriptionUpgrade} from '../../../store/slices/subscriptionSlice';
 import {Icons} from '../../../assets/icons';
+import RNFS from 'react-native-fs';
+import CustomAlertModal from '../../../components/CustomAlertModal';
 
 export default function SubscriptionPaymentScreen() {
   const dispatch = useDispatch<AppDispatch>();
@@ -21,6 +23,13 @@ export default function SubscriptionPaymentScreen() {
   const {quote, bankInfo, current, plans} = useSelector((s: RootState) => s.subscription);
   const token = useSelector((s: RootState) => s.auth.token);
   const insets = useSafeAreaInsets();
+  
+  // State cho CustomAlertModal
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState<'error' | 'success' | 'warning' | 'info'>('info');
+  
   const priceText = quote?.expectedAmount && quote.expectedAmount > 0
     ? `${quote.expectedAmount.toLocaleString('vi-VN')} ${quote?.currency || 'VND'}`
     : 'Miễn phí';
@@ -34,6 +43,47 @@ export default function SubscriptionPaymentScreen() {
   const currentName = getPlanNameByKey(current?.plan || 'free') || (current?.plan || 'Free');
   const targetName = quote?.planName || getPlanNameByKey(quote?.plan) || quote?.plan || '';
 
+  const showAlert = (title: string, message: string, type: 'error' | 'success' | 'warning' | 'info' = 'info') => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertType(type);
+    setAlertVisible(true);
+  };
+
+  const handleDownloadQR = async () => {
+    if (!quote?.qrUrl) {
+      showAlert('Lỗi', 'Không có mã QR để tải xuống', 'error');
+      return;
+    }
+
+    try {
+      // Tạo tên file với timestamp
+      const timestamp = new Date().getTime();
+      const fileName = `roomio_qr_${timestamp}.png`;
+      const filePath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
+
+      // Tải ảnh QR từ URL và lưu vào thư mục Download
+      const downloadResult = await RNFS.downloadFile({
+        fromUrl: quote.qrUrl,
+        toFile: filePath,
+        background: true,
+        discretionary: true,
+        progress: (res) => {
+          console.log(`Downloaded ${res.bytesWritten} of ${res.contentLength} bytes`);
+        },
+      }).promise;
+
+      if (downloadResult.statusCode === 200) {
+        showAlert('Thành công', 'Đã tải mã QR vào thư mục Download', 'success');
+      } else {
+        throw new Error('Download failed');
+      }
+    } catch (error) {
+      console.error('Lỗi khi tải QR code:', error);
+      showAlert('Lỗi', 'Không thể tải xuống mã QR. Vui lòng thử lại.', 'error');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" translucent backgroundColor="transparent" />
@@ -44,7 +94,17 @@ export default function SubscriptionPaymentScreen() {
         <View style={styles.qrCard}>
           {/* Bỏ khung tiêu đề trong thẻ theo yêu cầu */}
           {!!quote?.qrUrl && (
-            <Image source={{uri: quote.qrUrl}} style={styles.qr} resizeMode="contain" />
+            <View style={styles.qrContainer}>
+              <Image source={{uri: quote.qrUrl}} style={styles.qr} resizeMode="contain" />
+              <TouchableOpacity
+                style={styles.downloadButton}
+                onPress={handleDownloadQR}
+                activeOpacity={0.8}
+              >
+                <Image source={{uri: Icons.IconDownLoad}} style={styles.downloadIcon} />
+                <Text style={styles.downloadText}>Tải QR</Text>
+              </TouchableOpacity>
+            </View>
           )}
           {!!targetName && (
             <View style={styles.routePill}>
@@ -83,6 +143,14 @@ export default function SubscriptionPaymentScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      
+      <CustomAlertModal
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        type={alertType}
+        onClose={() => setAlertVisible(false)}
+      />
     </View>
   );
 }
@@ -92,7 +160,27 @@ const styles = StyleSheet.create({
   header: {width: SCREEN.width, paddingBottom: responsiveSpacing(6), paddingHorizontal: scale(16), borderBottomLeftRadius: 24, borderBottomRightRadius: 24},
   content: {padding: scale(16)},
   qrCard: {backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', elevation: 1, paddingTop: verticalScale(12)},
+  qrContainer: {position: 'relative', alignItems: 'center'},
   qr: {alignSelf: 'center', width: SCREEN.width - scale(60), height: SCREEN.width - scale(60), marginVertical: verticalScale(10)},
+  downloadButton: {
+    position: 'absolute',
+    top: verticalScale(10),
+    right: scale(10),
+    backgroundColor: Colors.dearkOlive,
+    paddingHorizontal: scale(12),
+    paddingVertical: verticalScale(6),
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  downloadIcon: {width: scale(16), height: scale(16), tintColor: '#fff', marginRight: scale(4)},
+  downloadText: {color: '#fff', fontFamily: Fonts.Roboto_Bold, fontSize: responsiveFont(12)},
   routePill: {alignSelf: 'center', flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: 999, paddingHorizontal: scale(10), paddingVertical: verticalScale(6), marginBottom: verticalScale(6)},
   routeFrom: {fontFamily: Fonts.Roboto_Bold, fontSize: responsiveFont(12), color: '#374151', marginRight: scale(6)},
   routeArrowIcon: {width: scale(6), height: scale(12), tintColor: '#111827', marginRight: scale(6)},

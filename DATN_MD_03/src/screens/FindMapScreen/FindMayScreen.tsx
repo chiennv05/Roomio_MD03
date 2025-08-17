@@ -22,7 +22,7 @@ import SearchBar from './components/SearchBar';
 import RoomMarker from './components/RoomMarker';
 import RoomCard from './components/RoomCard';
 
-const SEARCH_RADIUS = 1200; // 1.2km in meters
+const SEARCH_RADIUS = 1500; // 1.2km in meters
 
 // Hàm tính khoảng cách giữa 2 điểm theo công thức Haversine
 const calculateDistance = (
@@ -218,7 +218,7 @@ const FindMapScreen: React.FC = () => {
           <>
             <Circle
               center={selectedLocation}
-              radius={1200} // 5km in meters
+              radius={1500} 
               fillColor="rgba(0, 128, 0, 0.1)"
               strokeColor="rgba(0, 128, 0, 0.3)"
               strokeWidth={2}
@@ -227,16 +227,16 @@ const FindMapScreen: React.FC = () => {
               coordinate={selectedLocation}
               anchor={{x: 0.5, y: 1}}
               zIndex={999}>
-              <View style={styles.customMarker}>
-                <View style={styles.markerContainer}>
+              {/* <View style={styles.customMarker}> */}
+                {/* <View style={styles.markerContainer}> */}
                   <Image
-                    source={{uri: Icons.IconLocation}}
+                    source={{uri: Icons.IconMaker}}
                     style={styles.markerIcon}
                     resizeMode="contain"
                   />
-                </View>
-                <View style={styles.markerTail} />
-              </View>
+                {/* </View> */}
+                {/* <View style={styles.markerTail} /> */}
+              {/* </View> */}
             </Marker>
           </>
         )}
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
   },
   myLocationButton: {
     position: 'absolute',
-    bottom: responsiveSpacing(200),
+    bottom: responsiveSpacing(260),
     right: responsiveSpacing(16),
     width: responsiveIcon(40),
     height: responsiveIcon(40),
@@ -337,20 +337,21 @@ const styles = StyleSheet.create({
     tintColor: Colors.darkGreen,
   },
   bottomContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: Colors.white,
-    borderTopLeftRadius: responsiveSpacing(20),
-    borderTopRightRadius: responsiveSpacing(20),
-    padding: responsiveSpacing(16),
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: -2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-  },
+  position: 'absolute',
+  top: 670,
+  bottom: 0,
+  left: 20,
+  right: 20,
+  backgroundColor: 'transparent', // Đổi từ Colors.white thành transparent
+  borderTopLeftRadius: 0, // Bỏ borderRadius
+  borderTopRightRadius: 0, // Bỏ borderRadius
+  padding: 0, // Bỏ padding
+  shadowColor: 'transparent', // Bỏ shadow
+  shadowOffset: {width: 0, height: 0},
+  shadowOpacity: 0,
+  shadowRadius: 0,
+  elevation: 0,
+},
   customMarker: {
     alignItems: 'center',
   },
@@ -371,9 +372,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   markerIcon: {
-    width: responsiveIcon(24),
-    height: responsiveIcon(24),
-    tintColor: Colors.darkGreen,
+    width: responsiveIcon(26),
+    height: responsiveIcon(26),
   },
   markerTail: {
     width: responsiveIcon(12),

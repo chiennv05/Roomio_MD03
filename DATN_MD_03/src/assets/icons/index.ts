@@ -717,4 +717,8 @@ export const Icons = {
     ios: 'icon_trash_can_red',
     android: 'asset:/icons/icon_trash_can_red.png',
   }),
+  IconUsername: Platform.select({
+    ios: 'icon_username',
+    android: 'asset:/icons/icon_username.png',
+  }),
 };
