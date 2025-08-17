@@ -57,6 +57,10 @@ import RevenueStatisticScreen from '../screens/ChuTro/Statistic/RevenueStatistic
 import ContractStatisticScreen from '../screens/ChuTro/Statistic/ContractStatisticScreen';
 import SubscriptionScreen from '../screens/ChuTro/Subscription/SubscriptionScreen';
 import SubscriptionPaymentScreen from '../screens/ChuTro/Subscription/SubscriptionPaymentScreen';
+import SupportScreen from '../screens/Support/SupportScreen';
+import AddNewSupport from '../screens/Support/AddNewSupport';
+import SupportDetail from '../screens/Support/SupportDetail';
+import UpdateSupport from '../screens/Support/UpdateSupport';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -317,6 +321,34 @@ export default function TabScreen() {
           <Stack.Screen
             name="SubscriptionPayment"
             component={SubscriptionPaymentScreen}
+          />
+          <Stack.Screen
+            name="SupportScreen"
+            component={SupportScreen}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="AddNewSupport"
+            component={AddNewSupport}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="SupportDetail"
+            component={SupportDetail}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
+          />
+          <Stack.Screen
+            name="UpdateSupport"
+            component={UpdateSupport}
+            options={{
+              ...TransitionPresets.SlideFromRightIOS,
+            }}
           />
         </Stack.Navigator>
       </NavigationContainer>
