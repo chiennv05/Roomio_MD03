@@ -586,8 +586,8 @@ const EditInvoiceScreen = () => {
             // Recalculate amount based on quantity and unit price
             if (newItems[itemIndex].type === 'fixed') {
                 // Lấy đơn giá từ input hoặc từ item
-                const unitPrice = itemInputs[itemId]?.unitPrice !== undefined && itemInputs[itemId]?.unitPrice !== '' ?
-                    parseInt(itemInputs[itemId]?.unitPrice || '0') :
+                const unitPrice = itemInputs[itemId]?.unitPrice !== undefined ?
+                    (itemInputs[itemId]?.unitPrice === '' ? 0 : parseInt(itemInputs[itemId]?.unitPrice)) :
                     item.unitPrice;
 
                 // Tính toán amount dựa trên priceType
@@ -654,8 +654,8 @@ const EditInvoiceScreen = () => {
             // Recalculate amount based on quantity and unit price
             if (newItems[itemIndex].type === 'fixed') {
                 // Lấy số lượng từ input hoặc từ item
-                const quantity = itemInputs[itemId]?.quantity !== undefined && itemInputs[itemId]?.quantity !== '' ?
-                    parseInt(itemInputs[itemId]?.quantity || '0') :
+                const quantity = itemInputs[itemId]?.quantity !== undefined ?
+                    (itemInputs[itemId]?.quantity === '' ? 0 : parseInt(itemInputs[itemId]?.quantity)) :
                     item.quantity;
 
                 // Tính toán amount dựa trên priceType
@@ -667,12 +667,12 @@ const EditInvoiceScreen = () => {
                 }
             } else if (newItems[itemIndex].type === 'variable') {
                 // Lấy giá trị chỉ số từ input hoặc từ item
-                const currentReading = itemInputs[itemId]?.currentReading !== undefined && itemInputs[itemId]?.currentReading !== '' ?
-                    parseInt(itemInputs[itemId]?.currentReading || '0') :
+                const currentReading = itemInputs[itemId]?.currentReading !== undefined ?
+                    (itemInputs[itemId]?.currentReading === '' ? 0 : parseInt(itemInputs[itemId]?.currentReading)) :
                     (item.currentReading || 0);
 
-                const previousReading = itemInputs[itemId]?.previousReading !== undefined && itemInputs[itemId]?.previousReading !== '' ?
-                    parseInt(itemInputs[itemId]?.previousReading || '0') :
+                const previousReading = itemInputs[itemId]?.previousReading !== undefined ?
+                    (itemInputs[itemId]?.previousReading === '' ? 0 : parseInt(itemInputs[itemId]?.previousReading)) :
                     (item.previousReading || 0);
 
                 const usage = currentReading - previousReading;

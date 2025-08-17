@@ -510,13 +510,13 @@ const EditInvoiceScreen = () => {
             if (newItems[itemIndex].type === 'variable') {
                 // Lấy giá trị chỉ số từ input hoặc từ item
                 const currentReading = field === 'currentReading' ? reading :
-                    (itemInputs[itemId]?.currentReading !== undefined && itemInputs[itemId]?.currentReading !== '' ?
-                        parseInt(itemInputs[itemId]?.currentReading || '0') :
+                    (itemInputs[itemId]?.currentReading !== undefined ?
+                        (itemInputs[itemId]?.currentReading === '' ? 0 : parseInt(itemInputs[itemId]?.currentReading)) :
                         (item.currentReading || 0));
 
                 const previousReading = field === 'previousReading' ? reading :
-                    (itemInputs[itemId]?.previousReading !== undefined && itemInputs[itemId]?.previousReading !== '' ?
-                        parseInt(itemInputs[itemId]?.previousReading || '0') :
+                    (itemInputs[itemId]?.previousReading !== undefined ?
+                        (itemInputs[itemId]?.previousReading === '' ? 0 : parseInt(itemInputs[itemId]?.previousReading)) :
                         (item.previousReading || 0));
 
                 const usage = currentReading - previousReading;
@@ -586,8 +586,8 @@ const EditInvoiceScreen = () => {
             // Recalculate amount based on quantity and unit price
             if (newItems[itemIndex].type === 'fixed') {
                 // Lấy đơn giá từ input hoặc từ item
-                const unitPrice = itemInputs[itemId]?.unitPrice !== undefined && itemInputs[itemId]?.unitPrice !== '' ?
-                    parseInt(itemInputs[itemId]?.unitPrice || '0') :
+                const unitPrice = itemInputs[itemId]?.unitPrice !== undefined ?
+                    (itemInputs[itemId]?.unitPrice === '' ? 0 : parseInt(itemInputs[itemId]?.unitPrice)) :
                     item.unitPrice;
 
                 // Tính toán amount dựa trên priceType
@@ -654,8 +654,8 @@ const EditInvoiceScreen = () => {
             // Recalculate amount based on quantity and unit price
             if (newItems[itemIndex].type === 'fixed') {
                 // Lấy số lượng từ input hoặc từ item
-                const quantity = itemInputs[itemId]?.quantity !== undefined && itemInputs[itemId]?.quantity !== '' ?
-                    parseInt(itemInputs[itemId]?.quantity || '0') :
+                const quantity = itemInputs[itemId]?.quantity !== undefined ?
+                    (itemInputs[itemId]?.quantity === '' ? 0 : parseInt(itemInputs[itemId]?.quantity)) :
                     item.quantity;
 
                 // Tính toán amount dựa trên priceType
@@ -667,12 +667,12 @@ const EditInvoiceScreen = () => {
                 }
             } else if (newItems[itemIndex].type === 'variable') {
                 // Lấy giá trị chỉ số từ input hoặc từ item
-                const currentReading = itemInputs[itemId]?.currentReading !== undefined && itemInputs[itemId]?.currentReading !== '' ?
-                    parseInt(itemInputs[itemId]?.currentReading || '0') :
+                const currentReading = itemInputs[itemId]?.currentReading !== undefined ?
+                    (itemInputs[itemId]?.currentReading === '' ? 0 : parseInt(itemInputs[itemId]?.currentReading)) :
                     (item.currentReading || 0);
 
-                const previousReading = itemInputs[itemId]?.previousReading !== undefined && itemInputs[itemId]?.previousReading !== '' ?
-                    parseInt(itemInputs[itemId]?.previousReading || '0') :
+                const previousReading = itemInputs[itemId]?.previousReading !== undefined ?
+                    (itemInputs[itemId]?.previousReading === '' ? 0 : parseInt(itemInputs[itemId]?.previousReading)) :
                     (item.previousReading || 0);
 
                 const usage = currentReading - previousReading;
@@ -1553,22 +1553,22 @@ const EditInvoiceScreen = () => {
         // Kiểm tra nếu là khoản mục từ hợp đồng
         if (isStandardContractItem(item)) {
             result.isEditable = true;
-            result.canEditDescription = true; // Luôn cho phép chỉnh sửa description
+            result.canEditDescription = true;
             
             // Xử lý theo priceType
             if (priceType === 'perRoom') {
-                // perRoom: Không thể chỉnh sửa gì - ẩn input fields nhưng vẫn cho phép chỉnh sửa description
+                // perRoom: Không thể chỉnh sửa gì - ẩn input fields nhưng vẫn hiển thị description
                 result.isEditable = false;
-                result.canEditDescription = true; // Vẫn cho phép chỉnh sửa description
+                result.canEditDescription = false; // Không thể chỉnh sửa nhưng vẫn hiển thị
                 result.canEditMeterReadings = false;
             } else if (priceType === 'perUsage') {
                 // perUsage: Có thể chỉnh sửa chỉ số đồng hồ - hiển thị input fields cho meter readings
                 result.canEditMeterReadings = true;
                 // Đơn giá vẫn không được chỉnh sửa cho các item từ hợp đồng
             } else if (priceType === 'perPerson') {
-                // perPerson: Không thể chỉnh sửa gì - ẩn input fields nhưng vẫn cho phép chỉnh sửa description
+                // perPerson: Không thể chỉnh sửa gì - ẩn input fields nhưng vẫn hiển thị description
                 result.isEditable = false;
-                result.canEditDescription = true; // Vẫn cho phép chỉnh sửa description
+                result.canEditDescription = false; // Không thể chỉnh sửa nhưng vẫn hiển thị
                 result.canEditMeterReadings = false;
             }
             

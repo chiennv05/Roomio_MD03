@@ -510,13 +510,13 @@ const EditInvoiceScreen = () => {
             if (newItems[itemIndex].type === 'variable') {
                 // Lấy giá trị chỉ số từ input hoặc từ item
                 const currentReading = field === 'currentReading' ? reading :
-                    (itemInputs[itemId]?.currentReading !== undefined && itemInputs[itemId]?.currentReading !== '' ?
-                        parseInt(itemInputs[itemId]?.currentReading || '0') :
+                    (itemInputs[itemId]?.currentReading !== undefined ?
+                        (itemInputs[itemId]?.currentReading === '' ? 0 : parseInt(itemInputs[itemId]?.currentReading)) :
                         (item.currentReading || 0));
 
                 const previousReading = field === 'previousReading' ? reading :
-                    (itemInputs[itemId]?.previousReading !== undefined && itemInputs[itemId]?.previousReading !== '' ?
-                        parseInt(itemInputs[itemId]?.previousReading || '0') :
+                    (itemInputs[itemId]?.previousReading !== undefined ?
+                        (itemInputs[itemId]?.previousReading === '' ? 0 : parseInt(itemInputs[itemId]?.previousReading)) :
                         (item.previousReading || 0));
 
                 const usage = currentReading - previousReading;
@@ -586,8 +586,8 @@ const EditInvoiceScreen = () => {
             // Recalculate amount based on quantity and unit price
             if (newItems[itemIndex].type === 'fixed') {
                 // Lấy đơn giá từ input hoặc từ item
-                const unitPrice = itemInputs[itemId]?.unitPrice !== undefined && itemInputs[itemId]?.unitPrice !== '' ?
-                    parseInt(itemInputs[itemId]?.unitPrice || '0') :
+                const unitPrice = itemInputs[itemId]?.unitPrice !== undefined ?
+                    (itemInputs[itemId]?.unitPrice === '' ? 0 : parseInt(itemInputs[itemId]?.unitPrice)) :
                     item.unitPrice;
 
                 // Tính toán amount dựa trên priceType
@@ -654,8 +654,8 @@ const EditInvoiceScreen = () => {
             // Recalculate amount based on quantity and unit price
             if (newItems[itemIndex].type === 'fixed') {
                 // Lấy số lượng từ input hoặc từ item
-                const quantity = itemInputs[itemId]?.quantity !== undefined && itemInputs[itemId]?.quantity !== '' ?
-                    parseInt(itemInputs[itemId]?.quantity || '0') :
+                const quantity = itemInputs[itemId]?.quantity !== undefined ?
+                    (itemInputs[itemId]?.quantity === '' ? 0 : parseInt(itemInputs[itemId]?.quantity)) :
                     item.quantity;
 
                 // Tính toán amount dựa trên priceType
@@ -667,12 +667,12 @@ const EditInvoiceScreen = () => {
                 }
             } else if (newItems[itemIndex].type === 'variable') {
                 // Lấy giá trị chỉ số từ input hoặc từ item
-                const currentReading = itemInputs[itemId]?.currentReading !== undefined && itemInputs[itemId]?.currentReading !== '' ?
-                    parseInt(itemInputs[itemId]?.currentReading || '0') :
+                const currentReading = itemInputs[itemId]?.currentReading !== undefined ?
+                    (itemInputs[itemId]?.currentReading === '' ? 0 : parseInt(itemInputs[itemId]?.currentReading)) :
                     (item.currentReading || 0);
 
-                const previousReading = itemInputs[itemId]?.previousReading !== undefined && itemInputs[itemId]?.previousReading !== '' ?
-                    parseInt(itemInputs[itemId]?.previousReading || '0') :
+                const previousReading = itemInputs[itemId]?.previousReading !== undefined ?
+                    (itemInputs[itemId]?.previousReading === '' ? 0 : parseInt(itemInputs[itemId]?.previousReading)) :
                     (item.previousReading || 0);
 
                 const usage = currentReading - previousReading;
@@ -1553,22 +1553,22 @@ const EditInvoiceScreen = () => {
         // Kiểm tra nếu là khoản mục từ hợp đồng
         if (isStandardContractItem(item)) {
             result.isEditable = true;
-            result.canEditDescription = true; // Luôn cho phép chỉnh sửa description
+            result.canEditDescription = true;
             
             // Xử lý theo priceType
             if (priceType === 'perRoom') {
-                // perRoom: Không thể chỉnh sửa gì - ẩn input fields nhưng vẫn cho phép chỉnh sửa description
+                // perRoom: Không thể chỉnh sửa gì - ẩn tất cả input fields
                 result.isEditable = false;
-                result.canEditDescription = true; // Vẫn cho phép chỉnh sửa description
+                result.canEditDescription = false;
                 result.canEditMeterReadings = false;
             } else if (priceType === 'perUsage') {
                 // perUsage: Có thể chỉnh sửa chỉ số đồng hồ - hiển thị input fields cho meter readings
                 result.canEditMeterReadings = true;
                 // Đơn giá vẫn không được chỉnh sửa cho các item từ hợp đồng
             } else if (priceType === 'perPerson') {
-                // perPerson: Không thể chỉnh sửa gì - ẩn input fields nhưng vẫn cho phép chỉnh sửa description
+                // perPerson: Không thể chỉnh sửa gì - ẩn tất cả input fields
                 result.isEditable = false;
-                result.canEditDescription = true; // Vẫn cho phép chỉnh sửa description
+                result.canEditDescription = false;
                 result.canEditMeterReadings = false;
             }
             
@@ -2176,12 +2176,48 @@ const EditInvoiceScreen = () => {
                             </View>
 
                             {/* Show custom item badge for editable items */}
-                            
+                            {!isStandardContractItem(item) && editability.isEditable && item.category !== 'utility' && (
+                                <View style={styles.customItemBadgeContainer}>
+                                    <Text style={styles.customItemBadge}>Khoản mục tùy chỉnh</Text>
+                                </View>
+                            )}
+                            {/* Show utility badge for utility items */}
+                            {!isStandardContractItem(item) && editability.isEditable && item.category === 'utility' && (
+                                <View style={styles.customItemBadgeContainer}>
+                                    <Text style={[styles.customItemBadge, { backgroundColor: '#E6F7FF' }]}>Khoản mục thiết yếu</Text>
+                                </View>
+                            )}
 
-                            
+                            {/* Show contract item badge with price type */}
+                            {isStandardContractItem(item) && (
+                                <View style={styles.customItemBadgeContainer}>
+                                    {(() => {
+                                        const priceType = getItemPriceType(item);
+                                        let badgeText = 'Khoản mục hợp đồng';
+                                        let badgeColor = '#FFF3CD';
+                                        
+                                        if (priceType === 'perRoom') {
+                                            badgeText = 'Cố định theo phòng';
+                                            badgeColor = '#D1ECF1';
+                                        } else if (priceType === 'perUsage') {
+                                            badgeText = 'Theo chỉ số sử dụng';
+                                            badgeColor = '#D4EDDA';
+                                        } else if (priceType === 'perPerson') {
+                                            badgeText = 'Theo số người thuê';
+                                            badgeColor = '#F8D7DA';
+                                        }
+                                        
+                                        return (
+                                            <Text style={[styles.customItemBadge, { backgroundColor: badgeColor }]}>
+                                                {badgeText}
+                                            </Text>
+                                        );
+                                    })()}
+                                </View>
+                            )}
 
-                            {/* Description field - luôn hiển thị, có thể chỉnh sửa hoặc chỉ xem */}
-                            {editability.canEditDescription ? (
+                            {/* Description field - chỉ hiển thị khi có thể chỉnh sửa */}
+                            {editability.canEditDescription && (
                                 <TextInput
                                     style={styles.descriptionInput}
                                     value={itemInputs[itemId]?.description || item.description}
@@ -2189,11 +2225,7 @@ const EditInvoiceScreen = () => {
                                     placeholder="Mô tả (tùy chọn)"
                                     multiline
                                 />
-                            ) : (itemInputs[itemId]?.description || item.description) ? (
-                                <Text style={styles.itemDesc}>
-                                    {itemInputs[itemId]?.description || item.description}
-                                </Text>
-                            ) : null}
+                            )}
 
                             {item.category === 'utility' ? (
                                 // Chỉ hiển thị meter readings khi có thể chỉnh sửa (perUsage)
@@ -2269,7 +2301,6 @@ const EditInvoiceScreen = () => {
                                 ) : null
                             )}
 
-                            {/* Luôn hiển thị item details với đơn giá và tổng tiền */}
                             <View style={styles.itemDetails}>
                                 <View style={styles.itemPriceRow}>
                                     {editability.canEditUnitPrice ? (
@@ -2298,7 +2329,6 @@ const EditInvoiceScreen = () => {
                                             )}
                                         </View>
                                     ) : (
-                                        // Luôn hiển thị đơn giá dù có thể chỉnh sửa hay không
                                         <View style={styles.readOnlyPriceContainer}>
                                             <Text style={styles.unitPriceLabel}>Đơn giá:</Text>
                                             <Text style={styles.itemDetail}>

@@ -362,10 +362,10 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
             <Text style={styles.detailLabel}>Kỳ hóa đơn</Text>
             <Text style={styles.detailValue}>Tháng {period}</Text>
           </View>
-          {/* <View style={styles.detailRow}>
+          <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Ngày bắt đầu</Text>
             <Text style={styles.detailValue}>{startDate}</Text>
-          </View> */}
+          </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Hạn thanh toán</Text>
             <Text style={styles.detailValue}>{dueDate}</Text>

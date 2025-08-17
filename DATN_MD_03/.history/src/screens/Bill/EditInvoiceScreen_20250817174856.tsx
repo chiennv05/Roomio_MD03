@@ -510,24 +510,31 @@ const EditInvoiceScreen = () => {
             if (newItems[itemIndex].type === 'variable') {
                 // Lấy giá trị chỉ số từ input hoặc từ item
                 const currentReading = field === 'currentReading' ? reading :
-                    (itemInputs[itemId]?.currentReading !== undefined && itemInputs[itemId]?.currentReading !== '' ?
-                        parseInt(itemInputs[itemId]?.currentReading || '0') :
+                    (itemInputs[itemId]?.currentReading !== undefined ?
+                        (itemInputs[itemId]?.currentReading === '' ? 0 : parseInt(itemInputs[itemId]?.currentReading)) :
                         (item.currentReading || 0));
 
                 const previousReading = field === 'previousReading' ? reading :
-                    (itemInputs[itemId]?.previousReading !== undefined && itemInputs[itemId]?.previousReading !== '' ?
-                        parseInt(itemInputs[itemId]?.previousReading || '0') :
+                    (itemInputs[itemId]?.previousReading !== undefined ?
+                        (itemInputs[itemId]?.previousReading === '' ? 0 : parseInt(itemInputs[itemId]?.previousReading)) :
                         (item.previousReading || 0));
 
                 const usage = currentReading - previousReading;
                 newItems[itemIndex].quantity = usage > 0 ? usage : 0;
                 
                 // Tính toán amount dựa trên priceType
-                const priceType = getItemPriceType(item);
-                if (priceType === 'perPerson' && item.isPerPerson && item.personCount) {
-                    newItems[itemIndex].amount = newItems[itemIndex].quantity * newItems[itemIndex].unitPrice * item.personCount;
-                } else {
+                const editability = getItemEditability(newItems[itemIndex]);
+                if (editability.priceType === 'perUsage') {
+                    // perUsage: tính theo lượng sử dụng × đơn giá
                     newItems[itemIndex].amount = newItems[itemIndex].quantity * newItems[itemIndex].unitPrice;
+                } else if (editability.priceType === 'perPerson') {
+                    // perPerson: tính theo đơn giá × số người
+                    const personCount = newItems[itemIndex].personCount || 
+                        getNestedValue(selectedInvoice, 'contractId.contractInfo.personCount') || 1;
+                    newItems[itemIndex].amount = newItems[itemIndex].unitPrice * personCount;
+                } else {
+                    // perRoom: tính theo đơn giá cố định
+                    newItems[itemIndex].amount = newItems[itemIndex].unitPrice;
                 }
             }
 
@@ -586,16 +593,28 @@ const EditInvoiceScreen = () => {
             // Recalculate amount based on quantity and unit price
             if (newItems[itemIndex].type === 'fixed') {
                 // Lấy đơn giá từ input hoặc từ item
-                const unitPrice = itemInputs[itemId]?.unitPrice !== undefined && itemInputs[itemId]?.unitPrice !== '' ?
-                    parseInt(itemInputs[itemId]?.unitPrice || '0') :
+                const unitPrice = itemInputs[itemId]?.unitPrice !== undefined ?
+                    (itemInputs[itemId]?.unitPrice === '' ? 0 : parseInt(itemInputs[itemId]?.unitPrice)) :
                     item.unitPrice;
 
                 // Tính toán amount dựa trên priceType
-                const priceType = getItemPriceType(item);
-                if (priceType === 'perPerson' && item.isPerPerson && item.personCount) {
-                    newItems[itemIndex].amount = quantity * unitPrice * item.personCount;
-                } else {
+                const editability = getItemEditability(newItems[itemIndex]);
+                if (editability.priceType === 'perUsage') {
+                    // perUsage: tính theo số lượng × đơn giá
                     newItems[itemIndex].amount = quantity * unitPrice;
+                } else if (editability.priceType === 'perPerson') {
+                    // perPerson: tính theo đơn giá × số người
+                    const personCount = newItems[itemIndex].personCount || 
+                        getNestedValue(selectedInvoice, 'contractId.contractInfo.personCount') || 1;
+                    newItems[itemIndex].amount = unitPrice * personCount;
+                } else {
+                    // perRoom: tính theo đơn giá cố định
+                    newItems[itemIndex].amount = unitPrice;
+                }
+
+                // Xử lý logic cũ cho các khoản mục không từ hợp đồng
+                if (!isStandardContractItem(newItems[itemIndex]) && newItems[itemIndex].isPerPerson && newItems[itemIndex].personCount) {
+                    newItems[itemIndex].amount *= newItems[itemIndex].personCount;
                 }
             }
 
@@ -654,37 +673,42 @@ const EditInvoiceScreen = () => {
             // Recalculate amount based on quantity and unit price
             if (newItems[itemIndex].type === 'fixed') {
                 // Lấy số lượng từ input hoặc từ item
-                const quantity = itemInputs[itemId]?.quantity !== undefined && itemInputs[itemId]?.quantity !== '' ?
-                    parseInt(itemInputs[itemId]?.quantity || '0') :
+                const quantity = itemInputs[itemId]?.quantity !== undefined ?
+                    (itemInputs[itemId]?.quantity === '' ? 0 : parseInt(itemInputs[itemId]?.quantity)) :
                     item.quantity;
 
                 // Tính toán amount dựa trên priceType
-                const priceType = getItemPriceType(item);
-                if (priceType === 'perPerson' && item.isPerPerson && item.personCount) {
-                    newItems[itemIndex].amount = quantity * unitPrice * item.personCount;
-                } else {
+                const editability = getItemEditability(newItems[itemIndex]);
+                if (editability.priceType === 'perUsage') {
+                    // perUsage: tính theo số lượng × đơn giá
                     newItems[itemIndex].amount = quantity * unitPrice;
+                } else if (editability.priceType === 'perPerson') {
+                    // perPerson: tính theo đơn giá × số người
+                    const personCount = newItems[itemIndex].personCount || 
+                        getNestedValue(selectedInvoice, 'contractId.contractInfo.personCount') || 1;
+                    newItems[itemIndex].amount = unitPrice * personCount;
+                } else {
+                    // perRoom: tính theo đơn giá cố định
+                    newItems[itemIndex].amount = unitPrice;
+                }
+
+                // Xử lý logic cũ cho các khoản mục không từ hợp đồng
+                if (!isStandardContractItem(newItems[itemIndex]) && newItems[itemIndex].isPerPerson && newItems[itemIndex].personCount) {
+                    newItems[itemIndex].amount *= newItems[itemIndex].personCount;
                 }
             } else if (newItems[itemIndex].type === 'variable') {
                 // Lấy giá trị chỉ số từ input hoặc từ item
-                const currentReading = itemInputs[itemId]?.currentReading !== undefined && itemInputs[itemId]?.currentReading !== '' ?
-                    parseInt(itemInputs[itemId]?.currentReading || '0') :
+                const currentReading = itemInputs[itemId]?.currentReading !== undefined ?
+                    (itemInputs[itemId]?.currentReading === '' ? 0 : parseInt(itemInputs[itemId]?.currentReading)) :
                     (item.currentReading || 0);
 
-                const previousReading = itemInputs[itemId]?.previousReading !== undefined && itemInputs[itemId]?.previousReading !== '' ?
-                    parseInt(itemInputs[itemId]?.previousReading || '0') :
+                const previousReading = itemInputs[itemId]?.previousReading !== undefined ?
+                    (itemInputs[itemId]?.previousReading === '' ? 0 : parseInt(itemInputs[itemId]?.previousReading)) :
                     (item.previousReading || 0);
 
                 const usage = currentReading - previousReading;
                 newItems[itemIndex].quantity = usage > 0 ? usage : 0;
-                
-                // Tính toán amount dựa trên priceType
-                const priceType = getItemPriceType(item);
-                if (priceType === 'perPerson' && item.isPerPerson && item.personCount) {
-                    newItems[itemIndex].amount = newItems[itemIndex].quantity * unitPrice * item.personCount;
-                } else {
-                    newItems[itemIndex].amount = newItems[itemIndex].quantity * unitPrice;
-                }
+                newItems[itemIndex].amount = newItems[itemIndex].quantity * unitPrice;
             }
 
             setInvoiceItems(newItems);
@@ -768,25 +792,15 @@ const EditInvoiceScreen = () => {
 
             // Tính toán lại amount
             if (updatedItem.type === 'fixed') {
-                // Tính toán amount dựa trên priceType
-                const priceType = getItemPriceType(updatedItem);
-                if (priceType === 'perPerson' && updatedItem.isPerPerson && updatedItem.personCount) {
-                    updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice * updatedItem.personCount;
-                } else {
-                    updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
+                updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
+                if (updatedItem.isPerPerson && updatedItem.personCount) {
+                    updatedItem.amount *= updatedItem.personCount;
                 }
-            } else if (updatedItem.type === 'variable') {
-                const usage = (updatedItem.currentReading || 0) - (updatedItem.previousReading || 0);
-                updatedItem.quantity = usage > 0 ? usage : 0;
-                
-                // Tính toán amount dựa trên priceType
-                const priceType = getItemPriceType(updatedItem);
-                if (priceType === 'perPerson' && updatedItem.isPerPerson && updatedItem.personCount) {
-                    updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice * updatedItem.personCount;
-                } else {
-                    updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
-                }
-            }
+                                } else if (updatedItem.type === 'variable') {
+                        const usage = (updatedItem.currentReading || 0) - (updatedItem.previousReading || 0);
+                        updatedItem.quantity = usage > 0 ? usage : 0;
+                        updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
+                    }
 
             return updatedItem;
         });
@@ -1159,24 +1173,14 @@ const EditInvoiceScreen = () => {
 
             // Tính toán lại amount
             if (updatedItem.type === 'fixed') {
-                // Tính toán amount dựa trên priceType
-                const priceType = getItemPriceType(updatedItem);
-                if (priceType === 'perPerson' && updatedItem.isPerPerson && updatedItem.personCount) {
-                    updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice * updatedItem.personCount;
-                } else {
-                    updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
+                updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
+                if (updatedItem.isPerPerson && updatedItem.personCount) {
+                    updatedItem.amount *= updatedItem.personCount;
                 }
             } else if (updatedItem.type === 'variable') {
                 const usage = (updatedItem.currentReading || 0) - (updatedItem.previousReading || 0);
                 updatedItem.quantity = usage > 0 ? usage : 0;
-                
-                // Tính toán amount dựa trên priceType
-                const priceType = getItemPriceType(updatedItem);
-                if (priceType === 'perPerson' && updatedItem.isPerPerson && updatedItem.personCount) {
-                    updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice * updatedItem.personCount;
-                } else {
-                    updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
-                }
+                updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
             }
 
             return updatedItem;
@@ -1381,24 +1385,14 @@ const EditInvoiceScreen = () => {
 
                             // Tính toán lại amount
                             if (updatedItem.type === 'fixed') {
-                                // Tính toán amount dựa trên priceType
-                                const priceType = getItemPriceType(updatedItem);
-                                if (priceType === 'perPerson' && updatedItem.isPerPerson && updatedItem.personCount) {
-                                    updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice * updatedItem.personCount;
-                                } else {
-                                    updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
+                                updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
+                                if (updatedItem.isPerPerson && updatedItem.personCount) {
+                                    updatedItem.amount *= updatedItem.personCount;
                                 }
                             } else if (updatedItem.type === 'variable') {
                                 const usage = (updatedItem.currentReading || 0) - (updatedItem.previousReading || 0);
                                 updatedItem.quantity = usage > 0 ? usage : 0;
-                                
-                                // Tính toán amount dựa trên priceType
-                                const priceType = getItemPriceType(updatedItem);
-                                if (priceType === 'perPerson' && updatedItem.isPerPerson && updatedItem.personCount) {
-                                    updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice * updatedItem.personCount;
-                                } else {
-                                    updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
-                                }
+                                updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
                             }
 
                             return updatedItem;
@@ -1498,34 +1492,39 @@ const EditInvoiceScreen = () => {
             (item.category === 'rent'); // Rent is always a contract item
     };
 
-    // Get price type from contract for a specific item
-    const getItemPriceType = (item: InvoiceItem): 'perRoom' | 'perUsage' | 'perPerson' | null => {
-        if (!selectedInvoice?.contractId?.contractInfo?.serviceFeeConfig) {
-            return null;
+    // Get price type for contract items (perRoom, perPerson, perUsage)
+    const getItemPriceType = (item: InvoiceItem): 'perRoom' | 'perPerson' | 'perUsage' => {
+        // Nếu item có priceType trực tiếp
+        if ((item as any).priceType) {
+            return (item as any).priceType;
         }
 
-        const serviceFeeConfig = selectedInvoice.contractId.contractInfo.serviceFeeConfig;
+        // Nếu không có, xác định dựa trên tên và category
+        const name = item.name.toLowerCase();
         
-        // Kiểm tra các dịch vụ tiện ích cơ bản
-        if (item.name.toLowerCase().includes('điện') || item.name.toLowerCase().includes('electricity')) {
-            return serviceFeeConfig.electricity || null;
-        }
-        
-        if (item.name.toLowerCase().includes('nước') || item.name.toLowerCase().includes('water')) {
-            return serviceFeeConfig.water || null;
-        }
-
-        // Kiểm tra custom services
-        if (selectedInvoice.contractId.contractInfo.customServices) {
-            const customService = selectedInvoice.contractId.contractInfo.customServices.find(
-                (service: any) => service.name === item.name
-            );
-            if (customService) {
-                return customService.priceType || null;
+        // Điện nước thường là perUsage
+        if (item.category === 'utility') {
+            if (name.includes('điện') || name.includes('electricity')) {
+                return 'perUsage';
+            }
+            if (name.includes('nước') || name.includes('water')) {
+                return 'perUsage';
             }
         }
 
-        return null;
+        // Internet, máy giặt thường là perRoom
+        if (name.includes('internet') || name.includes('wifi') || 
+            name.includes('máy giặt') || name.includes('laundry')) {
+            return 'perRoom';
+        }
+
+        // Tiền thuê luôn là perRoom
+        if (item.category === 'rent') {
+            return 'perRoom';
+        }
+
+        // Mặc định là perRoom
+        return 'perRoom';
     };
 
     // Check if an item is editable and what fields can be edited
@@ -1536,6 +1535,7 @@ const EditInvoiceScreen = () => {
         canEditQuantity: boolean;
         canEditUnitPrice: boolean;
         canEditMeterReadings: boolean;
+        priceType: 'perRoom' | 'perPerson' | 'perUsage';
     } => {
         // Default: nothing is editable
         const result = {
@@ -1545,31 +1545,43 @@ const EditInvoiceScreen = () => {
             canEditQuantity: false,
             canEditUnitPrice: false,
             canEditMeterReadings: false,
+            priceType: 'perRoom' as 'perRoom' | 'perPerson' | 'perUsage',
         };
-
-        // Lấy price type từ hợp đồng
-        const priceType = getItemPriceType(item);
 
         // Kiểm tra nếu là khoản mục từ hợp đồng
         if (isStandardContractItem(item)) {
+            const priceType = getItemPriceType(item);
+            result.priceType = priceType;
             result.isEditable = true;
-            result.canEditDescription = true; // Luôn cho phép chỉnh sửa description
+            result.canEditDescription = true;
             
-            // Xử lý theo priceType
-            if (priceType === 'perRoom') {
-                // perRoom: Không thể chỉnh sửa gì - ẩn input fields nhưng vẫn cho phép chỉnh sửa description
-                result.isEditable = false;
-                result.canEditDescription = true; // Vẫn cho phép chỉnh sửa description
-                result.canEditMeterReadings = false;
-            } else if (priceType === 'perUsage') {
-                // perUsage: Có thể chỉnh sửa chỉ số đồng hồ - hiển thị input fields cho meter readings
-                result.canEditMeterReadings = true;
-                // Đơn giá vẫn không được chỉnh sửa cho các item từ hợp đồng
-            } else if (priceType === 'perPerson') {
-                // perPerson: Không thể chỉnh sửa gì - ẩn input fields nhưng vẫn cho phép chỉnh sửa description
-                result.isEditable = false;
-                result.canEditDescription = true; // Vẫn cho phép chỉnh sửa description
-                result.canEditMeterReadings = false;
+            // Xác định quyền chỉnh sửa dựa trên priceType
+            switch (priceType) {
+                case 'perRoom':
+                    // perRoom: không thể chỉnh sửa gì ngoài mô tả
+                    result.canEditName = false;
+                    result.canEditQuantity = false;
+                    result.canEditUnitPrice = false;
+                    result.canEditMeterReadings = false;
+                    break;
+                    
+                case 'perPerson':
+                    // perPerson: có thể chỉnh sửa mô tả, đơn giá sẽ tự động nhân với số người
+                    result.canEditName = false;
+                    result.canEditQuantity = false;
+                    result.canEditUnitPrice = false;
+                    result.canEditMeterReadings = false;
+                    break;
+                    
+                case 'perUsage':
+                    // perUsage: có thể chỉnh sửa chỉ số đồng hồ (nếu là utility)
+                    result.canEditName = false;
+                    result.canEditQuantity = false;
+                    result.canEditUnitPrice = false;
+                    if (item.category === 'utility') {
+                        result.canEditMeterReadings = true;
+                    }
+                    break;
             }
             
             return result;
@@ -1581,6 +1593,7 @@ const EditInvoiceScreen = () => {
             result.canEditDescription = true;
             result.canEditUnitPrice = true;
             result.canEditMeterReadings = true;
+            result.priceType = 'perUsage';
             return result;
         }
 
@@ -1591,6 +1604,7 @@ const EditInvoiceScreen = () => {
             result.canEditDescription = true;
             result.canEditQuantity = true;
             result.canEditUnitPrice = true;
+            result.priceType = 'perRoom';
             return result;
         }
 
@@ -1688,9 +1702,48 @@ const EditInvoiceScreen = () => {
         return usage > 0 ? usage : 0;
     };
 
+    // Helper function to calculate item amount based on priceType
+    const calculateItemAmountByPriceType = (item: InvoiceItem, quantity?: number, unitPrice?: number) => {
+        const editability = getItemEditability(item);
+        const finalQuantity = quantity !== undefined ? quantity : item.quantity;
+        const finalUnitPrice = unitPrice !== undefined ? unitPrice : item.unitPrice;
+
+        if (isStandardContractItem(item)) {
+            switch (editability.priceType) {
+                case 'perRoom':
+                    // perRoom: tính theo đơn giá cố định
+                    return finalUnitPrice;
+                    
+                case 'perPerson':
+                    // perPerson: tính theo đơn giá × số người
+                    const personCount = item.personCount || 
+                        getNestedValue(selectedInvoice, 'contractId.contractInfo.personCount') || 1;
+                    return finalUnitPrice * personCount;
+                    
+                case 'perUsage':
+                    // perUsage: tính theo số lượng × đơn giá
+                    return finalQuantity * finalUnitPrice;
+                    
+                default:
+                    return finalQuantity * finalUnitPrice;
+            }
+        } else {
+            // Các khoản mục không từ hợp đồng: giữ nguyên logic cũ
+            let amount = finalQuantity * finalUnitPrice;
+            if (item.isPerPerson && item.personCount) {
+                amount *= item.personCount;
+            }
+            return amount;
+        }
+    };
+
     // Tính toán số tiền của item dựa trên dữ liệu từ input hoặc từ item
     const calculateItemAmount = (item: InvoiceItem, inputData?: any) => {
         if (!item) {return 0;}
+
+        // Lấy thông tin editability để xác định priceType
+        const editability = getItemEditability(item);
+        const priceType = editability.priceType;
 
         if (item.type === 'fixed') {
             // Lấy số lượng và đơn giá từ input hoặc từ item
@@ -1702,13 +1755,39 @@ const EditInvoiceScreen = () => {
                 (inputData.unitPrice === '' ? 0 : parseInt(inputData.unitPrice)) :
                 (item.unitPrice || 0);
 
-            // Tính toán amount dựa trên priceType
-            const priceType = getItemPriceType(item);
-            if (priceType === 'perPerson' && item.isPerPerson && item.personCount) {
-                return quantity * unitPrice * item.personCount;
+            let amount = quantity * unitPrice;
+
+            // Xử lý theo priceType cho các khoản mục từ hợp đồng
+            if (isStandardContractItem(item)) {
+                switch (priceType) {
+                    case 'perRoom':
+                        // perRoom: tính theo phòng, không nhân với số người
+                        amount = unitPrice;
+                        break;
+                        
+                    case 'perPerson':
+                        // perPerson: tự động nhân với số người trong hợp đồng
+                        if (item.personCount && item.personCount > 0) {
+                            amount = unitPrice * item.personCount;
+                        } else {
+                            // Nếu không có personCount, lấy từ contract
+                            const contractPersonCount = getNestedValue(selectedInvoice, 'contractId.contractInfo.personCount') || 1;
+                            amount = unitPrice * contractPersonCount;
+                        }
+                        break;
+                        
+                    case 'perUsage':
+                        // perUsage: tính theo lượng sử dụng (đã được xử lý ở trên)
+                        break;
+                }
             } else {
-                return quantity * unitPrice;
+                // Các khoản mục không từ hợp đồng: giữ nguyên logic cũ
+                if (item.isPerPerson && item.personCount) {
+                    amount *= item.personCount;
+                }
             }
+
+            return amount;
         } else if (item.type === 'variable') {
             const usage = calculateUsage(item, inputData);
 
@@ -1716,13 +1795,34 @@ const EditInvoiceScreen = () => {
                 (inputData.unitPrice === '' ? 0 : parseInt(inputData.unitPrice)) :
                 (item.unitPrice || 0);
 
-            // Tính toán amount dựa trên priceType
-            const priceType = getItemPriceType(item);
-            if (priceType === 'perPerson' && item.isPerPerson && item.personCount) {
-                return usage * unitPrice * item.personCount;
-            } else {
-                return usage * unitPrice;
+            let amount = usage * unitPrice;
+
+            // Xử lý theo priceType cho các khoản mục từ hợp đồng
+            if (isStandardContractItem(item)) {
+                switch (priceType) {
+                    case 'perRoom':
+                        // perRoom: tính theo phòng, không nhân với lượng sử dụng
+                        amount = unitPrice;
+                        break;
+                        
+                    case 'perPerson':
+                        // perPerson: tự động nhân với số người trong hợp đồng
+                        if (item.personCount && item.personCount > 0) {
+                            amount = unitPrice * item.personCount;
+                        } else {
+                            // Nếu không có personCount, lấy từ contract
+                            const contractPersonCount = getNestedValue(selectedInvoice, 'contractId.contractInfo.personCount') || 1;
+                            amount = unitPrice * contractPersonCount;
+                        }
+                        break;
+                        
+                    case 'perUsage':
+                        // perUsage: tính theo lượng sử dụng (đã được xử lý ở trên)
+                        break;
+                }
             }
+
+            return amount;
         }
 
         return item.amount || 0;
@@ -1789,24 +1889,14 @@ const EditInvoiceScreen = () => {
 
             // Tính toán lại amount
             if (updatedItem.type === 'fixed') {
-                // Tính toán amount dựa trên priceType
-                const priceType = getItemPriceType(updatedItem);
-                if (priceType === 'perPerson' && updatedItem.isPerPerson && updatedItem.personCount) {
-                    updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice * updatedItem.personCount;
-                } else {
-                    updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
+                updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
+                if (updatedItem.isPerPerson && updatedItem.personCount) {
+                    updatedItem.amount *= updatedItem.personCount;
                 }
             } else if (updatedItem.type === 'variable') {
                 const usage = (updatedItem.currentReading || 0) - (updatedItem.previousReading || 0);
                 updatedItem.quantity = usage > 0 ? usage : 0;
-                
-                // Tính toán amount dựa trên priceType
-                const priceType = getItemPriceType(updatedItem);
-                if (priceType === 'perPerson' && updatedItem.isPerPerson && updatedItem.personCount) {
-                    updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice * updatedItem.personCount;
-                } else {
-                    updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
-                }
+                updatedItem.amount = updatedItem.quantity * updatedItem.unitPrice;
             }
 
             return updatedItem;
@@ -2153,13 +2243,13 @@ const EditInvoiceScreen = () => {
                                         placeholder="Tên khoản mục"
                                     />
                                 ) : (
-                                    <Text style={styles.itemName}>
-                                        {itemInputs[itemId]?.name || item.name}
-                                    </Text>
+                                    <Text style={styles.itemName}>{item.name}</Text>
                                 )}
                                 <View style={styles.categoryContainer}>
                                     <Text style={styles.itemCategory}>{getCategoryText(item.category)}</Text>
-                                    
+                                    {!editability.isEditable && (
+                                        <Text style={styles.readOnlyBadge}>Chỉ xem</Text>
+                                    )}
                                     {/* Add delete button for custom items */}
                                     {!isStandardContractItem(item) && editability.isEditable &&
                                         item.category !== 'utility' &&
@@ -2176,11 +2266,37 @@ const EditInvoiceScreen = () => {
                             </View>
 
                             {/* Show custom item badge for editable items */}
-                            
+                            {!isStandardContractItem(item) && editability.isEditable && item.category !== 'utility' && (
+                                <View style={styles.customItemBadgeContainer}>
+                                    <Text style={styles.customItemBadge}>Khoản mục tùy chỉnh</Text>
+                                </View>
+                            )}
+                            {/* Show utility badge for utility items */}
+                            {!isStandardContractItem(item) && editability.isEditable && item.category === 'utility' && (
+                                <View style={styles.customItemBadgeContainer}>
+                                    <Text style={[styles.customItemBadge, { backgroundColor: '#E6F7FF' }]}>Khoản mục thiết yếu</Text>
+                                </View>
+                            )}
 
-                            
+                            {/* Show contract item badge with price type info */}
+                            {isStandardContractItem(item) && (
+                                <View style={styles.contractItemBadgeContainer}>
+                                    <Text style={[styles.contractItemBadge, { 
+                                        backgroundColor: editability.priceType === 'perRoom' ? '#FFF3CD' : 
+                                                      editability.priceType === 'perPerson' ? '#D1ECF1' : '#D4EDDA'
+                                    }]}>
+                                        {editability.priceType === 'perRoom' ? '📋 Theo phòng' :
+                                         editability.priceType === 'perPerson' ? '👥 Theo người' : '📊 Theo lượng sử dụng'}
+                                    </Text>
+                                    {editability.priceType === 'perPerson' && (
+                                        <Text style={styles.personCountText}>
+                                            × {item.personCount || getNestedValue(selectedInvoice, 'contractId.contractInfo.personCount') || 1} người
+                                        </Text>
+                                    )}
+                                </View>
+                            )}
 
-                            {/* Description field - luôn hiển thị, có thể chỉnh sửa hoặc chỉ xem */}
+                            {/* Description field */}
                             {editability.canEditDescription ? (
                                 <TextInput
                                     style={styles.descriptionInput}
@@ -2189,70 +2305,64 @@ const EditInvoiceScreen = () => {
                                     placeholder="Mô tả (tùy chọn)"
                                     multiline
                                 />
-                            ) : (itemInputs[itemId]?.description || item.description) ? (
-                                <Text style={styles.itemDesc}>
-                                    {itemInputs[itemId]?.description || item.description}
-                                </Text>
+                            ) : item.description ? (
+                                <Text style={styles.itemDesc}>{item.description}</Text>
                             ) : null}
 
                             {item.category === 'utility' ? (
-                                // Chỉ hiển thị meter readings khi có thể chỉnh sửa (perUsage)
-                                editability.canEditMeterReadings ? (
-                                    <View style={styles.meterReadingContainer}>
-                                        <View style={styles.meterReadingRow}>
-                                            <Text style={styles.meterLabel}>Chỉ số cũ:</Text>
-                                            <View style={styles.inputFieldContainer}>
-                                                <TextInput
-                                                    style={[
-                                                        styles.meterInput,
-                                                        inputErrors[itemId]?.previousReading ? styles.inputError : {},
-                                                    ]}
-                                                    value={itemInputs[itemId]?.previousReading}
-                                                    onChangeText={(value) => updateMeterReading(itemId, 'previousReading', value)}
-                                                    keyboardType="numeric"
-                                                    editable={editability.canEditMeterReadings}
-                                                />
-                                            </View>
+                                <View style={styles.meterReadingContainer}>
+                                    <View style={styles.meterReadingRow}>
+                                        <Text style={styles.meterLabel}>Chỉ số cũ:</Text>
+                                        <View style={styles.inputFieldContainer}>
+                                            <TextInput
+                                                style={[
+                                                    styles.meterInput,
+                                                    inputErrors[itemId]?.previousReading ? styles.inputError : {},
+                                                ]}
+                                                value={itemInputs[itemId]?.previousReading}
+                                                onChangeText={(value) => updateMeterReading(itemId, 'previousReading', value)}
+                                                keyboardType="numeric"
+                                                editable={editability.canEditMeterReadings}
+                                            />
                                         </View>
-                                        {inputErrors[itemId]?.previousReading && (
-                                            <View style={styles.errorMessageContainer}>
-                                                <Text style={styles.validationErrorText}>
-                                                    {inputErrors[itemId]?.previousReading}
-                                                </Text>
-                                            </View>
-                                        )}
-                                        <View style={styles.meterReadingRow}>
-                                            <Text style={styles.meterLabel}>Chỉ số mới:</Text>
-                                            <View style={styles.inputFieldContainer}>
-                                                <TextInput
-                                                    style={[
-                                                        styles.meterInput,
-                                                        inputErrors[itemId]?.currentReading ? styles.inputError : {},
-                                                    ]}
-                                                    value={itemInputs[itemId]?.currentReading}
-                                                    onChangeText={(value) => updateMeterReading(itemId, 'currentReading', value)}
-                                                    keyboardType="numeric"
-                                                    editable={editability.canEditMeterReadings}
-                                                />
-                                            </View>
-                                        </View>
-                                        {inputErrors[itemId]?.currentReading && (
-                                            <View style={styles.errorMessageContainer}>
-                                                <Text style={styles.validationErrorText}>
-                                                    {inputErrors[itemId]?.currentReading}
-                                                </Text>
-                                            </View>
-                                        )}
-                                        <Text style={styles.usageText}>
-                                            Sử dụng: {calculateUsage(item, itemInputs[itemId])}
-                                        </Text>
                                     </View>
-                                ) : null
+                                    {inputErrors[itemId]?.previousReading && (
+                                        <View style={styles.errorMessageContainer}>
+                                            <Text style={styles.validationErrorText}>
+                                                {inputErrors[itemId]?.previousReading}
+                                            </Text>
+                                        </View>
+                                    )}
+                                    <View style={styles.meterReadingRow}>
+                                        <Text style={styles.meterLabel}>Chỉ số mới:</Text>
+                                        <View style={styles.inputFieldContainer}>
+                                            <TextInput
+                                                style={[
+                                                    styles.meterInput,
+                                                    inputErrors[itemId]?.currentReading ? styles.inputError : {},
+                                                ]}
+                                                value={itemInputs[itemId]?.currentReading}
+                                                onChangeText={(value) => updateMeterReading(itemId, 'currentReading', value)}
+                                                keyboardType="numeric"
+                                                editable={editability.canEditMeterReadings}
+                                            />
+                                        </View>
+                                    </View>
+                                    {inputErrors[itemId]?.currentReading && (
+                                        <View style={styles.errorMessageContainer}>
+                                            <Text style={styles.validationErrorText}>
+                                                {inputErrors[itemId]?.currentReading}
+                                            </Text>
+                                        </View>
+                                    )}
+                                    <Text style={styles.usageText}>
+                                        Sử dụng: {calculateUsage(item, itemInputs[itemId])}
+                                    </Text>
+                                </View>
                             ) : (
-                                // Chỉ hiển thị quantity khi có thể chỉnh sửa
-                                editability.canEditQuantity ? (
-                                    <View style={styles.quantityContainer}>
-                                        <Text style={styles.quantityLabel}>Số lượng:</Text>
+                                <View style={styles.quantityContainer}>
+                                    <Text style={styles.quantityLabel}>Số lượng:</Text>
+                                    {editability.canEditQuantity ? (
                                         <View style={styles.inputFieldContainer}>
                                             <TextInput
                                                 style={[
@@ -2265,11 +2375,12 @@ const EditInvoiceScreen = () => {
                                                 editable={editability.canEditQuantity}
                                             />
                                         </View>
-                                    </View>
-                                ) : null
+                                    ) : (
+                                        <Text style={styles.quantityText}>{item.quantity}</Text>
+                                    )}
+                                </View>
                             )}
 
-                            {/* Luôn hiển thị item details với đơn giá và tổng tiền */}
                             <View style={styles.itemDetails}>
                                 <View style={styles.itemPriceRow}>
                                     {editability.canEditUnitPrice ? (
@@ -2298,12 +2409,13 @@ const EditInvoiceScreen = () => {
                                             )}
                                         </View>
                                     ) : (
-                                        // Luôn hiển thị đơn giá dù có thể chỉnh sửa hay không
                                         <View style={styles.readOnlyPriceContainer}>
                                             <Text style={styles.unitPriceLabel}>Đơn giá:</Text>
                                             <Text style={styles.itemDetail}>
-                                                {Number(itemInputs[itemId]?.unitPrice || item.unitPrice).toLocaleString('vi-VN')} đ
-                                                {item.isPerPerson && ` × ${item.personCount} người`}
+                                                {item.unitPrice.toLocaleString('vi-VN')} đ
+                                                {isStandardContractItem(item) && editability.priceType === 'perPerson' && 
+                                                 ` × ${item.personCount || getNestedValue(selectedInvoice, 'contractId.contractInfo.personCount') || 1} người`}
+                                                {!isStandardContractItem(item) && item.isPerPerson && ` × ${item.personCount} người`}
                                             </Text>
                                         </View>
                                     )}
@@ -2849,14 +2961,6 @@ const styles = StyleSheet.create({
         width: 100,
         backgroundColor: Colors.white,
         textAlign: 'right',
-    },
-    meterValue: {
-        fontSize: 13,
-        color: Colors.dearkOlive,
-        fontWeight: '500',
-        textAlign: 'right',
-        width: 100,
-        paddingVertical: 2,
     },
     usageText: {
         fontSize: 13,
@@ -3428,6 +3532,25 @@ const styles = StyleSheet.create({
         right: 0,
         bottom: 0,
         pointerEvents: 'box-none',
+    },
+    contractItemBadgeContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 4,
+        marginBottom: 4,
+    },
+    contractItemBadge: {
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: Colors.dearkOlive,
+    },
+    personCountText: {
+        fontSize: 12,
+        color: Colors.dearkOlive,
+        marginLeft: 5,
     },
 });
 

@@ -175,29 +175,29 @@ const BillDetailScreen = () => {
     };
 
     // Tính ngày bắt đầu tính hóa đơn từ dữ liệu sẵn có
-    // const getInvoiceStartDate = (invoice?: Invoice) => {
-    //     if (!invoice) {return 'N/A';}
-    //     // Ưu tiên ngày phát hành nếu có
-    //     if (invoice.issueDate) {
-    //         return formatDate(invoice.issueDate);
-    //     }
-    //     // Fallback sang ngày tạo
-    //     if ((invoice as any).createdAt) {
-    //         return formatDate((invoice as any).createdAt);
-    //     }
-    //     // Fallback cuối: từ kỳ hóa đơn
-    //     const p: any = invoice.period;
-    //     if (p) {
-    //         if (typeof p === 'string') {
-    //             return formatDate(p);
-    //         }
-    //         if (typeof p === 'object' && 'month' in p && 'year' in p) {
-    //             const d = new Date(p.year, p.month - 1, 1);
-    //             return formatDate(d.toISOString());
-    //         }
-    //     }
-    //     return 'N/A';
-    // };
+    const getInvoiceStartDate = (invoice?: Invoice) => {
+        if (!invoice) {return 'N/A';}
+        // Ưu tiên ngày phát hành nếu có
+        if (invoice.issueDate) {
+            return formatDate(invoice.issueDate);
+        }
+        // Fallback sang ngày tạo
+        if ((invoice as any).createdAt) {
+            return formatDate((invoice as any).createdAt);
+        }
+        // Fallback cuối: từ kỳ hóa đơn
+        const p: any = invoice.period;
+        if (p) {
+            if (typeof p === 'string') {
+                return formatDate(p);
+            }
+            if (typeof p === 'object' && 'month' in p && 'year' in p) {
+                const d = new Date(p.year, p.month - 1, 1);
+                return formatDate(d.toISOString());
+            }
+        }
+        return 'N/A';
+    };
 
     // Get payment status text
     const getStatusText = (status: string) => {
@@ -398,10 +398,10 @@ const BillDetailScreen = () => {
                         <Text style={styles.detailLabel}>Mã hóa đơn</Text>
                         <Text style={styles.detailValue}>{selectedInvoice.invoiceNumber}</Text>
                     </View>
-                    {/* <View style={styles.detailRow}>
+                    <View style={styles.detailRow}>
                         <Text style={styles.detailLabel}>Ngày bắt đầu</Text>
                         <Text style={styles.detailValue}>{getInvoiceStartDate(selectedInvoice)}</Text>
-                    </View> */}
+                    </View>
                     <View style={styles.detailRow}>
                         <Text style={styles.detailLabel}>Người thuê</Text>
                         <Text style={styles.detailValue}>{getTenantName()}</Text>
@@ -699,8 +699,8 @@ const BillDetailScreen = () => {
                         {renderSummary()}
                     </ScrollView>
 
-                    {/* Hiển thị nút thanh toán nếu là người thuê và hóa đơn chưa thanh toán hoặc quá hạn */}
-                    {!isLandlord && (selectedInvoice.status === 'issued' || selectedInvoice.status === 'overdue') && (
+                    {/* Hiển thị nút thanh toán nếu là người thuê và hóa đơn chưa thanh toán */}
+                    {!isLandlord && selectedInvoice.status === 'issued' && (
                         <View style={styles.paymentButtonContainer}>
                             <TouchableOpacity
                                 style={styles.paymentButton}
@@ -710,12 +710,7 @@ const BillDetailScreen = () => {
                                 {markAsPaidLoading ? (
                                     <ActivityIndicator size="small" color={Colors.white} />
                                 ) : (
-                                    <Text style={styles.paymentButtonText}>
-                                        {selectedInvoice.status === 'overdue' 
-                                            ? 'Xác nhận thanh toán hóa đơn quá hạn'
-                                            : 'Xác nhận thanh toán'
-                                        }
-                                    </Text>
+                                    <Text style={styles.paymentButtonText}>Xác nhận thanh toán</Text>
                                 )}
                             </TouchableOpacity>
                         </View>

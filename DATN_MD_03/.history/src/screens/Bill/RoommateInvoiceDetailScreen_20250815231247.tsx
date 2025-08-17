@@ -61,19 +61,19 @@ const extractInvoiceInfo = (invoice: any) => {
   const dueDate = invoice?.dueDate ? formatDate(invoice.dueDate) : 'Không xác định';
 
   // Lấy ngày bắt đầu tính hoá đơn: ưu tiên issueDate -> createdAt -> period
-  // let startDate = 'Không xác định';
-  // if (invoice?.issueDate) {
-  //   startDate = formatDate(invoice.issueDate);
-  // } else if (invoice?.createdAt) {
-  //   startDate = formatDate(invoice.createdAt);
-  // } else if (invoice?.period) {
-  //   if (typeof invoice.period === 'string') {
-  //     startDate = formatDate(invoice.period);
-  //   } else if (invoice.period.month && invoice.period.year) {
-  //     const d = new Date(invoice.period.year, invoice.period.month - 1, 1);
-  //     startDate = formatDate(d.toISOString());
-  //   }
-  // }
+  let startDate = 'Không xác định';
+  if (invoice?.issueDate) {
+    startDate = formatDate(invoice.issueDate);
+  } else if (invoice?.createdAt) {
+    startDate = formatDate(invoice.createdAt);
+  } else if (invoice?.period) {
+    if (typeof invoice.period === 'string') {
+      startDate = formatDate(invoice.period);
+    } else if (invoice.period.month && invoice.period.year) {
+      const d = new Date(invoice.period.year, invoice.period.month - 1, 1);
+      startDate = formatDate(d.toISOString());
+    }
+  }
 
   return {
     roomNumber,
@@ -81,7 +81,7 @@ const extractInvoiceInfo = (invoice: any) => {
     period,
     roomAddress,
     dueDate,
-    // startDate,
+    startDate,
   };
 };
 
@@ -362,10 +362,10 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
             <Text style={styles.detailLabel}>Kỳ hóa đơn</Text>
             <Text style={styles.detailValue}>Tháng {period}</Text>
           </View>
-          {/* <View style={styles.detailRow}>
+          <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Ngày bắt đầu</Text>
             <Text style={styles.detailValue}>{startDate}</Text>
-          </View> */}
+          </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Hạn thanh toán</Text>
             <Text style={styles.detailValue}>{dueDate}</Text>
