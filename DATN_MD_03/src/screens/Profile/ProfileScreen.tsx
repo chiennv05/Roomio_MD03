@@ -86,15 +86,7 @@ export default function ProfileScreen() {
         );
       });
       // Load notification toggle from storage on mount
-      useEffect(() => {
-        (async () => {
-          try {
-            const enabled =
-              (await AsyncStorage.getItem('notif:enabled')) === '1';
-            setNotifEnabled(enabled);
-          } catch {}
-        })();
-      }, []);
+     
 
       setLocationPermissionGranted(granted);
       return granted;
@@ -505,7 +497,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroud,
   },
   scrollViewContent: {
-    paddingBottom: verticalScale(20),
+    paddingBottom: verticalScale(100),
     alignItems: 'center',
   },
   premiumCard: {
