@@ -23,7 +23,7 @@ const QuickStatsCards: React.FC<QuickStatsCardsProps> = ({email, username}) => {
         <View style={styles.iconContainer}>
           <View style={[styles.iconCircle, styles.usernameIconCircle]}>
             <Image
-              source={{uri: Icons.IconPerson}}
+              source={{uri: Icons.IconUsername}}
               style={[styles.iconImage, {tintColor: Colors.darkGreen}]}
             />
           </View>
@@ -109,10 +109,10 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   usernameIconCircle: {
-    backgroundColor: 'rgba(94, 182, 0, 0.15)',
+    backgroundColor: Colors.backgroud,
   },
   emailIconCircle: {
-    backgroundColor: 'rgba(94, 182, 0, 0.15)',
+    backgroundColor: Colors.backgroud,
   },
   iconImage: {
     tintColor: Colors.darkGreen,
@@ -138,10 +138,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   usernameValue: {
-    color: Colors.darkGreen,
+    color: Colors.black,
+    fontWeight: 'bold'
   },
   emailValue: {
-    color: Colors.darkGreen,
+    color: Colors.black,
+    fontWeight: 'bold'
   },
 });
 

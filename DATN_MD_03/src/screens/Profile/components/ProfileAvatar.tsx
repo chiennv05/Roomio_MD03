@@ -81,31 +81,33 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = React.memo(({
         </TouchableOpacity>
       </View>
 
-      <View style={styles.nameContainer}>
-        <View style={styles.nameWrapper}>
-          <Text style={styles.userName}>{fullName || 'Người dùng'}</Text>
-          {/* Verification Badge - positioned next to name */}
-          <View style={[styles.verificationBadge, isVerified ? styles.verifiedBadge : styles.unverifiedBadge]}>
+      {/* Fullname - centered */}
+      <Text style={styles.userName}>{fullName || 'Người dùng'}</Text>
+
+      {/* Badges container - Role and Verification side by side */}
+      <View style={styles.badgesContainer}>
+        <View style={[styles.userBadge, {backgroundColor: roleInfo.bgColor}]}>
+          <View style={[styles.badgeIconContainer, {backgroundColor: roleInfo.color}]}>
             <Image
-              source={{uri: isVerified ? Icons.IconSecuritySelectd : Icons.IconWarning}}
-              style={[styles.verificationIcon, isVerified ? styles.verifiedIcon : styles.unverifiedIcon]}
+              source={{uri: roleInfo.icon}}
+              style={styles.badgeIcon}
             />
-            <Text style={[styles.verificationText, isVerified ? styles.verifiedText : styles.unverifiedText]}>
-              {isVerified ? 'Đã xác thực' : 'Chưa xác thực'}
-            </Text>
           </View>
+          <Text style={[styles.userBadgeText, {color: roleInfo.color}]}>
+            {roleInfo.text}
+          </Text>
         </View>
-      </View>
-      <View style={[styles.userBadge, {backgroundColor: roleInfo.bgColor}]}>
-        <View style={[styles.badgeIconContainer, {backgroundColor: roleInfo.color}]}>
-                  <Image
-          source={{uri: roleInfo.icon}}
-          style={styles.badgeIcon}
-        />
+
+        {/* Verification Badge - positioned next to role */}
+        <View style={[styles.verificationBadge, isVerified ? styles.verifiedBadge : styles.unverifiedBadge]}>
+          <Image
+            source={{uri: isVerified ? Icons.IconSecuritySelectd : Icons.IconWarning}}
+            style={[styles.verificationIcon, isVerified ? styles.verifiedIcon : styles.unverifiedIcon]}
+          />
+          <Text style={[styles.verificationText, isVerified ? styles.verifiedText : styles.unverifiedText]}>
+            {isVerified ? 'Đã xác thực' : 'Chưa xác thực'}
+          </Text>
         </View>
-        <Text style={[styles.userBadgeText, {color: roleInfo.color}]}>
-          {roleInfo.text}
-        </Text>
       </View>
     </View>
   );
@@ -169,17 +171,16 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(24),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.dearkOlive,
-    marginBottom: scale(2),
+    marginBottom: verticalScale(8),
     textAlign: 'center',
   },
-  userRole: {
-    fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Medium,
-    color: Colors.mediumGray,
-    textAlign: 'center',
+  badgesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: scale(8),
   },
   userBadge: {
-    marginTop: verticalScale(4),
     paddingHorizontal: scale(14),
     paddingVertical: scale(6),
     borderRadius: scale(20),
@@ -206,24 +207,14 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Bold,
     letterSpacing: 0.3,
   },
-  nameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: scale(4),
-  },
-  nameWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   verificationBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: scale(8),
-    paddingVertical: verticalScale(3),
-    borderRadius: scale(12),
-    marginLeft: scale(8),
+    paddingHorizontal: scale(14),
+    paddingVertical: scale(6),
+    borderRadius: scale(20),
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
   },
   verifiedBadge: {
     backgroundColor: '#E8F5E9',
@@ -236,14 +227,14 @@ const styles = StyleSheet.create({
     borderColor: '#FF9800',
   },
   verificationIcon: {
-    width: scale(12),
-    height: scale(12),
-    marginRight: scale(4),
+    width: scale(14),
+    height: scale(14),
+    marginRight: scale(8),
   },
   verificationText: {
-    fontSize: responsiveFont(10),
-    fontFamily: Fonts.Roboto_Medium,
-    letterSpacing: 0.2,
+    fontSize: responsiveFont(13),
+    fontFamily: Fonts.Roboto_Bold,
+    letterSpacing: 0.3,
   },
   verifiedIcon: {
     tintColor: '#4CAF50',
