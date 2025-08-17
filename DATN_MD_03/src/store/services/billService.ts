@@ -461,8 +461,6 @@ export const markInvoiceAsPaid = async (
   paymentMethod: string,
 ) => {
   try {
-    console.log('Marking invoice as paid:', {invoiceId, paymentMethod});
-
     const response = await api.post<{
       success: boolean;
       message: string;
@@ -477,12 +475,6 @@ export const markInvoiceAsPaid = async (
         },
       },
     );
-
-    console.log(
-      'Mark as paid API response:',
-      JSON.stringify(response.data, null, 2),
-    );
-
     if ('isError' in response) {
       throw new Error(
         response.message || 'Có lỗi xảy ra khi thanh toán hóa đơn',

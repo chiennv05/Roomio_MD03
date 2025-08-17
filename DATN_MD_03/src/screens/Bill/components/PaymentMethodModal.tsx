@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     View,
     Text,
     Modal,
     StyleSheet,
     TouchableOpacity,
-    ActivityIndicator,
     SafeAreaView,
     Image,
     Platform,
@@ -118,16 +117,7 @@ const styles = StyleSheet.create({
     paymentMethodText: {
         fontSize: responsiveFont(16),
         color: Colors.dearkOlive,
-    },
-    loadingContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: responsiveSpacing(20),
-    },
-    loadingText: {
-        marginTop: responsiveSpacing(10),
-        fontSize: responsiveFont(16),
-        color: Colors.dearkOlive,
+        fontWeight: '500',
     },
 });
 
