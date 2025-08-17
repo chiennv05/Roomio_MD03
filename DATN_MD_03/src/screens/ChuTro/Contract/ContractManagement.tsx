@@ -31,11 +31,19 @@ import FilterStatusItem from './components/FilterStatusItem';
 import {filterOptionsContract} from './utils/filterContract';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
+import {checkProfileUser} from '../../../store/services/authService';
+import {useCustomAlert} from '../../../hooks/useCustomAlrert';
+import {CustomAlertModal} from '../../../components';
 
 const ContractManagement = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const dispatch = useDispatch<AppDispatch>();
-
+  const {
+    alertConfig,
+    visible: alertVisible,
+    hideAlert,
+    showConfirm,
+  } = useCustomAlert();
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,6 +53,8 @@ const ContractManagement = () => {
   const {contracts, pagination, loading} = useSelector(
     (state: RootState) => state.contract,
   );
+
+  const token = useSelector((s: RootState) => s.auth.token);
 
   // Load contracts
   const loadContracts = useCallback(
@@ -110,7 +120,33 @@ const ContractManagement = () => {
   const handleGoContractDetail = (contractId: string) => {
     navigation.navigate('ContractDetail', {contractId});
   };
-  const handleGoAddContract = () => {
+  const handleGoAddContract = async () => {
+    if (!token) {
+      return;
+    }
+    const checkUser = await checkProfileUser(token);
+    if (!checkUser.data.profileComplete) {
+      showConfirm(
+        'Bạn cần cập nhật thông tin cá nhân trước khi quản lý hợp đồng',
+        () => {
+          navigation.navigate('PersonalInformation', {});
+          hideAlert();
+        },
+        'Cập nhật thông tin',
+        [
+          {text: 'Hủy', onPress: hideAlert, style: 'cancel'},
+          {
+            text: 'Cập nhật ngay',
+            onPress: () => {
+              navigation.navigate('PersonalInformation', {});
+              hideAlert();
+            },
+            style: 'default',
+          },
+        ],
+      );
+      return;
+    }
     navigation.navigate('AddContractNoNotification');
   };
   return (
@@ -188,6 +224,16 @@ const ContractManagement = () => {
         onPress={handleGoAddContract}>
         <Image source={{uri: Icons.IconAdd}} style={styles.styleIcon} />
       </TouchableOpacity>
+      {alertConfig && (
+        <CustomAlertModal
+          visible={alertVisible}
+          title={alertConfig.title}
+          message={alertConfig.message}
+          onClose={hideAlert}
+          type={alertConfig.type}
+          buttons={alertConfig.buttons}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -243,12 +289,12 @@ const styles = StyleSheet.create({
   },
   buttonAddRoom: {
     position: 'absolute',
-    bottom: responsiveSpacing(20),
+    bottom: responsiveSpacing(60),
     right: responsiveSpacing(20),
-    width: responsiveIcon(44),
-    height: responsiveIcon(44),
+    width: responsiveIcon(56),
+    height: responsiveIcon(56),
     backgroundColor: Colors.limeGreen,
-    borderRadius: responsiveIcon(44) / 2,
+    borderRadius: responsiveIcon(56) / 2,
     padding: responsiveSpacing(12),
     shadowColor: Colors.black,
     shadowOffset: {

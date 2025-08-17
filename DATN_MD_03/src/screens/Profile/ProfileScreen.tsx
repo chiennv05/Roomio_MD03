@@ -40,6 +40,7 @@ import {
   stopPolling,
 } from '../Notification/services/NotificationPoller';
 import CustomAlertModal from '../../components/CustomAlertModal';
+import {clearFormDataFromStorage} from '../ChuTro/AddRoom/utils/asyncStorageUtils';
 
 export default function ProfileScreen() {
   const dispatch = useDispatch<AppDispatch>();
@@ -253,6 +254,7 @@ export default function ProfileScreen() {
     try {
       await dispatch(logoutUser(token)).unwrap();
       setShowLogoutModal(false);
+      await clearFormDataFromStorage();
       navigation.navigate('Login', {});
     } catch (error) {
       // Dù có lỗi API, vẫn logout local và navigate

@@ -170,7 +170,12 @@ const ContractDetailScreen = () => {
       return;
     }
 
-    const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
+    const allowedStatuses = [
+      'draft',
+      'pending_signature',
+      'pending_approval',
+      'needs_resigning',
+    ];
 
     if (!allowedStatuses.includes(selectedContract.status)) {
       showError(
@@ -207,7 +212,12 @@ const ContractDetailScreen = () => {
       return;
     }
 
-    const allowedStatuses = ['draft', 'pending_signature', 'pending_approval'];
+    const allowedStatuses = [
+      'draft',
+      'pending_signature',
+      'pending_approval',
+      'needs_resigning',
+    ];
 
     if (!allowedStatuses.includes(selectedContract.status)) {
       showError(

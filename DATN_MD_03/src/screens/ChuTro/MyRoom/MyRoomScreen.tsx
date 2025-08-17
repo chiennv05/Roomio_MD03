@@ -39,6 +39,7 @@ import {
   loadPlans,
   loadSubscriptions,
 } from '../../../store/slices/subscriptionSlice';
+import {checkProfileUser} from '../../../store/services/authService';
 
 export default function MyRoomScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -48,6 +49,7 @@ export default function MyRoomScreen() {
   const {rooms, loading, pagination} = useSelector(
     (state: RootState) => state.landlordRooms,
   );
+
   const {
     alertConfig,
     visible: alertVisible,
@@ -140,7 +142,33 @@ export default function MyRoomScreen() {
     [navigation],
   );
   const handleGoback = () => navigation.goBack();
-  const handleAddRoom = () => {
+  const handleAddRoom = async () => {
+    if (!token) {
+      return;
+    }
+    const checkUser = await checkProfileUser(token);
+    if (!checkUser.data.profileComplete) {
+      showConfirm(
+        'Bạn cần cập nhật thông tin cá nhân trước khi quản lý hợp đồng',
+        () => {
+          navigation.navigate('PersonalInformation', {});
+          hideAlert();
+        },
+        'Cập nhật thông tin',
+        [
+          {text: 'Hủy', onPress: hideAlert, style: 'cancel'},
+          {
+            text: 'Cập nhật ngay',
+            onPress: () => {
+              navigation.navigate('PersonalInformation', {});
+              hideAlert();
+            },
+            style: 'default',
+          },
+        ],
+      );
+      return;
+    }
     if (effectivePlan && total >= effectivePlan.maxActiveRooms) {
       showConfirm(
         `Bạn đã đạt giới hạn ${effectivePlan.maxActiveRooms} phòng trong gói ${effectivePlan.name}. Vui lòng nâng cấp gói để thêm phòng mới.`,
@@ -347,12 +375,12 @@ const styles = StyleSheet.create({
   },
   buttonAddRoom: {
     position: 'absolute',
-    bottom: responsiveSpacing(20),
+    bottom: responsiveSpacing(60),
     right: responsiveSpacing(20),
-    width: responsiveIcon(44),
-    height: responsiveIcon(44),
+    width: responsiveIcon(56),
+    height: responsiveIcon(56),
     backgroundColor: Colors.limeGreen,
-    borderRadius: responsiveIcon(44) / 2,
+    borderRadius: responsiveIcon(56) / 2,
     padding: responsiveSpacing(12),
     shadowColor: Colors.black,
     shadowOffset: {

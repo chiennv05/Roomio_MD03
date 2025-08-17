@@ -22,6 +22,7 @@ import {
 import {getImageUrl} from '../../../../configs';
 import {Icons} from '../../../../assets/icons';
 import {getStatusInfo} from '../constants/getStatusInfo';
+import LinearGradient from 'react-native-linear-gradient';
 
 interface RoomCardProps {
   item: Room;
@@ -51,12 +52,6 @@ const ItemRoom: React.FC<RoomCardProps> = ({item, onPress, index}) => {
 
   return (
     <View style={{marginTop: index === 0 ? responsiveSpacing(15) : 0}}>
-      <View style={[styles.containerStatus, {backgroundColor: status.color}]}>
-        <Text style={[styles.textStatus, {color: status.textColor}]}>
-          {status.label}
-        </Text>
-      </View>
-
       <TouchableOpacity
         style={styles.card}
         onPress={handleCardPress}
@@ -71,10 +66,21 @@ const ItemRoom: React.FC<RoomCardProps> = ({item, onPress, index}) => {
             {images.map((imageUri: string, idx: number) => (
               <View key={idx} style={styles.carouselItemContainer}>
                 <Image source={{uri: imageUri}} style={styles.carouselImage} />
+                <LinearGradient
+                  colors={['#00000080', '#FFFFFF00']}
+                  style={styles.imageOverlay}
+                  start={{x: 0, y: 1}}
+                  end={{x: 0, y: 0}}
+                />
               </View>
             ))}
           </ScrollView>
-
+          <View
+            style={[styles.containerStatus, {backgroundColor: status.color}]}>
+            <Text style={[styles.textStatus, {color: status.textColor}]}>
+              {status.label}
+            </Text>
+          </View>
           <View style={styles.priceOverlay}>
             <Text style={styles.priceOverlayText}>
               {item.rentPrice?.toLocaleString('vi-VN')}/ tháng
@@ -159,7 +165,7 @@ const styles = StyleSheet.create({
   },
   carouselContainer: {
     position: 'relative',
-    paddingTop: responsiveSpacing(16),
+    paddingTop: responsiveSpacing(8),
     paddingBottom: responsiveSpacing(1),
   },
   carouselItemContainer: {
@@ -175,7 +181,6 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
     borderRadius: moderateScale(16),
-    backgroundColor: Colors.lightGray,
   },
   priceOverlay: {
     position: 'absolute',
@@ -250,8 +255,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.limeGreen,
     position: 'absolute',
     zIndex: 1000,
-    top: responsiveSpacing(10),
-    right: responsiveSpacing(32),
+    top: responsiveSpacing(24),
+    right: responsiveSpacing(20),
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -267,5 +272,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: responsiveSpacing(5),
+  },
+  imageOverlay: {
+    position: 'absolute',
+    left: 10,
+    right: 10,
+    bottom: 6,
+    height: '50%',
+    borderRadius: moderateScale(16),
   },
 });
