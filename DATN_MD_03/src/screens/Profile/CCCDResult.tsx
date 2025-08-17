@@ -152,12 +152,20 @@ export default function CCCDResult() {
       return;
     }
 
+    // Định dạng ngày theo YYYY-MM-DD
+    const formatDateForApi = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
     const updatedData = {
       fullName: cccdData.fullName,
       identityNumber: cccdData.identityNumber,
       address: cccdData.address,
-      birthDate: cccdData.birthDate.toISOString(),
-      phone: user?.phone || '', // Sử dụng phone hiện tại từ user
+      birthDate: formatDateForApi(cccdData.birthDate), // Sử dụng định dạng YYYY-MM-DD
+      // Không gửi phone để cho phép xác minh CCCD mà không yêu cầu SĐT
     };
 
     console.log('Updating profile with data:', updatedData);
@@ -168,13 +176,7 @@ export default function CCCDResult() {
       const success = await dispatch(
         updateProfile({
           token,
-          data: {
-            fullName: cccdData.fullName,
-            identityNumber: cccdData.identityNumber,
-            address: cccdData.address,
-            birthDate: cccdData.birthDate.toISOString(),
-            phone: user?.phone || '',
-          },
+          data: updatedData,
         }),
       ).unwrap();
 
@@ -192,10 +194,16 @@ export default function CCCDResult() {
               if (redirectTo === 'DetailRoom' && roomId) {
                 navigation.reset({
                   index: 0,
-                  routes: [{name: 'DetailRoom', params: {roomId}}],
+                  routes: [
+                    {name: 'UITab'},
+                    {name: 'DetailRoom', params: {roomId}},
+                  ],
                 });
               } else {
-                navigation.replace('PersonalInformation', {});
+                navigation.reset({
+                  index: 0,
+                  routes: [{name: 'UITab'}],
+                });
               }
             },
           }],

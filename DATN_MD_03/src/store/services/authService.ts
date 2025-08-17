@@ -102,11 +102,12 @@ export const resetPassword = async (
 export const updateProfile = async (
   token: string,
   data: {
-    fullName: string;
-    phone: string;
-    identityNumber: string;
+    fullName?: string;
+    phone?: string;
+    identityNumber?: string;
     address?: string;
     birthDate?: string;
+    email?: string;
   },
 ) => {
   try {

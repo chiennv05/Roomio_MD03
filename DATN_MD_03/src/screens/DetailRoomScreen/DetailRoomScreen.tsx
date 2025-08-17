@@ -110,7 +110,7 @@ const DetailRoomScreen: React.FC = () => {
       amenities: roomDetail.amenities || [],
       furniture: roomDetail.furniture || [],
       ownerName: roomDetail.owner?.fullName || 'Chủ trọ',
-      ownerPhone: roomDetail.owner?.phone || 'Chưa có SĐT',
+      ownerPhone: `Có ${roomDetail.owner?.stats?.totalRooms || 0} bài đăng`,
       ownerAvatar: roomDetail.owner?.avatar || '',
       description: roomDetail.description || 'Mô tả phòng trọ...',
       currentRoomId: roomDetail._id,

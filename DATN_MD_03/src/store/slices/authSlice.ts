@@ -99,18 +99,20 @@ export const updateProfile = createAsyncThunk(
     }: {
       token: string;
       data: {
-        fullName: string;
-        phone: string;
-        identityNumber: string;
+        fullName?: string;
+        phone?: string;
+        identityNumber?: string;
         address?: string;
         birthDate?: string;
+        email?: string;
       };
     },
     {rejectWithValue},
   ) => {
     try {
-      const user = await updateProfileApi(token, data);
-      return user;
+      const response = await updateProfileApi(token, data);
+      const mapUser = mapApiUserToUser(response);
+      return mapUser;
     } catch (err: any) {
       return rejectWithValue(err.message || 'Update profile failed');
     }
@@ -173,15 +175,15 @@ export const updateAvatar = createAsyncThunk(
 
       // Extract new token if available
       const newToken = user.auth_token?.token || token;
-      
+
       // Map user data và return với avatar mới
       const mapUser = mapApiUserToUser(user, newToken);
-      
+
       // Store new token if it was updated
       if (newToken !== token) {
         await storeUserSession(newToken);
       }
-      
+
       return { user: mapUser, token: newToken };
         } catch (err: any) {
       console.error('Avatar upload error:', err);

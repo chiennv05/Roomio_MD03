@@ -58,6 +58,7 @@ export interface Owner {
   fullName: string;
   phone: string;
   stats?: OwnerStats;
+  avatar?: string;
 }
 
 export interface Stats {

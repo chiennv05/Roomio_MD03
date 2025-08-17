@@ -30,6 +30,7 @@ import ModalLoading from '../ChuTro/AddRoom/components/ModalLoading';
 import {HeaderWithBack} from '../../components';
 import CustomAlertModal from '../../components/CustomAlertModal';
 import LinearGradient from 'react-native-linear-gradient';
+import { CommonActions } from '@react-navigation/native';
 
 export default function CCCDScanning() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -129,12 +130,23 @@ export default function CCCDScanning() {
             if (barcodes.length > 0) {
               const rawData = barcodes[0].value;
               // Navigate to result screen with scanned data
-              navigation.navigate('CCCDResult', {
-                rawData,
-                imageUri: uri,
-                redirectTo: redirectTo || undefined,
-                roomId: roomId || undefined,
-              });
+              // Thay thế navigate bằng reset để tránh stack lại các màn hình
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [
+                    {
+                      name: 'CCCDResult',
+                      params: {
+                        rawData,
+                        imageUri: uri,
+                        redirectTo: redirectTo || undefined,
+                        roomId: roomId || undefined,
+                      },
+                    },
+                  ],
+                })
+              );
             } else {
               setAlertConfig({
                 visible: true,
@@ -215,12 +227,23 @@ export default function CCCDScanning() {
             if (barcodes.length > 0) {
               const rawData = barcodes[0].value;
               // Navigate to result screen with scanned data
-              navigation.navigate('CCCDResult', {
-                rawData,
-                imageUri: uri,
-                redirectTo: redirectTo || undefined,
-                roomId: roomId || undefined,
-              });
+              // Thay thế navigate bằng reset để tránh stack lại các màn hình
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [
+                    {
+                      name: 'CCCDResult',
+                      params: {
+                        rawData,
+                        imageUri: uri,
+                        redirectTo: redirectTo || undefined,
+                        roomId: roomId || undefined,
+                      },
+                    },
+                  ],
+                })
+              );
             } else {
               setAlertConfig({
                 visible: true,
