@@ -24,9 +24,21 @@ import {RootStackParamList} from '../../types/route';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {requestNotificationPermission} from './services/NativeNotifier';
 import LinearGradient from 'react-native-linear-gradient';
+import {CustomAlertModal, useCustomAlert} from './components';
 
 export default function NotificationPermissionScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+
+  // Custom Alert Hook
+  const {
+    alertConfig,
+    visible: alertVisible,
+    showAlert,
+    hideAlert,
+    showSuccess,
+    showError,
+    showConfirm,
+  } = useCustomAlert();
 
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -206,7 +218,11 @@ export default function NotificationPermissionScreen() {
     <LinearGradient
       colors={['#f8f9fa', '#e9ecef', '#f8f9fa']}
       style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent={true} />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="transparent"
+        translucent={true}
+      />
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <Animated.View
           style={[
@@ -290,6 +306,16 @@ export default function NotificationPermissionScreen() {
           </Animated.View>
         </Animated.View>
       </SafeAreaView>
+
+      {/* Custom Alert Modal */}
+      <CustomAlertModal
+        visible={alertVisible}
+        title={alertConfig?.title}
+        message={alertConfig?.message || ''}
+        onClose={hideAlert}
+        type={alertConfig?.type}
+        buttons={alertConfig?.buttons}
+      />
     </LinearGradient>
   );
 }

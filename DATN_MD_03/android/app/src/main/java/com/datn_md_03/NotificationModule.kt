@@ -51,6 +51,8 @@ class NotificationModule(private val reactContext: ReactApplicationContext) : Re
 
         val intent = Intent(reactContext, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("notificationId", id)
+            putExtra("fromNotification", true)
         }
         val contentIntent = PendingIntent.getActivity(
             reactContext,

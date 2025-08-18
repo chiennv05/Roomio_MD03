@@ -1,9 +1,10 @@
-import {View, StyleSheet, Alert} from 'react-native';
-import React, {useEffect, useCallback, useState} from 'react';
+import {View, StyleSheet, Alert, StatusBar, Animated} from 'react-native';
+import React, {useEffect, useCallback, useState, useRef} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
+import LinearGradient from 'react-native-linear-gradient';
 import {RootStackParamList} from '../../types/route';
 import {RootState, AppDispatch} from '../../store';
 import {
@@ -21,13 +22,16 @@ import NotificationListContainer, {
 } from './components/NotificationListContainer';
 import NotificationDetailModal from './components/NotificationDetailModal';
 import LoadingAnimation from '../../components/LoadingAnimation';
+import {CustomAlertModal, useCustomAlert} from './components';
 import {Colors} from '../../theme/color';
+import {responsiveSpacing} from '../../utils/responsive';
 
 type NotificationScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 const NotificationScreen = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<NotificationScreenNavigationProp>();
+  const route = useRoute();
   const {user, token} = useSelector((state: RootState) => state.auth);
   const {
     loading,
@@ -38,6 +42,14 @@ const NotificationScreen = () => {
     loadingMore,
   } = useSelector((state: RootState) => state.notification);
 
+  // Custom Alert Hook
+  const {
+    alertConfig,
+    visible: alertVisible,
+    hideAlert,
+    showSuccess,
+  } = useCustomAlert();
+
   const [activeTab, setActiveTab] = useState<
     'all' | 'schedule' | 'bill' | 'contract'
   >('all');
@@ -47,12 +59,61 @@ const NotificationScreen = () => {
     useState<FormattedNotification | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Load notifications khi component mount
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+
+  // Load notifications khi component mount với animation
   useEffect(() => {
     if (user && token) {
       dispatch(fetchNotifications({token, page: 1, limit: 20}));
     }
-  }, [dispatch, user, token]);
+
+    // Start entrance animation
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [dispatch, user, token, fadeAnim, slideAnim]);
+
+  // Handle navigation from notification tap
+  useEffect(() => {
+    const params = route.params as any;
+    if (params?.fromPush && params?.notificationId) {
+      console.log('Opened from notification:', params.notificationId);
+
+      // Show success message
+      setTimeout(() => {
+        showSuccess(
+          'Đã mở từ thông báo!',
+          'Thông báo đã được mở thành công',
+          true,
+        );
+      }, 1000);
+
+      // Optionally, find and highlight the specific notification
+      // or open its detail modal
+      const targetNotification = notifications.find(
+        notif => notif.id === params.notificationId,
+      );
+
+      if (targetNotification) {
+        // Auto-open the notification detail modal
+        setTimeout(() => {
+          setSelectedNotification(targetNotification);
+          setModalVisible(true);
+        }, 1500);
+      }
+    }
+  }, [route.params, notifications, showSuccess]);
 
   // Handle refresh
   const handleRefresh = useCallback(() => {
@@ -239,43 +300,69 @@ const NotificationScreen = () => {
       type: notification.type,
     }));
 
-  // Loading state
+  // Loading state với beautiful animation
   if (loading && notifications.length === 0) {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <LinearGradient
+        colors={[Colors.limeGreen, '#A8E600']}
+        style={styles.safeArea}>
+        <StatusBar barStyle="dark-content" backgroundColor={Colors.limeGreen} />
         <NotificationScreenHeader onMenuPress={handleMenuPress} />
         <View style={styles.loadingContainer}>
-          <LoadingAnimation size="large" color={Colors.limeGreen} />
+          <LoadingAnimation size="large" color={Colors.white} />
         </View>
-      </SafeAreaView>
+      </LinearGradient>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <NotificationScreenHeader onMenuPress={handleMenuPress} />
+    <View style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.limeGreen} />
 
-      <View style={styles.container}>
-        <NotificationHeader
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          unreadCount={unreadCount}
-        />
+      {/* Beautiful gradient header với limeGreen */}
+      <LinearGradient
+        colors={[Colors.limeGreen, '#A8E600']}
+        style={styles.headerGradient}>
+        <SafeAreaView>
+          <NotificationScreenHeader onMenuPress={handleMenuPress} />
+        </SafeAreaView>
+      </LinearGradient>
 
-        {formattedNotifications.length === 0 ? (
-          <EmptyNotification />
-        ) : (
-          <NotificationListContainer
-            notifications={formattedNotifications}
-            onRefresh={handleRefresh}
-            refreshing={refreshing}
-            onLoadMore={handleLoadMore}
-            loadingMore={loadingMore}
-            onMarkAsRead={handleNotificationPress}
-            onDeleteNotification={handleDeleteNotification}
+      {/* Main content with animation */}
+      <Animated.View
+        style={[
+          styles.container,
+          {
+            opacity: fadeAnim,
+            transform: [{translateY: slideAnim}],
+          },
+        ]}>
+        {/* Enhanced header with glass effect */}
+        <View style={styles.headerContainer}>
+          <NotificationHeader
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            unreadCount={unreadCount}
           />
-        )}
-      </View>
+        </View>
+
+        {/* Content area */}
+        <View style={styles.contentArea}>
+          {formattedNotifications.length === 0 ? (
+            <EmptyNotification />
+          ) : (
+            <NotificationListContainer
+              notifications={formattedNotifications}
+              onRefresh={handleRefresh}
+              refreshing={refreshing}
+              onLoadMore={handleLoadMore}
+              loadingMore={loadingMore}
+              onMarkAsRead={handleNotificationPress}
+              onDeleteNotification={handleDeleteNotification}
+            />
+          )}
+        </View>
+      </Animated.View>
 
       {/* Modal chi tiết thông báo */}
       <NotificationDetailModal
@@ -287,7 +374,21 @@ const NotificationScreen = () => {
         onNavigateToRoomManagement={navigateToRoomManagement}
         onNavigateToSupport={navigateToSupport}
       />
-    </SafeAreaView>
+
+      {/* Custom Alert Modal */}
+      <CustomAlertModal
+        visible={alertVisible}
+        title={alertConfig?.title}
+        message={alertConfig?.message || ''}
+        onClose={hideAlert}
+        type={alertConfig?.type}
+        timestamp={alertConfig?.timestamp}
+        icon={alertConfig?.icon}
+        showIcon={alertConfig?.showIcon}
+        buttons={alertConfig?.buttons}
+        customStyles={alertConfig?.customStyles}
+      />
+    </View>
   );
 };
 
@@ -377,15 +478,44 @@ const getNotificationTitle = (type: string): string => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: '#f8fafc',
+  },
+  headerGradient: {
+    paddingBottom: responsiveSpacing(20),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
   },
   container: {
     flex: 1,
+    backgroundColor: 'transparent',
+    marginTop: -responsiveSpacing(15), // Overlap effect
+  },
+  headerContainer: {
     backgroundColor: Colors.white,
+    marginHorizontal: responsiveSpacing(16),
+    borderRadius: responsiveSpacing(20),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    marginBottom: responsiveSpacing(16),
+  },
+  contentArea: {
+    flex: 1,
+    paddingHorizontal: responsiveSpacing(16),
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: Colors.white,
     justifyContent: 'center',
     alignItems: 'center',
   },

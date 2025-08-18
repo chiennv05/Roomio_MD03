@@ -11,6 +11,7 @@ import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
 import {responsiveFont, scale} from '../../../utils/responsive';
 import {FormattedNotification} from './NotificationListContainer';
+import {CustomAlertModal, useCustomAlert} from './index';
 
 interface NotificationDetailModalProps {
   visible: boolean;
@@ -31,6 +32,17 @@ const NotificationDetailModal: React.FC<NotificationDetailModalProps> = ({
   onNavigateToRoomManagement,
   onNavigateToSupport,
 }) => {
+  // Custom Alert Hook
+  const {
+    alertConfig,
+    visible: alertVisible,
+    showAlert,
+    hideAlert,
+    showSuccess,
+    showError,
+    showConfirm,
+    showNotificationAlert,
+  } = useCustomAlert();
   // Function để extract invoiceId từ notification content
   const extractInvoiceIdFromContent = (content: string): string | null => {
     // Tìm kiếm pattern cho invoiceId trong content
@@ -177,7 +189,18 @@ const NotificationDetailModal: React.FC<NotificationDetailModalProps> = ({
           <>
             <TouchableOpacity
               style={[styles.modalButton, styles.supportButton]}
-              onPress={onNavigateToSupport}>
+              onPress={() => {
+                showNotificationAlert(
+                  'Thông báo hỗ trợ',
+                  'Phản hồi từ Admin cho yêu cầu "gọi dang ký": ???',
+                  '5 giờ trước',
+                  () => {
+                    onNavigateToSupport();
+                    onClose();
+                  },
+                  'Xem hỗ trợ',
+                );
+              }}>
               <Text style={styles.supportButtonText}>Xem hỗ trợ</Text>
             </TouchableOpacity>
 
@@ -201,31 +224,47 @@ const NotificationDetailModal: React.FC<NotificationDetailModalProps> = ({
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <ScrollView style={styles.modalContent}>
-            <Text style={styles.modalTitle}>
-              {notification?.title || 'Chi tiết thông báo'}
-            </Text>
+    <>
+      <Modal
+        visible={visible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={onClose}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <ScrollView style={styles.modalContent}>
+              <Text style={styles.modalTitle}>
+                {notification?.title || 'Chi tiết thông báo'}
+              </Text>
 
-            <Text style={styles.modalContentText}>
-              {notification?.content || ''}
-            </Text>
+              <Text style={styles.modalContentText}>
+                {notification?.content || ''}
+              </Text>
 
-            <Text style={styles.modalTime}>
-              {notification?.date} - {notification?.time}
-            </Text>
-          </ScrollView>
+              <Text style={styles.modalTime}>
+                {notification?.date} - {notification?.time}
+              </Text>
+            </ScrollView>
 
-          <View style={styles.modalActions}>{renderActionButtons()}</View>
+            <View style={styles.modalActions}>{renderActionButtons()}</View>
+          </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+
+      {/* Custom Alert Modal */}
+      <CustomAlertModal
+        visible={alertVisible}
+        title={alertConfig?.title}
+        message={alertConfig?.message || ''}
+        onClose={hideAlert}
+        type={alertConfig?.type}
+        timestamp={alertConfig?.timestamp}
+        icon={alertConfig?.icon}
+        showIcon={alertConfig?.showIcon}
+        buttons={alertConfig?.buttons}
+        customStyles={alertConfig?.customStyles}
+      />
+    </>
   );
 };
 

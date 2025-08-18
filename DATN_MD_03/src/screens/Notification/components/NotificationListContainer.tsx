@@ -84,9 +84,14 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
     }
   };
 
-  const renderItem = ({item}: {item: FormattedNotification}) => (
-    <View style={styles.notificationWrapper}>
-      {/* Ngày hiển thị dưới dạng text tích hợp trong thông báo */}
+  const renderItem = ({
+    item,
+    index,
+  }: {
+    item: FormattedNotification;
+    index: number;
+  }) => (
+    <View style={[styles.notificationWrapper, index === 0 && styles.firstItem]}>
       <NotificationItemCard
         id={item.id}
         title={item.title}
@@ -132,10 +137,14 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
 const styles = StyleSheet.create({
   notificationWrapper: {
     position: 'relative',
-    marginTop: 0,
+    marginBottom: responsiveSpacing(8),
+  },
+  firstItem: {
+    marginTop: responsiveSpacing(8),
   },
   listContainer: {
     flex: 1,
+    backgroundColor: 'transparent',
   },
 });
 

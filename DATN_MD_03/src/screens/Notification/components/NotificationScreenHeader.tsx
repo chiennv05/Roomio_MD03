@@ -32,34 +32,28 @@ const NotificationScreenHeader: React.FC<NotificationScreenHeaderProps> = ({
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-
-      {/* Nút back */}
+      {/* Nút back với glass effect - ở bên trái */}
       <TouchableOpacity
         style={styles.backButton}
         onPress={handleBackPress}
-        activeOpacity={0.7}>
-        <Image
-          source={{uri: Icons.IconOut}}
-          style={styles.backIcon}
-          resizeMode="contain"
-        />
+        activeOpacity={0.8}>
+        <View style={styles.buttonGlass}>
+          <Image
+            source={{uri: Icons.IconArrowLeft}}
+            style={styles.backIcon}
+            resizeMode="contain"
+          />
+        </View>
       </TouchableOpacity>
 
-      {/* Tiêu đề */}
-      <Text style={styles.title}>Thông báo</Text>
+      {/* Tiêu đề với gradient text effect */}
+      <View style={styles.titleContainer}>
+        <Text style={styles.title}>🔔 Thông báo</Text>
+        <Text style={styles.subtitle}>Cập nhật mới nhất</Text>
+      </View>
 
-      {/* Nút menu */}
-      <TouchableOpacity
-        style={styles.menuButton}
-        onPress={onMenuPress}
-        activeOpacity={0.7}>
-        <Image
-          source={{uri: Icons.IconSelectDate}}
-          style={styles.menuIcon}
-          resizeMode="contain"
-        />
-      </TouchableOpacity>
+      {/* Spacer bên phải để cân bằng */}
+      <View style={styles.rightSpacer} />
     </View>
   );
 };
@@ -69,41 +63,64 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: responsiveSpacing(16),
-    paddingVertical: responsiveSpacing(12),
-    backgroundColor: Colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
+    paddingHorizontal: responsiveSpacing(20),
+    paddingVertical: responsiveSpacing(16),
+    backgroundColor: 'transparent',
   },
   backButton: {
-    width: moderateScale(40),
-    height: moderateScale(40),
+    width: moderateScale(44),
+    height: moderateScale(44),
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: moderateScale(20),
+  },
+  rightSpacer: {
+    width: moderateScale(44),
+    height: moderateScale(44),
+  },
+  buttonGlass: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    borderRadius: moderateScale(22),
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   backIcon: {
-    width: moderateScale(36),
-    height: moderateScale(36),
+    width: moderateScale(20),
+    height: moderateScale(20),
+    tintColor: Colors.white,
   },
-  title: {
-    fontSize: responsiveFont(20),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.black,
+
+  titleContainer: {
     flex: 1,
-    textAlign: 'center',
+    alignItems: 'center',
     marginHorizontal: responsiveSpacing(16),
   },
-  menuButton: {
-    width: moderateScale(40),
-    height: moderateScale(40),
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: moderateScale(20),
+  title: {
+    fontSize: responsiveFont(22),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.white,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: {width: 0, height: 1},
+    textShadowRadius: 2,
   },
-  menuIcon: {
-    width: moderateScale(36),
-    height: moderateScale(36),
+  subtitle: {
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Regular,
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+    marginTop: responsiveSpacing(2),
   },
 });
 

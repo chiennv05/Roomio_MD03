@@ -1,9 +1,10 @@
-import React from 'react';
+import React, {useRef, useEffect} from 'react';
 
 import {StatusBar} from 'react-native';
 import {createStackNavigator, TransitionPresets} from '@react-navigation/stack';
 import {RootStackParamList} from '../types/route';
 import {Colors} from '../theme/color';
+import NotificationEventListener from '../screens/Notification/services/NotificationEventListener';
 
 import SplashScreen from '../screens/Splash/SplashScreen';
 import LoginAndRegister from '../screens/LoginAndRegister/LoginAndRegister';
@@ -96,6 +97,20 @@ const Stack = createStackNavigator<RootStackParamList>();
 // };
 
 export default function TabScreen() {
+  const navigationRef = useRef<any>(null);
+
+  useEffect(() => {
+    // Initialize notification event listener when navigation is ready
+    if (navigationRef.current) {
+      NotificationEventListener.initialize(navigationRef.current);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      NotificationEventListener.cleanup();
+    };
+  }, []);
+
   return (
     <>
       <StatusBar
@@ -103,7 +118,14 @@ export default function TabScreen() {
         backgroundColor={Colors.backgroud}
         translucent={false}
       />
-      <NavigationContainer>
+      <NavigationContainer
+        ref={navigationRef}
+        onReady={() => {
+          // Initialize notification listener when navigation is ready
+          if (navigationRef.current) {
+            NotificationEventListener.initialize(navigationRef.current);
+          }
+        }}>
         <Stack.Navigator
           initialRouteName="SplashScreen"
           screenOptions={{headerShown: false}}>

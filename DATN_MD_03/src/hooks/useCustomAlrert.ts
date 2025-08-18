@@ -4,13 +4,22 @@ interface AlertConfig {
   title?: string;
   message: string;
   type?: 'success' | 'error' | 'warning' | 'info';
+  timestamp?: string;
+  icon?: string;
+  showIcon?: boolean;
   buttons?: Array<{
     text: string;
     onPress: () => void;
-    style?: 'default' | 'cancel' | 'destructive';
+    style?: 'default' | 'cancel' | 'destructive' | 'primary';
   }>;
   autoHide?: boolean;
   autoHideTimeout?: number;
+  customStyles?: {
+    modal?: object;
+    title?: object;
+    message?: object;
+    button?: object;
+  };
 }
 
 export const useCustomAlert = () => {
@@ -79,7 +88,7 @@ export const useCustomAlert = () => {
     customButtons?: Array<{
       text: string;
       onPress: () => void;
-      style?: 'default' | 'cancel' | 'destructive';
+      style?: 'default' | 'cancel' | 'destructive' | 'primary';
     }>,
   ) => {
     const buttons = customButtons || [
@@ -96,6 +105,49 @@ export const useCustomAlert = () => {
     });
   };
 
+  // Helper function để tạo notification-style alert
+  const showNotificationAlert = (
+    title: string,
+    message: string,
+    timestamp?: string,
+    onAction?: () => void,
+    actionText: string = 'Xem hỗ trợ',
+  ) => {
+    const currentTime =
+      timestamp ||
+      new Date().toLocaleString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+    showAlert({
+      title,
+      message,
+      timestamp: `Hôm nay - ${currentTime.split(' ')[1] || '5 giờ trước'}`,
+      type: 'info',
+      showIcon: false,
+      buttons: [
+        {text: 'Đóng', onPress: hideAlert, style: 'cancel'},
+        ...(onAction
+          ? [
+              {
+                text: actionText,
+                onPress: () => {
+                  onAction();
+                  hideAlert();
+                },
+                style: 'primary' as const,
+              },
+            ]
+          : []),
+      ],
+      autoHide: false,
+    });
+  };
+
   return {
     alertConfig,
     visible,
@@ -104,5 +156,6 @@ export const useCustomAlert = () => {
     showSuccess,
     showError,
     showConfirm,
+    showNotificationAlert,
   };
 };
