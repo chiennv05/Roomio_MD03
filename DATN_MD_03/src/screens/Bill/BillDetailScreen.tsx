@@ -416,6 +416,12 @@ const BillDetailScreen = () => {
                         <Text style={styles.detailLabel}>Hạn thanh toán</Text>
                         <Text style={styles.detailValue}>{formatDate(selectedInvoice.dueDate)}</Text>
                     </View>
+                    {selectedInvoice.status === 'paid' && selectedInvoice.paymentDate && (
+                        <View style={styles.detailRow}>
+                            <Text style={styles.detailLabel}>Ngày thanh toán</Text>
+                            <Text style={styles.detailValue}>{formatDate(selectedInvoice.paymentDate)}</Text>
+                        </View>
+                    )}
                     <View style={styles.detailRow}>
                         <Text style={styles.detailLabel}>Địa chỉ</Text>
                         <Text style={styles.detailValue}>

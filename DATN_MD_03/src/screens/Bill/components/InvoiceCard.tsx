@@ -286,6 +286,13 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress, onEdit, onD
                         <Text style={styles.infoLabel}>Hạn thanh toán:</Text>
                         <Text style={styles.infoValue}>{formatDateDisplay(invoice.dueDate)}</Text>
                     </View>
+                    
+                    {invoice.status === 'paid' && invoice.paymentDate && (
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Ngày thanh toán:</Text>
+                            <Text style={styles.infoValue}>{formatDateDisplay(invoice.paymentDate)}</Text>
+                        </View>
+                    )}
                 </View>
 
                 {/* Action buttons for landlords and draft invoices */}
@@ -305,8 +312,6 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress, onEdit, onD
                         </TouchableOpacity>
                     </View>
                 )}
-
-                {/* badge Người ở cùng đã chuyển vào headerRight để không đè trạng thái */}
             </TouchableOpacity>
 
             {/* Footer màu xanh với kỳ hóa đơn và số tiền */}
