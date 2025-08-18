@@ -18,7 +18,9 @@ interface BookingScheduleModalProps {
 const BookingScheduleModal = forwardRef<BottomSheet, BookingScheduleModalProps>(
   ({onPess}, ref) => {
     const snapPoints = useMemo(() => ['37%', '45%'], []);
-    const [message, setMessage] = React.useState<string>('');
+    const [message, setMessage] = React.useState<string>(
+      'Tôi quan tâm đến phòng này và muốn xem phòng vào cuối tuần.',
+    );
     const handleClose = useCallback(() => {
       (ref as React.RefObject<BottomSheet>)?.current?.close();
     }, [ref]);
@@ -50,7 +52,9 @@ const BookingScheduleModal = forwardRef<BottomSheet, BookingScheduleModalProps>(
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>Đặt lịch xem phòng</Text>
-            <Text style={styles.subtitle}>Đặt lịch xem phòng với chủ trọ</Text>
+            <Text style={styles.subtitle}>
+              Đặt lịch xem phòng với chủ trọ .
+            </Text>
           </View>
 
           {/* Content */}

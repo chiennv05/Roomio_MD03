@@ -221,7 +221,6 @@ const PdfViewerScreen = () => {
                 try {
                   await Share.open(shareOptions);
                 } catch (shareErr) {
-                  console.error('Share open error', shareErr);
                 } finally {
                   hideAlert();
                 }

@@ -20,8 +20,14 @@ export const validateRoomForm = (
   if (!form.roomNumber.trim()) {
     return {valid: false, message: 'Vui lòng nhập số phòng'};
   }
-  if (!form.area || typeof form.area !== 'number' || form.area <= 0) {
+  if (!form.area || typeof form.area !== 'number') {
     return {valid: false, message: 'Diện tích không hợp lệ'};
+  }
+  if (form.area <= 5) {
+    return {valid: false, message: 'Diện tích phải lớn hơn 5m²'};
+  }
+  if (form.area > 100) {
+    return {valid: false, message: 'Diện tích không được lớn hơn 100m²'};
   }
 
   if (!form.area || form.area <= 0) {

@@ -3,8 +3,8 @@ import React, {useEffect} from 'react';
 import {Provider, useSelector} from 'react-redux';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {store} from './src/store';
-
+import {persistor, store} from './src/store';
+import {PersistGate} from 'redux-persist/integration/react';
 import TabScreen from './src/navigation/TabScreen';
 import {MenuProvider} from 'react-native-popup-menu';
 import {scheduleNative} from './src/screens/Notification/services/NativeScheduler';
@@ -53,9 +53,11 @@ export default function App() {
     <SafeAreaProvider>
       <GestureHandlerRootView style={{flex: 1}}>
         <Provider store={store}>
-          <MenuProvider>
-            <Bootstrapper />
-          </MenuProvider>
+          <PersistGate loading={null} persistor={persistor}>
+            <MenuProvider>
+              <Bootstrapper />
+            </MenuProvider>
+          </PersistGate>
         </Provider>
       </GestureHandlerRootView>
     </SafeAreaProvider>

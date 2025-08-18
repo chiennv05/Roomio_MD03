@@ -7,7 +7,6 @@ import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 import com.facebook.react.modules.core.DeviceEventManagerModule
-import com.swmansion.gesturehandler.react.RNGestureHandlerEnabledRootView
 
 class MainActivity : ReactActivity() {
 
@@ -16,29 +15,29 @@ class MainActivity : ReactActivity() {
     handleNotificationIntent(intent)
   }
 
-  override fun onNewIntent(intent: Intent?) {
+  override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
     setIntent(intent)
     handleNotificationIntent(intent)
   }
 
   private fun handleNotificationIntent(intent: Intent?) {
-    if (intent != null) {
+    intent?.let {
       // Check if app was opened from notification
-      val fromNotification = intent.getBooleanExtra("fromNotification", false)
-      val notificationId = intent.getStringExtra("notificationId")
-      val flags = intent.flags
+      val fromNotification = it.getBooleanExtra("fromNotification", false)
+      val notificationId = it.getStringExtra("notificationId")
+      val flags = it.flags
 
       // If app was opened from notification
       if (fromNotification || (flags and Intent.FLAG_ACTIVITY_CLEAR_TOP) != 0) {
         // Send event to React Native with notification data
         val reactContext = reactInstanceManager?.currentReactContext
-        if (reactContext != null) {
+        reactContext?.let { context ->
           val params = com.facebook.react.bridge.Arguments.createMap()
           params.putString("notificationId", notificationId)
           params.putBoolean("fromNotification", true)
 
-          reactContext
+          context
             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
             .emit("notificationTapped", params)
         }

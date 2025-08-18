@@ -71,7 +71,7 @@ export default function Login({setModal}: ModalProps) {
       <ItemInput
         value={usename}
         onChangeText={setUsename}
-        placeholder={'Tài Khoản'}
+        placeholder={'Tên đăng nhập'}
         isPass={false}
         editable={true}
       />

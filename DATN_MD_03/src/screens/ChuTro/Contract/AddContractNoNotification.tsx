@@ -49,7 +49,7 @@ export default function AddContractNoNotification() {
   // DatePicker states
   const [openStartDatePicker, setOpenStartDatePicker] = useState(false);
   const [startDateObj, setStartDateObj] = useState(new Date());
-
+  console.log('tokenn save token');
   // Get date limits
   const {today, maxDate} = getDateLimits(5);
   const clearForm = () => {
@@ -116,6 +116,19 @@ export default function AddContractNoNotification() {
       name.trim(),
     );
 
+    // Lấy tên người đại diện (ở đây mình giả sử có field tenantName hoặc tenantUsername)
+    const mainTenant = tenantUsername.trim(); // hoặc tenantName nếu bạn có field tên
+
+    // Kiểm tra trùng tên người đại diện trong danh sách người cùng thuê
+    const isMainTenantInCoTenants = tenantsArray.includes(mainTenant);
+    if (isMainTenantInCoTenants) {
+      showError(
+        'Tên người đại diện không được xuất hiện trong danh sách người cùng thuê',
+        'Lỗi',
+        true,
+      );
+      return;
+    }
     // Kiểm tra trùng lặp trong danh sách người ở cùng
     const duplicates = tenantsArray.filter(
       (name, index) => tenantsArray.indexOf(name) !== index,

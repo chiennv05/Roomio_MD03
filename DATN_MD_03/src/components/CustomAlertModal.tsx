@@ -1,12 +1,5 @@
 import React, {useEffect} from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-} from 'react-native';
+import {Modal, View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -16,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import {Colors} from '../theme/color';
 import {Fonts} from '../theme/fonts';
-import {responsiveSpacing, responsiveFont, SCREEN} from '../utils/responsive';
+import {responsiveSpacing, responsiveFont} from '../utils/responsive';
 
 interface CustomAlertModalProps {
   visible: boolean;

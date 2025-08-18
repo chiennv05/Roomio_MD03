@@ -90,7 +90,7 @@ export default function Register({setModal}: ModalProps) {
       <ItemInput
         value={usename}
         onChangeText={setUsename}
-        placeholder={'Tài khoản'}
+        placeholder={'Tên đăng nhập'}
         isPass={false}
         editable={true}
       />

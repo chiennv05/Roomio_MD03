@@ -21,12 +21,16 @@ import Login from './components/Login';
 import Register from './components/Register';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import CustomModal from './components/CustomModal';
+import {useSelector} from 'react-redux';
+import {RootState} from '../../store';
+import ModalLoading from '../ChuTro/AddRoom/components/ModalLoading';
 
 export default function LoginAndRegister() {
   const [isLogin, setIsLogin] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
   const [titleModal, setTitleModal] = useState('');
   const [iconModal, setIconModal] = useState('');
+  const {loading} = useSelector((state: RootState) => state.auth);
 
   const hanldeOpenModal = () => {
     setIsVisible(true);
@@ -110,6 +114,7 @@ export default function LoginAndRegister() {
           icon={iconModal}
           title={titleModal}
         />
+        <ModalLoading loading={loading} visible={loading} />
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );

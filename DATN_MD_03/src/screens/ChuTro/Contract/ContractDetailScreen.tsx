@@ -315,13 +315,6 @@ const ContractDetailScreen = () => {
       );
       return;
     }
-    if (selectedContract.status === 'needs_resigning') {
-      showError(
-        'Hợp đồng ở trạng thái Cần ký lại không thể chấm dứt.',
-        'Không thể chấm dứt',
-      );
-      return;
-    }
 
     setAction('terminate');
     setValue('');
@@ -331,7 +324,7 @@ const ContractDetailScreen = () => {
     if (!selectedContract) {
       return;
     }
-
+    setGeneratingPDF(true); // bật loading
     try {
       if (action === 'extend') {
         const months = parseInt(value.trim());
@@ -367,6 +360,8 @@ const ContractDetailScreen = () => {
       }
     } catch (err: any) {
       showError(err?.message || 'Thao tác thất bại', 'Lỗi', true);
+    } finally {
+      setGeneratingPDF(false); // luôn tắt loading
     }
   };
 
@@ -469,7 +464,6 @@ const ContractDetailScreen = () => {
         break;
     }
   };
-  console.log('contract', selectedContract);
   // Hiển thị màn hình loading
   if (selectedContractLoading) {
     return (
@@ -641,7 +635,7 @@ const ContractDetailScreen = () => {
       ],
     );
   };
-
+  console.log('tenant cout', selectedContract?.contractInfo.tenantCount);
   const statusInfo = getContractStatusInfo(contract.status);
   const canUploadImages =
     contract.status === 'pending_signature' ||
@@ -829,6 +823,10 @@ const ContractDetailScreen = () => {
             label="CCCD"
             value={contract.contractInfo.landlordIdentityNumber}
           />
+          <InfoRow
+            label="Địa chỉ"
+            value={contract.contractInfo.landlordAddress || 'Chưa cập nhật'}
+          />
         </View>
 
         {/* Người ở cùng */}
@@ -839,10 +837,16 @@ const ContractDetailScreen = () => {
 
               {contract.contractInfo.coTenants.map((coTenant, index) => (
                 <View key={coTenant._id || index} style={styles.coTenantItem}>
-                  <InfoRow label="Tên" value={coTenant.username} />
+                  <InfoRow label="Tên" value={coTenant.fullName} />
                   <InfoRow label="Email" value={coTenant.email} />
                   {coTenant.phone && (
                     <InfoRow label="Điện thoại" value={coTenant.phone} />
+                  )}
+                  {coTenant.identityNumber && (
+                    <InfoRow label="CCCD" value={coTenant.identityNumber} />
+                  )}
+                  {coTenant.address && (
+                    <InfoRow label="Địa chỉ" value={coTenant.address} />
                   )}
                 </View>
               ))}
@@ -1050,10 +1054,20 @@ const styles = StyleSheet.create({
   },
   statusBadge: {
     borderRadius: moderateScale(20),
+    shadowColor: Colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+
+    // Shadow cho Android
+    elevation: 4,
   },
   statusText: {
-    fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Medium,
+    fontSize: responsiveFont(16),
     color: Colors.white,
     paddingHorizontal: responsiveSpacing(12),
     paddingVertical: responsiveSpacing(8),

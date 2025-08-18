@@ -69,9 +69,9 @@ export const createLandlordRoom = createAsyncThunk(
   async (room: Room, {rejectWithValue}) => {
     try {
       const res = await createLandlordRoomsService(room);
-      return res.data.room; // Giả sử API trả về room data trong trường hợp thành công
+      return res.data.room;
     } catch (err: any) {
-      return rejectWithValue(err.message || 'Tạo phòng thất bại');
+      return rejectWithValue({message: err.message});
     }
   },
 );

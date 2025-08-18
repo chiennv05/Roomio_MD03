@@ -9,19 +9,23 @@ import {
   responsiveSpacing,
   SCREEN,
 } from '../../../../utils/responsive';
-import {Images} from '../../../../assets/images';
-
 interface ItemCotenantsProps {
   item: CoTenant;
   onRemove: (username: string) => void;
 }
 
 const ItemCotenants: React.FC<ItemCotenantsProps> = ({item, onRemove}) => {
-  const avatarSource = item.avatar || Images.ImageAvatarDefault;
+  const avatarSource = item.avatar;
   return (
     <View style={styles.chip}>
       <View style={styles.titleContainer}>
-        <Image source={{uri: avatarSource}} style={styles.imageAvater} />
+        {item.avatar ? (
+          <Image source={{uri: avatarSource}} style={styles.imageAvater} />
+        ) : (
+          <Text style={[styles.personInitial]}>
+            {(item.fullName || item.username || 'N').charAt(0).toUpperCase()}
+          </Text>
+        )}
         <View style={styles.conainerNameandFullName}>
           <Text style={styles.textFullName}>{item.fullName}</Text>
           <Text style={styles.textUsername}>@{item.username}</Text>
@@ -110,5 +114,17 @@ const styles = StyleSheet.create({
     color: Colors.darkGray,
     fontWeight: '400',
     width: responsiveSpacing(120),
+  },
+  personInitial: {
+    width: responsiveIcon(66),
+    height: responsiveIcon(66),
+    borderRadius: responsiveIcon(66) / 2,
+    backgroundColor: Colors.limeGreen,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    color: Colors.black,
+    fontFamily: Fonts.Roboto_Bold,
+    marginRight: responsiveSpacing(12),
+    fontSize: responsiveIcon(28),
   },
 });

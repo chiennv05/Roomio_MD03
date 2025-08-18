@@ -1,5 +1,12 @@
 import React, {useState, useCallback, useMemo} from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Image} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {useDispatch} from 'react-redux';
@@ -200,7 +207,9 @@ const UpdateTenant = () => {
     [showConfirm, hideAlert, handleConfirmRemoveTenant],
   );
   return (
-    <View style={[styles.container, {paddingTop: insets.top}]}>
+    <ScrollView
+      style={[styles.container, {paddingTop: insets.top}]}
+      showsVerticalScrollIndicator={false}>
       <UIHeader
         title="Cập nhật người thuê"
         iconLeft={Icons.IconArrowLeft}
@@ -292,7 +301,7 @@ const UpdateTenant = () => {
           buttons={alertConfig.buttons}
         />
       )}
-    </View>
+    </ScrollView>
   );
 };
 

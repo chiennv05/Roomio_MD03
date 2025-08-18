@@ -43,10 +43,14 @@ export const createLandlordRoomsService = async (room: Room) => {
     if (!response.data.success) {
       throw new Error(response.data.message || 'Tạo phòng thất bại');
     }
+
     return response.data;
-  } catch (error: any) {
-    // Nếu muốn log lỗi chi tiết:
-    throw error;
+  } catch (err: any) {
+    const message =
+      err?.response?.data?.message || // ưu tiên message từ server
+      err?.message || // fallback axios error
+      'Tạo phòng thất bại';
+    throw new Error(message);
   }
 };
 
@@ -84,10 +88,6 @@ export const updateLandlordRoomService = async (roomId: string, room: Room) => {
     // Trả về toàn bộ response.data để thunk có thể xử lý
     return response.data;
   } catch (error: any) {
-    console.error(
-      'Lỗi khi cập nhật phòng:',
-      error.response?.data || error.message,
-    );
     throw error;
   }
 };
