@@ -36,94 +36,177 @@ const FilterTabsRow: React.FC<FilterTabsRowProps> = ({
   onSelectStatus,
   onSelectCategory,
 }) => {
-  // Combine all options into one array with type indicator
-  const allOptions = [
-    ...statusOptions.map(option => ({...option, type: 'status'})),
-    ...categoryOptions.slice(1).map(option => ({...option, type: 'category'})), // Skip "Tất cả" for category
-  ];
-
-  const handleOptionPress = (option: any) => {
-    if (option.type === 'status') {
-      onSelectStatus(option.key);
-    } else {
-      onSelectCategory(option.key);
-    }
-  };
-
-  const isSelected = (option: any) => {
-    if (option.type === 'status') {
-      return option.key === selectedStatus;
-    } else {
-      return option.key === selectedCategory;
-    }
-  };
+  const handleStatusPress = (key: string) => onSelectStatus(key);
+  const handleCategoryPress = (key: string) => onSelectCategory(key);
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}>
-        {allOptions.map((option, index) => {
-          const selected = isSelected(option);
-          return (
-            <TouchableOpacity
-              key={`${option.type}-${option.key}`}
-              style={[
-                styles.tab,
-                selected && styles.selectedTab,
-                index === 0 && styles.firstTab,
-                index === allOptions.length - 1 && styles.lastTab,
-              ]}
-              onPress={() => handleOptionPress(option)}
-              activeOpacity={0.7}>
-              <Text
-                style={[styles.tabText, selected && styles.selectedTabText]}>
-                {option.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+      {/* Status filters - Beautiful horizontal tabs */}
+      <View style={styles.statusSection}>
+        <Text style={styles.sectionTitle}>Trạng thái</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.statusScrollContent}>
+          {statusOptions.map((option, index) => {
+            const selected = option.key === selectedStatus;
+            return (
+              <TouchableOpacity
+                key={`status-${option.key}`}
+                style={[styles.statusTab, selected && styles.selectedStatusTab]}
+                onPress={() => handleStatusPress(option.key)}
+                activeOpacity={0.7}>
+                <Text
+                  style={[
+                    styles.statusTabText,
+                    selected && styles.selectedStatusTabText,
+                  ]}>
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* Category filters - Beautiful horizontal tabs */}
+      <View style={styles.categorySection}>
+        <Text style={styles.sectionTitle}>Danh mục</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryScrollContent}>
+          {categoryOptions.map((option, index) => {
+            const selected = option.key === selectedCategory;
+            return (
+              <TouchableOpacity
+                key={`category-${option.key || 'all'}`}
+                style={[
+                  styles.categoryTab,
+                  selected && styles.selectedCategoryTab,
+                ]}
+                onPress={() => handleCategoryPress(option.key)}
+                activeOpacity={0.7}>
+                <Text
+                  style={[
+                    styles.categoryTabText,
+                    selected && styles.selectedCategoryTabText,
+                  ]}>
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: responsiveSpacing(8), // Giảm padding vertical
-    paddingHorizontal: responsiveSpacing(8), // Thêm lại padding ngang nhỏ
+    backgroundColor: Colors.white,
+    paddingVertical: responsiveSpacing(20),
   },
-  scrollContent: {
-    paddingHorizontal: responsiveSpacing(4),
+
+  // Status section
+  statusSection: {
+    marginBottom: responsiveSpacing(24),
   },
-  tab: {
+
+  // Category section
+  categorySection: {
+    marginBottom: responsiveSpacing(8),
+  },
+
+  sectionTitle: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+    marginBottom: responsiveSpacing(12),
+    marginLeft: responsiveSpacing(16),
+  },
+
+  statusScrollContent: {
     paddingHorizontal: responsiveSpacing(16),
-    paddingVertical: responsiveSpacing(8),
-    marginHorizontal: responsiveSpacing(4),
+    paddingRight: responsiveSpacing(32),
+  },
+
+  categoryScrollContent: {
+    paddingHorizontal: responsiveSpacing(16),
+    paddingRight: responsiveSpacing(32),
+  },
+  // Beautiful Status tabs
+  statusTab: {
+    paddingHorizontal: responsiveSpacing(20),
+    paddingVertical: responsiveSpacing(12),
+    marginRight: responsiveSpacing(12),
+    borderRadius: scale(25),
+    backgroundColor: Colors.lightGray,
+    minWidth: scale(70),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  selectedStatusTab: {
+    backgroundColor: Colors.limeGreen,
+    shadowColor: Colors.limeGreen,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+
+  statusTabText: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Medium,
+    color: Colors.unselectedText,
+    textAlign: 'center',
+  },
+
+  selectedStatusTabText: {
+    color: Colors.white,
+    fontFamily: Fonts.Roboto_Bold,
+  },
+  // Beautiful Category tabs
+  categoryTab: {
+    paddingHorizontal: responsiveSpacing(18),
+    paddingVertical: responsiveSpacing(10),
+    marginRight: responsiveSpacing(12),
     borderRadius: scale(20),
     backgroundColor: Colors.white,
     borderWidth: 1,
     borderColor: Colors.divider,
+    minWidth: scale(80),
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  selectedTab: {
-    backgroundColor: Colors.limeGreen,
+
+  selectedCategoryTab: {
+    backgroundColor: Colors.limeGreenLight,
     borderColor: Colors.limeGreen,
+    borderWidth: 2,
+    shadowColor: Colors.limeGreen,
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  firstTab: {
-    marginLeft: 0,
-  },
-  lastTab: {
-    marginRight: 0,
-  },
-  tabText: {
-    fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Regular,
-    color: Colors.black,
+
+  categoryTabText: {
+    fontSize: responsiveFont(13),
+    fontFamily: Fonts.Roboto_Medium,
+    color: Colors.unselectedText,
     textAlign: 'center',
   },
-  selectedTabText: {
-    color: Colors.black,
+
+  selectedCategoryTabText: {
+    color: Colors.limeGreen,
     fontFamily: Fonts.Roboto_Bold,
   },
 });

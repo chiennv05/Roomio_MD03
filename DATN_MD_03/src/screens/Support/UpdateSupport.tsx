@@ -47,6 +47,7 @@ const UpdateSupport: React.FC = () => {
     {value: 'kyThuat' as SupportCategory, label: 'Kỹ thuật'},
     {value: 'thanhToan' as SupportCategory, label: 'Thanh toán'},
     {value: 'hopDong' as SupportCategory, label: 'Hợp đồng'},
+    {value: 'goiDangKy' as SupportCategory, label: 'Gói đăng ký'},
     {value: 'khac' as SupportCategory, label: 'Khác'},
   ];
 

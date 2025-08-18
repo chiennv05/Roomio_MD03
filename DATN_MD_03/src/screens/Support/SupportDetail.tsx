@@ -100,7 +100,7 @@ const SupportDetail: React.FC = () => {
         };
       case 'hoanTat':
         return {
-          color: Colors.figmaGreen,
+          color: Colors.limeGreen,
           text: 'Hoàn tất',
           bgColor: Colors.lightGreenBackground,
         };
@@ -122,6 +122,8 @@ const SupportDetail: React.FC = () => {
         return 'Thanh toán';
       case 'hopDong':
         return 'Hợp đồng';
+      case 'goiDangKy':
+        return 'Gói đăng ký';
       case 'khac':
         return 'Khác';
       default:
@@ -133,7 +135,7 @@ const SupportDetail: React.FC = () => {
   const getPriorityInfo = (priority: string) => {
     switch (priority) {
       case 'thap':
-        return {color: Colors.figmaGreen, text: 'Thấp'};
+        return {color: Colors.limeGreen, text: 'Thấp'};
       case 'trungBinh':
         return {color: Colors.warning, text: 'Trung bình'};
       case 'cao':
@@ -587,7 +589,7 @@ const styles = StyleSheet.create({
     maxHeight: 100,
   },
   sendButton: {
-    backgroundColor: Colors.figmaGreen,
+    backgroundColor: Colors.limeGreen,
     borderRadius: 24,
     paddingHorizontal: responsiveSpacing(16),
     height: 40,

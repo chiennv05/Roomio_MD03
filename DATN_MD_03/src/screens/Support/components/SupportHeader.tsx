@@ -15,6 +15,7 @@ import {
   responsiveSpacing,
   scale,
 } from '../../../utils/responsive';
+import {Icons} from '../../../assets/icons';
 
 interface SupportHeaderProps {
   title: string;
@@ -24,53 +25,62 @@ const SupportHeader: React.FC<SupportHeaderProps> = ({title}) => {
   const navigation = useNavigation();
 
   return (
-    <>
-      <StatusBar backgroundColor={Colors.white} barStyle="dark-content" />
-      <View style={styles.container}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-          activeOpacity={0.7}>
-          <Image
-            source={require('../../../assets/icons/icon_arrow_back.png')}
-            style={styles.backIcon}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-        <Text style={styles.title}>{title}</Text>
-        <View style={styles.rightPlaceholder} />
-      </View>
-    </>
+    <View style={styles.container}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+        activeOpacity={0.8}>
+        <Image
+          source={{uri: Icons.IconArrowBack}}
+          style={styles.backIcon}
+          resizeMode="contain"
+        />
+      </TouchableOpacity>
+      <Text style={styles.title}>{title}</Text>
+      <View style={styles.rightPlaceholder} />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    height: scale(50), // Giảm height để gọn hơn
+    height: scale(56),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Colors.backgroud,
     paddingHorizontal: responsiveSpacing(16),
-    paddingTop: responsiveSpacing(5), // Giảm padding top
+    paddingTop: responsiveSpacing(8),
   },
   backButton: {
-    padding: responsiveSpacing(4),
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(20),
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   backIcon: {
-    width: scale(24),
-    height: scale(24),
-    tintColor: Colors.black,
+    width: scale(20),
+    height: scale(20),
+    tintColor: Colors.white,
   },
   title: {
-    fontSize: responsiveFont(18),
+    fontSize: responsiveFont(20),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.black,
+    color: Colors.white,
     flex: 1,
     textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: {width: 0, height: 1},
+    textShadowRadius: 2,
   },
   rightPlaceholder: {
-    width: scale(32),
+    width: scale(40),
   },
 });
 
