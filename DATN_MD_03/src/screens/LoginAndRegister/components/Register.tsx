@@ -151,6 +151,6 @@ const styles = StyleSheet.create({
   textConditionGreen: {
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Regular,
-    color: Colors.primaryGreen,
+    color: Colors.darkGreen,
   },
 });

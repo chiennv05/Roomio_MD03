@@ -8,6 +8,8 @@ import {
   RefreshControl,
   TouchableOpacity,
   Image,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
@@ -149,8 +151,12 @@ const ContractManagement = () => {
     }
     navigation.navigate('AddContractNoNotification');
   };
+  const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
+
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+      <View style={[styles.content, { paddingTop: statusBarHeight }]}>
       <UIHeader
         title="Quản lý hợp đồng"
         iconLeft={Icons.IconArrowLeft}
@@ -234,12 +240,17 @@ const ContractManagement = () => {
           buttons={alertConfig.buttons}
         />
       )}
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
+  content: {
     flex: 1,
     backgroundColor: Colors.backgroud,
     alignItems: 'center',

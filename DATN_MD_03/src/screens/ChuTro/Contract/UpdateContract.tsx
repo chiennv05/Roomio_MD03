@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {StyleSheet, Text, ScrollView, View} from 'react-native';
+import {StyleSheet, Text, ScrollView, View, StatusBar, Platform} from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
@@ -224,18 +224,22 @@ export default function UpdateContract() {
     );
   };
 
+  const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
+
   return (
     <View style={styles.container}>
-      <ScrollView
-        style={styles.containerScrollview}
-        contentContainerStyle={styles.containerScroll}
-        showsVerticalScrollIndicator={false}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+      <View style={[styles.headerContainer, { paddingTop: statusBarHeight }]}>
         <UIHeader
           title="Cập nhật hợp đồng"
           iconLeft={Icons.IconArrowLeft}
           onPressLeft={handleCancelUpdate}
         />
-
+      </View>
+      <ScrollView
+        style={styles.containerScrollview}
+        contentContainerStyle={styles.containerScroll}
+        showsVerticalScrollIndicator={false}>
         <Text style={styles.label}>Nội quy</Text>
         <ItemInput
           placeholder="Điều khoản nội quy"
@@ -301,12 +305,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
+  },
+  headerContainer: {
+    backgroundColor: Colors.white,
+    width: '100%',
     alignItems: 'center',
   },
   containerScrollview: {
     flex: 1,
     backgroundColor: Colors.white,
     marginBottom: responsiveSpacing(100),
+    width: '100%',
   },
   containerScroll: {
     paddingBottom: responsiveSpacing(50),

@@ -10,7 +10,6 @@ import {
   PermissionsAndroid,
   ToastAndroid,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import Pdf from 'react-native-pdf';
@@ -238,15 +237,11 @@ const PdfViewerScreen = () => {
       showError('Đã xảy ra lỗi khi tải xuống file PDF.', 'Lỗi');
     }
   };
-
+  
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={Colors.backgroud}
-        translucent={false}
-      />
-      <View style={styles.headerContainer}>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} translucent />
+      <View style={[styles.headerContainer, { marginTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
         <UIHeader
           title="Xem hợp đồng PDF"
           iconLeft={Icons.IconArrowLeft}
@@ -290,14 +285,14 @@ const PdfViewerScreen = () => {
           buttons={alertConfig.buttons}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroud,
+    backgroundColor: Colors.white,
     alignItems: 'center',
   },
   pdfContainer: {
@@ -325,10 +320,10 @@ const styles = StyleSheet.create({
     color: Colors.textGray,
   },
   headerContainer: {
+    backgroundColor: Colors.white,
     width: '100%',
-    paddingBottom: 10,
-    justifyContent: 'center',
     alignItems: 'center',
+    paddingBottom: 10,
   },
 });
 

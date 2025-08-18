@@ -1,4 +1,4 @@
-import {StyleSheet, ScrollView, StatusBar, View} from 'react-native';
+import {StyleSheet, ScrollView, StatusBar, View, Platform} from 'react-native';
 import React, {useState} from 'react';
 import {Colors} from '../../../theme/color';
 import {ItemInput, UIHeader} from '../MyRoom/components';
@@ -137,21 +137,20 @@ export default function AddContract() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor={Colors.white}
-        translucent={false}
-      />
-      <UIHeader
-        title="Thêm hợp đồng"
-        onPressLeft={handleGoBack}
-        iconLeft={Icons.IconArrowLeft}
-      />
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} translucent />
+      <View style={[styles.headerContainer, { marginTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
+        <UIHeader
+          title="Thêm hợp đồng"
+          onPressLeft={handleGoBack}
+          iconLeft={Icons.IconArrowLeft}
+        />
+      </View>
 
-      <View style={styles.contentContainer}>
-        {/* Contract Term Input with DatePicker */}
-        <ItemInput
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.contentContainer}>
+          {/* Contract Term Input with DatePicker */}
+          <ItemInput
           placeholder="Thời hạn hợp đồng (tháng)"
           value={contractTerm.toString()}
           onChangeText={text => setContractTerm(text)}
@@ -244,11 +243,21 @@ export default function AddContract() {
         />
       )}
     </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
+  headerContainer: {
+    width: '100%',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+  },
+  scrollView: {
     flex: 1,
     backgroundColor: Colors.white,
     paddingHorizontal: 16,
@@ -257,7 +266,6 @@ const styles = StyleSheet.create({
     marginTop: responsiveSpacing(20),
     paddingBottom: responsiveSpacing(20),
   },
-
   contentContainer: {
     paddingBottom: responsiveSpacing(60),
     paddingTop: responsiveSpacing(20),

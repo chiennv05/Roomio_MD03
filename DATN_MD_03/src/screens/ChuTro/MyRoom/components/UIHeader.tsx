@@ -31,11 +31,13 @@ const UIHeader = ({
     <View style={[styles.container, {backgroundColor: color}]}>
       <View style={styles.containerLeftAndRight}>
         {iconLeft && (
-          <TouchableOpacity style={styles.styleButton} onPress={onPressLeft}>
-            <Image
-              source={{uri: Icons.IconArrowLeft}}
-              style={styles.styleIconButton}
-            />
+          <TouchableOpacity onPress={onPressLeft}>
+            <View style={styles.backButtonCircle}>
+              <Image
+                source={{uri: Icons.IconArrowLeft}}
+                style={styles.backIcon}
+              />
+            </View>
           </TouchableOpacity>
         )}
       </View>
@@ -45,8 +47,13 @@ const UIHeader = ({
       <View style={styles.containerLeftAndRight}>
         {iconRight &&
           (typeof iconRight === 'string' ? (
-            <TouchableOpacity style={styles.styleButton} onPress={onPressRight}>
-              <Image source={{uri: iconRight}} style={styles.styleIconRight} />
+            <TouchableOpacity onPress={onPressRight}>
+              <View style={styles.backButtonCircle}>
+                <Image
+                  source={{uri: iconRight}}
+                  style={styles.backIcon}
+                />
+              </View>
             </TouchableOpacity>
           ) : (
             iconRight // ✅ nếu là component thì render luôn
@@ -74,15 +81,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  styleButton: {
+  backButtonCircle: {
     width: responsiveIcon(36),
     height: responsiveIcon(36),
     borderRadius: responsiveIcon(36) / 2,
     backgroundColor: Colors.white,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  styleIconButton: {
+  backIcon: {
     width: responsiveIcon(24) / 2,
     height: responsiveIcon(24),
   },

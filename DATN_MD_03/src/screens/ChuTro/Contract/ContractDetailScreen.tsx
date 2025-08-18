@@ -988,6 +988,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0,
   },
   scrollView: {
     flex: 1,
@@ -996,6 +997,7 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     paddingBottom: verticalScale(20),
     alignItems: 'center',
+    width: '100%',
   },
   statusContainer: {
     flexDirection: 'row',

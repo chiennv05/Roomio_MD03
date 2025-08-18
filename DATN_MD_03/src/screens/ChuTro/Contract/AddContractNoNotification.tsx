@@ -1,4 +1,4 @@
-import {StyleSheet, ScrollView, View, Text} from 'react-native';
+import {StyleSheet, ScrollView, View, Text, StatusBar, Platform} from 'react-native';
 import React, {useState} from 'react';
 import {Colors} from '../../../theme/color';
 import {ItemInput, UIHeader} from '../MyRoom/components';
@@ -191,9 +191,14 @@ export default function AddContractNoNotification() {
     );
   };
 
+  const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
+
   return (
-    <ScrollView style={styles.container}>
-      <UIHeader
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+      <ScrollView style={styles.scrollView}>
+      <View style={[styles.headerContainer, { paddingTop: statusBarHeight }]}>
+        <UIHeader
         title="Thêm hợp đồng"
         onPressLeft={handleGoBack}
         iconLeft={Icons.IconArrowLeft}
@@ -295,7 +300,9 @@ export default function AddContractNoNotification() {
           buttons={alertConfig.buttons}
         />
       )}
+      </View>
     </ScrollView>
+    </View>
   );
 }
 
@@ -303,17 +310,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
+  },
+  headerContainer: {
+    backgroundColor: Colors.white,
+    width: '100%',
+    alignItems: 'center',
+  },
+  scrollView: {
+    flex: 1,
+    backgroundColor: Colors.white,
     paddingHorizontal: 16,
+    width: '100%',
   },
   containerContent: {
     paddingVertical: responsiveSpacing(20),
+    width: '100%',
+    alignItems: 'center',
   },
   conatinerButton: {
     marginTop: 16,
   },
   helperText: {
     fontSize: responsiveFont(15),
-    color: Colors.gray60, // màu xám nhẹ
+    color: Colors.gray60,
     marginBottom: responsiveSpacing(10),
     marginLeft: 4,
   },

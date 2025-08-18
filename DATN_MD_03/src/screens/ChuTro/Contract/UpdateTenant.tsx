@@ -6,8 +6,9 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  StatusBar,
+  Platform,
 } from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import {useDispatch} from 'react-redux';
 
@@ -34,7 +35,6 @@ import ItemCotenants from './components/ItemCotenants';
 import ItemHelpText from './components/ItemHelpText';
 
 const UpdateTenant = () => {
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
 
   const dispatch = useDispatch<AppDispatch>();
@@ -206,11 +206,16 @@ const UpdateTenant = () => {
     },
     [showConfirm, hideAlert, handleConfirmRemoveTenant],
   );
+  const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
+
   return (
-    <ScrollView
-      style={[styles.container, {paddingTop: insets.top}]}
-      showsVerticalScrollIndicator={false}>
-      <UIHeader
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}>
+        <View style={[styles.headerContainer, { paddingTop: statusBarHeight }]}>
+          <UIHeader
         title="Cập nhật người thuê"
         iconLeft={Icons.IconArrowLeft}
         onPressLeft={() => navigation.goBack()}
@@ -301,12 +306,26 @@ const UpdateTenant = () => {
           buttons={alertConfig.buttons}
         />
       )}
+      </View>
     </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: Colors.white},
+  container: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
+  headerContainer: {
+    backgroundColor: Colors.white,
+    width: '100%',
+    alignItems: 'center',
+  },
+  scrollView: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
   content: {
     flex: 1,
     backgroundColor: Colors.backgroud,
