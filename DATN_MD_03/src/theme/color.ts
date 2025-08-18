@@ -2,7 +2,7 @@ export const Colors = {
   backgroud: '#F4F4F4',
   limeGreen: '#BAFD00',
   limeGreenOpacity: 'rgba(186, 253, 0, 1)',
-  darkGreen: '#BAFD00',
+  darkGreen: '#5EB600',
   limeGreenLight: '#F2FFE6',
   white: '#FFFFFF',
   dearkOlive: '#17190F',

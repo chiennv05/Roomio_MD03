@@ -32,7 +32,6 @@ import ItemOptions from './components/ItemOptions';
 import {amenitiesOptions} from './utils/amenitiesOptions';
 import {OptionItem} from '../../../types/Options';
 import ItemButtonConfirm from '../../LoginAndRegister/components/ItemButtonConfirm';
-import ImagePicker from 'react-native-image-crop-picker';
 import {
   deleteRoomPhoto,
   ImageFile,
@@ -58,6 +57,7 @@ import {
   getFormDataFromStorage,
   saveFormDataToStorage,
 } from './utils/asyncStorageUtils';
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 
 type AddRoomNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -237,94 +237,101 @@ export default function AddRoomScreen() {
       [
         {
           text: 'Máy ảnh',
-          onPress: () => {
+          onPress: async () => {
             if (image.length >= 15) {
               showError('Bạn đã chọn tối đa 15 ảnh.', 'Thông báo');
               return;
             }
-            ImagePicker.openCamera({
-              width: 1000,
-              height: 1000,
-              cropping: true,
-              includeBase64: false,
-              includeExif: false,
-            })
-              .then(imageResult => {
-                if (!imageResult.path || !imageResult.mime) {
-                  showError('Không thể lấy thông tin ảnh', 'Lỗi');
-                  return;
-                }
-                const imageFile: ImageFile = {
-                  path: imageResult.path,
-                  mime: imageResult.mime,
-                  filename:
-                    imageResult.path.split('/').pop() ||
-                    `camera_${Date.now()}.jpg`,
-                };
-                hideAlert();
-                onUpload([imageFile]);
-              })
-              .catch(e => {
-                if (e.code !== 'E_PICKER_CANCELLED') {
-                  showError(
-                    'Không thể truy cập máy ảnh, vui lòng kiểm tra quyền truy cập',
-                    'Thông báo',
-                  );
-                }
+            try {
+              const result = await launchCamera({
+                mediaType: 'photo',
+                maxWidth: 1000,
+                maxHeight: 1000,
+                includeBase64: false,
               });
+
+              if (result.didCancel) {
+                return;
+              }
+
+              if (result.errorCode) {
+                showError(
+                  'Không thể truy cập máy ảnh, vui lòng kiểm tra quyền truy cập',
+                  'Thông báo',
+                );
+                return;
+              }
+
+              const asset = result.assets?.[0];
+              if (!asset?.uri || !asset?.type) {
+                showError('Không thể lấy thông tin ảnh', 'Lỗi');
+                return;
+              }
+
+              const imageFile: ImageFile = {
+                path: asset.uri,
+                mime: asset.type,
+                filename: asset.fileName || `camera_${Date.now()}.jpg`,
+              };
+
+              hideAlert();
+              onUpload([imageFile]);
+            } catch (e) {
+              showError(
+                'Không thể truy cập máy ảnh, vui lòng kiểm tra quyền truy cập',
+                'Thông báo',
+              );
+            }
           },
           style: 'default',
         },
         {
           text: 'Thư viện',
-          onPress: () => {
-            ImagePicker.openPicker({
-              multiple: true,
-              maxFiles: Math.min(15, remainingSlots),
-              mediaType: 'photo',
-              includeBase64: false,
-              includeExif: false,
-            })
-              .then(images => {
-                if (!Array.isArray(images)) {
-                  images = [images];
-                }
+          onPress: async () => {
+            try {
+              const result = await launchImageLibrary({
+                mediaType: 'photo',
+                selectionLimit: Math.min(15, remainingSlots),
+                includeBase64: false,
+              });
 
-                if (images.length > remainingSlots) {
-                  showError(
-                    `Bạn chỉ có thể chọn thêm tối đa ${remainingSlots} ảnh.`,
-                    'Thông báo',
-                  );
-                  return;
-                }
+              if (result.didCancel) {
+                return;
+              }
 
-                const imageFiles: ImageFile[] = images.map(img => {
-                  if (!img.path || !img.mime) {
+              if (result.errorCode) {
+                showError(
+                  'Không thể truy cập thư viện, vui lòng kiểm tra quyền truy cập',
+                  'Thông báo',
+                );
+                return;
+              }
+
+              const imageFiles: ImageFile[] = (result.assets || []).map(
+                asset => {
+                  if (!asset.uri || !asset.type) {
                     throw new Error('Ảnh không hợp lệ');
                   }
                   return {
-                    path: img.path,
-                    mime: img.mime,
-                    filename:
-                      img.path.split('/').pop() || `gallery_${Date.now()}.jpg`,
+                    path: asset.uri,
+                    mime: asset.type,
+                    filename: asset.fileName || `gallery_${Date.now()}.jpg`,
                   };
-                });
+                },
+              );
 
-                if (imageFiles.length > 0) {
-                  hideAlert();
-                  onUpload(imageFiles);
-                } else {
-                  showError('Không có ảnh nào được chọn', 'Thông báo');
-                }
-              })
-              .catch(e => {
-                if (e.code !== 'E_PICKER_CANCELLED') {
-                  showError(
-                    'Không thể truy cập thư viện, vui lòng kiểm tra quyền truy cập',
-                    'Thông báo',
-                  );
-                }
-              });
+              if (imageFiles.length > 0) {
+                hideAlert();
+                onUpload(imageFiles);
+              } else {
+                showError('Không có ảnh nào được chọn', 'Thông báo');
+              }
+            } catch (e) {
+              showError(
+                'Không thể truy cập thư viện, vui lòng kiểm tra quyền truy cập',
+                'Thông báo',
+              );
+            }
           },
           style: 'default',
         },
@@ -592,23 +599,17 @@ export default function AddRoomScreen() {
     };
 
     try {
-      const res = await dispatch(createLandlordRoom(room));
-      if (createLandlordRoom.fulfilled.match(res)) {
-        showSuccess('Tạo phòng trọ thành công!', 'Thành công');
-        clearForm();
-        await clearFormDataFromStorage();
-        navigation.goBack();
-      } else if (createLandlordRoom.rejected.match(res)) {
-        const message =
-          typeof res.payload === 'object' &&
-          res.payload !== null &&
-          'message' in res.payload
-            ? (res.payload as any).message
-            : 'Có lỗi xảy ra';
-        showError(message, 'Thất bại');
-      }
-    } catch (err) {
-      showError('Không thể kết nối đến máy chủ', 'Lỗi');
+      const res = await dispatch(createLandlordRoom(room)).unwrap();
+
+      // Nếu chạy đến đây nghĩa là thành công
+      showSuccess('Tạo phòng trọ thành công!', 'Thành công');
+      clearForm();
+      await clearFormDataFromStorage();
+      navigation.goBack();
+    } catch (err: any) {
+      // Nếu bị reject thì nhảy vào đây
+      const message = err?.message || 'Có lỗi xảy ra';
+      showError(message, 'Thất bại');
     }
   };
   const clearForm = () => {

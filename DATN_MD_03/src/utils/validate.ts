@@ -59,21 +59,6 @@ export const validateUserLogin = (input: {
     return 'Vui lòng nhập mật khẩu';
   }
 
-  if (input.username !== undefined) {
-    if (input.username.length < 3 || input.username.length > 20) {
-      return 'Username phải từ 3 đến 20 ký tự';
-    }
-  }
-
-  // Validate password
-  if (input.password !== undefined) {
-    const rePass =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
-    if (!rePass.test(input.password)) {
-      return 'Mật khẩu phải ít nhất 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt';
-    }
-  }
-
   return null; // không lỗi
 };
 
@@ -120,7 +105,9 @@ export const validateResetPassword = (
  * Bỏ dấu tiếng Việt để tìm kiếm
  */
 export const removeVietnameseDiacritics = (str: string): string => {
-  if (!str) {return '';}
+  if (!str) {
+    return '';
+  }
 
   return str
     .toLowerCase()
@@ -139,7 +126,9 @@ export const searchVietnameseText = (
   searchTerm: string,
   targetText: string,
 ): boolean => {
-  if (!searchTerm || !targetText) {return false;}
+  if (!searchTerm || !targetText) {
+    return false;
+  }
 
   const normalizedSearch = removeVietnameseDiacritics(searchTerm);
   const normalizedTarget = removeVietnameseDiacritics(targetText);

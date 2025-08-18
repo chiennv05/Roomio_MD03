@@ -139,12 +139,13 @@ export const uploadSignedContractImage = async (
   append: boolean, // true = thêm ảnh vào list, false = thay thế toàn bộ
 ) => {
   try {
+    console.log('form data ', formData);
     const url = `/contract/${contractId}/upload-signed?append=${append}`;
     const response = await api.post(url, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      timeout: 30000,
+      timeout: 60000,
     });
 
     if (!response.data) {
@@ -349,8 +350,6 @@ export const updateTenantsApi = async (
       usernames: usernames,
       apply: apply,
     });
-
-    console.log('log res api', response);
     if (!response.data || !response.data.success) {
       throw new Error(
         response.data?.message || 'Cập nhật người thuê không thành công',

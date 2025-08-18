@@ -24,6 +24,7 @@ import {
   UpdateContractPayload,
 } from '../../types';
 import {ImageFile} from '../services/uploadService';
+import {Platform} from 'react-native';
 
 interface ContractState {
   contracts: Contract[];
@@ -46,7 +47,23 @@ const initialState: ContractState = {
   selectedContractError: null,
   uploadingImages: false,
 };
-
+const normalizeImage = (img: ImageFile) => {
+  let uri = img.path;
+  // Nếu Android có đường dẫn bắt đầu bằng '/' thì thêm file://
+  if (
+    Platform.OS === 'android' &&
+    uri &&
+    !uri.startsWith('file://') &&
+    uri.startsWith('/')
+  ) {
+    uri = `file://${uri}`;
+  }
+  return {
+    uri,
+    type: img.mime || 'image/jpeg',
+    name: img.filename || `image_${Date.now()}.jpg`,
+  };
+};
 // Lấy danh sách hợp đồng
 export const fetchMyContracts = createAsyncThunk(
   'contract/fetchMyContracts',
@@ -137,18 +154,17 @@ export const uploadContractImages = createAsyncThunk(
     }: {contractId: string; images: ImageFile[]; append: boolean},
     {rejectWithValue},
   ) => {
-    console.log('Upload thunk called with:', {contractId, images});
-
     try {
       const formData = new FormData();
 
-      // Sử dụng field name 'signedPhotos' như trong Postman
+      // Append files (normalize each)
       images.forEach((img, index) => {
-        console.log(`Appending image ${index}:`, img);
+        const file = normalizeImage(img);
+        console.log(`Appending image ${index}:`, file);
         formData.append('signedPhotos', {
-          uri: img.path,
-          type: img.mime,
-          name: img.filename || `image_${index}.jpg`,
+          uri: file.uri,
+          type: file.type,
+          name: file.name,
         } as any);
       });
 
@@ -159,7 +175,6 @@ export const uploadContractImages = createAsyncThunk(
         append,
       );
       console.log('API response contract:', response);
-
       return response;
     } catch (err: any) {
       console.error('Upload error in thunk:', err);

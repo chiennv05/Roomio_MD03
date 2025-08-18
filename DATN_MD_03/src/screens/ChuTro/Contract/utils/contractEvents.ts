@@ -9,6 +9,7 @@ import ImagePicker from 'react-native-image-crop-picker';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../../types/route';
 import {Contract} from '../../../../types';
+import {launchImageLibrary} from 'react-native-image-picker';
 
 // Xử lý xem PDF
 export const handleViewPDF = async (
@@ -128,7 +129,6 @@ export const handleCameraUpload = async (
   }
 };
 
-// Xử lý upload ảnh từ thư viện
 export const handleGalleryUpload = async (
   contractId: string,
   dispatch: AppDispatch,
@@ -140,32 +140,35 @@ export const handleGalleryUpload = async (
   },
 ) => {
   try {
-    const selectedImages = await ImagePicker.openPicker({
-      multiple: true,
-      maxFiles: 5,
+    const result = await launchImageLibrary({
       mediaType: 'photo',
+      selectionLimit: 5, // Limits selection to maximum 5 images
       includeBase64: false,
-      includeExif: false,
+      includeExtra: false,
     });
 
-    const imageArray = Array.isArray(selectedImages)
-      ? selectedImages
-      : [selectedImages];
+    if (result.didCancel) {
+      return; // User cancelled the picker
+    }
 
-    const imageFiles: ImageFile[] = imageArray.map(img => ({
-      path: img.path,
-      mime: img.mime,
-      filename: img.path.split('/').pop() || `gallery_${Date.now()}.jpg`,
+    if (result.errorCode) {
+      throw new Error(result.errorMessage || 'Error accessing gallery');
+    }
+
+    const imageFiles: ImageFile[] = (result.assets || []).map(asset => ({
+      path: asset.uri || '',
+      mime: asset.type || 'image/jpeg',
+      filename: asset.fileName || `gallery_${Date.now()}.jpg`,
     }));
 
-    await uploadImages(contractId, imageFiles, dispatch, append, customAlert);
+    if (imageFiles.length > 0) {
+      await uploadImages(contractId, imageFiles, dispatch, append, customAlert);
+    }
   } catch (e: any) {
-    if (e.code !== 'E_PICKER_CANCELLED') {
-      if (customAlert) {
-        customAlert.showError('Không thể truy cập thư viện', 'Lỗi');
-      } else {
-        Alert.alert('Lỗi', 'Không thể truy cập thư viện');
-      }
+    if (customAlert) {
+      customAlert.showError('Không thể truy cập thư viện', 'Lỗi');
+    } else {
+      Alert.alert('Lỗi', 'Không thể truy cập thư viện');
     }
   }
 };

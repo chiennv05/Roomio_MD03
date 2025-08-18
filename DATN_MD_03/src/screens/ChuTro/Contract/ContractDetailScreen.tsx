@@ -635,7 +635,7 @@ const ContractDetailScreen = () => {
       ],
     );
   };
-
+  console.log('tenant cout', selectedContract?.contractInfo.tenantCount);
   const statusInfo = getContractStatusInfo(contract.status);
   const canUploadImages =
     contract.status === 'pending_signature' ||
