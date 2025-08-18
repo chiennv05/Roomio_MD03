@@ -22,12 +22,12 @@ import LinearGradient from 'react-native-linear-gradient';
 import {Colors} from '../../theme/color';
 import {Fonts} from '../../theme/fonts';
 import {responsiveFont, responsiveSpacing, scale} from '../../utils/responsive';
+import {Icons} from '../../assets/icons';
 
 import {
   Support,
   SupportStatusFilter,
   SupportCategoryFilter,
-  SUPPORT_STATUS_COLORS,
   STATUS_FILTER_OPTIONS,
   CATEGORY_FILTER_OPTIONS,
 } from '../../types/Support';
@@ -36,12 +36,7 @@ import {
   fetchSupportRequests,
   deleteSupportRequest,
 } from '../../store/slices/supportSlice';
-import {
-  SupportHeader,
-  SupportItem,
-  EmptySupport,
-  Pagination,
-} from './components';
+import {SupportItem, EmptySupport, Pagination} from './components';
 import {RootStackParamList} from '../../types/route';
 
 type SupportScreenNavigationProp = NativeStackNavigationProp<
@@ -167,64 +162,67 @@ const SupportScreen: React.FC = () => {
     isActive: categoryFilter === option.key,
   }));
 
-  // 🎨 Beautiful Filter Section
+  // 🎨 Compact Filter Section
   const renderFilters = () => (
     <View style={styles.filtersSection}>
-      {/* Status Filter */}
-      <View style={styles.filterGroup}>
-        <Text style={styles.filterTitle}>TRẠNG THÁI</Text>
-        <View style={styles.filterRow}>
-          {statusOptions.map(option => (
-            <TouchableOpacity
-              key={option.key}
-              style={[
-                styles.filterTab,
-                option.isActive && [
-                  styles.filterTabActive,
-                  {backgroundColor: option.color},
-                ],
-              ]}
-              onPress={() =>
-                setStatusFilter(option.key as SupportStatusFilter)
-              }>
-              <Text
+      {/* Compact Filter Row */}
+      <View style={styles.compactFilterRow}>
+        {/* Status Filters */}
+        <View style={styles.filterGroup}>
+          <Text style={styles.filterTitle}>TRẠNG THÁI</Text>
+          <View style={styles.filterRow}>
+            {statusOptions.map(option => (
+              <TouchableOpacity
+                key={option.key}
                 style={[
-                  styles.filterTabText,
-                  option.isActive && styles.filterTabTextActive,
-                ]}>
-                {option.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                  styles.filterTab,
+                  option.isActive && [
+                    styles.filterTabActive,
+                    {backgroundColor: option.color},
+                  ],
+                ]}
+                onPress={() =>
+                  setStatusFilter(option.key as SupportStatusFilter)
+                }>
+                <Text
+                  style={[
+                    styles.filterTabText,
+                    option.isActive && styles.filterTabTextActive,
+                  ]}>
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
-      </View>
 
-      {/* Category Filter */}
-      <View style={styles.filterGroup}>
-        <Text style={styles.filterTitle}>DANH MỤC</Text>
-        <View style={styles.filterRow}>
-          {categoryOptions.map(option => (
-            <TouchableOpacity
-              key={option.key}
-              style={[
-                styles.filterTab,
-                option.isActive && [
-                  styles.filterTabActive,
-                  {backgroundColor: option.color},
-                ],
-              ]}
-              onPress={() =>
-                setCategoryFilter(option.key as SupportCategoryFilter)
-              }>
-              <Text
+        {/* Category Filters */}
+        <View style={styles.filterGroup}>
+          <Text style={styles.filterTitle}>DANH MỤC</Text>
+          <View style={styles.filterRow}>
+            {categoryOptions.map(option => (
+              <TouchableOpacity
+                key={option.key}
                 style={[
-                  styles.filterTabText,
-                  option.isActive && styles.filterTabTextActive,
-                ]}>
-                {option.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                  styles.filterTab,
+                  option.isActive && [
+                    styles.filterTabActive,
+                    {backgroundColor: option.color},
+                  ],
+                ]}
+                onPress={() =>
+                  setCategoryFilter(option.key as SupportCategoryFilter)
+                }>
+                <Text
+                  style={[
+                    styles.filterTabText,
+                    option.isActive && styles.filterTabTextActive,
+                  ]}>
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
       </View>
     </View>
@@ -285,21 +283,21 @@ const SupportScreen: React.FC = () => {
       {
         number: openRequests,
         label: 'Đang mở',
-        color: SUPPORT_STATUS_COLORS.mo,
+        color: Colors.textGray,
         bgColor: Colors.white,
         icon: require('../../assets/icons/icon_eyes_on.png'),
       },
       {
         number: processingRequests,
         label: 'Đang xử lý',
-        color: SUPPORT_STATUS_COLORS.dangXuLy,
+        color: Colors.warning,
         bgColor: Colors.white,
         icon: require('../../assets/icons/icon_warning.png'),
       },
       {
         number: completedRequests,
         label: 'Hoàn tất',
-        color: SUPPORT_STATUS_COLORS.hoanTat,
+        color: Colors.statusCompleted,
         bgColor: Colors.white,
         icon: require('../../assets/icons/icon_check.png'),
       },
@@ -338,7 +336,6 @@ const SupportScreen: React.FC = () => {
 
     return (
       <View style={styles.contentWrapper}>
-        {supportRequests.length > 0 && renderSummaryStats()}
         <FlatList
           data={supportRequests}
           keyExtractor={item => item._id || Math.random().toString()}
@@ -369,12 +366,25 @@ const SupportScreen: React.FC = () => {
 
       {/* Beautiful Header with Gradient */}
       <LinearGradient
-        colors={[Colors.limeGreen, Colors.limeGreen]}
+        colors={[Colors.limeGreen, Colors.darkGreen]}
         style={styles.headerGradient}>
-        <SupportHeader title="Yêu cầu hỗ trợ" />
+        <View style={styles.customHeader}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}>
+            <View style={styles.backButtonCircle}>
+              <Image
+                source={{uri: Icons.IconArrowLeft}}
+                style={styles.backIcon}
+              />
+            </View>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Yêu cầu hỗ trợ</Text>
+          <View style={styles.headerPlaceholder} />
+        </View>
 
-        {/* Summary Stats integrated in header */}
-        {supportRequests.length > 0 && renderSummaryStats()}
+        {/* Summary Stats in header */}
+        {renderSummaryStats()}
       </LinearGradient>
 
       {/* Beautiful Filters */}
@@ -413,7 +423,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroud,
-    paddingTop: responsiveSpacing(5),
   },
 
   // Beautiful Header with gradient
@@ -424,6 +433,58 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 8,
+  },
+
+  // Custom header for gradient background
+  customHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: responsiveSpacing(20),
+    paddingTop: responsiveSpacing(16),
+    paddingBottom: responsiveSpacing(8),
+  },
+
+  headerTitle: {
+    fontSize: responsiveFont(20),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.white,
+    textAlign: 'center',
+    flex: 1,
+  },
+
+  headerPlaceholder: {
+    width: responsiveSpacing(36),
+    height: responsiveSpacing(36),
+  },
+
+  // Back button styles
+  backButton: {
+    width: responsiveSpacing(36),
+    height: responsiveSpacing(36),
+  },
+
+  backButtonCircle: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: Colors.white,
+    borderRadius: responsiveSpacing(18),
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: Colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+  },
+
+  backIcon: {
+    width: responsiveSpacing(12),
+    height: responsiveSpacing(24),
+    tintColor: Colors.black,
   },
 
   // Header styles
@@ -437,37 +498,42 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
 
-  // 🎨 Beautiful Filter Section
+  // 🎨 Compact Filter Section
   filtersSection: {
     backgroundColor: Colors.white,
-    paddingVertical: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(12),
     paddingHorizontal: responsiveSpacing(16),
     borderBottomWidth: 1,
     borderBottomColor: Colors.divider,
   },
 
+  compactFilterRow: {
+    flexDirection: 'column',
+    gap: responsiveSpacing(12),
+  },
+
   filterGroup: {
-    marginBottom: responsiveSpacing(16),
+    marginBottom: 0,
   },
 
   filterTitle: {
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(10),
     fontFamily: Fonts.Roboto_Medium,
     color: Colors.textGray,
-    marginBottom: responsiveSpacing(8),
+    marginBottom: responsiveSpacing(6),
     letterSpacing: 0.5,
   },
 
   filterRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: responsiveSpacing(8),
+    gap: responsiveSpacing(6),
   },
 
   filterTab: {
-    paddingHorizontal: responsiveSpacing(16),
-    paddingVertical: responsiveSpacing(8),
-    borderRadius: scale(20),
+    paddingHorizontal: responsiveSpacing(12),
+    paddingVertical: responsiveSpacing(6),
+    borderRadius: scale(16),
     backgroundColor: Colors.lightGray,
     borderWidth: 1,
     borderColor: Colors.divider,
@@ -483,7 +549,7 @@ const styles = StyleSheet.create({
   },
 
   filterTabText: {
-    fontSize: responsiveFont(14),
+    fontSize: responsiveFont(12),
     fontFamily: Fonts.Roboto_Medium,
     color: Colors.textGray,
   },
@@ -549,8 +615,17 @@ const styles = StyleSheet.create({
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingHorizontal: responsiveSpacing(16),
+    backgroundColor: Colors.white,
+    marginHorizontal: responsiveSpacing(16),
+    marginTop: responsiveSpacing(16),
+    marginBottom: responsiveSpacing(8),
+    borderRadius: scale(12),
     paddingVertical: responsiveSpacing(16),
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
 
   // List styles

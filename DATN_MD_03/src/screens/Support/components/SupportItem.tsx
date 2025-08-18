@@ -304,10 +304,10 @@ const styles = StyleSheet.create({
     marginRight: responsiveSpacing(6),
   },
   editButton: {
-    backgroundColor: Colors.limeGreen,
+    backgroundColor: '#22C55E', // Soft green - không chói
   },
   deleteButton: {
-    backgroundColor: Colors.figmaRed,
+    backgroundColor: '#EF4444', // Soft red - không chói
   },
   editButtonText: {
     fontSize: responsiveFont(12),

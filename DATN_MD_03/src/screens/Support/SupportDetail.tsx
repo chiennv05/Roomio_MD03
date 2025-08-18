@@ -13,15 +13,18 @@ import {
   Platform,
   Alert,
   ToastAndroid,
+  StatusBar,
 } from 'react-native';
 import {useRoute, useNavigation, RouteProp} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import LinearGradient from 'react-native-linear-gradient';
 import {supportService} from '../../store/services/supportService';
 import {Support, SupportMessage} from '../../types/Support';
 
 import {Colors} from '../../theme/color';
 import {Fonts} from '../../theme/fonts';
-import {responsiveFont, responsiveSpacing} from '../../utils/responsive';
+import {responsiveFont, responsiveSpacing, scale} from '../../utils/responsive';
+import {Icons} from '../../assets/icons';
 type SupportDetailRouteParams = {
   supportId: string;
 };
@@ -68,8 +71,34 @@ const SupportDetail: React.FC = () => {
     fetchSupportDetail();
   }, [fetchSupportDetail]);
 
-  // Format date
+  // Format date for messages (Facebook style)
   const formatDate = (dateString?: string) => {
+    if (!dateString) {
+      return '';
+    }
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60),
+    );
+
+    if (diffInHours < 1) {
+      return 'Vừa xong';
+    } else if (diffInHours < 24) {
+      return `${diffInHours}h`;
+    } else if (diffInHours < 24 * 7) {
+      const days = Math.floor(diffInHours / 24);
+      return `${days} ngày`;
+    } else {
+      return date.toLocaleDateString('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+      });
+    }
+  };
+
+  // Format full date for info cards
+  const formatFullDate = (dateString?: string) => {
     if (!dateString) {
       return '';
     }
@@ -150,11 +179,13 @@ const SupportDetail: React.FC = () => {
   };
 
   // Hiển thị thông báo dựa vào platform
-  const showToast = (message: string) => {
+  const showToast = (toastMessage: string) => {
     if (Platform.OS === 'android') {
-      ToastAndroid.show(message, ToastAndroid.SHORT);
+      ToastAndroid.show(toastMessage, ToastAndroid.SHORT);
     } else {
-      Alert.alert('Thông báo', message, [{text: 'OK'}], {cancelable: true});
+      Alert.alert('Thông báo', toastMessage, [{text: 'OK'}], {
+        cancelable: true,
+      });
     }
   };
 
@@ -185,10 +216,16 @@ const SupportDetail: React.FC = () => {
         // Hiển thị thông báo thành công
         showToast('Gửi tin nhắn thành công');
 
-        // Quay lại màn hình danh sách hỗ trợ
+        // Clear message input
+        setMessage('');
+
+        // Refresh support detail để hiển thị tin nhắn mới
+        await fetchSupportDetail();
+
+        // Scroll to bottom để hiển thị tin nhắn mới
         setTimeout(() => {
-          navigation.goBack();
-        }, 500);
+          scrollViewRef.current?.scrollToEnd({animated: true});
+        }, 300);
       }
     } catch (err) {
       console.error('Error sending message:', err);
@@ -214,7 +251,7 @@ const SupportDetail: React.FC = () => {
         <Text style={styles.errorText}>
           {error || 'Không tìm thấy dữ liệu'}
         </Text>
-        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+        <TouchableOpacity style={styles.errorBackButton} onPress={handleGoBack}>
           <Text style={styles.backButtonText}>Quay lại</Text>
         </TouchableOpacity>
       </SafeAreaView>
@@ -226,16 +263,27 @@ const SupportDetail: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backIcon} onPress={handleGoBack}>
-          <Image source={require('../../assets/icons/icon_arrow_back.png')} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Chi tiết yêu cầu</Text>
-        <View style={styles.headerRight} />
-      </View>
+      <StatusBar backgroundColor={Colors.limeGreen} barStyle="light-content" />
+
+      {/* Beautiful Header with Gradient */}
+      <LinearGradient
+        colors={[Colors.limeGreen, '#8BC34A']}
+        style={styles.headerGradient}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+            <Image
+              source={{uri: Icons.IconArrowBack}}
+              style={styles.backIcon}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Chi tiết yêu cầu</Text>
+          <View style={styles.headerRight} />
+        </View>
+      </LinearGradient>
 
       <KeyboardAvoidingView
-        style={{flex: 1}}
+        style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
         <ScrollView
@@ -243,38 +291,35 @@ const SupportDetail: React.FC = () => {
           style={styles.content}
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}>
+          {/* Support Info Card */}
           <View style={styles.card}>
-            <Text style={styles.title}>{supportData.title}</Text>
-
-            <View style={styles.infoRow}>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Trạng thái:</Text>
-                <View
-                  style={[
-                    styles.statusContainer,
-                    {borderColor: statusInfo.color},
-                  ]}>
-                  <Text style={[styles.statusText, {color: statusInfo.color}]}>
-                    {statusInfo.text}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Danh mục:</Text>
-                <Text style={styles.infoValue}>
-                  {getCategoryText(supportData.category)}
+            <View style={styles.titleSection}>
+              <Text style={styles.title}>{supportData.title}</Text>
+              <View
+                style={[
+                  styles.statusBadge,
+                  {backgroundColor: statusInfo.bgColor},
+                ]}>
+                <Text style={[styles.statusText, {color: statusInfo.color}]}>
+                  {statusInfo.text}
                 </Text>
               </View>
             </View>
 
-            <View style={styles.infoRow}>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Mức độ ưu tiên:</Text>
+            <View style={styles.infoGrid}>
+              <View style={styles.infoCard}>
+                <Text style={styles.infoLabel}>Danh mục</Text>
+                <Text style={styles.infoValue}>
+                  {getCategoryText(supportData.category)}
+                </Text>
+              </View>
+
+              <View style={styles.infoCard}>
+                <Text style={styles.infoLabel}>Mức độ</Text>
                 <View
                   style={[
-                    styles.priorityContainer,
-                    {borderColor: priorityInfo.color},
+                    styles.priorityBadge,
+                    {backgroundColor: priorityInfo.color + '20'},
                   ]}>
                   <Text
                     style={[styles.priorityText, {color: priorityInfo.color}]}>
@@ -283,87 +328,124 @@ const SupportDetail: React.FC = () => {
                 </View>
               </View>
 
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Ngày tạo:</Text>
+              <View style={styles.infoCard}>
+                <Text style={styles.infoLabel}>Ngày tạo</Text>
                 <Text style={styles.infoValue}>
-                  {formatDate(supportData.createdAt)}
+                  {formatFullDate(supportData.createdAt)}
                 </Text>
               </View>
             </View>
 
+            {/* Content Section */}
             <View style={styles.contentSection}>
-              <Text style={styles.sectionTitle}>Nội dung yêu cầu</Text>
+              <Text style={styles.sectionTitle}>📝 Nội dung yêu cầu</Text>
               <View style={styles.contentBox}>
                 <Text style={styles.contentText}>{supportData.content}</Text>
               </View>
             </View>
+          </View>
 
-            {/* Hiển thị tin nhắn trao đổi */}
-            {supportData.messages && supportData.messages.length > 0 && (
-              <View style={styles.contentSection}>
-                <Text style={styles.sectionTitle}>Tin nhắn trao đổi</Text>
+          {/* Messages Section - Facebook Messenger Style */}
+          {supportData.messages && supportData.messages.length > 0 && (
+            <View style={styles.messagesCard}>
+              <Text style={styles.sectionTitle}>💬 Tin nhắn trao đổi</Text>
+              <View style={styles.messagesContainer}>
                 {supportData.messages.map(
                   (msg: SupportMessage, index: number) => (
                     <View
                       key={index}
                       style={[
-                        styles.messageContainer,
-                        msg.sender === 'admin'
-                          ? styles.adminMessage
-                          : styles.userMessage,
+                        styles.messageRow,
+                        msg.sender === 'user' && styles.userMessageRow,
                       ]}>
-                      <View style={styles.messageHeader}>
-                        <Text
+                      {/* Avatar chỉ hiển thị cho admin */}
+                      {msg.sender === 'admin' && (
+                        <View style={styles.adminAvatar}>
+                          <Text style={styles.avatarText}>A</Text>
+                        </View>
+                      )}
+
+                      <View
+                        style={[
+                          styles.messageContent,
+                          msg.sender === 'user' && styles.userMessageContent,
+                        ]}>
+                        <View
                           style={[
-                            styles.messageSender,
+                            styles.messageBubble,
                             msg.sender === 'admin'
-                              ? styles.adminSender
-                              : styles.userSender,
+                              ? styles.adminMessageBubble
+                              : styles.userMessageBubble,
                           ]}>
-                          {msg.sender === 'admin' ? 'Admin' : 'Khách hàng'}
-                        </Text>
-                        <Text style={styles.messageTime}>
-                          {formatDate(msg.createdAt)}
-                        </Text>
+                          <Text
+                            style={[
+                              styles.messageText,
+                              msg.sender === 'user' && styles.userMessageText,
+                            ]}>
+                            {msg.message}
+                          </Text>
+                        </View>
+
+                        <View
+                          style={[
+                            styles.messageInfo,
+                            msg.sender === 'user' && styles.userMessageInfo,
+                          ]}>
+                          <Text style={styles.messageSender}>
+                            {msg.sender === 'admin' ? 'Admin' : 'Bạn'}
+                          </Text>
+                          <Text style={styles.messageTime}>
+                            {formatDate(msg.createdAt)}
+                          </Text>
+                        </View>
                       </View>
-                      <Text style={styles.messageContent}>{msg.message}</Text>
                     </View>
                   ),
                 )}
               </View>
-            )}
-          </View>
+            </View>
+          )}
         </ScrollView>
 
         {/* Message input section - only show if status is not "hoanTat" */}
         {supportData.status !== 'hoanTat' ? (
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.messageInput}
-              placeholder="Nhập tin nhắn để gửi cho Admin"
-              value={message}
-              onChangeText={setMessage}
-              multiline
-              maxLength={500}
-            />
-            <TouchableOpacity
-              style={[
-                styles.sendButton,
-                !message.trim() && styles.disabledButton,
-              ]}
-              onPress={handleSendMessage}
-              disabled={!message.trim() || sendingMessage}>
-              {sendingMessage ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <Text style={styles.sendText}>Gửi</Text>
-              )}
-            </TouchableOpacity>
+          <View style={styles.inputSection}>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.messageInput}
+                placeholder="Nhập tin nhắn để gửi cho Admin..."
+                value={message}
+                onChangeText={setMessage}
+                multiline
+                maxLength={500}
+                placeholderTextColor={Colors.textGray}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.sendButton,
+                  !message.trim() && styles.disabledButton,
+                ]}
+                onPress={handleSendMessage}
+                disabled={!message.trim() || sendingMessage}>
+                {sendingMessage ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text style={styles.sendText}>➤</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.inputHint}>
+              💡 Mô tả chi tiết vấn đề để được hỗ trợ tốt nhất
+            </Text>
           </View>
         ) : (
-          <View style={styles.completedMessageContainer}>
-            <Text style={styles.completedMessageText}>
-              Yêu cầu hỗ trợ đã hoàn tất. Không thể gửi thêm tin nhắn.
+          <View style={styles.completedContainer}>
+            <View style={styles.completedIcon}>
+              <Text style={styles.completedEmoji}>✅</Text>
+            </View>
+            <Text style={styles.completedTitle}>Yêu cầu đã hoàn tất</Text>
+            <Text style={styles.completedMessage}>
+              Cảm ơn bạn đã sử dụng dịch vụ hỗ trợ của chúng tôi
             </Text>
           </View>
         )}
@@ -376,246 +458,400 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroud,
-    marginTop: responsiveSpacing(5),
   },
+  keyboardView: {
+    flex: 1,
+  },
+
+  // Loading & Error States
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.backgroud,
   },
   loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
+    marginTop: responsiveSpacing(10),
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    padding: 20,
+    backgroundColor: Colors.backgroud,
+    padding: responsiveSpacing(20),
   },
   errorText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
+    marginTop: responsiveSpacing(10),
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
     textAlign: 'center',
   },
-  backButton: {
-    marginTop: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: '#2196F3',
-    borderRadius: 4,
+  errorBackButton: {
+    marginTop: responsiveSpacing(20),
+    paddingVertical: responsiveSpacing(12),
+    paddingHorizontal: responsiveSpacing(24),
+    backgroundColor: Colors.limeGreen,
+    borderRadius: scale(8),
   },
   backButtonText: {
-    color: 'white',
-    fontWeight: '500',
+    color: Colors.white,
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Medium,
+  },
+
+  // Beautiful Header
+  headerGradient: {
+    paddingBottom: responsiveSpacing(20),
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
   },
   header: {
+    height: scale(56),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Colors.backgroud,
-    paddingVertical: responsiveSpacing(12),
     paddingHorizontal: responsiveSpacing(16),
-    paddingTop: responsiveSpacing(5),
+    paddingTop: responsiveSpacing(8),
+  },
+  backButton: {
+    padding: responsiveSpacing(8),
+    borderRadius: scale(20),
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  backIcon: {
+    width: scale(24),
+    height: scale(24),
+    tintColor: Colors.white,
   },
   headerTitle: {
     fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.black,
-  },
-  backIcon: {
-    padding: responsiveSpacing(4),
+    color: Colors.white,
+    flex: 1,
+    textAlign: 'center',
   },
   headerRight: {
-    width: 32,
+    width: scale(40),
   },
+  // Content Layout
   content: {
     flex: 1,
-    padding: responsiveSpacing(16),
+    backgroundColor: Colors.backgroud,
   },
   contentContainer: {
-    paddingBottom: responsiveSpacing(20),
+    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(20),
+    paddingBottom: responsiveSpacing(100),
   },
+
+  // Beautiful Cards
   card: {
     backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: responsiveSpacing(16),
-    marginBottom: responsiveSpacing(12),
-    elevation: 2,
+    borderRadius: scale(16),
+    padding: responsiveSpacing(20),
+    marginBottom: responsiveSpacing(16),
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+
+  // Title Section
+  titleSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: responsiveSpacing(20),
   },
   title: {
     fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
-    marginBottom: responsiveSpacing(12),
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  infoItem: {
     flex: 1,
+    marginRight: responsiveSpacing(12),
   },
-  infoLabel: {
-    fontSize: responsiveFont(12),
-    color: Colors.textGray,
-    marginBottom: responsiveSpacing(4),
-  },
-  infoValue: {
-    fontSize: responsiveFont(14),
-    color: Colors.black,
-    fontFamily: Fonts.Roboto_Bold,
-  },
-  statusContainer: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: responsiveSpacing(10),
+  statusBadge: {
+    paddingHorizontal: responsiveSpacing(12),
     paddingVertical: responsiveSpacing(6),
-    alignSelf: 'flex-start',
-    backgroundColor: '#fff',
+    borderRadius: scale(20),
   },
   statusText: {
     fontSize: responsiveFont(12),
     fontFamily: Fonts.Roboto_Bold,
   },
-  priorityContainer: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: responsiveSpacing(10),
-    paddingVertical: responsiveSpacing(6),
+
+  // Info Grid
+  infoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: responsiveSpacing(12),
+  },
+  infoCard: {
+    flex: 1,
+    minWidth: '30%',
+    backgroundColor: Colors.backgroud,
+    borderRadius: scale(12),
+    padding: responsiveSpacing(12),
+  },
+  infoLabel: {
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Medium,
+    color: Colors.textGray,
+    marginBottom: responsiveSpacing(4),
+  },
+  infoValue: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+  },
+  priorityBadge: {
+    paddingHorizontal: responsiveSpacing(8),
+    paddingVertical: responsiveSpacing(4),
+    borderRadius: scale(12),
     alignSelf: 'flex-start',
-    backgroundColor: '#fff',
   },
   priorityText: {
     fontSize: responsiveFont(12),
     fontFamily: Fonts.Roboto_Bold,
   },
+  // Content Section
   contentSection: {
-    marginTop: responsiveSpacing(16),
+    marginTop: responsiveSpacing(20),
   },
   sectionTitle: {
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
-    marginBottom: responsiveSpacing(8),
+    marginBottom: responsiveSpacing(12),
   },
   contentBox: {
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: responsiveSpacing(12),
-    borderWidth: 1,
-    borderColor: Colors.divider,
-  },
-  responseBox: {
-    backgroundColor: '#e8f5e9',
-    borderRadius: 4,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#c8e6c9',
+    backgroundColor: Colors.backgroud,
+    borderRadius: scale(12),
+    padding: responsiveSpacing(16),
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.limeGreen,
   },
   contentText: {
-    fontSize: 15,
-    color: '#333',
-    lineHeight: 22,
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.black,
+    lineHeight: responsiveFont(20),
   },
-  messageContainer: {
-    borderRadius: 16,
-    padding: responsiveSpacing(10),
-    marginBottom: responsiveSpacing(8),
-    borderWidth: 1,
-    maxWidth: '85%',
+
+  // Messages Card
+  messagesCard: {
+    backgroundColor: Colors.white,
+    borderRadius: scale(16),
+    padding: responsiveSpacing(20),
+    marginBottom: responsiveSpacing(16),
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  messageHeader: {
+  messagesContainer: {
+    gap: responsiveSpacing(16),
+  },
+
+  // Facebook Messenger Style Messages
+  messageRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    marginBottom: responsiveSpacing(12),
+    alignItems: 'flex-end',
+  },
+  userMessageRow: {
+    flexDirection: 'row-reverse', // Avatar bên phải cho user
+  },
+
+  // Avatars
+  adminAvatar: {
+    width: scale(32),
+    height: scale(32),
+    borderRadius: scale(16),
+    backgroundColor: '#42A5F5', // Light blue for admin
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 6,
+    marginRight: responsiveSpacing(8),
+  },
+  userAvatar: {
+    width: scale(32),
+    height: scale(32),
+    borderRadius: scale(16),
+    backgroundColor: '#66BB6A', // Light green for user
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: responsiveSpacing(8), // Margin bên trái khi avatar ở bên phải
+  },
+  avatarText: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.white,
+  },
+
+  // Message Content Container
+  messageContent: {
+    flex: 1,
+    maxWidth: '75%',
+  },
+  userMessageContent: {
+    alignItems: 'flex-end', // Căn tin nhắn user về bên phải
+  },
+
+  // Message Bubbles
+  messageBubble: {
+    borderRadius: scale(18),
+    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(10),
+    marginBottom: responsiveSpacing(4),
+  },
+  adminMessageBubble: {
+    backgroundColor: '#F0F0F0', // Light gray for admin messages
+    alignSelf: 'flex-start',
+    borderBottomLeftRadius: scale(4),
+  },
+  userMessageBubble: {
+    backgroundColor: '#007AFF', // Blue for user messages (like iOS Messages)
+    alignSelf: 'flex-end',
+    borderBottomRightRadius: scale(4),
+  },
+
+  // Message Text
+  messageText: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    lineHeight: responsiveFont(20),
+    color: Colors.black, // Default color for admin messages
+  },
+  userMessageText: {
+    color: Colors.white, // White text for user messages on blue background
+  },
+
+  // Message Info (sender name and time)
+  messageInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: responsiveSpacing(4),
+    marginTop: responsiveSpacing(2),
+  },
+  userMessageInfo: {
+    flexDirection: 'row',
+    marginLeft: 0,
+    marginRight: responsiveSpacing(4),
+    justifyContent: 'flex-end', // Căn phải cho thông tin user
   },
   messageSender: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  adminSender: {
-    color: '#0277BD',
-  },
-  userSender: {
-    color: '#558B2F',
-  },
-  messageContent: {
-    fontSize: 15,
-    color: '#333',
-    lineHeight: 20,
+    fontSize: responsiveFont(11),
+    fontFamily: Fonts.Roboto_Medium,
+    color: Colors.textGray,
+    marginRight: responsiveSpacing(6),
   },
   messageTime: {
-    fontSize: 12,
-    color: '#757575',
-    marginLeft: 8,
+    fontSize: responsiveFont(11),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
   },
-  adminMessage: {
-    backgroundColor: '#e3f2fd',
-    borderColor: '#bbdefb',
-    alignSelf: 'flex-start',
-  },
-  userMessage: {
-    backgroundColor: '#f1f8e9',
-    borderColor: '#dcedc8',
-    alignSelf: 'flex-end',
+  // Input Section
+  inputSection: {
+    backgroundColor: Colors.white,
+    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(12),
+    borderTopWidth: 1,
+    borderTopColor: Colors.divider,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: -2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
   },
   inputContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: responsiveSpacing(12),
-    backgroundColor: Colors.white,
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
+    alignItems: 'flex-end',
+    backgroundColor: Colors.backgroud,
+    borderRadius: scale(24),
+    borderWidth: 1,
+    borderColor: Colors.divider,
+    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(8),
   },
   messageInput: {
     flex: 1,
-    backgroundColor: Colors.backgroud,
-    borderRadius: 24,
-    paddingHorizontal: responsiveSpacing(12),
-    paddingVertical: responsiveSpacing(8),
-    borderWidth: 1,
-    borderColor: Colors.divider,
-    maxHeight: 100,
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.black,
+    maxHeight: scale(100),
+    minHeight: scale(40),
   },
   sendButton: {
+    width: scale(44),
+    height: scale(44),
     backgroundColor: Colors.limeGreen,
-    borderRadius: 24,
-    paddingHorizontal: responsiveSpacing(16),
-    height: 40,
+    borderRadius: scale(22),
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: responsiveSpacing(8),
   },
   sendText: {
+    fontSize: responsiveFont(18),
     color: Colors.white,
     fontFamily: Fonts.Roboto_Bold,
   },
   disabledButton: {
-    backgroundColor: Colors.gray150,
+    backgroundColor: Colors.textGray,
+    opacity: 0.5,
   },
-  completedMessageContainer: {
-    padding: 16,
-    backgroundColor: '#e8f5e9',
+  inputHint: {
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
+    marginTop: responsiveSpacing(8),
+    textAlign: 'center',
+  },
+
+  // Completed State
+  completedContainer: {
+    backgroundColor: Colors.white,
+    paddingHorizontal: responsiveSpacing(20),
+    paddingVertical: responsiveSpacing(24),
     borderTopWidth: 1,
-    borderTopColor: '#c8e6c9',
+    borderTopColor: Colors.divider,
     alignItems: 'center',
-    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: -2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  completedMessageText: {
-    fontSize: 14,
-    color: '#4caf50',
-    fontWeight: '500',
+  completedIcon: {
+    width: scale(60),
+    height: scale(60),
+    backgroundColor: Colors.limeGreen + '20',
+    borderRadius: scale(30),
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: responsiveSpacing(12),
+  },
+  completedEmoji: {
+    fontSize: responsiveFont(24),
+  },
+  completedTitle: {
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.black,
+    marginBottom: responsiveSpacing(4),
+  },
+  completedMessage: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
     textAlign: 'center',
   },
 });

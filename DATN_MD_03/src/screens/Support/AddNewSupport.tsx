@@ -201,20 +201,10 @@ const AddNewSupport: React.FC = () => {
         {/* Support Info Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Image
-              source={{uri: Icons.IconReport}}
-              style={styles.cardIcon}
-              resizeMode="contain"
-            />
             <Text style={styles.cardTitle}>Thông tin cần được hỗ trợ</Text>
           </View>
 
           <View style={styles.inputContainer}>
-            <Image
-              source={{uri: Icons.IconEditBlack}}
-              style={styles.inputIcon}
-              resizeMode="contain"
-            />
             <TextInput
               style={styles.input}
               placeholder="Nhập tiêu đề yêu cầu hỗ trợ"
@@ -226,25 +216,17 @@ const AddNewSupport: React.FC = () => {
 
           <View style={styles.dropdownRow}>
             <View style={styles.dropdownContainer}>
-              <View style={styles.dropdownWrapper}>
-                <Image
-                  source={{uri: Icons.IconReport}}
-                  style={styles.dropdownIcon}
-                  resizeMode="contain"
-                />
-                <TouchableOpacity
-                  style={styles.dropdown}
-                  onPress={() => setIsCategoryOpen(!isCategoryOpen)}>
-                  <Text style={styles.dropdownText}>
-                    {getCategoryLabel(category)}
-                  </Text>
-                  <Image
-                    source={{uri: Icons.IconArrowDown}}
-                    style={styles.arrowIcon}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-              </View>
+              <Text style={styles.dropdownLabel}>Danh mục</Text>
+              <TouchableOpacity
+                style={styles.dropdown}
+                onPress={() => setIsCategoryOpen(!isCategoryOpen)}>
+                <Text style={styles.dropdownText}>
+                  {getCategoryLabel(category)}
+                </Text>
+                <Text style={styles.arrowText}>
+                  {isCategoryOpen ? '▲' : '▼'}
+                </Text>
+              </TouchableOpacity>
               {isCategoryOpen && (
                 <View style={styles.dropdownList}>
                   {categories.map((item, index) => (
@@ -274,22 +256,12 @@ const AddNewSupport: React.FC = () => {
             </View>
 
             <View style={styles.dropdownContainer}>
-              <View style={styles.dropdownWrapper}>
-                <Image
-                  source={{uri: Icons.IconWarning}}
-                  style={styles.dropdownIcon}
-                  resizeMode="contain"
-                />
-                <View style={styles.dropdownDisabled}>
-                  <Text style={styles.dropdownText}>
-                    {getPriorityLabel(priority)}
-                  </Text>
-                  <Image
-                    source={{uri: Icons.IconArrowDown}}
-                    style={styles.arrowIconDisabled}
-                    resizeMode="contain"
-                  />
-                </View>
+              <Text style={styles.dropdownLabel}>Mức độ</Text>
+              <View style={styles.dropdownDisabled}>
+                <Text style={styles.dropdownText}>
+                  {getPriorityLabel(priority)}
+                </Text>
+                <Text style={styles.arrowText}>▼</Text>
               </View>
             </View>
           </View>
@@ -298,20 +270,10 @@ const AddNewSupport: React.FC = () => {
         {/* Content Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Image
-              source={{uri: Icons.IconEditBlack}}
-              style={styles.cardIcon}
-              resizeMode="contain"
-            />
             <Text style={styles.cardTitle}>Nội dung sự cố</Text>
           </View>
 
           <View style={styles.textAreaContainer}>
-            <Image
-              source={{uri: Icons.IconEditBlack}}
-              style={styles.textAreaIcon}
-              resizeMode="contain"
-            />
             <TextInput
               style={styles.textArea}
               placeholder="Mô tả chi tiết vấn đề bạn gặp phải..."
@@ -408,28 +370,16 @@ const styles = StyleSheet.create({
   },
 
   cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: responsiveSpacing(16),
-  },
-
-  cardIcon: {
-    width: scale(24),
-    height: scale(24),
-    tintColor: Colors.limeGreen,
-    marginRight: responsiveSpacing(12),
   },
 
   cardTitle: {
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
-    flex: 1,
   },
   // Input Styles
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: Colors.backgroud,
     borderRadius: scale(12),
     paddingHorizontal: responsiveSpacing(16),
@@ -438,15 +388,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.divider,
   },
 
-  inputIcon: {
-    width: scale(20),
-    height: scale(20),
-    tintColor: Colors.limeGreen,
-    marginRight: responsiveSpacing(12),
-  },
-
   input: {
-    flex: 1,
     fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.black,
@@ -455,25 +397,14 @@ const styles = StyleSheet.create({
 
   // Text Area
   textAreaContainer: {
-    flexDirection: 'row',
     backgroundColor: Colors.backgroud,
     borderRadius: scale(12),
     padding: responsiveSpacing(16),
     borderWidth: 1,
     borderColor: Colors.divider,
-    alignItems: 'flex-start',
-  },
-
-  textAreaIcon: {
-    width: scale(20),
-    height: scale(20),
-    tintColor: Colors.limeGreen,
-    marginRight: responsiveSpacing(12),
-    marginTop: responsiveSpacing(2),
   },
 
   textArea: {
-    flex: 1,
     fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.black,
@@ -491,39 +422,35 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  dropdownWrapper: {
+  dropdownLabel: {
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Medium,
+    color: Colors.textGray,
+    marginBottom: responsiveSpacing(6),
+  },
+
+  dropdown: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: Colors.backgroud,
     borderRadius: scale(12),
-    paddingLeft: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(12),
+    paddingHorizontal: responsiveSpacing(16),
     borderWidth: 1,
     borderColor: Colors.divider,
   },
 
-  dropdownIcon: {
-    width: scale(20),
-    height: scale(20),
-    tintColor: Colors.limeGreen,
-    marginRight: responsiveSpacing(12),
-  },
-
-  dropdown: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: responsiveSpacing(12),
-    paddingRight: responsiveSpacing(16),
-  },
-
   dropdownDisabled: {
-    flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: Colors.backgroud,
+    borderRadius: scale(12),
     paddingVertical: responsiveSpacing(12),
-    paddingRight: responsiveSpacing(16),
+    paddingHorizontal: responsiveSpacing(16),
+    borderWidth: 1,
+    borderColor: Colors.divider,
     opacity: 0.6,
   },
   dropdownText: {
@@ -533,17 +460,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  arrowIcon: {
-    width: scale(16),
-    height: scale(16),
-    tintColor: Colors.textGray,
-  },
-
-  arrowIconDisabled: {
-    width: scale(16),
-    height: scale(16),
-    tintColor: Colors.textGray,
-    opacity: 0.5,
+  arrowText: {
+    fontSize: responsiveFont(12),
+    color: Colors.textGray,
+    fontFamily: Fonts.Roboto_Regular,
   },
 
   dropdownList: {
