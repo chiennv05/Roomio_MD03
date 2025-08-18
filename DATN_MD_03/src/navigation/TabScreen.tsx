@@ -53,6 +53,7 @@ import ContractDetailLesseeScreen from '../screens/NguoiThue/Contract/ContractDe
 import UpdateTenant from '../screens/ChuTro/Contract/UpdateTenant';
 import CCCDResult from '../screens/Profile/CCCDResult';
 import CCCDScanning from '../screens/Profile/CCCDScanning';
+import StatisticScreen from '../screens/ChuTro/Statistic/StatisticScreen';
 import RoomStatisticScreen from '../screens/ChuTro/Statistic/RoomStatisticScreen';
 import RevenueStatisticScreen from '../screens/ChuTro/Statistic/RevenueStatisticScreen';
 import ContractStatisticScreen from '../screens/ChuTro/Statistic/ContractStatisticScreen';
@@ -294,7 +295,7 @@ export default function TabScreen() {
               ...TransitionPresets.SlideFromRightIOS,
             }}
           />
-          {/* <Stack.Screen name="StatisticScreen" component={StatisticScreen} /> */}
+          <Stack.Screen name="StatisticScreen" component={StatisticScreen} />
           <Stack.Screen
             name="RoomStatisticScreen"
             component={RoomStatisticScreen}
