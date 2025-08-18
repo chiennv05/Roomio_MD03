@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Alert,
   SafeAreaView,
   Image,
   StatusBar,
@@ -24,6 +23,7 @@ import {Colors} from '../../theme/color';
 import {Fonts} from '../../theme/fonts';
 import {responsiveFont, responsiveSpacing, scale} from '../../utils/responsive';
 import {Icons} from '../../assets/icons';
+import {CustomAlertModal, useCustomAlert} from './components';
 
 type UpdateSupportScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -39,6 +39,17 @@ const UpdateSupport: React.FC = () => {
   const route =
     useRoute<RouteProp<Record<string, UpdateSupportRouteParams>, string>>();
   const {supportId} = route.params || {};
+
+  // Custom Alert Hook
+  const {
+    alertConfig,
+    visible: alertVisible,
+    showAlert,
+    hideAlert,
+    showSuccess,
+    showError,
+    showConfirm,
+  } = useCustomAlert();
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -90,13 +101,15 @@ const UpdateSupport: React.FC = () => {
 
           // Check if the request is already completed
           if (supportData.status === 'hoanTat') {
-            Alert.alert(
-              'Không thể cập nhật',
+            showConfirm(
               'Yêu cầu hỗ trợ đã được hoàn tất, không thể cập nhật.',
+              () => navigation.goBack(),
+              'Không thể cập nhật',
               [
                 {
                   text: 'Quay lại',
                   onPress: () => navigation.goBack(),
+                  style: 'primary',
                 },
               ],
             );
@@ -111,7 +124,7 @@ const UpdateSupport: React.FC = () => {
     };
 
     fetchSupportDetail();
-  }, [supportId, navigation]);
+  }, [supportId, navigation, showConfirm]);
 
   // Hiển thị nhãn của giá trị đã chọn
   const getCategoryLabel = (value: string) => {
@@ -125,12 +138,12 @@ const UpdateSupport: React.FC = () => {
   // Hàm cập nhật yêu cầu hỗ trợ
   const handleSubmit = async () => {
     if (!title.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề');
+      showError('Vui lòng nhập tiêu đề');
       return;
     }
 
     if (!content.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập nội dung');
+      showError('Vui lòng nhập nội dung');
       return;
     }
 
@@ -145,27 +158,22 @@ const UpdateSupport: React.FC = () => {
       });
 
       if ('isError' in response) {
-        Alert.alert(
-          'Lỗi',
+        showError(
           response.message || 'Đã xảy ra lỗi khi cập nhật yêu cầu hỗ trợ',
         );
       } else {
-        Alert.alert(
-          'Thành công',
+        showSuccess(
           'Yêu cầu hỗ trợ của bạn đã được cập nhật thành công',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                // Navigate back to refresh the list
-                navigation.goBack();
-              },
-            },
-          ],
+          'Thành công',
+          false,
+          () => {
+            // Navigate back to refresh the list
+            navigation.goBack();
+          },
         );
       }
     } catch (err) {
-      Alert.alert('Lỗi', 'Đã xảy ra lỗi khi cập nhật yêu cầu hỗ trợ');
+      showError('Đã xảy ra lỗi khi cập nhật yêu cầu hỗ trợ');
     } finally {
       setIsLoading(false);
     }
@@ -392,6 +400,16 @@ const UpdateSupport: React.FC = () => {
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Custom Alert Modal */}
+      <CustomAlertModal
+        visible={alertVisible}
+        title={alertConfig?.title}
+        message={alertConfig?.message || ''}
+        onClose={hideAlert}
+        type={alertConfig?.type}
+        buttons={alertConfig?.buttons}
+      />
     </SafeAreaView>
   );
 };

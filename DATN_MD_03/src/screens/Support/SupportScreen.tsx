@@ -8,7 +8,6 @@ import {
   Text,
   SafeAreaView,
   Platform,
-  Alert,
   StatusBar,
   Animated,
   RefreshControl,
@@ -23,6 +22,7 @@ import {Colors} from '../../theme/color';
 import {Fonts} from '../../theme/fonts';
 import {responsiveFont, responsiveSpacing, scale} from '../../utils/responsive';
 import {Icons} from '../../assets/icons';
+import {CustomAlertModal, useCustomAlert} from './components';
 
 import {
   Support,
@@ -50,6 +50,17 @@ const SupportScreen: React.FC = () => {
     (state: RootState) => state.support,
   );
   const navigation = useNavigation<SupportScreenNavigationProp>();
+
+  // Custom Alert Hook
+  const {
+    alertConfig,
+    visible: alertVisible,
+    showAlert,
+    hideAlert,
+    showSuccess,
+    showError,
+    showConfirm,
+  } = useCustomAlert();
 
   const handleAddNewSupport = () => {
     navigation.navigate('AddNewSupport');
@@ -104,40 +115,30 @@ const SupportScreen: React.FC = () => {
   // Handle delete item
   const handleDeleteItem = (item: Support) => {
     if (item.status === 'hoanTat') {
-      Alert.alert(
-        'Không thể xóa',
-        'Yêu cầu hỗ trợ đã hoàn tất không thể xóa.',
-        [{text: 'Đồng ý'}],
-      );
+      showError('Yêu cầu hỗ trợ đã hoàn tất không thể xóa.', 'Không thể xóa');
       return;
     }
 
-    Alert.alert(
-      'Xác nhận xóa',
+    showConfirm(
       'Bạn có chắc chắn muốn xóa yêu cầu hỗ trợ này?',
+      () => {
+        if (item._id) {
+          dispatch(deleteSupportRequest(item._id) as any)
+            .unwrap()
+            .then(() => {
+              // Success notification
+              showSuccess('Đã xóa yêu cầu hỗ trợ', 'Thành công');
+            })
+            .catch((err: any) => {
+              // Error notification
+              showError(err || 'Không thể xóa yêu cầu hỗ trợ');
+            });
+        }
+      },
+      'Xác nhận xóa',
       [
-        {
-          text: 'Hủy',
-          style: 'cancel',
-        },
-        {
-          text: 'Xóa',
-          style: 'destructive',
-          onPress: () => {
-            if (item._id) {
-              dispatch(deleteSupportRequest(item._id) as any)
-                .unwrap()
-                .then(() => {
-                  // Success notification
-                  Alert.alert('Thành công', 'Đã xóa yêu cầu hỗ trợ');
-                })
-                .catch((err: any) => {
-                  // Error notification
-                  Alert.alert('Lỗi', err || 'Không thể xóa yêu cầu hỗ trợ');
-                });
-            }
-          },
-        },
+        {text: 'Hủy', onPress: hideAlert, style: 'cancel'},
+        {text: 'Xóa', onPress: () => {}, style: 'destructive'},
       ],
     );
   };
@@ -415,6 +416,16 @@ const SupportScreen: React.FC = () => {
           <Text style={styles.fabText}>+</Text>
         </LinearGradient>
       </TouchableOpacity>
+
+      {/* Custom Alert Modal */}
+      <CustomAlertModal
+        visible={alertVisible}
+        title={alertConfig?.title}
+        message={alertConfig?.message || ''}
+        onClose={hideAlert}
+        type={alertConfig?.type}
+        buttons={alertConfig?.buttons}
+      />
     </SafeAreaView>
   );
 };

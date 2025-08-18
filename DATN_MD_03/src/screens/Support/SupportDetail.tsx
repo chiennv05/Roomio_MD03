@@ -11,7 +11,6 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ToastAndroid,
   StatusBar,
 } from 'react-native';
@@ -25,6 +24,7 @@ import {Colors} from '../../theme/color';
 import {Fonts} from '../../theme/fonts';
 import {responsiveFont, responsiveSpacing, scale} from '../../utils/responsive';
 import {Icons} from '../../assets/icons';
+import {CustomAlertModal, useCustomAlert} from './components';
 type SupportDetailRouteParams = {
   supportId: string;
 };
@@ -34,6 +34,16 @@ const SupportDetail: React.FC = () => {
     useRoute<RouteProp<Record<string, SupportDetailRouteParams>, string>>();
   const navigation = useNavigation();
   const {supportId} = route.params || {};
+
+  // Custom Alert Hook
+  const {
+    alertConfig,
+    visible: alertVisible,
+    showAlert,
+    hideAlert,
+    showSuccess,
+    showError,
+  } = useCustomAlert();
 
   // Không cần lấy token vì supportService đã tự xử lý token
   const [supportData, setSupportData] = useState<Support | null>(null);
@@ -183,21 +193,19 @@ const SupportDetail: React.FC = () => {
     if (Platform.OS === 'android') {
       ToastAndroid.show(toastMessage, ToastAndroid.SHORT);
     } else {
-      Alert.alert('Thông báo', toastMessage, [{text: 'OK'}], {
-        cancelable: true,
-      });
+      showSuccess(toastMessage, 'Thông báo');
     }
   };
 
   // Handle sending a new message
   const handleSendMessage = async () => {
     if (!message.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập nội dung tin nhắn');
+      showError('Vui lòng nhập nội dung tin nhắn');
       return;
     }
 
     if (!supportId) {
-      Alert.alert('Lỗi', 'Không tìm thấy ID yêu cầu hỗ trợ');
+      showError('Không tìm thấy ID yêu cầu hỗ trợ');
       return;
     }
 
@@ -211,7 +219,7 @@ const SupportDetail: React.FC = () => {
       );
 
       if ('isError' in response) {
-        Alert.alert('Lỗi', response.message || 'Không thể gửi tin nhắn');
+        showError(response.message || 'Không thể gửi tin nhắn');
       } else {
         // Hiển thị thông báo thành công
         showToast('Gửi tin nhắn thành công');
@@ -229,7 +237,7 @@ const SupportDetail: React.FC = () => {
       }
     } catch (err) {
       console.error('Error sending message:', err);
-      Alert.alert('Lỗi', 'Đã xảy ra lỗi khi gửi tin nhắn');
+      showError('Đã xảy ra lỗi khi gửi tin nhắn');
     } finally {
       setSendingMessage(false);
     }
@@ -450,6 +458,16 @@ const SupportDetail: React.FC = () => {
           </View>
         )}
       </KeyboardAvoidingView>
+
+      {/* Custom Alert Modal */}
+      <CustomAlertModal
+        visible={alertVisible}
+        title={alertConfig?.title}
+        message={alertConfig?.message || ''}
+        onClose={hideAlert}
+        type={alertConfig?.type}
+        buttons={alertConfig?.buttons}
+      />
     </SafeAreaView>
   );
 };

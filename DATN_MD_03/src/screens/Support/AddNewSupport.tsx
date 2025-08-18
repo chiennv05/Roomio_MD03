@@ -6,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Alert,
   SafeAreaView,
   Image,
   StatusBar,
@@ -24,6 +23,7 @@ import {Fonts} from '../../theme/fonts';
 import {responsiveFont, responsiveSpacing, scale} from '../../utils/responsive';
 import {Icons} from '../../assets/icons';
 import ItemButton from '../LoginAndRegister/components/ItemButton';
+import {CustomAlertModal, useCustomAlert} from './components';
 
 // Hàm xác định mức ưu tiên theo loại yêu cầu (module-scope, dùng được ở mọi nơi)
 function computePriority(cat: SupportCategory): SupportPriority {
@@ -49,6 +49,16 @@ const AddNewSupport: React.FC = () => {
 
   // Lấy thông tin user từ Redux store
   const user = useSelector((state: RootState) => state.auth.user);
+
+  // Custom Alert Hook
+  const {
+    alertConfig,
+    visible: alertVisible,
+    showAlert,
+    hideAlert,
+    showSuccess,
+    showError,
+  } = useCustomAlert();
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -125,12 +135,12 @@ const AddNewSupport: React.FC = () => {
   // Hàm gửi yêu cầu hỗ trợ
   const handleSubmit = async () => {
     if (!title.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập tiêu đề');
+      showError('Vui lòng nhập tiêu đề');
       return;
     }
 
     if (!content.trim()) {
-      Alert.alert('Lỗi', 'Vui lòng nhập nội dung');
+      showError('Vui lòng nhập nội dung');
       return;
     }
 
@@ -145,27 +155,20 @@ const AddNewSupport: React.FC = () => {
       });
 
       if ('isError' in response) {
-        Alert.alert(
-          'Lỗi',
-          response.message || 'Đã xảy ra lỗi khi gửi yêu cầu hỗ trợ',
-        );
+        showError(response.message || 'Đã xảy ra lỗi khi gửi yêu cầu hỗ trợ');
       } else {
-        Alert.alert(
-          'Thành công',
+        showSuccess(
           'Yêu cầu hỗ trợ của bạn đã được gửi thành công',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                // Navigate back to refresh the list
-                navigation.goBack();
-              },
-            },
-          ],
+          'Thành công',
+          false,
+          () => {
+            // Navigate back to refresh the list
+            navigation.goBack();
+          },
         );
       }
     } catch (error) {
-      Alert.alert('Lỗi', 'Đã xảy ra lỗi khi gửi yêu cầu hỗ trợ');
+      showError('Đã xảy ra lỗi khi gửi yêu cầu hỗ trợ');
     } finally {
       setIsLoading(false);
     }
@@ -292,6 +295,16 @@ const AddNewSupport: React.FC = () => {
       <View style={styles.bottomBar}>
         <ItemButton onPress={handleSubmit} loading={isLoading} />
       </View>
+
+      {/* Custom Alert Modal */}
+      <CustomAlertModal
+        visible={alertVisible}
+        title={alertConfig?.title}
+        message={alertConfig?.message || ''}
+        onClose={hideAlert}
+        type={alertConfig?.type}
+        buttons={alertConfig?.buttons}
+      />
     </SafeAreaView>
   );
 };
