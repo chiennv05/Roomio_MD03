@@ -47,7 +47,7 @@ export const getContractStatusInfo = (status: string) => {
         label: 'Chờ phê duyệt',
         color: Colors.white,
         backgroudColor: Colors.gray,
-        backgroudStatus: Colors.mediumGray,
+        backgroudStatus: '#ffc107',
         textColor: Colors.dearkOlive,
         textColorLabel: Colors.darkGray,
       };
@@ -231,9 +231,19 @@ const styles = StyleSheet.create({
   },
   statusBadge: {
     borderRadius: 999,
+    shadowColor: Colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+
+    // Shadow cho Android
+    elevation: 4,
   },
   statusText: {
-    fontFamily: Fonts.Roboto_Regular,
+    fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(16),
     color: Colors.white,
     paddingVertical: responsiveSpacing(6),

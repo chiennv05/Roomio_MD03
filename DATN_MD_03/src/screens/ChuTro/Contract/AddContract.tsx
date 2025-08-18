@@ -99,21 +99,6 @@ export default function AddContract() {
     const tenantsArray = processCoTenants(formData.coTenants).map(name =>
       name.trim(),
     );
-    const mainTenant = coTenants.trim();
-
-    // Kiểm tra trùng tên người đại diện trong danh sách người cùng thuê
-    const isMainTenantInCoTenants = tenantsArray.some(
-      name => name.toLowerCase() === mainTenant.toLowerCase(),
-    );
-    if (isMainTenantInCoTenants) {
-      showError(
-        'Tên người đại diện không được xuất hiện trong danh sách người cùng thuê',
-        'Lỗi',
-        true,
-      );
-      return;
-    }
-
     // Kiểm tra trùng lặp trong danh sách người cùng thuê
     const duplicates = tenantsArray.filter(
       (name, index, self) =>

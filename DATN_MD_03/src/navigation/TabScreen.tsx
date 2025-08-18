@@ -61,6 +61,7 @@ import SupportScreen from '../screens/Support/SupportScreen';
 import AddNewSupport from '../screens/Support/AddNewSupport';
 import SupportDetail from '../screens/Support/SupportDetail';
 import UpdateSupport from '../screens/Support/UpdateSupport';
+import UpdateContract from '../screens/ChuTro/Contract/UpdateContract';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
@@ -230,13 +231,13 @@ export default function TabScreen() {
           <Stack.Screen name="DetailRoomLandlord" component={RoomDetail} />
           <Stack.Screen name="UpdateRoomScreen" component={UpdateRoom} />
           <Stack.Screen name="AddContract" component={AddContract} />
-          {/* <Stack.Screen
+          <Stack.Screen
             name="UpdateContract"
             component={UpdateContract}
             options={{
               ...TransitionPresets.SlideFromRightIOS,
             }}
-          /> */}
+          />
           <Stack.Screen
             // <<<<<<< HEAD
             // name="PolicyTerms"

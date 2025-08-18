@@ -135,25 +135,11 @@ export const uploadContractImages = createAsyncThunk(
       images,
       append,
     }: {contractId: string; images: ImageFile[]; append: boolean},
-    {rejectWithValue, getState},
+    {rejectWithValue},
   ) => {
     console.log('Upload thunk called with:', {contractId, images});
 
     try {
-      const state = getState() as any;
-      const selectedContract = state.contract.selectedContract;
-
-      if (
-        !selectedContract ||
-        (selectedContract.status !== 'pending_signature' &&
-          selectedContract.status !== 'pending_approval' &&
-          selectedContract.status !== 'needs_resigning')
-      ) {
-        return rejectWithValue(
-          'Chỉ có thể upload ảnh khi hợp đồng đang chờ ký hoặc chờ phê duyệt',
-        );
-      }
-
       const formData = new FormData();
 
       // Sử dụng field name 'signedPhotos' như trong Postman
@@ -172,7 +158,7 @@ export const uploadContractImages = createAsyncThunk(
         formData,
         append,
       );
-      console.log('API response:', response);
+      console.log('API response contract:', response);
 
       return response;
     } catch (err: any) {
@@ -461,13 +447,24 @@ const contractSlice = createSlice({
         const contractId = payload.data?.contractId;
 
         if (updatedContract) {
-          // Cập nhật selectedContract
-          state.selectedContract = updatedContract;
+          // Cập nhật selectedContract (giữ nguyên roomId cũ)
+          if (
+            state.selectedContract &&
+            state.selectedContract._id === contractId
+          ) {
+            state.selectedContract = {
+              ...updatedContract,
+              roomId: state.selectedContract.roomId, // giữ nguyên roomId
+            };
+          }
 
-          // Cập nhật trong danh sách contracts
+          // Cập nhật trong danh sách contracts (giữ nguyên roomId cũ)
           const idx = state.contracts.findIndex(c => c._id === contractId);
           if (idx !== -1) {
-            state.contracts[idx] = updatedContract;
+            state.contracts[idx] = {
+              ...updatedContract,
+              roomId: state.contracts[idx].roomId, // giữ nguyên roomId
+            };
           }
         }
       })
