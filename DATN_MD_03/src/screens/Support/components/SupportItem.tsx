@@ -11,8 +11,6 @@ import {
   responsiveSpacing,
   scale,
 } from '../../../utils/responsive';
-import {Icons} from '../../../assets/icons';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 
 interface SupportItemProps {
   item: Support;
@@ -29,27 +27,27 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
     switch (status) {
       case 'mo':
         return {
-          color: Colors.statusOpen,
+          color: Colors.statusOpen, // gray badge bg
           text: 'Mở',
           bgColor: Colors.statusOpenBg,
         };
       case 'dangXuLy':
         return {
-          color: Colors.statusProcessing,
+          color: Colors.warning,
           text: 'Đang xử lý',
-          bgColor: Colors.statusProcessingBg,
+          bgColor: Colors.lightYellowBackground,
         };
       case 'hoanTat':
         return {
-          color: Colors.white, // Chữ trắng trên nền xanh đậm
+          color: Colors.figmaGreen,
           text: 'Hoàn tất',
-          bgColor: Colors.statusCompleted, // Background xanh đậm như admin
+          bgColor: Colors.lightGreenBackground,
         };
       default:
         return {
-          color: Colors.statusLow,
+          color: Colors.textGray,
           text: 'Không xác định',
-          bgColor: Colors.statusLowBg,
+          bgColor: Colors.lightGray,
         };
     }
   };
@@ -106,72 +104,41 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
     <TouchableOpacity
       style={styles.container}
       onPress={() => onPress(item)}
-      activeOpacity={0.8}>
+      activeOpacity={0.7}>
       <View style={styles.content}>
-        {/* Header with title and status */}
         <View style={styles.headerRow}>
-          <View style={styles.titleContainer}>
-            <Text style={styles.title} numberOfLines={2}>
-              {item.title}
-            </Text>
-            <View style={styles.metaRow}>
-              <Text style={styles.dateText}>{formatDate(item.createdAt)}</Text>
-              <View style={styles.categoryContainer}>
-                <Text style={styles.categoryLabel}>
-                  {getCategoryText(item.category)}
-                </Text>
-              </View>
-            </View>
-          </View>
+          <Text style={styles.title} numberOfLines={1}>
+            {item.title}
+          </Text>
           <View
-            style={[styles.statusBadge, {backgroundColor: statusInfo.bgColor}]}>
-            <View style={styles.statusBadgeContent}>
-              {item.status === 'hoanTat' ? (
-                <Image
-                  source={{uri: Icons.IconCheck}}
-                  style={[styles.statusIcon, {tintColor: statusInfo.color}]}
-                  resizeMode="contain"
-                />
-              ) : item.status === 'dangXuLy' ? (
-                <Image
-                  source={{uri: Icons.IconWarning}}
-                  style={[styles.statusIcon, {tintColor: statusInfo.color}]}
-                  resizeMode="contain"
-                />
-              ) : (
-                <Image
-                  source={{uri: Icons.IconEyesOn}}
-                  style={[styles.statusIcon, {tintColor: statusInfo.color}]}
-                  resizeMode="contain"
-                />
-              )}
-              <Text style={[styles.statusBadgeText, {color: statusInfo.color}]}>
-                {statusInfo.text}
-              </Text>
-            </View>
+            style={[styles.statusBadge, {backgroundColor: statusInfo.color}]}>
+            <Text style={styles.statusBadgeText}>{statusInfo.text}</Text>
           </View>
         </View>
 
-        {/* Description */}
-        {item.description && (
+        {/* Hiển thị nội dung mô tả */}
+        {item.content && (
           <Text style={styles.description} numberOfLines={2}>
-            {item.description}
+            {item.content}
           </Text>
         )}
 
-        {/* Action buttons for modifiable items */}
+        <View style={styles.bottomRow}>
+          <View style={styles.metaInfo}>
+            <Text style={styles.dateText}>{formatDate(item.createdAt)}</Text>
+            <Text style={styles.categoryLabel}>
+              {getCategoryText(item.category)}
+            </Text>
+          </View>
+        </View>
+
         {canModify && (
           <View style={styles.actionsRow}>
             <TouchableOpacity
               style={[styles.actionButton, styles.editButton]}
               onPress={handleEdit}
               hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-              <Image
-                source={{uri: Icons.IconEditWhite}}
-                style={[styles.actionIcon, {tintColor: Colors.white}]}
-                resizeMode="contain"
-              />
-              <Text style={styles.editButtonText}>Chỉnh sửa</Text>
+              <Text style={styles.editButtonText}>Chỉnh sửa yêu cầu</Text>
             </TouchableOpacity>
 
             {onDelete && (
@@ -179,12 +146,7 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
                 style={[styles.actionButton, styles.deleteButton]}
                 onPress={handleDelete}
                 hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-                <Image
-                  source={{uri: Icons.IconTrashCanRed}}
-                  style={[styles.actionIcon, {tintColor: Colors.white}]}
-                  resizeMode="contain"
-                />
-                <Text style={styles.deleteButtonText}>Xóa</Text>
+                <Text style={styles.deleteButtonText}>Xóa yêu cầu</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -197,15 +159,15 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.white,
-    borderRadius: scale(16),
-    padding: responsiveSpacing(20),
-    marginBottom: responsiveSpacing(12),
-    marginHorizontal: responsiveSpacing(16),
-    elevation: 3,
+    borderRadius: scale(12),
+    padding: responsiveSpacing(16),
+    marginBottom: responsiveSpacing(8), // Giảm margin bottom
+    marginHorizontal: responsiveSpacing(8), // Giảm margin ngang để item rộng hơn
+    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.1,
-    shadowRadius: 6,
+    shadowRadius: 2,
   },
   content: {
     flex: 1,
@@ -214,110 +176,78 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: responsiveSpacing(12),
-  },
-  titleContainer: {
-    flex: 1,
-    marginRight: responsiveSpacing(12),
+    marginBottom: responsiveSpacing(8),
   },
   title: {
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
-    lineHeight: responsiveFont(22),
-    marginBottom: responsiveSpacing(8),
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flex: 1,
+    marginRight: responsiveSpacing(8),
   },
   statusBadge: {
-    paddingHorizontal: responsiveSpacing(12),
-    paddingVertical: responsiveSpacing(8),
-    borderRadius: scale(20),
-    minWidth: scale(80),
+    paddingHorizontal: responsiveSpacing(8),
+    paddingVertical: responsiveSpacing(4),
+    borderRadius: scale(12),
+    minWidth: scale(50),
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  statusBadgeContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statusIcon: {
-    width: scale(14),
-    height: scale(14),
-    marginRight: responsiveSpacing(4),
   },
   statusBadgeText: {
-    fontSize: responsiveFont(11),
+    fontSize: responsiveFont(12),
     fontFamily: Fonts.Roboto_Bold,
+    color: Colors.white,
   },
   description: {
     fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Regular,
-    color: Colors.unselectedText,
-    marginBottom: responsiveSpacing(16),
+    color: Colors.textGray,
+    marginBottom: responsiveSpacing(8),
     lineHeight: responsiveFont(20),
   },
+  bottomRow: {
+    marginBottom: responsiveSpacing(12),
+  },
+  metaInfo: {
+    flexDirection: 'column',
+  },
   dateText: {
-    fontSize: responsiveFont(11),
+    fontSize: responsiveFont(12),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.textGray,
-  },
-  categoryContainer: {
-    backgroundColor: Colors.lightGray,
-    paddingHorizontal: responsiveSpacing(8),
-    paddingVertical: responsiveSpacing(2),
-    borderRadius: scale(8),
+    marginBottom: responsiveSpacing(4),
   },
   categoryLabel: {
-    fontSize: responsiveFont(10),
-    fontFamily: Fonts.Roboto_Medium,
-    color: Colors.unselectedText,
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
   },
   actionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: responsiveSpacing(12),
-    marginTop: responsiveSpacing(4),
+    gap: responsiveSpacing(8),
   },
   actionButton: {
     flex: 1,
-    flexDirection: 'row',
     paddingVertical: responsiveSpacing(10),
-    paddingHorizontal: responsiveSpacing(16),
-    borderRadius: scale(25),
+    paddingHorizontal: responsiveSpacing(12),
+    borderRadius: scale(20),
     alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  actionIcon: {
-    width: scale(16),
-    height: scale(16),
-    marginRight: responsiveSpacing(6),
   },
   editButton: {
-    backgroundColor: '#22C55E', // Soft green - không chói
+    backgroundColor: Colors.figmaGreen,
   },
   deleteButton: {
-    backgroundColor: '#EF4444', // Soft red - không chói
+    backgroundColor: Colors.figmaRed,
   },
   editButtonText: {
     fontSize: responsiveFont(12),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.white,
+    color: Colors.black,
   },
   deleteButtonText: {
     fontSize: responsiveFont(12),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.white,
+    color: Colors.black,
   },
 });
 

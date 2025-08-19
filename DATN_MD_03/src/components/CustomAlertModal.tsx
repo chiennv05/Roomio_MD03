@@ -20,7 +20,7 @@ interface CustomAlertModalProps {
   buttons?: Array<{
     text: string;
     onPress: () => void;
-    style?: 'default' | 'cancel' | 'destructive';
+    style?: 'default' | 'cancel' | 'destructive' | 'primary';
   }>;
 }
 
@@ -94,6 +94,7 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
                           style={[
                             btn.style === 'cancel' && styles.cancelText,
                             btn.style === 'default' && styles.confirmText,
+                            btn.style === 'primary' && styles.primaryText,
                             btn.style === 'destructive' &&
                               styles.destructiveText,
                           ]}>
@@ -177,7 +178,12 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Bold,
   },
   destructiveText: {
-    color: Colors.red, // hoặc 'red' nếu bạn chưa định nghĩa Colors.error
+    color: Colors.red,
+    fontSize: responsiveFont(15),
+    fontFamily: Fonts.Roboto_Bold,
+  },
+  primaryText: {
+    color: Colors.limeGreen,
     fontSize: responsiveFont(15),
     fontFamily: Fonts.Roboto_Bold,
   },

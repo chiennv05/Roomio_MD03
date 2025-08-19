@@ -6,38 +6,36 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Text,
+  Image,
   SafeAreaView,
   Platform,
   StatusBar,
-  Animated,
-  RefreshControl,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
-import {Image} from 'react-native';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import LinearGradient from 'react-native-linear-gradient';
 
 import {Colors} from '../../theme/color';
 import {Fonts} from '../../theme/fonts';
 import {responsiveFont, responsiveSpacing, scale} from '../../utils/responsive';
 import {Icons} from '../../assets/icons';
-import {CustomAlertModal, useCustomAlert} from './components';
 
-import {
-  Support,
-  SupportStatusFilter,
-  SupportCategoryFilter,
-  STATUS_FILTER_OPTIONS,
-  CATEGORY_FILTER_OPTIONS,
-} from '../../types/Support';
+import {Support} from '../../types/Support';
 import {RootState} from '../../store';
 import {
   fetchSupportRequests,
   deleteSupportRequest,
 } from '../../store/slices/supportSlice';
-import {SupportItem, EmptySupport, Pagination} from './components';
+import {
+  FilterTabsRow,
+  SupportItem,
+  EmptySupport,
+  Pagination,
+} from './components';
+import SupportHeader from './components/SupportHeader';
 import {RootStackParamList} from '../../types/route';
+import CustomAlertModal from '../../components/CustomAlertModal';
+import {useCustomAlert} from '../../hooks/useCustomAlrert';
 
 type SupportScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -50,27 +48,18 @@ const SupportScreen: React.FC = () => {
     (state: RootState) => state.support,
   );
   const navigation = useNavigation<SupportScreenNavigationProp>();
-
-  // Custom Alert Hook
-  const {
-    alertConfig,
-    visible: alertVisible,
-    showAlert,
-    hideAlert,
-    showSuccess,
-    showError,
-    showConfirm,
-  } = useCustomAlert();
+  const {alertConfig, visible, showError, showSuccess, showConfirm, hideAlert} =
+    useCustomAlert();
+  const statusBarHeight =
+    Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
 
   const handleAddNewSupport = () => {
     navigation.navigate('AddNewSupport');
   };
 
-  // 🎨 Beautiful Filter States
-  const [statusFilter, setStatusFilter] =
-    useState<SupportStatusFilter>('tatCa');
-  const [categoryFilter, setCategoryFilter] =
-    useState<SupportCategoryFilter>('tatCa');
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('');
 
   // Function to load support requests with filters
   const loadSupportRequests = useCallback(
@@ -80,11 +69,11 @@ const SupportScreen: React.FC = () => {
         limit: 10,
       };
 
-      if (statusFilter && statusFilter !== 'tatCa') {
+      if (statusFilter) {
         params.status = statusFilter;
       }
 
-      if (categoryFilter && categoryFilter !== 'tatCa') {
+      if (categoryFilter) {
         params.category = categoryFilter;
       }
 
@@ -126,19 +115,23 @@ const SupportScreen: React.FC = () => {
           dispatch(deleteSupportRequest(item._id) as any)
             .unwrap()
             .then(() => {
-              // Success notification
               showSuccess('Đã xóa yêu cầu hỗ trợ', 'Thành công');
             })
             .catch((err: any) => {
-              // Error notification
-              showError(err || 'Không thể xóa yêu cầu hỗ trợ');
+              showError(err || 'Không thể xóa yêu cầu hỗ trợ', 'Lỗi');
             });
         }
       },
       'Xác nhận xóa',
       [
         {text: 'Hủy', onPress: hideAlert, style: 'cancel'},
-        {text: 'Xóa', onPress: () => {}, style: 'destructive'},
+        {
+          text: 'Xóa',
+          onPress: () => {
+            /* handled in onConfirm */
+          },
+          style: 'destructive',
+        },
       ],
     );
   };
@@ -148,284 +141,119 @@ const SupportScreen: React.FC = () => {
     loadSupportRequests(page);
   };
 
-  // 🎨 Beautiful Filter Options with Colors
-  const statusOptions = STATUS_FILTER_OPTIONS.map(option => ({
-    key: option.key,
-    label: option.label,
-    color: option.color,
-    isActive: statusFilter === option.key,
-  }));
+  // Status filter options - keys match backend values
+  const statusOptions = [
+    {key: '', label: 'Tất cả'},
+    {key: 'mo', label: 'Mở'},
+    {key: 'dangXuLy', label: 'Đang xử lý'},
+    {key: 'hoanTat', label: 'Hoàn tất'},
+  ];
 
-  const categoryOptions = CATEGORY_FILTER_OPTIONS.map(option => ({
-    key: option.key,
-    label: option.label,
-    color: option.color,
-    isActive: categoryFilter === option.key,
-  }));
+  // Category filter options - keys match backend values
+  const categoryOptions = [
+    {key: '', label: 'Tất cả'},
+    {key: 'kyThuat', label: 'Kỹ thuật'},
+    {key: 'thanhToan', label: 'Thanh toán'},
+    {key: 'hopDong', label: 'Hợp đồng'},
+    {key: 'khac', label: 'Khác'},
+  ];
 
-  // 🎨 Compact Filter Section
+  // Render the filter section
   const renderFilters = () => (
-    <View style={styles.filtersSection}>
-      {/* Compact Filter Row */}
-      <View style={styles.compactFilterRow}>
-        {/* Status Filters */}
-        <View style={styles.filterGroup}>
-          <Text style={styles.filterTitle}>TRẠNG THÁI</Text>
-          <View style={styles.filterRow}>
-            {statusOptions.map(option => (
-              <TouchableOpacity
-                key={option.key}
-                style={[
-                  styles.filterTab,
-                  option.isActive && [
-                    styles.filterTabActive,
-                    {backgroundColor: option.color},
-                  ],
-                ]}
-                onPress={() =>
-                  setStatusFilter(option.key as SupportStatusFilter)
-                }>
-                <Text
-                  style={[
-                    styles.filterTabText,
-                    option.isActive && styles.filterTabTextActive,
-                  ]}>
-                  {option.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Category Filters */}
-        <View style={styles.filterGroup}>
-          <Text style={styles.filterTitle}>DANH MỤC</Text>
-          <View style={styles.filterRow}>
-            {categoryOptions.map(option => (
-              <TouchableOpacity
-                key={option.key}
-                style={[
-                  styles.filterTab,
-                  option.isActive && [
-                    styles.filterTabActive,
-                    {backgroundColor: option.color},
-                  ],
-                ]}
-                onPress={() =>
-                  setCategoryFilter(option.key as SupportCategoryFilter)
-                }>
-                <Text
-                  style={[
-                    styles.filterTabText,
-                    option.isActive && styles.filterTabTextActive,
-                  ]}>
-                  {option.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </View>
-    </View>
+    <FilterTabsRow
+      statusOptions={statusOptions}
+      categoryOptions={categoryOptions}
+      selectedStatus={statusFilter}
+      selectedCategory={categoryFilter}
+      onSelectStatus={setStatusFilter}
+      onSelectCategory={setCategoryFilter}
+    />
   );
-
-  // Render loading state
-  const renderLoadingState = () => (
-    <View style={styles.centerContainer}>
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.limeGreen} />
-        <Text style={styles.loadingText}>Đang tải...</Text>
-      </View>
-    </View>
-  );
-
-  // Render error state
-  const renderErrorState = () => (
-    <View style={styles.centerContainer}>
-      <View style={styles.errorContainer}>
-        <View style={styles.errorIconContainer}>
-          <Image
-            source={require('../../assets/icons/icon_error.png')}
-            style={styles.errorIcon}
-          />
-        </View>
-        <Text style={styles.errorTitle}>Có lỗi xảy ra</Text>
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity
-          style={styles.retryButton}
-          onPress={() => loadSupportRequests()}>
-          <Text style={styles.retryButtonText}>Thử lại</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
-  // Render modern summary stats with animations
-  const renderSummaryStats = () => {
-    const totalRequests = supportRequests.length;
-    const openRequests = supportRequests.filter(
-      item => item.status === 'mo',
-    ).length;
-    const processingRequests = supportRequests.filter(
-      item => item.status === 'dangXuLy',
-    ).length;
-    const completedRequests = supportRequests.filter(
-      item => item.status === 'hoanTat',
-    ).length;
-
-    const statsData = [
-      {
-        number: totalRequests,
-        label: 'Tổng yêu cầu',
-        color: Colors.limeGreen,
-        bgColor: Colors.white,
-        icon: require('../../assets/icons/icon_light_report.png'),
-      },
-      {
-        number: openRequests,
-        label: 'Đang mở',
-        color: Colors.textGray,
-        bgColor: Colors.white,
-        icon: require('../../assets/icons/icon_eyes_on.png'),
-      },
-      {
-        number: processingRequests,
-        label: 'Đang xử lý',
-        color: Colors.warning,
-        bgColor: Colors.white,
-        icon: require('../../assets/icons/icon_warning.png'),
-      },
-      {
-        number: completedRequests,
-        label: 'Hoàn tất',
-        color: Colors.statusCompleted,
-        bgColor: Colors.white,
-        icon: require('../../assets/icons/icon_check.png'),
-      },
-    ];
-
-    return (
-      <View style={styles.summaryRow}>
-        {statsData.map((stat, index) => (
-          <View key={index} style={styles.summaryCard}>
-            <View
-              style={[
-                styles.summaryIconContainer,
-                {backgroundColor: stat.color},
-              ]}>
-              <Image source={stat.icon} style={styles.summaryIcon} />
-            </View>
-            <Text style={[styles.summaryNumber, {color: stat.color}]}>
-              {stat.number}
-            </Text>
-            <Text style={styles.summaryLabel}>{stat.label}</Text>
-          </View>
-        ))}
-      </View>
-    );
-  };
 
   // Render content based on loading state
   const renderContent = () => {
     if (loading && supportRequests.length === 0) {
-      return renderLoadingState();
+      return (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color="#2196F3" />
+        </View>
+      );
     }
 
     if (error && supportRequests.length === 0) {
-      return renderErrorState();
+      return (
+        <View style={styles.centerContainer}>
+          <Image
+            source={{uri: Icons.IconError as any}}
+            style={{width: scale(60), height: scale(60)}}
+          />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => loadSupportRequests()}>
+            <Text style={styles.retryButtonText}>Thử lại</Text>
+          </TouchableOpacity>
+        </View>
+      );
     }
 
     return (
-      <View style={styles.contentWrapper}>
-        <FlatList
-          data={supportRequests}
-          keyExtractor={item => item._id || Math.random().toString()}
-          renderItem={({item}) => (
-            <SupportItem
-              item={item}
-              onPress={handleItemPress}
-              onDelete={handleDeleteItem}
-            />
-          )}
-          contentContainerStyle={
-            supportRequests.length === 0
-              ? styles.emptyListContent
-              : styles.listContent
-          }
-          ListEmptyComponent={<EmptySupport />}
-          refreshing={loading}
-          onRefresh={() => loadSupportRequests()}
-          showsVerticalScrollIndicator={false}
-        />
-      </View>
+      <FlatList
+        data={supportRequests}
+        keyExtractor={item => item._id || Math.random().toString()}
+        renderItem={({item}) => (
+          <SupportItem
+            item={item}
+            onPress={handleItemPress}
+            onDelete={handleDeleteItem}
+          />
+        )}
+        contentContainerStyle={
+          supportRequests.length === 0 ? {flex: 1} : styles.listContent
+        }
+        ListEmptyComponent={<EmptySupport />}
+        refreshing={loading}
+        onRefresh={() => loadSupportRequests()}
+        showsVerticalScrollIndicator={false}
+      />
     );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={Colors.limeGreen} />
-
-      {/* Beautiful Header with Gradient */}
-      <LinearGradient
-        colors={[Colors.limeGreen, Colors.darkGreen]}
-        style={styles.headerGradient}>
-        <View style={styles.customHeader}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}>
-            <View style={styles.backButtonCircle}>
-              <Image
-                source={{uri: Icons.IconArrowLeft}}
-                style={styles.backIcon}
-              />
-            </View>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Yêu cầu hỗ trợ</Text>
-          <View style={styles.headerPlaceholder} />
-        </View>
-
-        {/* Summary Stats in header */}
-        {renderSummaryStats()}
-      </LinearGradient>
-
-      {/* Beautiful Filters */}
+    <SafeAreaView style={[styles.container, {paddingTop: statusBarHeight}]}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroud} />
+      <SupportHeader
+        title="Yêu cầu hỗ trợ"
+        backgroundColor={Colors.backgroud}
+      />
       {renderFilters()}
-
-      {/* Main content */}
       <View style={styles.contentContainer}>{renderContent()}</View>
-
-      {/* Pagination */}
       {pagination.totalPages > 1 && (
-        <View style={styles.paginationContainer}>
-          <Pagination
-            currentPage={pagination.page}
-            totalPages={pagination.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </View>
+        <Pagination
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          onPageChange={handlePageChange}
+        />
       )}
-
-      {/* Enhanced FAB Button */}
-      <TouchableOpacity
-        style={styles.fabButton}
-        onPress={handleAddNewSupport}
-        activeOpacity={0.8}>
-        <LinearGradient
-          colors={[Colors.limeGreen, Colors.darkGreen]}
-          style={styles.fabGradient}>
-          <Text style={styles.fabText}>+</Text>
-        </LinearGradient>
+      <TouchableOpacity style={styles.fabButton} onPress={handleAddNewSupport}>
+        <Image
+          source={{uri: Icons.IconAdd as any}}
+          style={styles.fabIcon}
+          resizeMode="contain"
+        />
       </TouchableOpacity>
 
-      {/* Custom Alert Modal */}
-      <CustomAlertModal
-        visible={alertVisible}
-        title={alertConfig?.title}
-        message={alertConfig?.message || ''}
-        onClose={hideAlert}
-        type={alertConfig?.type}
-        buttons={alertConfig?.buttons}
-      />
+      {/* Global Alert Modal for this screen */}
+      {alertConfig && (
+        <CustomAlertModal
+          visible={true}
+          title={alertConfig.title || 'Thông báo'}
+          message={alertConfig.message}
+          onClose={hideAlert}
+          type={alertConfig.type}
+          buttons={alertConfig.buttons}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -434,371 +262,85 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroud,
+    paddingBottom: Platform.OS === 'ios' ? 0 : responsiveSpacing(16),
+    paddingTop: responsiveSpacing(5), // Giảm marginTop để đẩy lên trên
   },
-
-  // Beautiful Header with gradient
-  headerGradient: {
-    paddingBottom: responsiveSpacing(20),
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-
-  // Custom header for gradient background
-  customHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: responsiveSpacing(20),
-    paddingTop: responsiveSpacing(16),
-    paddingBottom: responsiveSpacing(8),
-  },
-
-  headerTitle: {
-    fontSize: responsiveFont(20),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.white,
-    textAlign: 'center',
-    flex: 1,
-  },
-
-  headerPlaceholder: {
-    width: responsiveSpacing(36),
-    height: responsiveSpacing(36),
-  },
-
-  // Back button styles
-  backButton: {
-    width: responsiveSpacing(36),
-    height: responsiveSpacing(36),
-  },
-
-  backButtonCircle: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: Colors.white,
-    borderRadius: responsiveSpacing(18),
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 2,
-    shadowColor: Colors.black,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-  },
-
-  backIcon: {
-    width: responsiveSpacing(12),
-    height: responsiveSpacing(24),
-    tintColor: Colors.black,
-  },
-
-  // Header styles
-  headerContainer: {
-    backgroundColor: Colors.white,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
-    zIndex: 1,
-  },
-
-  // 🎨 Compact Filter Section
-  filtersSection: {
-    backgroundColor: Colors.white,
-    paddingVertical: responsiveSpacing(12),
-    paddingHorizontal: responsiveSpacing(16),
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
-  },
-
-  compactFilterRow: {
-    flexDirection: 'column',
-    gap: responsiveSpacing(12),
-  },
-
-  filterGroup: {
-    marginBottom: 0,
-  },
-
-  filterTitle: {
-    fontSize: responsiveFont(10),
-    fontFamily: Fonts.Roboto_Medium,
-    color: Colors.textGray,
-    marginBottom: responsiveSpacing(6),
-    letterSpacing: 0.5,
-  },
-
-  filterRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: responsiveSpacing(6),
-  },
-
-  filterTab: {
-    paddingHorizontal: responsiveSpacing(12),
-    paddingVertical: responsiveSpacing(6),
-    borderRadius: scale(16),
-    backgroundColor: Colors.lightGray,
-    borderWidth: 1,
-    borderColor: Colors.divider,
-  },
-
-  filterTabActive: {
-    borderColor: 'transparent',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-
-  filterTabText: {
-    fontSize: responsiveFont(12),
-    fontFamily: Fonts.Roboto_Medium,
-    color: Colors.textGray,
-  },
-
-  filterTabTextActive: {
-    color: Colors.white,
-    fontFamily: Fonts.Roboto_Bold,
-  },
-
-  // Filters styles (legacy)
-  filtersContainer: {
-    backgroundColor: Colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
-  },
-
-  // Content styles
   contentContainer: {
     flex: 1,
-    backgroundColor: Colors.backgroud,
   },
-
-  contentWrapper: {
-    flex: 1,
-  },
-
-  // Summary stats styles
-  summaryContainer: {
-    flexDirection: 'row',
-    backgroundColor: Colors.white,
-    marginHorizontal: responsiveSpacing(16),
-    marginTop: responsiveSpacing(16),
-    borderRadius: scale(12),
-    padding: responsiveSpacing(16),
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-
-  summaryCard: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: responsiveSpacing(8),
-  },
-
-  summaryNumber: {
-    fontSize: responsiveFont(24),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.limeGreen,
-    marginBottom: responsiveSpacing(4),
-  },
-
-  summaryLabel: {
-    fontSize: responsiveFont(12),
-    fontFamily: Fonts.Roboto_Regular,
-    color: Colors.textGray,
-    textAlign: 'center',
-  },
-
-  // Summary stats in header styles
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: Colors.white,
-    marginHorizontal: responsiveSpacing(16),
-    marginTop: responsiveSpacing(16),
-    marginBottom: responsiveSpacing(8),
-    borderRadius: scale(12),
-    paddingVertical: responsiveSpacing(16),
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-
-  // List styles
   listContent: {
-    paddingHorizontal: responsiveSpacing(16),
-    paddingVertical: responsiveSpacing(8),
-    paddingBottom: responsiveSpacing(100),
+    paddingHorizontal: responsiveSpacing(8), // Giảm padding ngang
+    paddingVertical: responsiveSpacing(8), // Giảm padding dọc
+    paddingBottom: responsiveSpacing(100), // Tăng padding để tránh che nội dung bởi FAB
   },
-
-  emptyListContent: {
-    flex: 1,
-    paddingHorizontal: responsiveSpacing(16),
-  },
-
-  // Loading state styles
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: responsiveSpacing(20),
   },
-
-  loadingContainer: {
-    alignItems: 'center',
-    backgroundColor: Colors.white,
-    padding: responsiveSpacing(32),
-    borderRadius: scale(16),
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-
-  loadingText: {
+  errorText: {
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.textGray,
     marginTop: responsiveSpacing(16),
-  },
-
-  // Summary icon styles
-  summaryIconContainer: {
-    width: scale(32),
-    height: scale(32),
-    borderRadius: scale(16),
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: responsiveSpacing(8),
-  },
-
-  summaryIcon: {
-    width: scale(20),
-    height: scale(20),
-    tintColor: Colors.white,
-  },
-
-  // Error icon style
-  errorIcon: {
-    width: scale(48),
-    height: scale(48),
-    tintColor: Colors.error,
-  },
-
-  // FAB text style
-  fabText: {
-    fontSize: responsiveFont(28),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.white,
     textAlign: 'center',
   },
-
-  // Error state styles
-  errorContainer: {
-    alignItems: 'center',
-    backgroundColor: Colors.white,
-    padding: responsiveSpacing(32),
-    borderRadius: scale(16),
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    maxWidth: '90%',
-  },
-
-  errorIconContainer: {
-    width: scale(80),
-    height: scale(80),
-    borderRadius: scale(40),
-    backgroundColor: Colors.rejectedBg,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: responsiveSpacing(16),
-  },
-
-  errorTitle: {
-    fontSize: responsiveFont(18),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.black,
-    marginBottom: responsiveSpacing(8),
-    textAlign: 'center',
-  },
-
-  errorText: {
-    fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Regular,
-    color: Colors.textGray,
-    marginBottom: responsiveSpacing(24),
-    textAlign: 'center',
-    lineHeight: responsiveFont(20),
-  },
-
   retryButton: {
+    marginTop: responsiveSpacing(16),
     paddingVertical: responsiveSpacing(12),
-    paddingHorizontal: responsiveSpacing(24),
-    backgroundColor: Colors.limeGreen,
-    borderRadius: scale(25),
-    shadowColor: Colors.limeGreen,
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    paddingHorizontal: responsiveSpacing(20),
+    backgroundColor: Colors.figmaGreen,
+    borderRadius: scale(8),
   },
-
   retryButtonText: {
     color: Colors.white,
     fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(14),
-    textAlign: 'center',
   },
 
-  // Pagination styles
-  paginationContainer: {
+  filterContainer: {
     backgroundColor: Colors.white,
-    paddingVertical: responsiveSpacing(12),
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
+    padding: responsiveSpacing(16),
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
-
-  // FAB Button styles
+  categoryFilterContainer: {
+    backgroundColor: Colors.white,
+    paddingHorizontal: responsiveSpacing(16),
+    paddingBottom: responsiveSpacing(16),
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
   fabButton: {
     position: 'absolute',
     right: responsiveSpacing(20),
     bottom:
-      Platform.OS === 'ios' ? responsiveSpacing(30) : responsiveSpacing(30),
-    width: scale(60),
-    height: scale(60),
-    borderRadius: scale(30),
-    shadowColor: Colors.limeGreen,
-    shadowOffset: {width: 0, height: 6},
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-
-  fabGradient: {
-    width: '100%',
-    height: '100%',
-    borderRadius: scale(30),
+      Platform.OS === 'ios' ? responsiveSpacing(20) : responsiveSpacing(30),
+    width: scale(56),
+    height: scale(56),
+    borderRadius: scale(28),
+    backgroundColor: Colors.figmaGreen,
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+  },
+  fabIcon: {
+    width: scale(24),
+    height: scale(24),
+    tintColor: Colors.white,
   },
 });
 

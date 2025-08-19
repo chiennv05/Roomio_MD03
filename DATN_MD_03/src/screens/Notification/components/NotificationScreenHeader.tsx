@@ -48,7 +48,13 @@ const NotificationScreenHeader: React.FC<NotificationScreenHeaderProps> = ({
 
       {/* Tiêu đề với gradient text effect */}
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>🔔 Thông báo</Text>
+        <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+          <Image
+            source={{uri: Icons.IconNotification}}
+            style={styles.titleIcon}
+          />
+          <Text style={styles.title}>Thông báo</Text>
+        </View>
         <Text style={styles.subtitle}>Cập nhật mới nhất</Text>
       </View>
 
@@ -72,6 +78,7 @@ const styles = StyleSheet.create({
     height: moderateScale(44),
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: moderateScale(22),
   },
   rightSpacer: {
     width: moderateScale(44),
@@ -80,24 +87,30 @@ const styles = StyleSheet.create({
   buttonGlass: {
     width: '100%',
     height: '100%',
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: Colors.white,
+    opacity: 1,
     borderRadius: moderateScale(22),
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    shadowColor: '#000',
+    borderWidth: 2,
+    borderColor: Colors.white,
+    shadowColor: Colors.shadowDefault,
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
     elevation: 3,
   },
   backIcon: {
     width: moderateScale(20),
     height: moderateScale(20),
+    tintColor: Colors.black,
+  },
+  titleIcon: {
+    width: moderateScale(18),
+    height: moderateScale(18),
     tintColor: Colors.white,
   },
 

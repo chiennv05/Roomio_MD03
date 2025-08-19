@@ -41,6 +41,7 @@ export const Colors = {
   rejectedBg: '#FCE4E4',
   limeGreenOpacityLight: 'rgba(186, 253, 0, 0.4)',
   ashGray: '#9F9F9F',
+  shadowDefault: 'rgba(0, 0, 0, 0.15)',
 
   // Admin Status Colors - Đồng bộ với admin
   statusCompleted: '#28A745', // Hoàn tất - Xanh lá đậm

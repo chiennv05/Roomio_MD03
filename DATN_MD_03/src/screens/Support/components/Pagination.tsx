@@ -1,6 +1,12 @@
 import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import {View, Text, StyleSheet, TouchableOpacity, Image} from 'react-native';
+import {Colors} from '../../../theme/color';
+import {
+  responsiveFont,
+  responsiveSpacing,
+  scale,
+} from '../../../utils/responsive';
+import {Icons} from '../../../assets/icons';
 
 interface PaginationProps {
   currentPage: number;
@@ -64,11 +70,7 @@ const Pagination: React.FC<PaginationProps> = ({
         style={[styles.arrowButton, currentPage === 1 && styles.disabledButton]}
         onPress={() => currentPage > 1 && onPageChange(currentPage - 1)}
         disabled={currentPage === 1}>
-        <Icon
-          name="chevron-left"
-          size={24}
-          color={currentPage === 1 ? '#CCCCCC' : '#333'}
-        />
+        <Text style={styles.arrowText}>{'<'}</Text>
       </TouchableOpacity>
 
       {/* Page numbers */}
@@ -113,11 +115,7 @@ const Pagination: React.FC<PaginationProps> = ({
           currentPage < totalPages && onPageChange(currentPage + 1)
         }
         disabled={currentPage === totalPages}>
-        <Icon
-          name="chevron-right"
-          size={24}
-          color={currentPage === totalPages ? '#CCCCCC' : '#333'}
-        />
+        <Text style={styles.arrowText}>{'>'}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -128,11 +126,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 16,
+    marginVertical: responsiveSpacing(12),
   },
   arrowButton: {
-    padding: 8,
-    borderRadius: 4,
+    padding: responsiveSpacing(8),
+    borderRadius: scale(8),
+  },
+  arrowText: {
+    fontSize: responsiveFont(18),
+    color: Colors.black,
   },
   disabledButton: {
     opacity: 0.5,
@@ -140,31 +142,31 @@ const styles = StyleSheet.create({
   pageNumbersContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: 8,
+    marginHorizontal: responsiveSpacing(8),
   },
   pageButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: scale(32),
+    height: scale(32),
+    borderRadius: scale(16),
     justifyContent: 'center',
     alignItems: 'center',
-    marginHorizontal: 4,
+    marginHorizontal: responsiveSpacing(4),
   },
   currentPageButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: Colors.figmaGreen,
   },
   pageText: {
-    fontSize: 14,
-    color: '#333',
+    fontSize: responsiveFont(14),
+    color: Colors.black,
   },
   currentPageText: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: Colors.white,
+    fontFamily: 'Roboto-Bold',
   },
   ellipsis: {
-    fontSize: 16,
-    marginHorizontal: 4,
-    color: '#555',
+    fontSize: responsiveFont(16),
+    marginHorizontal: responsiveSpacing(4),
+    color: Colors.textGray,
   },
 });
 

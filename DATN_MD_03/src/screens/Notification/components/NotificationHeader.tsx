@@ -6,10 +6,12 @@ import {
   StyleSheet,
   ScrollView,
   Animated,
+  Image,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
+import {Icons} from '../../../assets/icons';
 import {
   responsiveFont,
   responsiveSpacing,
@@ -32,28 +34,28 @@ const NotificationHeader: React.FC<NotificationHeaderProps> = ({
       key: 'all',
       label: 'Tất cả',
       badge: unreadCount,
-      icon: '📋',
-      gradient: [Colors.limeGreen, '#A8E600'],
+      icon: Icons.IconNotification,
+      gradient: [Colors.limeGreen, Colors.darkGreen],
     },
     {
       key: 'schedule',
       label: 'Lịch xem phòng',
       badge: 0,
-      icon: '📅',
+      icon: Icons.IconPaper,
       gradient: ['#11998e', '#38ef7d'],
     },
     {
       key: 'bill',
       label: 'Hóa đơn',
       badge: 0,
-      icon: '💰',
+      icon: Icons.IconPaper,
       gradient: ['#f093fb', '#f5576c'],
     },
     {
       key: 'contract',
       label: 'Hợp đồng',
       badge: 0,
-      icon: '📄',
+      icon: Icons.IconDieuKhoan,
       gradient: ['#4facfe', '#00f2fe'],
     },
   ];
@@ -84,7 +86,7 @@ const NotificationHeader: React.FC<NotificationHeaderProps> = ({
                     style={styles.activeTabGradient}
                     start={{x: 0, y: 0}}
                     end={{x: 1, y: 1}}>
-                    <Text style={styles.iconText}>{tab.icon}</Text>
+                    <Image source={{uri: tab.icon}} style={styles.iconImage} />
                     <Text style={styles.activeTabText}>{tab.label}</Text>
                     {tab.badge > 0 && (
                       <View style={styles.badge}>
@@ -94,7 +96,10 @@ const NotificationHeader: React.FC<NotificationHeaderProps> = ({
                   </LinearGradient>
                 ) : (
                   <View style={styles.inactiveTab}>
-                    <Text style={styles.iconTextInactive}>{tab.icon}</Text>
+                    <Image
+                      source={{uri: tab.icon}}
+                      style={styles.iconImageInactive}
+                    />
                     <Text style={styles.tabText}>{tab.label}</Text>
                     {tab.badge > 0 && (
                       <View style={styles.badge}>
@@ -126,11 +131,11 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#f8fafc',
+    backgroundColor: Colors.backgroud,
     borderRadius: moderateScale(30),
     padding: responsiveSpacing(6),
     minWidth: '100%',
-    shadowColor: '#000',
+    shadowColor: Colors.shadowDefault,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -164,7 +169,7 @@ const styles = StyleSheet.create({
     paddingVertical: responsiveSpacing(12),
     paddingHorizontal: responsiveSpacing(16),
     borderRadius: moderateScale(24),
-    shadowColor: '#000',
+    shadowColor: Colors.shadowDefault,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -183,19 +188,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: responsiveSpacing(16),
     backgroundColor: 'transparent',
   },
-  iconText: {
-    fontSize: responsiveFont(16),
+  iconImage: {
+    width: responsiveFont(18),
+    height: responsiveFont(18),
     marginRight: responsiveSpacing(6),
+    tintColor: Colors.white,
   },
-  iconTextInactive: {
-    fontSize: responsiveFont(14),
+  iconImageInactive: {
+    width: responsiveFont(16),
+    height: responsiveFont(16),
     marginRight: responsiveSpacing(4),
     opacity: 0.6,
+    tintColor: Colors.unselectedText,
   },
   tabText: {
     fontSize: responsiveFont(13),
     fontFamily: Fonts.Roboto_Medium,
-    color: '#64748b',
+    color: Colors.unselectedText,
     textAlign: 'center',
     flex: 1,
   },
@@ -205,7 +214,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
     textAlign: 'center',
     flex: 1,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowColor: Colors.shadowDefault,
     textShadowOffset: {width: 0, height: 1},
     textShadowRadius: 2,
   },
@@ -213,7 +222,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: responsiveSpacing(-4),
     right: responsiveSpacing(8),
-    backgroundColor: '#ef4444',
+    backgroundColor: Colors.error,
     borderRadius: moderateScale(12),
     minWidth: moderateScale(20),
     height: moderateScale(20),
@@ -221,7 +230,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: Colors.white,
-    shadowColor: '#ef4444',
+    shadowColor: Colors.error,
     shadowOffset: {
       width: 0,
       height: 2,

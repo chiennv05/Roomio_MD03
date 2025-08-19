@@ -102,7 +102,9 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
     const notificationColors = {
       // Thông báo hỗ trợ - màu xanh lá tươi với gradient
       support: {
-        background: isRead ? '#E8F5E9' : '#A5D6A7',
+        background: isRead
+          ? Colors.lightGreenBackground
+          : Colors.limeGreenOpacityLight,
         gradient: ['#4CAF50', '#66BB6A'],
         iconBg: '#4CAF50',
         border: '#388E3C',
@@ -112,8 +114,8 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
       // Thông báo hợp đồng - màu xanh dương với gradient
       contract: {
         background: isRead ? '#E3F2FD' : '#90CAF9',
-        gradient: ['#2196F3', '#42A5F5'],
-        iconBg: '#2196F3',
+        gradient: [Colors.info, '#42A5F5'],
+        iconBg: Colors.info,
         border: '#1976D2',
         textColor: '#0D47A1',
         shadowColor: '#2196F3',
@@ -402,7 +404,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'center',
     marginRight: responsiveSpacing(16),
-    shadowColor: '#000',
+    shadowColor: Colors.shadowDefault,
     shadowOffset: {
       width: 0,
       height: 2,
