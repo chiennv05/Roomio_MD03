@@ -387,22 +387,20 @@ const HomeScreen: React.FC = () => {
   ]);
 
   // Empty component
-  const ListEmptyComponent = useMemo(() => (
-    loading ? (
-      <View style={styles.loadingContainer}>
-        <LoadingAnimation size="large" color={Colors.limeGreen} />
-        <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
-      </View>
-    ) : (
-      <EmptySearchAnimation
-        title={hasActiveFilters ? 'Không tìm thấy phòng phù hợp' : 'Không có phòng nào'}
-        subtitle={hasActiveFilters
-          ? 'Thử thay đổi bộ lọc để tìm kiếm phòng khác'
-          : 'Hiện tại chưa có phòng nào được đăng'
-        }
-      />
-    )
-  ), [loading, hasActiveFilters]);
+  const ListEmptyComponent = useMemo(() => {
+    if (!filteredRooms.length) {
+      return (
+        <EmptySearchAnimation
+          title={hasActiveFilters ? 'Không tìm thấy phòng phù hợp' : 'Không có phòng nào'}
+          subtitle={hasActiveFilters
+            ? 'Thử thay đổi bộ lọc để tìm kiếm phòng khác'
+            : 'Hiện tại chưa có phòng nào được đăng'
+          }
+        />
+      );
+    }
+    return null;
+  }, [filteredRooms.length, hasActiveFilters]);
 
   // Footer component
   const ListFooterComponent = useMemo(() => (
@@ -415,16 +413,22 @@ const HomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <Animated.View
-        style={[
-          styles.container,
-          {
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
-          },
-        ]}
-      >
-        <FlatList
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <LoadingAnimation size="large" color={Colors.limeGreen} />
+          <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
+        </View>
+      ) : (
+        <Animated.View
+          style={[
+            styles.container,
+            {
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
+          <FlatList
           data={filteredRooms}
           renderItem={AnimatedRoomCard}
           keyExtractor={(item, index) => item._id || index.toString()}
@@ -443,6 +447,7 @@ const HomeScreen: React.FC = () => {
           windowSize={10}
         />
       </Animated.View>
+      )}
 
       {/* Overlay để tạo hiệu ứng transition mượt mà */}
       {showSearchOverlay && (
@@ -484,7 +489,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-    paddingBottom: responsiveSpacing(20),
+    paddingBottom: responsiveSpacing(90), // Tăng padding bottom để tránh TabBar
   },
   roomsContainer: {
     paddingTop: responsiveSpacing(8),

@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   textTitle: {
     fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(18),
-    color: Colors.primaryGreen,
+    color: Colors.darkGreen,
   },
   textTitleDefaut: {
     fontFamily: Fonts.Roboto_Bold,
