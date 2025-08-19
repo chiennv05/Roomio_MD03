@@ -17,20 +17,11 @@ interface CustomAlertModalProps {
   message: string;
   onClose: () => void;
   type?: 'error' | 'success' | 'warning' | 'info';
-  timestamp?: string;
-  icon?: string;
-  showIcon?: boolean;
   buttons?: Array<{
     text: string;
     onPress: () => void;
-    style?: 'default' | 'cancel' | 'destructive' | 'primary';
+    style?: 'default' | 'cancel' | 'destructive';
   }>;
-  customStyles?: {
-    modal?: object;
-    title?: object;
-    message?: object;
-    button?: object;
-  };
 }
 
 const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
@@ -39,11 +30,7 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
   message,
   onClose,
   type = 'info',
-  timestamp,
-  icon,
-  showIcon = false,
   buttons,
-  customStyles,
 }) => {
   const opacity = useSharedValue(0);
   const scale = useSharedValue(0.3);
@@ -78,23 +65,6 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
     });
   };
 
-  // Get icon and color based on type
-  const getTypeConfig = () => {
-    switch (type) {
-      case 'success':
-        return {icon: '✅', color: '#4CAF50', bgColor: '#E8F5E8'};
-      case 'error':
-        return {icon: '❌', color: '#F44336', bgColor: '#FFEBEE'};
-      case 'warning':
-        return {icon: '⚠️', color: '#FF9800', bgColor: '#FFF3E0'};
-      case 'info':
-      default:
-        return {icon: 'ℹ️', color: '#2196F3', bgColor: '#E3F2FD'};
-    }
-  };
-
-  const typeConfig = getTypeConfig();
-
   return (
     <Modal
       transparent
@@ -109,50 +79,21 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
           onPress={handleClose}>
           <Animated.View style={[styles.modal, modalStyle]}>
             <TouchableOpacity activeOpacity={1}>
-              <View style={[styles.content, customStyles?.modal]}>
-                {/* Icon hiển thị nếu showIcon = true hoặc có icon custom */}
-                {(showIcon || icon) && (
-                  <View
-                    style={[
-                      styles.iconContainer,
-                      {backgroundColor: typeConfig.bgColor},
-                    ]}>
-                    <Text style={[styles.iconText, {color: typeConfig.color}]}>
-                      {icon || typeConfig.icon}
-                    </Text>
-                  </View>
-                )}
-
-                <Text style={[styles.title, customStyles?.title]}>{title}</Text>
-                <Text style={[styles.message, customStyles?.message]}>
-                  {message}
-                </Text>
-
-                {/* Timestamp hiển thị nếu có */}
-                {timestamp && <Text style={styles.timestamp}>{timestamp}</Text>}
-
+              <View style={styles.content}>
+                <Text style={styles.title}>{title}</Text>
+                <Text style={styles.message}>{message}</Text>
                 {buttons && buttons.length > 0 && (
                   <View style={styles.buttonContainer}>
                     {buttons.map((btn, idx) => (
                       <TouchableOpacity
                         key={idx}
-                        style={[
-                          styles.button,
-                          btn.style === 'default' && styles.primaryButton,
-                          btn.style === 'primary' && styles.primaryButton,
-                          btn.style === 'cancel' && styles.secondaryButton,
-                          btn.style === 'destructive' &&
-                            styles.destructiveButton,
-                          customStyles?.button,
-                        ]}
+                        style={[styles.button]}
                         onPress={btn.onPress}
                         activeOpacity={0.8}>
                         <Text
                           style={[
-                            styles.buttonText,
                             btn.style === 'cancel' && styles.cancelText,
                             btn.style === 'default' && styles.confirmText,
-                            btn.style === 'primary' && styles.confirmText,
                             btn.style === 'destructive' &&
                               styles.destructiveText,
                           ]}>
@@ -185,96 +126,59 @@ const styles = StyleSheet.create({
   },
   modal: {
     backgroundColor: '#fff',
-    borderRadius: responsiveSpacing(12),
+    borderRadius: responsiveSpacing(16),
     paddingHorizontal: responsiveSpacing(20),
-    paddingVertical: responsiveSpacing(20),
-    width: '85%',
-    maxWidth: 350,
+    paddingVertical: responsiveSpacing(24),
+    width: '90%',
+    maxWidth: 400,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 6,
   },
   content: {
     width: '100%',
-    alignItems: 'center',
-  },
-  iconContainer: {
-    width: responsiveSpacing(60),
-    height: responsiveSpacing(60),
-    borderRadius: responsiveSpacing(30),
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: responsiveSpacing(16),
-  },
-  iconText: {
-    fontSize: responsiveFont(24),
-    textAlign: 'center',
   },
   title: {
-    fontSize: responsiveFont(17),
+    fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
-    color: '#333333',
-    marginBottom: responsiveSpacing(12),
-    textAlign: 'center',
-    lineHeight: responsiveFont(22),
+    color: Colors.black,
+    marginBottom: responsiveSpacing(8),
+    textAlign: 'left',
   },
   message: {
-    fontSize: responsiveFont(15),
+    fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Regular,
-    color: '#666666',
-    textAlign: 'center',
-    lineHeight: responsiveFont(20),
-    marginBottom: responsiveSpacing(8),
-  },
-  timestamp: {
-    fontSize: responsiveFont(13),
-    fontFamily: Fonts.Roboto_Regular,
-    color: '#999999',
-    textAlign: 'center',
+    color: Colors.darkGray,
+    textAlign: 'left',
+    lineHeight: responsiveFont(22),
     marginBottom: responsiveSpacing(20),
   },
   buttonContainer: {
     flexDirection: 'row',
-    gap: responsiveSpacing(12),
-    justifyContent: 'space-between',
-    marginTop: responsiveSpacing(8),
+    gap: responsiveSpacing(16),
+    justifyContent: 'flex-end',
   },
   button: {
-    flex: 1,
-    paddingVertical: responsiveSpacing(12),
-    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(8),
     borderRadius: responsiveSpacing(8),
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: responsiveSpacing(44),
-  },
-  primaryButton: {
-    backgroundColor: '#FFA500', // Orange color
-  },
-  secondaryButton: {
-    backgroundColor: '#F5F5F5', // Light gray
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-  },
-  destructiveButton: {
-    backgroundColor: '#FF4444',
-  },
-  buttonText: {
-    fontSize: responsiveFont(16),
-    fontFamily: Fonts.Roboto_Medium,
-    textAlign: 'center',
   },
   cancelText: {
-    color: '#666666',
+    color: Colors.black,
+    fontSize: responsiveFont(15),
+    fontFamily: Fonts.Roboto_Bold,
   },
   confirmText: {
-    color: '#FFFFFF',
+    color: Colors.darkGreen,
+    fontSize: responsiveFont(15),
     fontFamily: Fonts.Roboto_Bold,
   },
   destructiveText: {
-    color: '#FFFFFF',
+    color: Colors.red, // hoặc 'red' nếu bạn chưa định nghĩa Colors.error
+    fontSize: responsiveFont(15),
     fontFamily: Fonts.Roboto_Bold,
   },
 });

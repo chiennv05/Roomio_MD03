@@ -76,16 +76,18 @@ export const getLandlordRoomDetailService = async (roomId: string) => {
  */
 export const updateLandlordRoomService = async (roomId: string, room: Room) => {
   try {
-    console.log('Updating room with data:', room);
-
     const response = await api.put(`/landlord/rooms/${roomId}`, room);
-    console.log('Update service response:', response.data);
 
     if (!response.data.success) {
-      throw new Error(response.data.message || 'Cập nhật phòng thất bại');
+      const errorMsg =
+        response.data.errors?.[0] ||
+        response.data.message ||
+        'Cập nhật phòng thất bại';
+
+      // Ném ra để thunk xử lý
+      throw new Error(errorMsg);
     }
 
-    // Trả về toàn bộ response.data để thunk có thể xử lý
     return response.data;
   } catch (error: any) {
     throw error;

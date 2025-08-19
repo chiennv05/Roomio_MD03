@@ -95,9 +95,17 @@ export const updateLandlordRoom = createAsyncThunk(
   async ({roomId, room}: {roomId: string; room: Room}, {rejectWithValue}) => {
     try {
       const res = await updateLandlordRoomService(roomId, room);
-      return res.data;
+      // vì service đã return response.data => không cần res.data nữa
+      return res.data; // trả về room đã cập nhật
     } catch (err: any) {
-      return rejectWithValue(err.message || 'Lỗi cập nhật phòng');
+      // lấy lỗi chi tiết từ API (nếu có)
+      const errorMsg =
+        err.response?.data?.errors?.[0] || // lỗi mảng chi tiết
+        err.response?.data?.message || // lỗi message chung
+        err.message ||
+        'Lỗi cập nhật phòng';
+
+      return rejectWithValue(errorMsg);
     }
   },
 );

@@ -558,17 +558,17 @@ export default function UpdateRoom() {
         return;
       }
 
-      const res = await dispatch(
+      await dispatch(
         updateLandlordRoom({
           roomId: item._id as string,
           room: updatedRoom,
         }),
-      );
+      ).unwrap();
 
       showSuccess('Cập nhật phòng trọ thành công!', 'Thành công');
       navigation.goBack();
     } catch (err: any) {
-      const message = err?.message || 'Có lỗi xảy ra';
+      const message = err || 'Có lỗi xảy ra';
       showError(message, 'Thất bại');
     }
   };
