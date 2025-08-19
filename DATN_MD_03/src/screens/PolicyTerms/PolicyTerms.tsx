@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     width: responsiveSpacing(32),
     height: responsiveSpacing(32),
     borderRadius: responsiveSpacing(16),
-    backgroundColor: Colors.primaryGreen,
+    backgroundColor: Colors.darkGreen,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: responsiveSpacing(16),
