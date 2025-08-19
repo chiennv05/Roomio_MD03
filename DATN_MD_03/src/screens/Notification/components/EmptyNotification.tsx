@@ -53,11 +53,6 @@ const EmptyNotification = () => {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={[Colors.limeGreenOpacityLight, 'rgba(186, 253, 0, 0.1)']}
-        style={styles.gradientBackground}
-      />
-
       <Animated.View
         style={[
           styles.content,
@@ -112,20 +107,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: responsiveSpacing(32),
     backgroundColor: 'transparent',
-    position: 'relative',
-  },
-  gradientBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: responsiveSpacing(20),
-    margin: responsiveSpacing(16),
   },
   content: {
     alignItems: 'center',
-    zIndex: 1,
   },
   iconContainer: {
     marginBottom: responsiveSpacing(32),

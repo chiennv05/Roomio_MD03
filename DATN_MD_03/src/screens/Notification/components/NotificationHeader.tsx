@@ -17,8 +17,8 @@ import {
 } from '../../../utils/responsive';
 
 interface NotificationHeaderProps {
-  activeTab: 'all' | 'schedule' | 'bill' | 'contract';
-  onTabChange: (tab: 'all' | 'schedule' | 'bill' | 'contract') => void;
+  activeTab: 'all' | 'heThong' | 'hopDong' | 'thanhToan' | 'hoTro';
+  onTabChange: (tab: 'all' | 'heThong' | 'hopDong' | 'thanhToan' | 'hoTro') => void;
   unreadCount: number;
 }
 
@@ -33,28 +33,35 @@ const NotificationHeader: React.FC<NotificationHeaderProps> = ({
       label: 'Tất cả',
       badge: unreadCount,
       icon: Icons.IconNotification,
-      color: Colors.brandPrimary,
+      color: '#6B7280', // gray-500 - màu trung tính cho Tất cả
     },
     {
-      key: 'schedule',
-      label: 'Lịch xem phòng',
+      key: 'heThong',
+      label: 'Hệ Thống',
       badge: 0,
-      icon: Icons.IconPaper,
+      icon: Icons.IconHeThong,
       color: '#2563EB', // blue-600
     },
     {
-      key: 'bill',
-      label: 'Hóa đơn',
+      key: 'hopDong',
+      label: 'Hợp Đồng',
       badge: 0,
-      icon: Icons.IconPaper,
+      icon: Icons.IconHopDong,
+      color: '#059669', // green-600 - màu xanh lá của Tất cả
+    },
+    {
+      key: 'thanhToan',
+      label: 'Thanh Toán',
+      badge: 0,
+      icon: Icons.IconThanhToan,
       color: '#EA580C', // orange-600
     },
     {
-      key: 'contract',
-      label: 'Hợp đồng',
+      key: 'hoTro',
+      label: 'Hỗ Trợ',
       badge: 0,
-      icon: Icons.IconDieuKhoan,
-      color: '#9333EA', // purple-600
+      icon: Icons.IconHoTro,
+      color: '#9333EA', // purple-600 - màu tím
     },
   ];
 
@@ -127,13 +134,15 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: 'transparent',
     paddingVertical: responsiveSpacing(8),
-    paddingHorizontal: responsiveSpacing(12),
+    paddingHorizontal: responsiveSpacing(8),
+    marginTop: responsiveSpacing(25), // Giảm từ 25 xuống 8
   },
   scrollContainer: {
-    marginBottom: responsiveSpacing(8),
+    marginBottom: responsiveSpacing(4), // Giảm từ 8 xuống 4
   },
   scrollContent: {
-    paddingHorizontal: responsiveSpacing(4),
+    paddingHorizontal: responsiveSpacing(8),
+    paddingRight: responsiveSpacing(16), // Thêm padding phải để đảm bảo tab cuối hiển thị đầy đủ
   },
   tabContainer: {
     flexDirection: 'row',
@@ -149,15 +158,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: moderateScale(24),
     position: 'relative',
-    marginRight: responsiveSpacing(10),
+    marginRight: responsiveSpacing(8), // Giảm từ 10 xuống 8
     minHeight: moderateScale(40),
     overflow: 'hidden',
+    minWidth: moderateScale(80), // Thêm minWidth để đảm bảo tab có kích thước tối thiểu
   },
   firstTab: {
     marginLeft: 0,
   },
   lastTab: {
-    marginRight: 0,
+    marginRight: responsiveSpacing(8), // Thêm margin cho tab cuối
   },
   activeTab: {
     flex: 1,
@@ -169,7 +179,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: responsiveSpacing(12),
     borderRadius: moderateScale(18),
     backgroundColor: 'transparent',
-    borderWidth: 1,
+    borderWidth: 2, // Tăng từ 1 lên 2 để đậm hơn
   },
   inactiveTab: {
     flex: 1,
@@ -177,45 +187,45 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: responsiveSpacing(12),
-    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(10), // Giảm từ 12 xuống 10
+    paddingHorizontal: responsiveSpacing(12), // Giảm từ 16 xuống 12
     backgroundColor: 'transparent',
     borderRadius: moderateScale(24),
   },
   iconImageActive: {
-    width: responsiveFont(18),
-    height: responsiveFont(18),
-    marginRight: responsiveSpacing(6),
+    width: responsiveFont(16), // Giảm từ 18 xuống 16
+    height: responsiveFont(16),
+    marginRight: responsiveSpacing(4), // Giảm từ 6 xuống 4
   },
   iconImageInactive: {
-    width: responsiveFont(16),
-    height: responsiveFont(16),
-    marginRight: responsiveSpacing(4),
+    width: responsiveFont(14), // Giảm từ 16 xuống 14
+    height: responsiveFont(14),
+    marginRight: responsiveSpacing(3), // Giảm từ 4 xuống 3
     opacity: 0.6,
     tintColor: Colors.unselectedText,
   },
   tabText: {
-    fontSize: responsiveFont(13),
-    fontFamily: Fonts.Roboto_Medium,
-    color: Colors.unselectedText,
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular, // Đổi về Regular
+    color: Colors.textGray,
     textAlign: 'center',
-    flex: 1,
+    letterSpacing: 0.3, // Thêm letter spacing
   },
   activeTabText: {
     fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Bold,
+    fontFamily: Fonts.Roboto_Bold, // Giữ Bold cho tab active
     color: Colors.black,
     textAlign: 'center',
-    flex: 1,
+    letterSpacing: 0.3, // Thêm letter spacing
   },
   badge: {
     position: 'absolute',
     top: responsiveSpacing(-4),
-    right: responsiveSpacing(8),
+    right: responsiveSpacing(6), // Giảm từ 8 xuống 6
     backgroundColor: Colors.error,
-    borderRadius: moderateScale(12),
-    minWidth: moderateScale(20),
-    height: moderateScale(20),
+    borderRadius: moderateScale(10), // Giảm từ 12 xuống 10
+    minWidth: moderateScale(18), // Giảm từ 20 xuống 18
+    height: moderateScale(18), // Giảm từ 20 xuống 18
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
@@ -230,7 +240,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   badgeText: {
-    fontSize: responsiveFont(10),
+    fontSize: responsiveFont(9), // Giảm từ 10 xuống 9
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.white,
   },
