@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useMemo, useCallback, useEffect } from 'react';
 import {
   StyleSheet,
   StatusBar,
@@ -11,13 +11,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
 import { fetchFavoriteRooms } from '../../store/slices/roomSlice';
 import { Colors } from '../../theme/color';
-import { filterRoomsBySearch } from '../../utils/validate';
-
-// Import reusable components from SearchScreen
-import SearchBar from '../SearchScreen/components/SearchBar';
+// Bỏ thanh tìm kiếm, chỉ giữ danh sách yêu thích
 import FavoriteSearchResults from './components/FavoriteSearchResults';
 import EmptyFavorite from './components/EmptyFavorite';
-
 const FavoriteScreen: React.FC = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch<AppDispatch>();
@@ -35,17 +31,6 @@ const FavoriteScreen: React.FC = () => {
   const slideAnim = useMemo(() => new Animated.Value(100), []);
   const scaleAnim = useMemo(() => new Animated.Value(1.05), []);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
-
-  // Debounce search query to improve performance
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-    }, 800); // 800ms delay để tránh request liên tục
-
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
 
   // Load favorite rooms when component mounts or user changes
   useEffect(() => {
@@ -63,15 +48,11 @@ const FavoriteScreen: React.FC = () => {
     }, [dispatch, user?.auth_token])
   );
 
-  // Filter favorite rooms by search query
-  const filteredFavoriteRooms = useMemo(() => {
+  // Danh sách hiển thị: toàn bộ phòng yêu thích
+  const roomsToRender = useMemo(() => {
     if (!favoriteRooms || !Array.isArray(favoriteRooms)) {return [];}
-
-    // Apply search filter with debounced query
-    const searchFiltered = filterRoomsBySearch(favoriteRooms, debouncedSearchQuery);
-
-    return searchFiltered;
-  }, [favoriteRooms, debouncedSearchQuery]);
+    return favoriteRooms;
+  }, [favoriteRooms]);
 
   // Animation khi vào màn hình - slide up từ dưới
   const animateIn = useCallback(() => {
@@ -114,18 +95,7 @@ const FavoriteScreen: React.FC = () => {
     }, [fadeAnim, slideAnim, scaleAnim, animateIn])
   );
 
-  // Hàm xử lý tìm kiếm
-  const handleSearch = useCallback(() => {
-    // Real-time search is handled by filteredFavoriteRooms useMemo
-    if (debouncedSearchQuery.trim()) {
-      console.log(`🔍 User searched favorites for: "${debouncedSearchQuery}"`);
-    }
-  }, [debouncedSearchQuery]);
-
-  // Hàm xử lý thay đổi text - Real-time filtering
-  const handleSearchTextChange = useCallback((text: string) => {
-    setSearchQuery(text);
-  }, []);
+  // Không còn tìm kiếm, bỏ handler
 
   // Hàm xử lý nhấn vào room card
   const handleRoomPress = useCallback((roomId: string) => {
@@ -133,13 +103,8 @@ const FavoriteScreen: React.FC = () => {
     (navigation as any).navigate('DetailRoom', { roomId });
   }, [navigation]);
 
-  // Memoized title with search results count
-  const favoriteTitle = useMemo(() => {
-    if (debouncedSearchQuery.trim()) {
-      return `Tìm kiếm trong yêu thích (${filteredFavoriteRooms.length})`;
-    }
-    return `Phòng yêu thích (${filteredFavoriteRooms.length})`;
-  }, [debouncedSearchQuery, filteredFavoriteRooms.length]);
+  // Tiêu đề đơn giản cho danh sách yêu thích
+  const favoriteTitle = useMemo(() => 'Phòng yêu thích', []);
 
   // Check if user is logged in
   const isLoggedIn = !!user?.auth_token;
@@ -178,18 +143,10 @@ const FavoriteScreen: React.FC = () => {
           },
         ]}
       >
-        {/* Search Bar */}
-        <SearchBar
-          value={searchQuery}
-          onChangeText={handleSearchTextChange}
-          onSearchPress={handleSearch}
-          placeholder="Tìm trong danh sách yêu thích..."
-        />
-
         {/* Favorite Results */}
         <FavoriteSearchResults
           title={favoriteTitle}
-          rooms={filteredFavoriteRooms}
+          rooms={roomsToRender}
           onRoomPress={handleRoomPress}
         />
       </Animated.View>
