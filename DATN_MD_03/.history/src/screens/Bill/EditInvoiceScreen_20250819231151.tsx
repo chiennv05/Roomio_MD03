@@ -2905,7 +2905,7 @@ const styles = StyleSheet.create({
     itemAmount: {
         fontSize: 14,
         fontWeight: 'bold',
-        color: Colors.dearkOlive,
+        color: Colors.primaryGreen,
     },
     summarySection: {
         backgroundColor: 'transparent',
@@ -3264,6 +3264,10 @@ const styles = StyleSheet.create({
         marginTop: 20,
         marginBottom: 20,
         gap: 10,
+        backgroundColor: Colors.black,
+        borderRadius: 50,
+        padding: 8,
+        alignItems: 'center',
     },
     saveDraftButton: {
         flex: 1,
@@ -3298,8 +3302,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#BAFD00',
         paddingVertical: 16,
         paddingHorizontal: 24,
-        borderRadius: 25,
+        borderRadius: 50,
         alignItems: 'center',
+        width: '100%',
     },
     readOnlyPriceContainer: {
         flexDirection: 'row',

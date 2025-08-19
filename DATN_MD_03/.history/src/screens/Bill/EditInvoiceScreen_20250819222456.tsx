@@ -16,7 +16,6 @@ import {
     FlatList,
     Dimensions,
     KeyboardAvoidingView,
-    StatusBar,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
@@ -1895,25 +1894,22 @@ const EditInvoiceScreen = () => {
 
     const renderHeader = () => {
         const title = selectedInvoice ? `Chỉnh sửa hóa đơn ${formatPeriod(selectedInvoice.period)}` : 'Chỉnh sửa hóa đơn';
-        const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
         return (
-            <View style={{ paddingTop: statusBarHeight, alignItems: 'center', marginBottom: 30 }}>
-                <UIHeader
-                    title={title}
-                    iconLeft={'back'}
-                    onPressLeft={handleBackPress}
-                    iconRight={
-                        <TouchableOpacity onPress={() => setSaveTemplateModalVisible(true)}>
-                            <View style={{justifyContent: 'center', alignItems: 'center'}}>
-                                <Image
-                                    source={require('../../assets/icons/icon_save_template.png')}
-                                    style={styles.headerIcon}
-                                />
-                            </View>
-                        </TouchableOpacity>
-                    }
-                />
-            </View>
+            <UIHeader
+                title={title}
+                iconLeft={'back'}
+                onPressLeft={handleBackPress}
+                iconRight={
+                    <TouchableOpacity onPress={() => setSaveTemplateModalVisible(true)}>
+                        <View style={{justifyContent: 'center', alignItems: 'center'}}>
+                            <Image
+                                source={require('../../assets/icons/icon_save_template.png')}
+                                style={styles.headerIcon}
+                            />
+                        </View>
+                    </TouchableOpacity>
+                }
+            />
         );
     };
 
@@ -2905,7 +2901,7 @@ const styles = StyleSheet.create({
     itemAmount: {
         fontSize: 14,
         fontWeight: 'bold',
-        color: Colors.dearkOlive,
+        color: Colors.primaryGreen,
     },
     summarySection: {
         backgroundColor: 'transparent',
@@ -3267,17 +3263,17 @@ const styles = StyleSheet.create({
     },
     saveDraftButton: {
         flex: 1,
-        backgroundColor: Colors.darkGray,
-        paddingVertical: 16,
-        paddingHorizontal: 24,
-        borderRadius: 25,
+        backgroundColor: Colors.white,
+        padding: 15,
+        borderRadius: 50,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: Colors.primaryGreen,
     },
     saveDraftText: {
-        color: Colors.white,
+        color: Colors.primaryGreen,
         fontWeight: 'bold',
         fontSize: 16,
-        letterSpacing: 0.5,
     },
     saveTemplateButton: {
         flex: 1,
@@ -3295,10 +3291,9 @@ const styles = StyleSheet.create({
     },
     saveButton: {
         flex: 1,
-        backgroundColor: '#BAFD00',
-        paddingVertical: 16,
-        paddingHorizontal: 24,
-        borderRadius: 25,
+        backgroundColor: Colors.limeGreen,
+        padding: 15,
+        borderRadius: 50,
         alignItems: 'center',
     },
     readOnlyPriceContainer: {

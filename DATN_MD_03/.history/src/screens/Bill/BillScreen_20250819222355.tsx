@@ -15,7 +15,6 @@ import {
     Animated,
     Easing,
     TextInput,
-    StatusBar,
 } from 'react-native';
 import LoadingAnimationWrapper from '../../components/LoadingAnimationWrapper';
 import UIHeader from '../ChuTro/MyRoom/components/UIHeader';
@@ -1305,18 +1304,13 @@ const BillScreen = () => {
         );
     }
 
-    const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
-
     return (
         <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-            <View style={{ paddingTop: statusBarHeight, alignItems: 'center', marginBottom: 30 }}>
-                <UIHeader
-                    title={isUserCoTenant ? 'Hóa đơn người ở cùng' : 'Hóa đơn thu chi'}
-                    iconLeft={'back'}
-                    onPressLeft={handleBackToProfile}
-                />
-            </View>
+            <UIHeader
+                title={isUserCoTenant ? 'Hóa đơn người ở cùng' : 'Hóa đơn thu chi'}
+                iconLeft={'back'}
+                onPressLeft={handleBackToProfile}
+            />
 
 
 

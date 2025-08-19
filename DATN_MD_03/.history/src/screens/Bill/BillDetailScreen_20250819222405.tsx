@@ -11,7 +11,6 @@ import {
     Platform,
     UIManager,
     LayoutAnimation,
-    StatusBar,
 } from 'react-native';
 import LoadingAnimationWrapper from '../../components/LoadingAnimationWrapper';
 import UIHeader from '../ChuTro/MyRoom/components/UIHeader';
@@ -303,15 +302,12 @@ const BillDetailScreen = () => {
 
     const renderHeader = () => {
         const title = selectedInvoice ? `Hóa đơn tháng ${formatPeriod(selectedInvoice.period)}` : 'Chi tiết hóa đơn';
-        const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
         return (
-            <View style={{ paddingTop: statusBarHeight, alignItems: 'center', marginBottom: 30 }}>
-                <UIHeader
-                    title={title}
-                    iconLeft={'back'}
-                    onPressLeft={() => navigation.goBack()}
-                />
-            </View>
+            <UIHeader
+                title={title}
+                iconLeft={'back'}
+                onPressLeft={() => navigation.goBack()}
+            />
         );
     };
 
@@ -1063,7 +1059,7 @@ const styles = StyleSheet.create({
     },
     detailLabel: {
         fontSize: 14,
-        color: Colors.black,
+        color: Colors.mediumGray,
         flex: 1,
     },
     detailValue: {

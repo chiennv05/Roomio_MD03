@@ -2905,7 +2905,7 @@ const styles = StyleSheet.create({
     itemAmount: {
         fontSize: 14,
         fontWeight: 'bold',
-        color: Colors.dearkOlive,
+        color: Colors.primaryGreen,
     },
     summarySection: {
         backgroundColor: 'transparent',
@@ -3267,17 +3267,17 @@ const styles = StyleSheet.create({
     },
     saveDraftButton: {
         flex: 1,
-        backgroundColor: Colors.darkGray,
-        paddingVertical: 16,
-        paddingHorizontal: 24,
-        borderRadius: 25,
+        backgroundColor: Colors.white,
+        padding: 15,
+        borderRadius: 50,
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: Colors.primaryGreen,
     },
     saveDraftText: {
-        color: Colors.white,
+        color: Colors.primaryGreen,
         fontWeight: 'bold',
         fontSize: 16,
-        letterSpacing: 0.5,
     },
     saveTemplateButton: {
         flex: 1,
@@ -3295,10 +3295,9 @@ const styles = StyleSheet.create({
     },
     saveButton: {
         flex: 1,
-        backgroundColor: '#BAFD00',
-        paddingVertical: 16,
-        paddingHorizontal: 24,
-        borderRadius: 25,
+        backgroundColor: Colors.limeGreen,
+        padding: 15,
+        borderRadius: 50,
         alignItems: 'center',
     },
     readOnlyPriceContainer: {

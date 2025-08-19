@@ -15,7 +15,6 @@ import {
   Platform,
   UIManager,
   LayoutAnimation,
-  StatusBar,
 } from 'react-native';
 import LoadingAnimationWrapper from '../../components/LoadingAnimationWrapper';
 import UIHeader from '../ChuTro/MyRoom/components/UIHeader';
@@ -320,22 +319,19 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
   const isTenant = user?.role === 'nguoiThue';
 
   const renderHeader = () => {
-    const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
     return (
-      <View style={{ paddingTop: statusBarHeight, alignItems: 'center', marginBottom: 30 }}>
-        <UIHeader
-          title={'Chi tiết hóa đơn người ở cùng'}
-          iconLeft={'back'}
-          onPressLeft={handleGoBack}
-        />
-      </View>
+      <UIHeader
+        title={'Chi tiết hóa đơn người ở cùng'}
+        iconLeft={'back'}
+        onPressLeft={handleGoBack}
+      />
     );
   };
 
   const renderInvoiceInfo = () => {
     if (!roommateInvoice) return null;
 
-    const { roomNumber, tenantName, period, roomAddress, dueDate } = extractInvoiceInfo(roommateInvoice);
+    const { roomNumber, tenantName, period, roomAddress, dueDate, startDate } = extractInvoiceInfo(roommateInvoice);
     const status = getStatusText(roommateInvoice.status);
 
     return (
@@ -362,7 +358,10 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
             <Text style={styles.detailLabel}>Kỳ hóa đơn</Text>
             <Text style={styles.detailValue}>Tháng {period}</Text>
           </View>
-          {/* Ngày bắt đầu: không sử dụng */}
+          {/* <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Ngày bắt đầu</Text>
+            <Text style={styles.detailValue}>{startDate}</Text>
+          </View> */}
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Hạn thanh toán</Text>
             <Text style={styles.detailValue}>{dueDate}</Text>
@@ -769,7 +768,7 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
-    color: Colors.black,
+    color: Colors.mediumGray,
     flex: 1,
   },
   detailValue: {

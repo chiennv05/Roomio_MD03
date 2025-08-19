@@ -769,7 +769,7 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
-    color: Colors.black,
+    color: Colors.mediumGray,
     flex: 1,
   },
   detailValue: {

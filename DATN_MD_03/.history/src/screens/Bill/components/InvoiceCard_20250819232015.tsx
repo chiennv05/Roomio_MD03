@@ -69,23 +69,6 @@ const getStatusColor = (status: string) => {
     }
 };
 
-// Map status to appropriate text color for contrast
-const getStatusTextColor = (status: string) => {
-    switch (status) {
-        case 'issued': // yellow background
-            return Colors.black;
-        case 'paid': // bright lime
-            return Colors.black;
-        case 'draft':
-        case 'pending':
-        case 'pending_confirmation':
-        case 'overdue':
-        case 'canceled':
-        default:
-            return Colors.white;
-    }
-};
-
 // Map status to Vietnamese
 const getStatusText = (status: string) => {
     switch (status) {
@@ -253,12 +236,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress, onEdit, onD
                                     backgroundColor: getStatusColor(invoice.status),
                                 },
                             ]}>
-                            <Text style={[
-                                styles.statusText,
-                                { color: getStatusTextColor(invoice.status) },
-                            ]}>
-                                {getStatusText(invoice.status)}
-                            </Text>
+                            <Text style={styles.statusText}>{getStatusText(invoice.status)}</Text>
                         </View>
                         {invoice.isRoommate && (
                             <View style={styles.roommateBadgeInline}>
@@ -441,7 +419,7 @@ const styles = StyleSheet.create({
     },
     infoLabel: {
         fontSize: 14,
-        color: Colors.black,
+        color: Colors.mediumGray,
         flex: 1,
         marginRight: 6,
     },

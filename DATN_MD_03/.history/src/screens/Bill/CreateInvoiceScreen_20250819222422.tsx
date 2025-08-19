@@ -11,7 +11,6 @@ import {
     Alert,
     Platform,
     Image,
-    StatusBar,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp, NavigationProp } from '@react-navigation/native';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
@@ -244,14 +243,11 @@ const CreateInvoiceScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             {/* Header */}
-            <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-            <View style={{ paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0, alignItems: 'center', marginBottom: 30 }}>
-                <UIHeader
-                    title={'Tạo hóa đơn mới'}
-                    iconLeft={'back'}
-                    onPressLeft={handleGoBack}
-                />
-            </View>
+            <UIHeader
+                title={'Tạo hóa đơn mới'}
+                iconLeft={'back'}
+                onPressLeft={handleGoBack}
+            />
 
             {loading ? (
                 <LoadingAnimationWrapper 

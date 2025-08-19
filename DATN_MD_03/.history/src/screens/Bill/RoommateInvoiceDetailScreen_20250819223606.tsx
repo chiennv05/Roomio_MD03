@@ -322,7 +322,7 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
   const renderHeader = () => {
     const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
     return (
-      <View style={{ paddingTop: statusBarHeight, alignItems: 'center', marginBottom: 30 }}>
+      <View style={{ paddingTop: statusBarHeight, alignItems: 'center' }}>
         <UIHeader
           title={'Chi tiết hóa đơn người ở cùng'}
           iconLeft={'back'}
@@ -769,7 +769,7 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
-    color: Colors.black,
+    color: Colors.mediumGray,
     flex: 1,
   },
   detailValue: {

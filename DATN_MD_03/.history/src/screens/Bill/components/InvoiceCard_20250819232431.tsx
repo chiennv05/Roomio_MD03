@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     },
     infoLabel: {
         fontSize: 14,
-        color: Colors.black,
+        color: Colors.mediumGray,
         flex: 1,
         marginRight: 6,
     },

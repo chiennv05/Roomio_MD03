@@ -2905,7 +2905,7 @@ const styles = StyleSheet.create({
     itemAmount: {
         fontSize: 14,
         fontWeight: 'bold',
-        color: Colors.dearkOlive,
+        color: Colors.primaryGreen,
     },
     summarySection: {
         backgroundColor: 'transparent',

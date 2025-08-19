@@ -9,7 +9,6 @@ import {
     SafeAreaView,
     Image,
     Platform,
-    StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
@@ -237,14 +236,11 @@ const InvoiceTemplatesScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             {/* Header */}
-            <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-            <View style={{ paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0, alignItems: 'center', marginBottom: 30 }}>
-                <UIHeader
-                    title={'Mẫu hóa đơn'}
-                    iconLeft={'back'}
-                    onPressLeft={handleGoBack}
-                />
-            </View>
+            <UIHeader
+                title={'Mẫu hóa đơn'}
+                iconLeft={'back'}
+                onPressLeft={handleGoBack}
+            />
 
             <FlatList
                 data={templates}

@@ -73,7 +73,6 @@ const getStatusColor = (status: string) => {
 const getStatusTextColor = (status: string) => {
     switch (status) {
         case 'issued': // yellow background
-            return Colors.black;
         case 'paid': // bright lime
             return Colors.black;
         case 'draft':
@@ -441,7 +440,7 @@ const styles = StyleSheet.create({
     },
     infoLabel: {
         fontSize: 14,
-        color: Colors.black,
+        color: Colors.mediumGray,
         flex: 1,
         marginRight: 6,
     },

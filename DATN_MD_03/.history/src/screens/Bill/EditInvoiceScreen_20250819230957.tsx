@@ -2905,7 +2905,7 @@ const styles = StyleSheet.create({
     itemAmount: {
         fontSize: 14,
         fontWeight: 'bold',
-        color: Colors.dearkOlive,
+        color: Colors.primaryGreen,
     },
     summarySection: {
         backgroundColor: 'transparent',
@@ -3263,7 +3263,11 @@ const styles = StyleSheet.create({
         marginHorizontal: 15,
         marginTop: 20,
         marginBottom: 20,
-        gap: 10,
+        gap: 8,
+        backgroundColor: Colors.black,
+        borderRadius: 50,
+        padding: 8,
+        alignItems: 'center',
     },
     saveDraftButton: {
         flex: 1,

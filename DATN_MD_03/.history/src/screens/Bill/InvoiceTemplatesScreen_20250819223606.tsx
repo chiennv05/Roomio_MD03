@@ -238,7 +238,7 @@ const InvoiceTemplatesScreen = () => {
         <SafeAreaView style={styles.container}>
             {/* Header */}
             <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-            <View style={{ paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0, alignItems: 'center', marginBottom: 30 }}>
+            <View style={{ paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0, alignItems: 'center' }}>
                 <UIHeader
                     title={'Mẫu hóa đơn'}
                     iconLeft={'back'}

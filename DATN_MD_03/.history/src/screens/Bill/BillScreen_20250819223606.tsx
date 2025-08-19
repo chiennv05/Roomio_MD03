@@ -1310,7 +1310,7 @@ const BillScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-            <View style={{ paddingTop: statusBarHeight, alignItems: 'center', marginBottom: 30 }}>
+            <View style={{ paddingTop: statusBarHeight, alignItems: 'center' }}>
                 <UIHeader
                     title={isUserCoTenant ? 'Hóa đơn người ở cùng' : 'Hóa đơn thu chi'}
                     iconLeft={'back'}

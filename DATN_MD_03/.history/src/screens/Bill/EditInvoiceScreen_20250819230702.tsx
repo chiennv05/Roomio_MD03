@@ -2547,23 +2547,27 @@ const EditInvoiceScreen = () => {
                 {renderInvoiceInfo()}
                 {renderInvoiceItems()}
                 {renderSummary()}
+            </ScrollView>
 
-                <View style={styles.buttonGroup}>
+            {/* Floating action area (like BillScreen) */}
+            <View style={styles.fabBackgroundContainer}>
+                <View style={styles.fabContainer}>
                     <TouchableOpacity
                         style={styles.saveDraftButton}
                         onPress={handleSaveDraft}
-                        disabled={isLoading || !selectedInvoice}>
+                        disabled={isLoading || !selectedInvoice}
+                    >
                         {isLoading ? (
                             <ActivityIndicator size="small" color={Colors.black} />
                         ) : (
                             <Text style={styles.saveDraftText}>Lưu nháp</Text>
                         )}
                     </TouchableOpacity>
-
                     <TouchableOpacity
-                        style={[styles.saveButton, { backgroundColor: Colors.limeGreen }]}
+                        style={styles.saveButton}
                         onPress={handleIssueInvoice}
-                        disabled={updateInvoiceLoading}>
+                        disabled={updateInvoiceLoading}
+                    >
                         {updateInvoiceLoading ? (
                             <ActivityIndicator size="small" color={Colors.black} />
                         ) : (
@@ -2571,7 +2575,7 @@ const EditInvoiceScreen = () => {
                         )}
                     </TouchableOpacity>
                 </View>
-            </ScrollView>
+            </View>
 
             {/* Modal container */}
             <View style={styles.modalContainer}>
@@ -2905,7 +2909,7 @@ const styles = StyleSheet.create({
     itemAmount: {
         fontSize: 14,
         fontWeight: 'bold',
-        color: Colors.dearkOlive,
+        color: Colors.primaryGreen,
     },
     summarySection: {
         backgroundColor: 'transparent',
@@ -3256,6 +3260,35 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         padding: 5,
+    },
+    fabBackgroundContainer: {
+        position: 'absolute',
+        bottom: 30,
+        left: 20,
+        right: 20,
+        backgroundColor: Colors.black,
+        borderRadius: 50,
+        padding: 8,
+        overflow: 'hidden',
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+            },
+            android: {
+                elevation: 4,
+            },
+        }),
+        zIndex: 999,
+    },
+    fabContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 8,
+        gap: 8,
     },
     buttonGroup: {
         flexDirection: 'row',

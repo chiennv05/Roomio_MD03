@@ -15,7 +15,6 @@ import {
   Platform,
   UIManager,
   LayoutAnimation,
-  StatusBar,
 } from 'react-native';
 import LoadingAnimationWrapper from '../../components/LoadingAnimationWrapper';
 import UIHeader from '../ChuTro/MyRoom/components/UIHeader';
@@ -320,15 +319,12 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
   const isTenant = user?.role === 'nguoiThue';
 
   const renderHeader = () => {
-    const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
     return (
-      <View style={{ paddingTop: statusBarHeight, alignItems: 'center', marginBottom: 30 }}>
-        <UIHeader
-          title={'Chi tiết hóa đơn người ở cùng'}
-          iconLeft={'back'}
-          onPressLeft={handleGoBack}
-        />
-      </View>
+      <UIHeader
+        title={'Chi tiết hóa đơn người ở cùng'}
+        iconLeft={'back'}
+        onPressLeft={handleGoBack}
+      />
     );
   };
 
@@ -769,7 +765,7 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
-    color: Colors.black,
+    color: Colors.mediumGray,
     flex: 1,
   },
   detailValue: {

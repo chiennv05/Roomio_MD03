@@ -2547,23 +2547,27 @@ const EditInvoiceScreen = () => {
                 {renderInvoiceInfo()}
                 {renderInvoiceItems()}
                 {renderSummary()}
+            </ScrollView>
 
-                <View style={styles.buttonGroup}>
+            {/* Floating action area (like BillScreen) */}
+            <View style={styles.fabBackgroundContainer}>
+                <View style={styles.fabContainer}>
                     <TouchableOpacity
                         style={styles.saveDraftButton}
                         onPress={handleSaveDraft}
-                        disabled={isLoading || !selectedInvoice}>
+                        disabled={isLoading || !selectedInvoice}
+                    >
                         {isLoading ? (
                             <ActivityIndicator size="small" color={Colors.black} />
                         ) : (
                             <Text style={styles.saveDraftText}>Lưu nháp</Text>
                         )}
                     </TouchableOpacity>
-
                     <TouchableOpacity
-                        style={[styles.saveButton, { backgroundColor: Colors.limeGreen }]}
+                        style={styles.saveButton}
                         onPress={handleIssueInvoice}
-                        disabled={updateInvoiceLoading}>
+                        disabled={updateInvoiceLoading}
+                    >
                         {updateInvoiceLoading ? (
                             <ActivityIndicator size="small" color={Colors.black} />
                         ) : (
@@ -2571,7 +2575,7 @@ const EditInvoiceScreen = () => {
                         )}
                     </TouchableOpacity>
                 </View>
-            </ScrollView>
+            </View>
 
             {/* Modal container */}
             <View style={styles.modalContainer}>
@@ -2905,7 +2909,7 @@ const styles = StyleSheet.create({
     itemAmount: {
         fontSize: 14,
         fontWeight: 'bold',
-        color: Colors.dearkOlive,
+        color: Colors.primaryGreen,
     },
     summarySection: {
         backgroundColor: 'transparent',
