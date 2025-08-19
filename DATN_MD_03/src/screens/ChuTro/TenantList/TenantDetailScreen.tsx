@@ -10,6 +10,7 @@ import {
   Easing,
   Image,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import {useRoute, RouteProp} from '@react-navigation/native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useSelector, useDispatch} from 'react-redux';
@@ -64,6 +65,16 @@ const TenantDetailScreen = () => {
       dispatch(resetTenantDetail());
     };
   }, [dispatch]);
+
+  // Hàm lấy chữ cái đầu của tên
+  const getInitials = (fullName: string) => {
+    return fullName
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
+  };
 
   // Ưu tiên dùng data truyền từ TenantList, fallback về Redux store nếu thiếu
   const selectedTenant = React.useMemo(() => {
@@ -227,15 +238,13 @@ const TenantDetailScreen = () => {
                       style={styles.avtCotenaant}
                     />
                   ) : (
-                    <Text style={[styles.personInitial]}>
-                      {(
-                        selectedTenant.fullName ||
-                        selectedTenant.username ||
-                        'N'
-                      )
-                        .charAt(0)
-                        .toUpperCase()}
-                    </Text>
+                    <LinearGradient
+                      colors={['#7B9EFF', '#9B7BFF']}
+                      style={styles.personInitial}>
+                      <Text style={styles.personInitialText}>
+                        {getInitials(selectedTenant.fullName || selectedTenant.username || 'N')}
+                      </Text>
+                    </LinearGradient>
                   )}
                   <View style={styles.personInfo}>
                     <Text style={[styles.personName, {color: Colors.white}]}>
@@ -256,11 +265,13 @@ const TenantDetailScreen = () => {
                         style={styles.avtCotenaant}
                       />
                     ) : (
-                      <Text style={styles.personInitial}>
-                        {((co.fullName || co.username || 'N') as string)
-                          .charAt(0)
-                          .toUpperCase()}
-                      </Text>
+                      <LinearGradient
+                        colors={['#7B9EFF', '#9B7BFF']}
+                        style={styles.personInitial}>
+                        <Text style={styles.personInitialText}>
+                          {getInitials((co.fullName || co.username || 'N') as string)}
+                        </Text>
+                      </LinearGradient>
                     )}
                     <View style={styles.personInfo}>
                       <Text style={styles.personName}>
@@ -314,30 +325,20 @@ const TenantDetailScreen = () => {
               {activeContract.contractInfo.coTenants?.map((coTenant: any, index: number) => (
                 <View key={index} style={styles.coTenantCard}>
                   <View style={styles.coHeaderRow}>
-                    <View
-                      style={[
-                        styles.coAvatar,
-                        {
-                          backgroundColor: coTenant.avatar
-                            ? Colors.white
-                            : Colors.limeGreen,
-                        },
-                      ]}>
+                    <View style={styles.coAvatar}>
                       {coTenant.avatar ? (
                         <Image
                           source={{uri: coTenant.avatar}}
                           style={styles.avtCotenaant}
                         />
                       ) : (
-                        <Text style={styles.coAvatarText}>
-                          {(
-                            (coTenant as any).fullName ||
-                            coTenant.username ||
-                            'N'
-                          )
-                            .charAt(0)
-                            .toUpperCase()}
-                        </Text>
+                        <LinearGradient
+                          colors={['#7B9EFF', '#9B7BFF']}
+                          style={styles.coAvatar}>
+                          <Text style={styles.coAvatarText}>
+                            {getInitials((coTenant as any).fullName || coTenant.username || 'N')}
+                          </Text>
+                        </LinearGradient>
                       )}
                     </View>
                     <View style={styles.flex1}>
@@ -477,12 +478,14 @@ const styles = StyleSheet.create({
     width: scale(28),
     height: scale(28),
     borderRadius: scale(14),
-    backgroundColor: Colors.limeGreen,
-    textAlign: 'center',
-    textAlignVertical: 'center',
-    color: Colors.black,
-    fontFamily: Fonts.Roboto_Bold,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: scale(8),
+  },
+  personInitialText: {
+    color: Colors.white,
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(12),
   },
   personInfo: {
     flexDirection: 'column',
@@ -594,8 +597,9 @@ const styles = StyleSheet.create({
     marginRight: scale(10),
   },
   coAvatarText: {
-    color: Colors.black,
+    color: Colors.white,
     fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(14),
   },
   coName: {
     fontFamily: Fonts.Roboto_Bold,
