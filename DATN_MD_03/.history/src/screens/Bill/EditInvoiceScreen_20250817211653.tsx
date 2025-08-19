@@ -1712,7 +1712,7 @@ const EditInvoiceScreen = () => {
             // Tính toán amount dựa trên priceType
             const priceType = getItemPriceType(item);
             if (priceType === 'perPerson' && item.isPerPerson && item.personCount) {
-               return quantity * unitPrice;
+                return quantity * unitPrice * item.personCount;
             } else {
                 return quantity * unitPrice;
             }
@@ -2438,7 +2438,7 @@ const EditInvoiceScreen = () => {
                 // Tính toán lại amount
                 const usage = newCurrentReading - newPreviousReading;
                 newItems[index].quantity = usage > 0 ? usage : 0;
-                // newItems[index].amount = newItems[index].quantity * newItems[index].unitPrice;
+                newItems[index].amount = newItems[index].quantity * newItems[index].unitPrice;
 
                 hasChanges = true;
             }
