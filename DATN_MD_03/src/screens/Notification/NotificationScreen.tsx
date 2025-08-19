@@ -25,6 +25,7 @@ import LoadingAnimation from '../../components/LoadingAnimation';
 import {CustomAlertModal, useCustomAlert} from './components';
 import {Colors} from '../../theme/color';
 import {responsiveSpacing} from '../../utils/responsive';
+import CustomAlertModalNotification from '../../components/CutomAlaertModalNotification';
 
 type NotificationScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -376,7 +377,7 @@ const NotificationScreen = () => {
       />
 
       {/* Custom Alert Modal */}
-      <CustomAlertModal
+      <CustomAlertModalNotification
         visible={alertVisible}
         title={alertConfig?.title}
         message={alertConfig?.message || ''}
