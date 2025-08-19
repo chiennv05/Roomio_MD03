@@ -6,22 +6,22 @@ import {
   ScrollView,
   RefreshControl,
   SafeAreaView,
-  TouchableOpacity,
   StatusBar,
   Platform,
-  Image,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../../store';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
-import {responsiveFont, responsiveSpacing} from '../../../utils/responsive';
+import {responsiveFont, responsiveSpacing, SCREEN} from '../../../utils/responsive';
 import {fetchDashboard} from '../../../store/slices/dashboardSlice';
 import {StatisticCard, MainChart} from './components';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
 import {LoadingAnimation} from '../../../components';
+import UIHeader from '../MyRoom/components/UIHeader';
+import {Icons} from '../../../assets/icons';
 
 type StatisticScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -146,20 +146,17 @@ const StatisticScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar
-        backgroundColor="transparent"
-        translucent
+        backgroundColor={Colors.backgroud}
         barStyle="dark-content"
+        translucent
       />
-
-      {/* Header */}
-      <View style={[styles.header, {marginTop: statusBarHeight}]}>
-        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-          <Image
-            source={require('../../../assets/icons/icon_arrow_back.png')}
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Thống kê</Text>
-        <View style={styles.placeholder} />
+      <View style={[styles.headerContainer, {marginTop: statusBarHeight + 5}]}>
+        <UIHeader
+          title="Thống kê"
+          iconLeft={Icons.IconArrowLeft}
+          onPressLeft={handleGoBack}
+          color={Colors.backgroud}
+        />
       </View>
 
       <ScrollView
@@ -169,7 +166,7 @@ const StatisticScreen = () => {
         }>
         {/* Main Chart */}
         <View
-          style={[styles.chartsContainer, {marginTop: statusBarHeight + 20}]}>
+          style={[styles.chartsContainer, {marginTop: 10}]}>
           <MainChart
             title={mainChartData.title}
             data={mainChartData.data}
@@ -363,25 +360,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginVertical: responsiveSpacing(20),
   },
-  header: {
-    flexDirection: 'row',
+  headerContainer: {
     alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: Colors.backgroud,
     paddingHorizontal: responsiveSpacing(16),
-    paddingVertical: responsiveSpacing(12),
-    backgroundColor: Colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
-  },
-  backButton: {
-    padding: responsiveSpacing(8),
-  },
-  headerTitle: {
-    fontSize: responsiveFont(18),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.darkGray,
-  },
-  placeholder: {
-    width: 40,
+    paddingVertical: responsiveSpacing(8),
   },
 });

@@ -6,9 +6,9 @@ import {
   ScrollView,
   RefreshControl,
   SafeAreaView,
-  TouchableOpacity,
   StatusBar,
   Platform,
+  TouchableOpacity,
   Image,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
@@ -19,6 +19,7 @@ import {
   responsiveFont,
   responsiveSpacing,
   scale,
+  SCREEN,
 } from '../../../utils/responsive';
 import {fetchDashboard} from '../../../store/slices/dashboardSlice';
 import {useNavigation} from '@react-navigation/native';
@@ -26,6 +27,8 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
 import {LoadingAnimation} from '../../../components';
 import {StatChart} from './components';
+import UIHeader from '../MyRoom/components/UIHeader';
+import {Icons} from '../../../assets/icons';
 
 type RevenueStatisticScreenNavigationProp =
   StackNavigationProp<RootStackParamList>;
@@ -76,20 +79,17 @@ const RevenueStatisticScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar
-        backgroundColor="transparent"
-        translucent
+        backgroundColor={Colors.backgroud}
         barStyle="dark-content"
+        translucent
       />
-
-      {/* Header */}
-      <View style={[styles.header, {marginTop: statusBarHeight}]}>
-        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-          <Image
-            source={require('../../../assets/icons/icon_arrow_back.png')}
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Thống kê doanh thu</Text>
-        <View style={styles.placeholder} />
+      <View style={[styles.headerContainer, {marginTop: statusBarHeight + 5}]}>
+        <UIHeader
+          title="Thống kê doanh thu"
+          iconLeft={Icons.IconArrowLeft}
+          onPressLeft={handleGoBack}
+          color={Colors.backgroud}
+        />
       </View>
 
       <ScrollView
@@ -231,26 +231,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.backgroud,
   },
-  header: {
-    flexDirection: 'row',
+  headerContainer: {
     alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: Colors.backgroud,
     paddingHorizontal: responsiveSpacing(16),
-    paddingVertical: responsiveSpacing(12),
-    backgroundColor: Colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.divider,
-  },
-  backButton: {
-    padding: responsiveSpacing(8),
-  },
-  headerTitle: {
-    fontSize: responsiveFont(18),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.darkGray,
-  },
-  placeholder: {
-    width: scale(40),
+    paddingVertical: responsiveSpacing(8),
   },
   scrollContent: {
     paddingBottom: responsiveSpacing(24),
