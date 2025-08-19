@@ -11,6 +11,17 @@ export const Colors = {
   lightGray: '#F5F5F5',
   darkGray: '#444444',
 
+  // Brand toned primary for UI (ít chói hơn lime)
+  brandPrimary: '#16A34A', // emerald-600
+  brandPrimarySoft: '#E8F5E9', // nền dịu cho tab active
+
+  // Accent palette dùng nhất quán với các phần Bill/khác
+  accentSupport: '#0891B2', // cyan-600
+  accentContract: '#2563EB', // blue-600
+  accentSystem: '#6B7280', // gray-600
+  accentPayment: '#EA580C', // orange-600
+  accentSchedule: '#0D9488', // teal-600
+
   primaryGreen: '#BAFD00',
   figmaGreen: '#BAFD00', // Lime Green - chủ đạo
   figmaRed: '#FF383CE5', // Màu đỏ từ Figma
@@ -23,6 +34,7 @@ export const Colors = {
 
   cardBg: '#FFFFFF',
   textGray: '#A0A0A0',
+  textSecondary: '#4B5563', // dễ đọc hơn trên nền trắng
   unselectedText: '#666666',
   divider: '#F0F0F0',
   red: '#FF0000',
@@ -33,6 +45,7 @@ export const Colors = {
   gray150: '#D9D9D9',
   grayLight: '#CCCCCC',
   gray60: '#626262',
+  neutralSoft: '#F3F4F6', // nền xám rất nhạt cho chip/tab
   lightGreenBackground: '#F7FFE6',
   lightBlueBackground: '#F0F0F8',
   lightYellowBackground: '#F8F8F0',

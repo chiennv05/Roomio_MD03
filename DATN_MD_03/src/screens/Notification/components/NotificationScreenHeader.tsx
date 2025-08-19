@@ -69,8 +69,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: responsiveSpacing(20),
-    paddingVertical: responsiveSpacing(16),
+    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(10),
     backgroundColor: 'transparent',
   },
   backButton: {
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   titleIcon: {
     width: moderateScale(18),
     height: moderateScale(18),
-    tintColor: Colors.white,
+    tintColor: Colors.limeGreen,
   },
 
   titleContainer: {
@@ -120,18 +120,15 @@ const styles = StyleSheet.create({
     marginHorizontal: responsiveSpacing(16),
   },
   title: {
-    fontSize: responsiveFont(22),
+    fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.white,
+    color: Colors.black,
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: {width: 0, height: 1},
-    textShadowRadius: 2,
   },
   subtitle: {
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(11),
     fontFamily: Fonts.Roboto_Regular,
-    color: 'rgba(255, 255, 255, 0.8)',
+    color: Colors.unselectedText,
     textAlign: 'center',
     marginTop: responsiveSpacing(2),
   },

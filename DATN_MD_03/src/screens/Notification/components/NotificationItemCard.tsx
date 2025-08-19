@@ -96,111 +96,99 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
     return iconSource;
   };
 
-  // Màu icon và background dựa trên loại thông báo
+  // Màu sắc toned-down theo loại, ưu tiên nền trắng + viền chỉ báo màu
   const getStatusColor = () => {
-    // Định nghĩa màu sắc cho từng loại thông báo với độ tương phản cao
-    const notificationColors = {
-      // Thông báo hỗ trợ - màu xanh lá tươi với gradient
+    const neutralText = Colors.black;
+    const mutedText = Colors.textGray;
+
+    const map = {
       support: {
-        background: isRead
-          ? Colors.lightGreenBackground
-          : Colors.limeGreenOpacityLight,
-        gradient: ['#4CAF50', '#66BB6A'],
-        iconBg: '#4CAF50',
-        border: '#388E3C',
-        textColor: '#1B5E20',
-        shadowColor: '#4CAF50',
+        background: Colors.white,
+        iconTint: Colors.accentSupport,
+        border: Colors.accentSupport,
+        titleColor: neutralText,
+        contentColor: mutedText,
+        shadowColor: Colors.shadowDefault,
       },
-      // Thông báo hợp đồng - màu xanh dương với gradient
       contract: {
-        background: isRead ? '#E3F2FD' : '#90CAF9',
-        gradient: [Colors.info, '#42A5F5'],
-        iconBg: Colors.info,
-        border: '#1976D2',
-        textColor: '#0D47A1',
-        shadowColor: '#2196F3',
+        background: Colors.white,
+        iconTint: Colors.accentContract,
+        border: Colors.accentContract,
+        titleColor: neutralText,
+        contentColor: mutedText,
+        shadowColor: Colors.shadowDefault,
       },
-      // Thông báo hệ thống - màu tím với gradient
       system: {
-        background: isRead ? '#F3E5F5' : '#CE93D8',
-        gradient: ['#9C27B0', '#BA68C8'],
-        iconBg: '#9C27B0',
-        border: '#7B1FA2',
-        textColor: '#4A148C',
-        shadowColor: '#9C27B0',
+        background: Colors.white,
+        iconTint: Colors.accentSystem,
+        border: Colors.accentSystem,
+        titleColor: neutralText,
+        contentColor: mutedText,
+        shadowColor: Colors.shadowDefault,
       },
-      // Thông báo thanh toán - màu cam với gradient
       payment: {
-        background: isRead ? '#FFF3E0' : '#FFCC80',
-        gradient: ['#FF9800', '#FFB74D'],
-        iconBg: '#FF9800',
-        border: '#F57C00',
-        textColor: '#E65100',
-        shadowColor: '#FF9800',
+        background: Colors.white,
+        iconTint: Colors.accentPayment,
+        border: Colors.accentPayment,
+        titleColor: neutralText,
+        contentColor: mutedText,
+        shadowColor: Colors.shadowDefault,
       },
-      // Lịch xem phòng - màu xanh mint với gradient
       schedule: {
-        background: isRead ? '#E0F2F1' : '#80CBC4',
-        gradient: ['#26A69A', '#4DB6AC'],
-        iconBg: '#26A69A',
-        border: '#00695C',
-        textColor: '#004D40',
-        shadowColor: '#26A69A',
+        background: Colors.white,
+        iconTint: Colors.accentSchedule,
+        border: Colors.accentSchedule,
+        titleColor: neutralText,
+        contentColor: mutedText,
+        shadowColor: Colors.shadowDefault,
       },
-      // Thông báo mặc định - màu xám với gradient
       default: {
-        background: isRead ? '#F5F5F5' : '#E0E0E0',
-        gradient: ['#757575', '#9E9E9E'],
-        iconBg: '#757575',
-        border: '#424242',
-        textColor: '#212121',
-        shadowColor: '#757575',
+        background: Colors.white,
+        iconTint: Colors.gray150,
+        border: Colors.gray200,
+        titleColor: neutralText,
+        contentColor: mutedText,
+        shadowColor: Colors.shadowDefault,
       },
-    };
+    } as const;
 
-    // Xác định loại thông báo dựa trên type từ API
-    let colorScheme = notificationColors.default;
-
+    let scheme = map.default;
     switch (type) {
       case 'hoTro':
-        colorScheme = notificationColors.support;
+        scheme = map.support;
         break;
       case 'hopDong':
-        colorScheme = notificationColors.contract;
+        scheme = map.contract;
         break;
       case 'heThong':
-        colorScheme = notificationColors.system;
+        scheme = map.system;
         break;
       case 'thanhToan':
-        colorScheme = notificationColors.payment;
+        scheme = map.payment;
         break;
       case 'lichXemPhong':
-        colorScheme = notificationColors.schedule;
+        scheme = map.schedule;
         break;
       default:
-        // Fallback: kiểm tra title nếu type không khớp
-        if (title.toLowerCase().includes('hỗ trợ')) {
-          colorScheme = notificationColors.support;
-        } else if (title.toLowerCase().includes('hợp đồng')) {
-          colorScheme = notificationColors.contract;
-        } else if (title.toLowerCase().includes('hệ thống')) {
-          colorScheme = notificationColors.system;
-        } else if (
+        if (title.toLowerCase().includes('hỗ trợ')) scheme = map.support;
+        else if (title.toLowerCase().includes('hợp đồng'))
+          scheme = map.contract;
+        else if (title.toLowerCase().includes('hệ thống')) scheme = map.system;
+        else if (
           title.toLowerCase().includes('thanh toán') ||
           title.toLowerCase().includes('hóa đơn')
-        ) {
-          colorScheme = notificationColors.payment;
-        }
+        )
+          scheme = map.payment;
         break;
     }
 
     return {
-      cardBg: colorScheme.background,
-      gradient: colorScheme.gradient,
-      iconBg: colorScheme.iconBg,
-      borderColor: colorScheme.border,
-      textColor: colorScheme.textColor,
-      shadowColor: colorScheme.shadowColor,
+      cardBg: scheme.background,
+      iconTint: scheme.iconTint,
+      borderColor: scheme.border,
+      titleColor: scheme.titleColor,
+      contentColor: scheme.contentColor,
+      shadowColor: scheme.shadowColor,
     };
   };
 
@@ -285,53 +273,46 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
             styles.container,
             {
               backgroundColor: statusColors.cardBg,
-              borderLeftWidth: 6,
+              borderLeftWidth: 4,
               borderLeftColor: statusColors.borderColor,
               shadowColor: statusColors.shadowColor,
-              shadowOffset: {
-                width: 0,
-                height: isRead ? 2 : 4,
-              },
-              shadowOpacity: isRead ? 0.1 : 0.2,
-              shadowRadius: isRead ? 4 : 8,
-              elevation: isRead ? 3 : 6,
+              shadowOffset: {width: 0, height: 2},
+              shadowOpacity: 0.06,
+              shadowRadius: 3,
+              elevation: 2,
             },
           ]}
           onPress={onPress}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           activeOpacity={0.9}>
-          {/* Gradient overlay for unread notifications */}
+          {/* Subtle overlay for unread notifications */}
           {!isRead && (
-            <LinearGradient
-              colors={[
-                statusColors.gradient[0] + '10',
-                statusColors.gradient[1] + '05',
+            <View
+              style={[
+                styles.gradientOverlay,
+                {backgroundColor: 'rgba(0,0,0,0.02)'},
               ]}
-              style={styles.gradientOverlay}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 1}}
             />
           )}
 
-          {/* Icon trạng thái với gradient background */}
+          {/* Icon trạng thái với nền tròn màu (không gradient) */}
           <View style={styles.iconContainer}>
-            <LinearGradient
-              colors={statusColors.gradient}
-              style={styles.iconGradient}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 1}}>
+            <View
+              style={[
+                styles.iconGradient,
+                {
+                  backgroundColor: Colors.white,
+                  borderColor: statusColors.borderColor,
+                  borderWidth: 1,
+                },
+              ]}>
               <Image
                 source={getImageSource()}
-                style={[
-                  styles.iconImage,
-                  {
-                    tintColor: Colors.white,
-                  },
-                ]}
+                style={[styles.iconImage, {tintColor: statusColors.iconTint}]}
                 resizeMode="contain"
               />
-            </LinearGradient>
+            </View>
           </View>
 
           {/* Nội dung */}
@@ -340,8 +321,8 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
               style={[
                 styles.title,
                 {
-                  color: statusColors.textColor,
-                  fontWeight: isRead ? 'normal' : 'bold', // Bold nếu chưa đọc
+                  color: statusColors.titleColor,
+                  fontWeight: isRead ? 'normal' : 'bold',
                 },
               ]}
               numberOfLines={1}>
@@ -351,10 +332,7 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
             <Text
               style={[
                 styles.content,
-                {
-                  color: statusColors.textColor,
-                  opacity: isRead ? 0.7 : 0.9, // Mờ hơn nếu đã đọc
-                },
+                {color: Colors.textSecondary, opacity: isRead ? 0.8 : 1},
               ]}
               numberOfLines={2}>
               {content}
@@ -363,10 +341,7 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
             <Text
               style={[
                 styles.time,
-                {
-                  color: statusColors.textColor,
-                  opacity: 0.6,
-                },
+                {color: statusColors.contentColor, opacity: 0.6},
               ]}>
               {time}
             </Text>
@@ -381,10 +356,10 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     padding: responsiveSpacing(20),
-    borderRadius: responsiveSpacing(16),
+    borderRadius: responsiveSpacing(14),
     marginBottom: responsiveSpacing(12),
     marginHorizontal: responsiveSpacing(4),
-    minHeight: moderateScale(110),
+    minHeight: moderateScale(104),
     position: 'relative',
     overflow: 'hidden',
   },

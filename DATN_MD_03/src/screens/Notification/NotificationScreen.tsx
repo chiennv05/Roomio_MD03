@@ -4,7 +4,6 @@ import {useSelector, useDispatch} from 'react-redux';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
-import LinearGradient from 'react-native-linear-gradient';
 import {RootStackParamList} from '../../types/route';
 import {RootState, AppDispatch} from '../../store';
 import {
@@ -22,7 +21,7 @@ import NotificationListContainer, {
 } from './components/NotificationListContainer';
 import NotificationDetailModal from './components/NotificationDetailModal';
 import LoadingAnimation from '../../components/LoadingAnimation';
-import {CustomAlertModal, useCustomAlert} from './components';
+import {useCustomAlert} from './components';
 import {Colors} from '../../theme/color';
 import {responsiveSpacing} from '../../utils/responsive';
 import CustomAlertModalNotification from '../../components/CutomAlaertModalNotification';
@@ -103,13 +102,22 @@ const NotificationScreen = () => {
       // Optionally, find and highlight the specific notification
       // or open its detail modal
       const targetNotification = notifications.find(
-        notif => notif.id === params.notificationId,
+        notif => (notif._id || (notif as any).id) === params.notificationId,
       );
 
       if (targetNotification) {
         // Auto-open the notification detail modal
+        const formatted: FormattedNotification = {
+          id: targetNotification._id || '',
+          title: getNotificationTitle(targetNotification.type),
+          content: targetNotification.content,
+          time: formatRelativeTime(targetNotification.createdAt),
+          date: formatFullDate(targetNotification.createdAt),
+          isRead: targetNotification.status === 'read',
+          type: targetNotification.type,
+        };
         setTimeout(() => {
-          setSelectedNotification(targetNotification);
+          setSelectedNotification(formatted);
           setModalVisible(true);
         }, 1500);
       }
@@ -304,30 +312,31 @@ const NotificationScreen = () => {
   // Loading state với beautiful animation
   if (loading && notifications.length === 0) {
     return (
-      <LinearGradient
-        colors={[Colors.limeGreen, '#A8E600']}
-        style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor={Colors.limeGreen} />
+      <View style={[styles.safeArea, {backgroundColor: Colors.backgroud}]}>
+        <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
         <NotificationScreenHeader onMenuPress={handleMenuPress} />
         <View style={styles.loadingContainer}>
-          <LoadingAnimation size="large" color={Colors.white} />
+          <LoadingAnimation size="large" color={Colors.limeGreen} />
         </View>
-      </LinearGradient>
+      </View>
     );
   }
 
   return (
     <View style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.limeGreen} />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
 
-      {/* Beautiful gradient header với limeGreen */}
-      <LinearGradient
-        colors={[Colors.limeGreen, '#A8E600']}
-        style={styles.headerGradient}>
+      {/* Header trên cùng chứa tiêu đề + tabs */}
+      <View style={styles.headerPlain}>
         <SafeAreaView>
           <NotificationScreenHeader onMenuPress={handleMenuPress} />
+          <NotificationHeader
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            unreadCount={unreadCount}
+          />
         </SafeAreaView>
-      </LinearGradient>
+      </View>
 
       {/* Main content with animation */}
       <Animated.View
@@ -339,13 +348,7 @@ const NotificationScreen = () => {
           },
         ]}>
         {/* Enhanced header with glass effect */}
-        <View style={styles.headerContainer}>
-          <NotificationHeader
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            unreadCount={unreadCount}
-          />
-        </View>
+        <View style={styles.headerContainer} />
 
         {/* Content area */}
         <View style={styles.contentArea}>
@@ -479,10 +482,11 @@ const getNotificationTitle = (type: string): string => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: Colors.backgroud,
   },
-  headerGradient: {
+  headerPlain: {
     paddingBottom: responsiveSpacing(20),
+    backgroundColor: Colors.white,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -498,18 +502,15 @@ const styles = StyleSheet.create({
     marginTop: -responsiveSpacing(15), // Overlap effect
   },
   headerContainer: {
-    backgroundColor: Colors.white,
+    backgroundColor: 'transparent',
     marginHorizontal: responsiveSpacing(16),
-    borderRadius: responsiveSpacing(20),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-    marginBottom: responsiveSpacing(16),
+    borderRadius: 0,
+    shadowColor: 'transparent',
+    shadowOffset: {width: 0, height: 0},
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+    marginBottom: responsiveSpacing(12),
   },
   contentArea: {
     flex: 1,
