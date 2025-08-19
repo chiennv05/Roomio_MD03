@@ -1,4 +1,8 @@
 import React, {useEffect} from 'react';
+import {LogBox} from 'react-native';
+
+// Tắt tất cả warning trên màn hình
+LogBox.ignoreAllLogs();
 
 import {Provider, useSelector} from 'react-redux';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';

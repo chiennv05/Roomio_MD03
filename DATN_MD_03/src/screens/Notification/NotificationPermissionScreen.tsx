@@ -25,6 +25,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {requestNotificationPermission} from './services/NativeNotifier';
 import LinearGradient from 'react-native-linear-gradient';
 import {CustomAlertModal, useCustomAlert} from './components';
+import {PermissionsAndroid, Platform} from 'react-native';
 
 export default function NotificationPermissionScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -33,11 +34,7 @@ export default function NotificationPermissionScreen() {
   const {
     alertConfig,
     visible: alertVisible,
-    showAlert,
     hideAlert,
-    showSuccess,
-    showError,
-    showConfirm,
   } = useCustomAlert();
 
   // Animation values
@@ -183,17 +180,47 @@ export default function NotificationPermissionScreen() {
     ]).start(callback);
   };
 
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'Yêu cầu quyền truy cập vị trí',
+            message: 'Ứng dụng cần truy cập vị trí để hiển thị bản đồ và tìm phòng gần bạn',
+            buttonNeutral: 'Hỏi lại sau',
+            buttonNegative: 'Từ chối',
+            buttonPositive: 'Đồng ý',
+          },
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      } catch (err) {
+        console.warn('Error requesting location permission:', err);
+        return false;
+      }
+    }
+    // iOS: always return true since we can't check permission directly
+    return Promise.resolve(true);
+  };
+
   const handleEnable = async () => {
     animateButtonPress(async () => {
       try {
+        // Xin quyền thông báo
         await requestNotificationPermission();
+        // Xin quyền vị trí
+        const locationGranted = await requestLocationPermission();
+        // Lưu trạng thái các quyền
         await AsyncStorage.multiSet([
           ['notif:asked', '1'],
           ['notif:enabled', '1'],
+          ['location:asked', '1'],
+          ['location:enabled', locationGranted ? '1' : '0'],
         ]);
+
         navigation.replace('UITab');
       } catch (error) {
-        console.error('Error enabling notifications:', error);
+        console.error('Error enabling permissions:', error);
         navigation.replace('UITab');
       }
     });
@@ -205,10 +232,12 @@ export default function NotificationPermissionScreen() {
         await AsyncStorage.multiSet([
           ['notif:asked', '1'],
           ['notif:enabled', '0'],
+          ['location:asked', '1'],
+          ['location:enabled', '0'],
         ]);
         navigation.replace('UITab');
       } catch (error) {
-        console.error('Error disabling notifications:', error);
+        console.error('Error disabling permissions:', error);
         navigation.replace('UITab');
       }
     });
@@ -265,7 +294,7 @@ export default function NotificationPermissionScreen() {
                 transform: [{translateY: titleSlideAnim}],
               },
             ]}>
-            Cho phép Roomio có thể gửi thông báo cho bạn
+            Cho phép Roomio gửi thông báo và truy cập vị trí
           </Animated.Text>
 
           <Animated.View
@@ -277,10 +306,16 @@ export default function NotificationPermissionScreen() {
               },
             ]}>
             <Text style={styles.subtitle}>
-              Gửi hóa đơn tiền nhà mỗi tháng qua app
+              • Gửi hóa đơn tiền nhà mỗi tháng qua app
             </Text>
             <Text style={styles.subtitle}>
-              Gợi ý cho bạn những phòng trọ tại khu vực gần bạn
+              • Gợi ý phòng trọ tại khu vực gần bạn
+            </Text>
+            <Text style={styles.subtitle}>
+              • Hiển thị vị trí phòng trọ trên bản đồ
+            </Text>
+            <Text style={styles.subtitle}>
+              • Tính khoảng cách từ vị trí của bạn đến phòng trọ
             </Text>
           </Animated.View>
 
@@ -314,7 +349,7 @@ export default function NotificationPermissionScreen() {
         message={alertConfig?.message || ''}
         onClose={hideAlert}
         type={alertConfig?.type}
-        buttons={alertConfig?.buttons}
+        buttons={alertConfig?.buttons as {text: string; onPress: () => void; style?: 'default' | 'cancel' | 'destructive'}[] | undefined}
       />
     </LinearGradient>
   );

@@ -25,6 +25,11 @@ import { responsiveSpacing, responsiveFont } from '../../utils/responsive';
 import { RootStackParamList } from '../../types/route';
 import { Fonts } from '../../theme/fonts';
 import { validateRoomByFilters, sortRoomsByScore } from '../../utils/roomUtils';
+import {
+  requestLocationPermission,
+  getCurrentPosition,
+  sortRoomsByLocationAndPopularity,
+} from '../../utils/locationUtils';
 import EmptySearchAnimation from '../../components/EmptySearchAnimation';
 import LoadingAnimation from '../../components/LoadingAnimation';
 import LoginPromptModal from '../../components/LoginPromptModal';
@@ -59,12 +64,32 @@ const HomeScreen: React.FC = () => {
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
+  const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
   // Xoá modal search, chỉ dùng input trực tiếp
 
   // Toggle để kiểm soát client-side filtering (có thể tắt nếu backend đã fix)
   const useClientSideFiltering = true;
 
   const { rooms, loading, loadRooms } = useRooms();
+
+  // Hàm lấy vị trí người dùng
+  const getUserLocation = useCallback(async () => {
+    try {
+      const hasPermission = await requestLocationPermission();
+      setLocationPermissionGranted(hasPermission);
+
+      if (hasPermission) {
+        const position = await getCurrentPosition();
+        setUserLocation(position);
+        console.log('Vị trí người dùng:', position);
+      }
+    } catch (error) {
+      console.warn('Không thể lấy vị trí người dùng:', error);
+      setLocationPermissionGranted(false);
+      setUserLocation(null);
+    }
+  }, []);
 
   // Reset animation when screen comes into focus
   useFocusEffect(
@@ -73,7 +98,10 @@ const HomeScreen: React.FC = () => {
       scaleAnim.setValue(1);
       overlayAnim.setValue(0);
       setShowSearchOverlay(false);
-    }, [fadeAnim, scaleAnim, overlayAnim])
+
+      // Lấy vị trí người dùng khi vào màn hình
+      getUserLocation();
+    }, [fadeAnim, scaleAnim, overlayAnim, getUserLocation])
   );
 
   // Initialize animation value for a room
@@ -163,63 +191,73 @@ const HomeScreen: React.FC = () => {
            !!areaRange;
   }, [selectedAmenities.length, selectedFurniture.length, selectedRegions.length, priceRange, areaRange]);
 
-  // Filter rooms ở phía client để đảm bảo logic AND đúng
+  // Filter rooms ở phía client và sắp xếp theo vị trí
   const filteredRooms = useMemo(() => {
-    // Nếu tắt client-side filtering, trả về rooms từ API
-    if (!useClientSideFiltering) {
-      return sortRoomsByScore(rooms);
+    let roomsToProcess = rooms;
+
+    // Áp dụng filter nếu cần
+    if (useClientSideFiltering && !hasNoFilters) {
+      roomsToProcess = rooms.filter(room => {
+        const isValid = validateRoomByFilters(
+          room,
+          selectedAmenities,
+          selectedFurniture,
+          regionsToFilter,
+          priceRange || undefined,
+          areaRange || undefined
+        );
+        return isValid;
+      });
     }
 
-    // Nếu không có filter nào, trả về tất cả đã sắp xếp
-    if (hasNoFilters) {
-      return sortRoomsByScore(rooms);
+    // Sắp xếp theo vị trí và độ phổ biến
+    if (userLocation && locationPermissionGranted) {
+      return sortRoomsByLocationAndPopularity(roomsToProcess, userLocation, 6000);
+    } else {
+      // Nếu không có vị trí, sắp xếp theo điểm số thông thường
+      return sortRoomsByScore(roomsToProcess);
     }
-
-    const filtered = rooms.filter(room => {
-      const isValid = validateRoomByFilters(
-        room,
-        selectedAmenities,
-        selectedFurniture,
-        regionsToFilter,
-        priceRange || undefined,
-        areaRange || undefined
-      );
-
-      return isValid;
-    });
-
-    // Sắp xếp kết quả theo điểm số
-    return sortRoomsByScore(filtered);
-  }, [rooms, selectedAmenities, selectedFurniture, regionsToFilter, priceRange, areaRange, useClientSideFiltering, hasNoFilters]);
+  }, [
+    rooms,
+    selectedAmenities,
+    selectedFurniture,
+    regionsToFilter,
+    priceRange,
+    areaRange,
+    useClientSideFiltering,
+    hasNoFilters,
+    userLocation,
+    locationPermissionGranted,
+  ]);
 
   // Build filters object - Memoized
   const buildFilters = useMemo((): RoomFilters => {
-    const filters: RoomFilters = {};
+    const filterParams: RoomFilters = {};
 
     if (priceRange) {
-      filters.minPrice = priceRange.min;
-      filters.maxPrice = priceRange.max;
+      filterParams.minPrice = priceRange.min;
+      filterParams.maxPrice = priceRange.max;
     }
 
     if (areaRange) {
-      filters.minArea = areaRange.min;
-      filters.maxArea = areaRange.max;
+      filterParams.minArea = areaRange.min;
+      filterParams.maxArea = areaRange.max;
     }
 
     if (selectedFurniture.length > 0) {
-      filters.furniture = selectedFurniture;
+      filterParams.furniture = selectedFurniture;
     }
 
     if (selectedAmenities.length > 0) {
-      filters.amenities = selectedAmenities;
+      filterParams.amenities = selectedAmenities;
     }
 
     if (selectedRegions.length > 0) {
       // Use districts array for filtering
-      filters.districts = selectedRegions.map(region => region.name);
+      filterParams.districts = selectedRegions.map(region => region.name);
     }
 
-    return filters;
+    return filterParams;
   }, [priceRange, areaRange, selectedFurniture, selectedAmenities, selectedRegions]);
 
   // Load data when component mounts or filters change
@@ -387,22 +425,20 @@ const HomeScreen: React.FC = () => {
   ]);
 
   // Empty component
-  const ListEmptyComponent = useMemo(() => (
-    loading ? (
-      <View style={styles.loadingContainer}>
-        <LoadingAnimation size="large" color={Colors.limeGreen} />
-        <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
-      </View>
-    ) : (
-      <EmptySearchAnimation
-        title={hasActiveFilters ? 'Không tìm thấy phòng phù hợp' : 'Không có phòng nào'}
-        subtitle={hasActiveFilters
-          ? 'Thử thay đổi bộ lọc để tìm kiếm phòng khác'
-          : 'Hiện tại chưa có phòng nào được đăng'
-        }
-      />
-    )
-  ), [loading, hasActiveFilters]);
+  const ListEmptyComponent = useMemo(() => {
+    if (!filteredRooms.length) {
+      return (
+        <EmptySearchAnimation
+          title={hasActiveFilters ? 'Không tìm thấy phòng phù hợp' : 'Không có phòng nào'}
+          subtitle={hasActiveFilters
+            ? 'Thử thay đổi bộ lọc để tìm kiếm phòng khác'
+            : 'Hiện tại chưa có phòng nào được đăng'
+          }
+        />
+      );
+    }
+    return null;
+  }, [filteredRooms.length, hasActiveFilters]);
 
   // Footer component
   const ListFooterComponent = useMemo(() => (
@@ -415,16 +451,22 @@ const HomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <Animated.View
-        style={[
-          styles.container,
-          {
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
-          },
-        ]}
-      >
-        <FlatList
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <LoadingAnimation size="large" color={Colors.limeGreen} />
+          <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
+        </View>
+      ) : (
+        <Animated.View
+          style={[
+            styles.container,
+            {
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
+          <FlatList
           data={filteredRooms}
           renderItem={AnimatedRoomCard}
           keyExtractor={(item, index) => item._id || index.toString()}
@@ -443,6 +485,7 @@ const HomeScreen: React.FC = () => {
           windowSize={10}
         />
       </Animated.View>
+      )}
 
       {/* Overlay để tạo hiệu ứng transition mượt mà */}
       {showSearchOverlay && (
@@ -484,7 +527,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-    paddingBottom: responsiveSpacing(20),
+    paddingBottom: responsiveSpacing(90), // Tăng padding bottom để tránh TabBar
   },
   roomsContainer: {
     paddingTop: responsiveSpacing(8),

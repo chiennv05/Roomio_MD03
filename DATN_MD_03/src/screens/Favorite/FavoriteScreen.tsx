@@ -202,7 +202,7 @@ export default FavoriteScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroud,
+    backgroundColor: Colors.white,
   },
   animatedContainer: {
     flex: 1,
