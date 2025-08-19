@@ -10,14 +10,11 @@ import {
   Easing,
   Image,
 } from 'react-native';
-import {useRoute, RouteProp, useFocusEffect} from '@react-navigation/native';
+import {useRoute, RouteProp} from '@react-navigation/native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useSelector, useDispatch} from 'react-redux';
 import {RootState, AppDispatch} from '../../../store';
-import {
-  fetchTenantDetails,
-  resetTenantDetail,
-} from '../../../store/slices/tenantSlice';
+import {resetTenantDetail} from '../../../store/slices/tenantSlice';
 import {RootStackParamList} from '../../../types/route';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
@@ -49,29 +46,87 @@ const StatusBadge = ({
 
 const TenantDetailScreen = () => {
   const route = useRoute<RouteProp<RootStackParamList, 'TenantDetail'>>();
-  const {tenantId} = route.params;
+  // Nhận dữ liệu tenant đã truyền từ TenantList (nếu có)
+  const tenantDataFromList = (route.params as any)?.tenantData;
   const insets = useSafeAreaInsets();
 
   const dispatch = useDispatch<AppDispatch>();
-  const token = useSelector((state: RootState) => state.auth.token);
-  const {selectedTenant, activeContract, detailLoading} = useSelector(
-    (state: RootState) => state.tenant,
-  );
+  const {
+    selectedTenant: storeSelectedTenant,
+    activeContract: storeActiveContract,
+    detailLoading: storeDetailLoading,
+  } = useSelector((state: RootState) => state.tenant);
 
   // Animated occupancy progress
   const progressAnim = React.useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    if (token && tenantId) {
-      dispatch(fetchTenantDetails({token, tenantId}));
-    }
     return () => {
       dispatch(resetTenantDetail());
     };
-  }, [dispatch, token, tenantId]);
+  }, [dispatch]);
+
+  // Ưu tiên dùng data truyền từ TenantList, fallback về Redux store nếu thiếu
+  const selectedTenant = React.useMemo(() => {
+    if (tenantDataFromList) {
+      return {
+        _id: tenantDataFromList._id,
+        username: tenantDataFromList.username,
+        email: tenantDataFromList.email,
+        status: tenantDataFromList.status,
+        createdAt: tenantDataFromList.contractStartDate || '',
+        birthDate: (tenantDataFromList as any).birthDate || '',
+        fullName: tenantDataFromList.fullName,
+        identityNumber: (tenantDataFromList as any).identityNumber || '',
+        phone: tenantDataFromList.phone,
+        address: (tenantDataFromList as any).address || '',
+        avatar: tenantDataFromList.avatar,
+      } as any;
+    }
+    return storeSelectedTenant as any;
+  }, [tenantDataFromList, storeSelectedTenant]);
+
+  const activeContract = React.useMemo(() => {
+    if (tenantDataFromList) {
+      return {
+        contractInfo: {
+          roomNumber: tenantDataFromList.room?.roomNumber || 'N/A',
+          tenantCount: tenantDataFromList.tenantCount || 1,
+          maxOccupancy: tenantDataFromList.room?.maxOccupancy || tenantDataFromList.tenantCount || 1,
+          monthlyRent: tenantDataFromList.monthlyRent || 0,
+          coTenants: tenantDataFromList.coTenants || [],
+          startDate: tenantDataFromList.contractStartDate || '',
+          endDate: tenantDataFromList.contractEndDate || '',
+          // Các field còn lại không dùng trực tiếp trong UI hiện tại
+          serviceFees: {electricity: 0, water: 0},
+          serviceFeeConfig: {electricity: 'perRoom', water: 'perRoom'},
+          tenantName: tenantDataFromList.fullName,
+          tenantPhone: tenantDataFromList.phone,
+          tenantIdentityNumber: (tenantDataFromList as any).identityNumber || '',
+          tenantEmail: tenantDataFromList.email,
+          tenantBirthDate: (tenantDataFromList as any).birthDate || '',
+          landlordName: '',
+          landlordPhone: '',
+          landlordIdentityNumber: '',
+          roomAddress: '',
+          roomArea: 0,
+          deposit: 0,
+          contractTerm: 0,
+          customServices: [],
+          furniture: [],
+          amenities: [],
+        },
+      } as any;
+    }
+    return storeActiveContract as any;
+  }, [tenantDataFromList, storeActiveContract]);
+
+  const maxOccupancy = (activeContract as any)?.contractInfo?.maxOccupancy ||
+    (tenantDataFromList?.room?.maxOccupancy) || 1;
+  const tenantCount = (activeContract as any)?.contractInfo?.tenantCount || 0;
 
   useEffect(() => {
-    const max = activeContract?.contractInfo?.maxOccupancy || 1;
-    const count = activeContract?.contractInfo?.tenantCount || 0;
+    const max = maxOccupancy;
+    const count = tenantCount;
     const target = Math.min(1, count / Math.max(1, max));
     Animated.timing(progressAnim, {
       toValue: target,
@@ -80,20 +135,12 @@ const TenantDetailScreen = () => {
       useNativeDriver: false,
     }).start();
   }, [
-    activeContract?.contractInfo?.tenantCount,
-    activeContract?.contractInfo?.maxOccupancy,
+    maxOccupancy,
+    tenantCount,
     progressAnim,
   ]);
 
-  // Refetch khi màn hình quay lại để đồng bộ người ở cùng sau khi chỉnh sửa
-  useFocusEffect(
-    React.useCallback(() => {
-      if (token && tenantId) {
-        dispatch(fetchTenantDetails({token, tenantId}));
-      }
-      return undefined;
-    }, [dispatch, token, tenantId]),
-  );
+  // Bỏ refetch: màn chi tiết dùng data truyền sang, không gọi API nữa
 
   const renderInfoRow = (
     label: string,
@@ -121,7 +168,7 @@ const TenantDetailScreen = () => {
     );
   }
 
-  if (detailLoading) {
+  if (storeDetailLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <HeaderWithBack
@@ -156,8 +203,7 @@ const TenantDetailScreen = () => {
                 Phòng {activeContract.contractInfo.roomNumber}
               </Text>
               <Text style={styles.summarySubTitle}>
-                {activeContract.contractInfo.tenantCount}/
-                {activeContract.contractInfo.maxOccupancy} người đang ở
+                {tenantCount}/{maxOccupancy} người đang ở
               </Text>
               <View style={styles.progressContainer}>
                 <Animated.View
@@ -202,7 +248,7 @@ const TenantDetailScreen = () => {
                   </View>
                 </View>
 
-                {activeContract.contractInfo.coTenants?.map((co: any, idx) => (
+                {activeContract.contractInfo.coTenants?.map((co: any, idx: number) => (
                   <View key={`cotenant-${idx}`} style={styles.personChip}>
                     {co.avatar ? (
                       <Image
@@ -265,7 +311,7 @@ const TenantDetailScreen = () => {
                 </View>
               </View>
 
-              {activeContract.contractInfo.coTenants?.map((coTenant, index) => (
+              {activeContract.contractInfo.coTenants?.map((coTenant: any, index: number) => (
                 <View key={index} style={styles.coTenantCard}>
                   <View style={styles.coHeaderRow}>
                     <View

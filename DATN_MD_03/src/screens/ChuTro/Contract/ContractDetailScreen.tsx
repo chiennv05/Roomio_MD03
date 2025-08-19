@@ -483,7 +483,7 @@ const ContractDetailScreen = () => {
               />
             }
           />
-        </View>
+          </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.darkGreen} />
           <Text style={styles.loadingText}>Đang tải thông tin hợp đồng...</Text>
@@ -977,7 +977,7 @@ const ContractDetailScreen = () => {
           message={alertConfig.message}
           onClose={hideAlert}
           type={alertConfig.type}
-          buttons={alertConfig.buttons}
+          buttons={alertConfig.buttons as any}
         />
       )}
     </SafeAreaView>
