@@ -21,6 +21,7 @@ import {
 import { Fonts } from '../../../theme/fonts';
 import { getImageUrl } from '../../../configs';
 import { Icons } from '../../../assets/icons';
+// import { formatDistance } from '../../../utils/locationUtils';
 
 // Interface định nghĩa props cho component RoomCard
 interface RoomCardProps {
@@ -86,6 +87,16 @@ const RoomCard: React.FC<RoomCardProps> = ({ item, onPress }) => {
               {formatPrice(item.rentPrice || 0)}
             </Text>
           </View>
+
+          {/* Distance tag - hiển thị khoảng cách nếu có
+          {item.distance !== undefined && item.distance !== null && (
+            <View style={styles.distanceTag}>
+              <Image source={{ uri: Icons.IconLocation }} style={styles.distanceIcon} />
+              <Text style={styles.distanceText}>
+                {formatDistance(item.distance)}
+              </Text>
+            </View>
+          )} */}
 
           {/* Progress bars */}
           {images.length > 1 && (
@@ -219,6 +230,29 @@ const styles = StyleSheet.create({
     height: moderateScale(4),
     borderRadius: moderateScale(2),
   },
+  // distanceTag: {
+  //   position: 'absolute',
+  //   top: responsiveSpacing(10),
+  //   right: responsiveSpacing(10),
+  //   backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  //   paddingHorizontal: responsiveSpacing(8),
+  //   paddingVertical: responsiveSpacing(4),
+  //   borderRadius: moderateScale(12),
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  // },
+  // distanceIcon: {
+  //   width: responsiveIcon(12),
+  //   height: responsiveIcon(12),
+  //   tintColor: Colors.white,
+  //   marginRight: responsiveSpacing(4),
+  // },
+  // distanceText: {
+  //   color: Colors.white,
+  //   fontSize: responsiveFont(12),
+  //   fontFamily: Fonts.Roboto_Medium,
+  //   fontWeight: '500',
+  // },
   info: {
     paddingHorizontal: responsiveSpacing(4),
     paddingTop: responsiveSpacing(8),
