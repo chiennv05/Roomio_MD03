@@ -15,6 +15,7 @@ import {
   clearRoomDetail,
   fetchRelatedRooms,
   clearRelatedRooms,
+  setRelatedRooms,
   toggleFavorite,
 } from '../../store/slices/roomSlice';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -270,8 +271,8 @@ const DetailRoomScreen: React.FC = () => {
   }, [navigation, roomDetail]);
 
   const handleRoomPress = useCallback(
-    (roomId: string) => {
-      navigation.navigate('DetailRoom', {roomId});
+    (selectedRoomId: string) => {
+      navigation.navigate('DetailRoom', {roomId: selectedRoomId});
     },
     [navigation],
   );
@@ -323,24 +324,91 @@ const DetailRoomScreen: React.FC = () => {
     };
   }, [dispatch, navigation, roomId, user?.auth_token]);
 
-  // Riêng useEffect cho related rooms để tránh loop
+  // Lấy danh sách rooms từ HomeScreen để tìm phòng liên quan
+  const { rooms: homeRooms } = useSelector((state: RootState) => state.room);
+
+  // Logic thông minh: Ưu tiên khu vực, sau đó đến giá gần nhau
   useEffect(() => {
     if (
       roomDetailData?.currentRoomId &&
       roomDetailData.currentRoomId === roomId &&
-      roomDetailData.district &&
-      roomDetailData.province &&
-      !hasLoadedRelated
+      !hasLoadedRelated &&
+      homeRooms.length > 0
     ) {
-      dispatch(
-        fetchRelatedRooms({
-          roomId,
-          district: roomDetailData.district,
-          province: roomDetailData.province,
-          limit: 6,
-        }),
-      );
-      setHasLoadedRelated(true);
+      // Lọc ra tất cả phòng khác (loại bỏ phòng hiện tại)
+      const otherRooms = homeRooms.filter(room => room._id !== roomId);
+
+      if (otherRooms.length > 0) {
+        const currentPrice = roomDetailData.price ?
+          parseInt(roomDetailData.price.replace(/[^\d]/g, ''), 10) : 0;
+        const currentDistrict = roomDetailData.district;
+
+        // 1. Ưu tiên cao nhất: Phòng cùng khu vực (district)
+        const sameDistrictRooms = otherRooms.filter(room =>
+          room.location?.district === currentDistrict
+        );
+
+        // 2. Ưu tiên thứ hai: Phòng có giá gần giá hiện tại (trong khoảng ±30%)
+        const priceRange = currentPrice * 0.3; // 30% khoảng giá
+        const similarPriceRooms = otherRooms.filter(room => {
+          const roomPrice = room.rentPrice || 0;
+          return Math.abs(roomPrice - currentPrice) <= priceRange;
+        });
+
+        // 3. Sắp xếp phòng cùng khu vực theo giá gần nhất
+        const sortedSameDistrict = sameDistrictRooms.sort((a, b) => {
+          const priceA = a.rentPrice || 0;
+          const priceB = b.rentPrice || 0;
+          return Math.abs(priceA - currentPrice) - Math.abs(priceB - currentPrice);
+        });
+
+        // 4. Sắp xếp phòng giá tương tự theo khoảng cách giá
+        const sortedSimilarPrice = similarPriceRooms
+          .filter(room => room.location?.district !== currentDistrict) // Loại bỏ phòng đã có trong cùng khu vực
+          .sort((a, b) => {
+            const priceA = a.rentPrice || 0;
+            const priceB = b.rentPrice || 0;
+            return Math.abs(priceA - currentPrice) - Math.abs(priceB - currentPrice);
+          });
+
+        // 5. Kết hợp theo thứ tự ưu tiên và lấy tối đa 5 phòng
+        const relatedRoomsFromHome = [
+          ...sortedSameDistrict,           // Ưu tiên 1: Cùng khu vực
+          ...sortedSimilarPrice,           // Ưu tiên 2: Giá tương tự
+          ...otherRooms.filter(room =>     // Ưu tiên 3: Phòng còn lại
+            room.location?.district !== currentDistrict &&
+            !similarPriceRooms.includes(room)
+          ),
+        ].slice(0, 5);
+
+        console.log('🏠 Smart Related Rooms Debug:');
+        console.log('- Current room:', roomDetailData.name);
+        console.log('- Current district:', currentDistrict);
+        console.log('- Current price:', currentPrice.toLocaleString('vi-VN'));
+        console.log('- Same district rooms:', sortedSameDistrict.length);
+        console.log('- Similar price rooms:', sortedSimilarPrice.length);
+        console.log('- Final related rooms:', relatedRoomsFromHome.length);
+        console.log('- Related rooms details:', relatedRoomsFromHome.map(room => ({
+          district: room.location?.district,
+          price: room.rentPrice?.toLocaleString('vi-VN'),
+          name: room.description?.substring(0, 30) + '...',
+        })));
+
+        // Cập nhật vào Redux store
+        dispatch(setRelatedRooms(relatedRoomsFromHome));
+        setHasLoadedRelated(true);
+      } else {
+        // Nếu không có phòng nào khác trong HomeScreen, fallback về API
+        dispatch(
+          fetchRelatedRooms({
+            roomId,
+            district: roomDetailData.district,
+            province: roomDetailData.province,
+            limit: 5,
+          }),
+        );
+        setHasLoadedRelated(true);
+      }
     }
   }, [
     dispatch,
@@ -348,7 +416,10 @@ const DetailRoomScreen: React.FC = () => {
     roomDetailData?.currentRoomId,
     roomDetailData?.district,
     roomDetailData?.province,
+    roomDetailData?.price,
+    roomDetailData?.name,
     hasLoadedRelated,
+    homeRooms,
   ]);
 
   // Memoized error component
