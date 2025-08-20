@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     createButtonText: {
-        color: Colors.black,
+        color: Colors.white,
         fontSize: responsiveFont(16),
         fontWeight: 'bold',
     },

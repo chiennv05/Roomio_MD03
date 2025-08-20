@@ -39,7 +39,7 @@ import {
     resetCompleteInvoiceState,
 } from '../../store/slices/billSlice';
 import { RootStackParamList } from '../../types/route';
-import { SCREEN, scale, verticalScale, responsiveSpacing } from '../../utils/responsive';
+import { SCREEN, scale, verticalScale } from '../../utils/responsive';
 import { Invoice, InvoiceItem } from '../../types/Bill';
 import { Icons } from '../../assets/icons';
 import SaveTemplateModal from './components/SaveTemplateModal';
@@ -469,7 +469,43 @@ const EditInvoiceScreen = () => {
 
             // Nếu đang cập nhật chỉ số cũ, tự động cập nhật chỉ số mới = chỉ số cũ + 1
             if (field === 'previousReading') {
-                // Không tự động cập nhật chỉ số mới
+                // Chỉ tự động cập nhật nếu chỉ số mới chưa được nhập hoặc bằng với chỉ số cũ trước đó
+                const currentReading = itemInputs[itemId]?.currentReading;
+                const previousOldReading = item.previousReading || 0;
+
+                // Chỉ tự động cập nhật trong các trường hợp:
+                // 1. Chỉ số mới chưa được nhập (undefined hoặc rỗng)
+                // 2. Chỉ số mới đang bằng chỉ số cũ trước đó + 1 (người dùng chưa chỉnh sửa)
+                // 3. Chỉ số mới đang bằng chỉ số cũ trước đó (trường hợp ban đầu)
+                if (
+                    currentReading === undefined ||
+                    currentReading === '' ||
+                    parseInt(currentReading) === previousOldReading + 1 ||
+                    parseInt(currentReading) === previousOldReading
+                ) {
+                    const newCurrentReading = reading + 1;
+
+                    // Cập nhật state itemInputs
+                    setItemInputs(prev => ({
+                        ...prev,
+                        [itemId]: {
+                            ...prev[itemId],
+                            currentReading: newCurrentReading.toString(),
+                        },
+                    }));
+
+                    // Cập nhật trực tiếp vào invoiceItems
+                    newItems[itemIndex].currentReading = newCurrentReading;
+
+                    // Xóa lỗi nếu có
+                    setInputErrors(prev => ({
+                        ...prev,
+                        [itemId]: {
+                            ...prev[itemId],
+                            currentReading: '',
+                        },
+                    }));
+                }
             }
 
             // Recalculate amount for variable items
@@ -724,7 +760,9 @@ const EditInvoiceScreen = () => {
                 updatedItem.currentReading = inputData.currentReading === '' ? 0 : parseInt(inputData.currentReading);
             }
 
-            // Không cập nhật số lượng từ input
+            if (inputData.quantity !== undefined) {
+                updatedItem.quantity = inputData.quantity === '' ? 0 : parseInt(inputData.quantity);
+            }
 
             // Không cập nhật đơn giá từ input
 
@@ -834,10 +872,8 @@ const EditInvoiceScreen = () => {
         for (const itemId in itemInputs) {
             const inputs = itemInputs[itemId];
             if (inputs) {
-                // Kiểm tra chỉ số đồng hồ: chỉ áp dụng khi được phép sửa (perUsage)
-                const item = invoiceItems.find(item => item._id === itemId);
-                const priceType = item ? getItemPriceType(item) : null;
-                if (priceType === 'perUsage' && inputs.previousReading !== undefined && inputs.previousReading.trim() === '') {
+                // Kiểm tra chỉ số đồng hồ
+                if (inputs.previousReading !== undefined && inputs.previousReading.trim() === '') {
                     setInputErrors(prev => ({
                         ...prev,
                         [itemId]: {
@@ -848,7 +884,7 @@ const EditInvoiceScreen = () => {
                     return true;
                 }
 
-                if (priceType === 'perUsage' && inputs.currentReading !== undefined && inputs.currentReading.trim() === '') {
+                if (inputs.currentReading !== undefined && inputs.currentReading.trim() === '') {
                     setInputErrors(prev => ({
                         ...prev,
                         [itemId]: {
@@ -860,7 +896,8 @@ const EditInvoiceScreen = () => {
                 }
 
                 // Kiểm tra chỉ số đồng hồ bằng 0
-                if (priceType === 'perUsage' && item && item.type === 'variable') {
+                const item = invoiceItems.find(item => item._id === itemId);
+                if (item && item.type === 'variable') {
                     const prevReading = inputs.previousReading !== undefined ?
                         parseInt(inputs.previousReading || '0') :
                         (item.previousReading || 0);
@@ -894,16 +931,35 @@ const EditInvoiceScreen = () => {
                     }
                 }
 
-                // Không kiểm tra số lượng vì không cho phép chỉnh sửa
+                // Kiểm tra số lượng
+                if (inputs.quantity !== undefined && inputs.quantity.trim() === '') {
+                    setInputErrors(prev => ({
+                        ...prev,
+                        [itemId]: {
+                            ...prev[itemId],
+                            quantity: 'Không được để trống',
+                        },
+                    }));
+                    return true;
+                }
 
-                // Không yêu cầu đơn giá (đơn giá không thể chỉnh sửa)
+                // Kiểm tra đơn giá
+                if (inputs.unitPrice !== undefined && inputs.unitPrice.trim() === '') {
+                    setInputErrors(prev => ({
+                        ...prev,
+                        [itemId]: {
+                            ...prev[itemId],
+                            unitPrice: 'Không được để trống',
+                        },
+                    }));
+                    return true;
+                }
             }
         }
 
         // Kiểm tra các khoản mục có chỉ số bằng 0 nhưng không có trong itemInputs
         for (const item of invoiceItems) {
-            const priceType = getItemPriceType(item);
-            if (priceType === 'perUsage' && item.type === 'variable' && item._id) {
+            if (item.type === 'variable' && item._id) {
                 const itemId = item._id;
 
                 // Nếu không có trong itemInputs, kiểm tra giá trị trực tiếp từ item
@@ -1093,7 +1149,9 @@ const EditInvoiceScreen = () => {
                 updatedItem.currentReading = inputData.currentReading === '' ? 0 : parseInt(inputData.currentReading);
             }
 
-            // Không cập nhật số lượng từ input
+            if (inputData.quantity !== undefined) {
+                updatedItem.quantity = inputData.quantity === '' ? 0 : parseInt(inputData.quantity);
+            }
 
             // Không cập nhật đơn giá từ input
 
@@ -1218,6 +1276,9 @@ const EditInvoiceScreen = () => {
                     // Với các item khác, cập nhật các trường cơ bản
                     itemData.name = inputData?.name || item.name;
                     itemData.description = inputData?.description !== undefined ? inputData.description : item.description;
+                    itemData.quantity = inputData?.quantity !== undefined ?
+                        (inputData.quantity === '' ? 0 : parseInt(inputData.quantity)) :
+                        item.quantity;
                     // Không cho phép cập nhật đơn giá cho bất kỳ item nào
                 }
 
@@ -1530,10 +1591,9 @@ const EditInvoiceScreen = () => {
         // Allow editing for custom items (service, maintenance, other)
         if (item.category === 'service' || item.category === 'maintenance' || item.category === 'other') {
             result.isEditable = true;
-            result.canEditName = false;
+            result.canEditName = true;
             result.canEditDescription = true;
-            // Không cho phép chỉnh sửa số lượng
-            result.canEditQuantity = false;
+            result.canEditQuantity = true;
             // Không cho phép chỉnh sửa đơn giá cho tất cả item
             result.canEditUnitPrice = false;
             // Kiểm tra nếu có priceType là perUsage thì cho phép chỉnh sửa meter readings
@@ -1734,7 +1794,9 @@ const EditInvoiceScreen = () => {
                 updatedItem.currentReading = inputData.currentReading === '' ? 0 : parseInt(inputData.currentReading);
             }
 
-            // Không cập nhật số lượng từ input
+            if (inputData.quantity !== undefined) {
+                updatedItem.quantity = inputData.quantity === '' ? 0 : parseInt(inputData.quantity);
+            }
 
             // Không cập nhật đơn giá từ input
 
@@ -2193,30 +2255,65 @@ const EditInvoiceScreen = () => {
                                         Sử dụng: {calculateUsage(item, itemInputs[itemId])}
                                     </Text>
                                 </View>
-                            ) : null}
-
-                            {/* Hiển thị số lượng dạng chỉ đọc */}
-                            <View style={[
-                                styles.quantityContainer,
-                                ((item.type === 'variable' ? calculateUsage(item, itemInputs[itemId]) : item.quantity) > 0 ? {} : { display: 'none' })
-                            ]}>
-                                 <Text style={styles.quantityLabel}>Số lượng:</Text>
-                                 <Text style={styles.quantityText}>
-                                     {item.type === 'variable' ? calculateUsage(item, itemInputs[itemId]) : item.quantity}
-                                 </Text>
-                             </View>
+                            ) : (
+                                // Chỉ hiển thị quantity khi có thể chỉnh sửa
+                                editability.canEditQuantity ? (
+                                    <View style={styles.quantityContainer}>
+                                        <Text style={styles.quantityLabel}>Số lượng:</Text>
+                                        <View style={styles.inputFieldContainer}>
+                                            <TextInput
+                                                style={[
+                                                    styles.quantityInput,
+                                                    inputErrors[itemId]?.quantity ? styles.inputError : {},
+                                                ]}
+                                                value={itemInputs[itemId]?.quantity}
+                                                onChangeText={(value) => updateItemQuantity(itemId, value)}
+                                                keyboardType="numeric"
+                                                editable={editability.canEditQuantity}
+                                            />
+                                        </View>
+                                    </View>
+                                ) : null
+                            )}
 
                             {/* Luôn hiển thị item details với đơn giá và tổng tiền */}
                             <View style={styles.itemDetails}>
                                 <View style={styles.itemPriceRow}>
-                                    {/* Đơn giá chỉ hiển thị dạng chỉ đọc */}
-                                    <View style={styles.readOnlyPriceContainer}>
-                                        <Text style={styles.unitPriceLabel}>Đơn giá:</Text>
-                                        <Text style={styles.itemDetail}>
-                                            {Number(item.unitPrice).toLocaleString('vi-VN')} đ
-                                            {item.isPerPerson && ` × ${item.personCount} người`}
-                                        </Text>
-                                    </View>
+                                    {editability.canEditUnitPrice ? (
+                                        <View style={styles.unitPriceWrapper}>
+                                            <View style={styles.unitPriceContainer}>
+                                                <Text style={styles.unitPriceLabel}>Đơn giá:</Text>
+                                                <View style={styles.inputFieldNormal}>
+                                                    <TextInput
+                                                        style={[
+                                                            styles.unitPriceInput,
+                                                            inputErrors[itemId]?.unitPrice ? styles.inputError : {},
+                                                        ]}
+                                                        value={itemInputs[itemId]?.unitPrice}
+                                                        onChangeText={(value) => updateItemUnitPrice(itemId, value)}
+                                                        keyboardType="numeric"
+                                                    />
+                                                </View>
+                                                <Text style={styles.unitPriceCurrency}>đ</Text>
+                                            </View>
+                                            {inputErrors[itemId]?.unitPrice && (
+                                                <View style={styles.errorNormalContainer}>
+                                                    <Text style={styles.validationErrorText}>
+                                                        {inputErrors[itemId]?.unitPrice}
+                                                    </Text>
+                                                </View>
+                                            )}
+                                        </View>
+                                    ) : (
+                                        // Luôn hiển thị đơn giá dù có thể chỉnh sửa hay không
+                                        <View style={styles.readOnlyPriceContainer}>
+                                            <Text style={styles.unitPriceLabel}>Đơn giá:</Text>
+                                            <Text style={styles.itemDetail}>
+                                                {Number(itemInputs[itemId]?.unitPrice || item.unitPrice).toLocaleString('vi-VN')} đ
+                                                {item.isPerPerson && ` × ${item.personCount} người`}
+                                            </Text>
+                                        </View>
+                                    )}
                                     <Text style={styles.itemAmount}>
                                         {calculateItemAmount(item, itemInputs[itemId]).toLocaleString('vi-VN')} đ
                                     </Text>
@@ -2579,7 +2676,7 @@ const styles = StyleSheet.create({
     section: {
         backgroundColor: Colors.white,
         marginTop: 10,
-        paddingHorizontal: responsiveSpacing(20),
+        paddingHorizontal: 20,
         paddingVertical: 15,
         borderRadius: 8,
         marginHorizontal: 15,
@@ -2634,7 +2731,7 @@ const styles = StyleSheet.create({
     },
     addItemButton: {
         backgroundColor: Colors.limeGreen,
-        paddingHorizontal: responsiveSpacing(20),
+        paddingHorizontal: 20,
         paddingVertical: 12,
         borderRadius: 50,
         width: '100%',

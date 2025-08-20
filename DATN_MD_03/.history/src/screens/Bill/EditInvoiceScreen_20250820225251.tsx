@@ -39,7 +39,7 @@ import {
     resetCompleteInvoiceState,
 } from '../../store/slices/billSlice';
 import { RootStackParamList } from '../../types/route';
-import { SCREEN, scale, verticalScale, responsiveSpacing } from '../../utils/responsive';
+import { SCREEN, scale, verticalScale } from '../../utils/responsive';
 import { Invoice, InvoiceItem } from '../../types/Bill';
 import { Icons } from '../../assets/icons';
 import SaveTemplateModal from './components/SaveTemplateModal';
@@ -2579,7 +2579,7 @@ const styles = StyleSheet.create({
     section: {
         backgroundColor: Colors.white,
         marginTop: 10,
-        paddingHorizontal: responsiveSpacing(20),
+        paddingHorizontal: 20,
         paddingVertical: 15,
         borderRadius: 8,
         marginHorizontal: 15,
@@ -2634,7 +2634,7 @@ const styles = StyleSheet.create({
     },
     addItemButton: {
         backgroundColor: Colors.limeGreen,
-        paddingHorizontal: responsiveSpacing(20),
+        paddingHorizontal: 20,
         paddingVertical: 12,
         borderRadius: 50,
         width: '100%',

@@ -39,7 +39,7 @@ import {
     resetCompleteInvoiceState,
 } from '../../store/slices/billSlice';
 import { RootStackParamList } from '../../types/route';
-import { SCREEN, scale, verticalScale, responsiveSpacing } from '../../utils/responsive';
+import { SCREEN, scale, verticalScale } from '../../utils/responsive';
 import { Invoice, InvoiceItem } from '../../types/Bill';
 import { Icons } from '../../assets/icons';
 import SaveTemplateModal from './components/SaveTemplateModal';
@@ -469,7 +469,43 @@ const EditInvoiceScreen = () => {
 
             // Nếu đang cập nhật chỉ số cũ, tự động cập nhật chỉ số mới = chỉ số cũ + 1
             if (field === 'previousReading') {
-                // Không tự động cập nhật chỉ số mới
+                // Chỉ tự động cập nhật nếu chỉ số mới chưa được nhập hoặc bằng với chỉ số cũ trước đó
+                const currentReading = itemInputs[itemId]?.currentReading;
+                const previousOldReading = item.previousReading || 0;
+
+                // Chỉ tự động cập nhật trong các trường hợp:
+                // 1. Chỉ số mới chưa được nhập (undefined hoặc rỗng)
+                // 2. Chỉ số mới đang bằng chỉ số cũ trước đó + 1 (người dùng chưa chỉnh sửa)
+                // 3. Chỉ số mới đang bằng chỉ số cũ trước đó (trường hợp ban đầu)
+                if (
+                    currentReading === undefined ||
+                    currentReading === '' ||
+                    parseInt(currentReading) === previousOldReading + 1 ||
+                    parseInt(currentReading) === previousOldReading
+                ) {
+                    const newCurrentReading = reading + 1;
+
+                    // Cập nhật state itemInputs
+                    setItemInputs(prev => ({
+                        ...prev,
+                        [itemId]: {
+                            ...prev[itemId],
+                            currentReading: newCurrentReading.toString(),
+                        },
+                    }));
+
+                    // Cập nhật trực tiếp vào invoiceItems
+                    newItems[itemIndex].currentReading = newCurrentReading;
+
+                    // Xóa lỗi nếu có
+                    setInputErrors(prev => ({
+                        ...prev,
+                        [itemId]: {
+                            ...prev[itemId],
+                            currentReading: '',
+                        },
+                    }));
+                }
             }
 
             // Recalculate amount for variable items
@@ -1530,7 +1566,7 @@ const EditInvoiceScreen = () => {
         // Allow editing for custom items (service, maintenance, other)
         if (item.category === 'service' || item.category === 'maintenance' || item.category === 'other') {
             result.isEditable = true;
-            result.canEditName = false;
+            result.canEditName = true;
             result.canEditDescription = true;
             // Không cho phép chỉnh sửa số lượng
             result.canEditQuantity = false;
@@ -2195,17 +2231,6 @@ const EditInvoiceScreen = () => {
                                 </View>
                             ) : null}
 
-                            {/* Hiển thị số lượng dạng chỉ đọc */}
-                            <View style={[
-                                styles.quantityContainer,
-                                ((item.type === 'variable' ? calculateUsage(item, itemInputs[itemId]) : item.quantity) > 0 ? {} : { display: 'none' })
-                            ]}>
-                                 <Text style={styles.quantityLabel}>Số lượng:</Text>
-                                 <Text style={styles.quantityText}>
-                                     {item.type === 'variable' ? calculateUsage(item, itemInputs[itemId]) : item.quantity}
-                                 </Text>
-                             </View>
-
                             {/* Luôn hiển thị item details với đơn giá và tổng tiền */}
                             <View style={styles.itemDetails}>
                                 <View style={styles.itemPriceRow}>
@@ -2579,7 +2604,7 @@ const styles = StyleSheet.create({
     section: {
         backgroundColor: Colors.white,
         marginTop: 10,
-        paddingHorizontal: responsiveSpacing(20),
+        paddingHorizontal: 20,
         paddingVertical: 15,
         borderRadius: 8,
         marginHorizontal: 15,
@@ -2634,7 +2659,7 @@ const styles = StyleSheet.create({
     },
     addItemButton: {
         backgroundColor: Colors.limeGreen,
-        paddingHorizontal: responsiveSpacing(20),
+        paddingHorizontal: 20,
         paddingVertical: 12,
         borderRadius: 50,
         width: '100%',
