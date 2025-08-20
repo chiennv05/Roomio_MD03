@@ -265,9 +265,21 @@ const HomeScreen: React.FC = () => {
     loadRooms(buildFilters);
   }, [buildFilters, loadRooms]);
 
-  // Khi searchQuery hoặc filter thay đổi, gọi lại loadRooms
+  // Debounce search query để tránh gọi API liên tục khi gõ
   useEffect(() => {
-    loadRooms({ ...buildFilters, search: searchQuery });
+    // Nếu không có searchQuery, không cần debounce
+    if (!searchQuery.trim()) {
+      loadRooms(buildFilters);
+      return;
+    }
+
+    // Debounce 800ms - chỉ gọi API sau khi người dùng ngừng gõ 800ms
+    const timeoutId = setTimeout(() => {
+      loadRooms({ ...buildFilters, search: searchQuery });
+    }, 800);
+
+    // Cleanup timeout khi searchQuery thay đổi hoặc component unmount
+    return () => clearTimeout(timeoutId);
   }, [buildFilters, loadRooms, searchQuery]);
 
   // Memoized callbacks
