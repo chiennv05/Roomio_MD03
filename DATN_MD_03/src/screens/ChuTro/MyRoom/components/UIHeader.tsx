@@ -4,6 +4,7 @@ import {Icons} from '../../../../assets/icons';
 import {
   responsiveFont,
   responsiveIcon,
+  responsiveSpacing,
   SCREEN,
   verticalScale,
 } from '../../../../utils/responsive';
@@ -68,8 +69,9 @@ export default UIHeader;
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    width: SCREEN.width * 0.9,
+    width: '100%',
     marginTop: verticalScale(10),
+    paddingHorizontal: responsiveSpacing(16),
   },
   containerLeftAndRight: {
     flex: 1,
@@ -106,6 +108,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
     fontWeight: '700',
+    textAlign: 'center',
   },
   styleIconRight: {
     width: responsiveIcon(24),

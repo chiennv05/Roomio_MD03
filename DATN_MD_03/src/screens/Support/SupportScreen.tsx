@@ -340,7 +340,7 @@ const styles = StyleSheet.create({
   fabIcon: {
     width: scale(24),
     height: scale(24),
-    tintColor: Colors.white,
+    tintColor: Colors.black,
   },
 });
 

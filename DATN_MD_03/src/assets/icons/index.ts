@@ -729,4 +729,21 @@ export const Icons = {
     ios: 'icon_username',
     android: 'asset:/icons/icon_username.png',
   }),
+  // He Thong, Hop Dong, Thanh Toan, Ho Tro
+  IconHeThong: Platform.select({
+    ios: 'icon_he_thong',
+    android: 'asset:/icons/icon_he_thong.png',
+  }),
+  IconHopDong: Platform.select({
+    ios: 'icon_hop_dong',
+    android: 'asset:/icons/icon_hop_dong.png',
+  }),
+  IconThanhToan: Platform.select({
+    ios: 'icon_thanh_toan',
+    android: 'asset:/icons/icon_thanh_toan.png',
+  }),
+  IconHoTro: Platform.select({
+    ios: 'icon_ho_tro',
+    android: 'asset:/icons/icon_ho_tro.png',
+  }),
 };

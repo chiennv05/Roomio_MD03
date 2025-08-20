@@ -14,17 +14,18 @@ import {
   deleteNotificationById,
 } from '../../store/slices/notificationSlice';
 import EmptyNotification from './components/EmptyNotification';
-import NotificationScreenHeader from './components/NotificationScreenHeader';
+import UIHeader from '../ChuTro/MyRoom/components/UIHeader';
 import NotificationHeader from './components/NotificationHeader';
 import NotificationListContainer, {
   FormattedNotification,
 } from './components/NotificationListContainer';
-import NotificationDetailModal from './components/NotificationDetailModal';
+import CustomAlertModal from '../../components/CustomAlertModal';
 import LoadingAnimation from '../../components/LoadingAnimation';
 import {useCustomAlert} from './components';
 import {Colors} from '../../theme/color';
 import {responsiveSpacing} from '../../utils/responsive';
 import CustomAlertModalNotification from '../../components/CutomAlaertModalNotification';
+import {Icons} from '../../assets/icons';
 
 type NotificationScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -51,7 +52,7 @@ const NotificationScreen = () => {
   } = useCustomAlert();
 
   const [activeTab, setActiveTab] = useState<
-    'all' | 'schedule' | 'bill' | 'contract'
+    'all' | 'heThong' | 'hopDong' | 'thanhToan' | 'hoTro'
   >('all');
 
   // State cho modal chi tiết thông báo
@@ -274,26 +275,25 @@ const NotificationScreen = () => {
 
   // Handle tab change
   const handleTabChange = useCallback(
-    (tab: 'all' | 'schedule' | 'bill' | 'contract') => {
+    (tab: 'all' | 'heThong' | 'hopDong' | 'thanhToan' | 'hoTro') => {
       setActiveTab(tab);
     },
     [],
   );
 
-  // Handle menu press
-  const handleMenuPress = useCallback(() => {
-    console.log('Menu pressed');
-  }, []);
+
 
   // Filter notifications based on active tab
   const getFilteredNotifications = useCallback(() => {
     switch (activeTab) {
-      case 'schedule':
-        return notifications.filter(n => n.type === 'lichXemPhong');
-      case 'bill':
-        return notifications.filter(n => n.type === 'thanhToan');
-      case 'contract':
+      case 'heThong':
+        return notifications.filter(n => n.type === 'heThong');
+      case 'hopDong':
         return notifications.filter(n => n.type === 'hopDong');
+      case 'thanhToan':
+        return notifications.filter(n => n.type === 'thanhToan');
+      case 'hoTro':
+        return notifications.filter(n => n.type === 'hoTro');
       default:
         return notifications;
     }
@@ -314,30 +314,38 @@ const NotificationScreen = () => {
   // Loading state với beautiful animation
   if (loading && notifications.length === 0) {
     return (
-      <View style={[styles.safeArea, {backgroundColor: Colors.backgroud}]}>
+      <SafeAreaView style={styles.safeArea}>
         <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-        <NotificationScreenHeader onMenuPress={handleMenuPress} />
+        <View style={styles.headerContainer}>
+          <UIHeader
+            title="Thông báo"
+            iconLeft={Icons.IconArrowLeft}
+            onPressLeft={() => navigation.goBack()}
+          />
+        </View>
         <View style={styles.loadingContainer}>
           <LoadingAnimation size="large" color={Colors.limeGreen} />
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
 
-      {/* Header trên cùng chứa tiêu đề + tabs */}
-      <View style={styles.headerPlain}>
-        <SafeAreaView>
-          <NotificationScreenHeader onMenuPress={handleMenuPress} />
-          <NotificationHeader
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            unreadCount={unreadCount}
-          />
-        </SafeAreaView>
+      {/* Header và Filter gộp chung */}
+      <View style={styles.headerContainer}>
+        <UIHeader
+          title="Thông báo"
+          iconLeft={Icons.IconArrowLeft}
+          onPressLeft={() => navigation.goBack()}
+        />
+        <NotificationHeader
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          unreadCount={unreadCount}
+        />
       </View>
 
       {/* Main content with animation */}
@@ -349,9 +357,6 @@ const NotificationScreen = () => {
             transform: [{translateY: slideAnim}],
           },
         ]}>
-        {/* Enhanced header with glass effect */}
-        <View style={styles.headerContainer} />
-
         {/* Content area */}
         <View style={styles.contentArea}>
           {formattedNotifications.length === 0 ? (
@@ -371,14 +376,63 @@ const NotificationScreen = () => {
       </Animated.View>
 
       {/* Modal chi tiết thông báo */}
-      <NotificationDetailModal
+      <CustomAlertModal
         visible={modalVisible}
-        notification={selectedNotification}
+        title={selectedNotification?.title || 'Thông báo'}
+        message={selectedNotification?.content || ''}
         onClose={closeModal}
-        onNavigateToBill={navigateToBillScreen}
-        onNavigateToContract={navigateToContractScreen}
-        onNavigateToRoomManagement={navigateToRoomManagement}
-        onNavigateToSupport={navigateToSupport}
+        isRead={selectedNotification?.isRead || false}
+        type="info"
+        buttons={[
+          {
+            text: 'Xem chi tiết',
+            onPress: () => {
+              closeModal();
+              // Xử lý navigation dựa trên loại thông báo
+              if (selectedNotification) {
+                switch (selectedNotification.type) {
+                  case 'thanhToan':
+                    // Thông báo thanh toán - navigate đến BillScreen
+                    navigateToBillScreen();
+                    break;
+                  case 'hopDong':
+                    // Thông báo hợp đồng - kiểm tra nếu có rentRequestData thì navigate đến AddContract
+                    const originalNotification = notifications.find(
+                      n => n._id === selectedNotification.id,
+                    );
+                    if (originalNotification?.rentRequestData?.tenantInfo) {
+                      // Có thông tin người thuê - navigate đến AddContract
+                      navigation.navigate('AddContract', {
+                        notificationId: selectedNotification.id,
+                      });
+                    } else {
+                      // Không có thông tin người thuê - navigate đến ContractManagement
+                      navigateToContractScreen();
+                    }
+                    break;
+                  case 'heThong':
+                    // Thông báo hệ thống - navigate đến RoomManagement
+                    navigateToRoomManagement();
+                    break;
+                  case 'hoTro':
+                    // Thông báo hỗ trợ - navigate đến SupportScreen
+                    navigateToSupport();
+                    break;
+                  default:
+                    // Mặc định - navigate đến RoomManagement
+                    navigateToRoomManagement();
+                    break;
+                }
+              }
+            },
+            style: 'default', // Đổi từ 'primary' sang 'default' để sử dụng darkGreen
+          },
+          {
+            text: 'Đóng',
+            onPress: closeModal,
+            style: 'cancel',
+          },
+        ]}
       />
 
       {/* Custom Alert Modal */}
@@ -394,7 +448,7 @@ const NotificationScreen = () => {
         buttons={alertConfig?.buttons}
         customStyles={alertConfig?.customStyles}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -484,39 +538,20 @@ const getNotificationTitle = (type: string): string => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.backgroud,
-  },
-  headerPlain: {
-    paddingBottom: responsiveSpacing(20),
     backgroundColor: Colors.white,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 10,
+  },
+  headerContainer: {
+    backgroundColor: Colors.white,
+    paddingBottom: responsiveSpacing(8),
   },
   container: {
     flex: 1,
     backgroundColor: 'transparent',
-    marginTop: -responsiveSpacing(15), // Overlap effect
-  },
-  headerContainer: {
-    backgroundColor: 'transparent',
-    marginHorizontal: responsiveSpacing(16),
-    borderRadius: 0,
-    shadowColor: 'transparent',
-    shadowOffset: {width: 0, height: 0},
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
-    marginBottom: responsiveSpacing(12),
   },
   contentArea: {
     flex: 1,
     paddingHorizontal: responsiveSpacing(16),
+    paddingTop: responsiveSpacing(8),
   },
   loadingContainer: {
     flex: 1,

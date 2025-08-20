@@ -7,7 +7,6 @@ import {
   Image,
   ImageSourcePropType,
   Animated,
-  I18nManager,
 } from 'react-native';
 import {Swipeable} from 'react-native-gesture-handler';
 import LinearGradient from 'react-native-linear-gradient';
@@ -31,19 +30,21 @@ interface NotificationItemCardProps {
   onPress?: () => void;
   onDelete?: () => void; // Callback khi nhấn nút xóa
   id: string; // ID của thông báo
+  isUnread?: boolean; // Thêm prop để biết có phải chưa đọc không
 }
 
 const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
   title,
   content,
   time,
-  date,
+  date: _date,
   isRead,
   type,
-  icon,
+  icon: _icon,
   onPress,
   onDelete,
-  id,
+  id: _id,
+  isUnread = false,
 }) => {
   // Tham chiếu đến Swipeable để có thể đóng sau khi xóa
   const swipeableRef = React.useRef<Swipeable>(null);
@@ -76,17 +77,24 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
     }).start();
   };
 
-  // Icon dựa trên trạng thái đọc/chưa đọc
-  const getStatusIcon = () => {
-    if (isRead) {
-      return Icons.IconTick; // Tick icon cho đã đọc
-    } else {
-      return Icons.IconWarning; // Warning icon cho chưa đọc
+  // Icon dựa trên loại thông báo thay vì trạng thái đọc/chưa đọc
+  const getTypeIcon = () => {
+    switch (type) {
+      case 'heThong':
+        return Icons.IconHeThong;
+      case 'hopDong':
+        return Icons.IconHopDong;
+      case 'thanhToan':
+        return Icons.IconThanhToan;
+      case 'hoTro':
+        return Icons.IconHoTro;
+      default:
+        return Icons.IconPaper; // Icon mặc định
     }
   };
 
   const getImageSource = () => {
-    const iconSource = getStatusIcon();
+    const iconSource = getTypeIcon();
     if (!iconSource) {
       return undefined;
     }
@@ -104,32 +112,32 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
     const map = {
       support: {
         background: Colors.white,
-        iconTint: Colors.accentSupport,
-        border: Colors.accentSupport,
+        iconTint: '#9333EA', // Màu tím của filter Hỗ Trợ
+        border: '#9333EA', // Màu tím của filter Hỗ Trợ
         titleColor: neutralText,
         contentColor: mutedText,
         shadowColor: Colors.shadowDefault,
       },
       contract: {
         background: Colors.white,
-        iconTint: Colors.accentContract,
-        border: Colors.accentContract,
+        iconTint: '#059669', // Màu xanh lá của filter Hợp Đồng
+        border: '#059669', // Màu xanh lá của filter Hợp Đồng
         titleColor: neutralText,
         contentColor: mutedText,
         shadowColor: Colors.shadowDefault,
       },
       system: {
         background: Colors.white,
-        iconTint: Colors.accentSystem,
-        border: Colors.accentSystem,
+        iconTint: '#2563EB', // Màu xanh dương của filter Hệ Thống
+        border: '#2563EB', // Màu xanh dương của filter Hệ Thống
         titleColor: neutralText,
         contentColor: mutedText,
         shadowColor: Colors.shadowDefault,
       },
       payment: {
         background: Colors.white,
-        iconTint: Colors.accentPayment,
-        border: Colors.accentPayment,
+        iconTint: '#EA580C', // Màu cam của filter Thanh Toán
+        border: '#EA580C', // Màu cam của filter Thanh Toán
         titleColor: neutralText,
         contentColor: mutedText,
         shadowColor: Colors.shadowDefault,
@@ -272,9 +280,15 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
           style={[
             styles.container,
             {
-              backgroundColor: statusColors.cardBg,
+              backgroundColor: isUnread ? '#E3F2FD' : statusColors.cardBg, // Background xanh nhạt cho chưa đọc
               borderLeftWidth: 4,
               borderLeftColor: statusColors.borderColor,
+              borderTopWidth: 0.2, // Thêm viền trên
+              borderTopColor: statusColors.borderColor, // Cùng màu với viền trái
+              borderBottomWidth: 0.2, // Thêm viền dưới
+              borderBottomColor: statusColors.borderColor, // Cùng màu với viền trái
+              borderRightWidth: 0.2, // Thêm viền phải
+              borderRightColor: statusColors.borderColor, // Cùng màu với viền trái
               shadowColor: statusColors.shadowColor,
               shadowOffset: {width: 0, height: 2},
               shadowOpacity: 0.06,
@@ -404,21 +418,24 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: responsiveFont(16),
-    fontFamily: Fonts.Roboto_Medium,
+    fontFamily: Fonts.Roboto_Bold,
     marginBottom: responsiveSpacing(4),
-    // Màu sẽ được override bởi inline style
+    color: Colors.black,
+    letterSpacing: 0.3, // Thêm letter spacing
   },
   content: {
     fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Regular,
+    fontFamily: Fonts.Roboto_Regular, // Đổi về Regular
     lineHeight: responsiveFont(18),
     marginBottom: responsiveSpacing(6),
-    // Màu sẽ được override bởi inline style
+    color: Colors.textSecondary,
+    letterSpacing: 0.5, // Thêm letter spacing đẹp
   },
   time: {
     fontSize: responsiveFont(11),
-    fontFamily: Fonts.Roboto_Regular,
-    // Màu sẽ được override bởi inline style
+    fontFamily: Fonts.Roboto_Regular, // Đổi về Regular
+    color: Colors.textGray,
+    letterSpacing: 0.3, // Thêm letter spacing
   },
   rightActionContainer: {
     width: moderateScale(90),
