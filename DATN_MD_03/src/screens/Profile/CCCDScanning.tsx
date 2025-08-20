@@ -7,6 +7,8 @@ import {
   Image,
   StatusBar,
   Animated,
+  Platform,
+  PermissionsAndroid,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
@@ -22,6 +24,7 @@ import {
 } from '../../utils/responsive';
 import {Colors} from '../../theme/color';
 import {Icons} from '../../assets/icons';
+import {Camera, CameraType} from 'react-native-camera-kit';
 import ItemIntroduct from './components/ItemIntroduct';
 import {Images} from '../../assets/images';
 import {Fonts} from '../../theme/fonts';
@@ -38,6 +41,8 @@ export default function CCCDScanning() {
   const {redirectTo, roomId} = route.params || {};
   const [showCamera, setShowCamera] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const cameraRef = useRef<any>(null);
+  const [pendingResult, setPendingResult] = useState<{uri: string; rawData: string} | null>(null);
 
   // Alert modal state
   const [alertConfig, setAlertConfig] = useState({
@@ -80,106 +85,115 @@ export default function CCCDScanning() {
     }
   }, [showCamera, startScanAnimation]);
 
-  const handleStartScanning = () => {
-    setShowCamera(true);
-  };
+  const requestCameraPermission = useCallback(async (): Promise<boolean> => {
+    if (Platform.OS === 'android') {
+      try {
+        const res = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+        );
+        return res === PermissionsAndroid.RESULTS.GRANTED;
+      } catch (e) {
+        return false;
+      }
+    }
+    return true;
+  }, []);
 
-  const handleTakePhoto = () => {
-    launchImageLibrary(
-      {
-        mediaType: 'photo',
-        quality: 1,
-      },
-      async response => {
-        if (response.didCancel) {
-          return;
-        } else if (response.errorCode) {
-          setAlertConfig({
-            visible: true,
-            title: 'Lỗi',
-            message: 'Không thể chọn ảnh. Vui lòng thử lại.',
-            type: 'error',
-            buttons: [{
+  const handleStartScanning = useCallback(async () => {
+    const granted = await requestCameraPermission();
+    if (granted) {
+      setShowCamera(true);
+    } else {
+      setAlertConfig({
+        visible: true,
+        title: 'Thông báo',
+        message: 'Không thể truy cập máy ảnh, vui lòng kiểm tra quyền truy cập',
+        type: 'warning',
+        buttons: [{
+          text: 'Đóng',
+          style: 'default',
+          onPress: () => setAlertConfig(prev => ({...prev, visible: false})),
+        }],
+      });
+    }
+  }, [requestCameraPermission]);
+
+  const handleTakePhoto = useCallback(async () => {
+    if (!cameraRef.current) {
+      return;
+    }
+    setIsScanning(true);
+    try {
+      const photo = await cameraRef.current.capture();
+      const uri = (photo as any)?.uri as string | undefined;
+      if (!uri) {
+        throw new Error('NO_URI');
+      }
+
+      const barcodes = await BarcodeScanning.scan(uri);
+
+      if (barcodes.length > 0) {
+        const rawData = barcodes[0].value;
+        setPendingResult({uri, rawData});
+        setAlertConfig({
+          visible: true,
+          title: 'Thông báo',
+          message: rawData,
+          type: 'info',
+          buttons: [
+            {
+              text: 'OK',
+              style: 'default',
+              onPress: () => {
+                setAlertConfig(prev => ({...prev, visible: false}));
+                navigation.navigate('CCCDResult' as never, {
+                  rawData,
+                  imageUri: uri,
+                  redirectTo: redirectTo || undefined,
+                  roomId: roomId || undefined,
+                } as never);
+              },
+            },
+            {
               text: 'Đóng',
               style: 'default',
               onPress: () => setAlertConfig(prev => ({...prev, visible: false})),
-            }],
-          });
-          return;
-        } else if (response.assets && response.assets.length > 0) {
-          const uri = response.assets[0].uri;
-          if (!uri) {
-            setAlertConfig({
-              visible: true,
-              title: 'Lỗi',
-              message: 'Không tìm thấy ảnh. Vui lòng thử lại.',
-              type: 'error',
-              buttons: [{
-                text: 'Đóng',
-                style: 'default',
-                onPress: () => setAlertConfig(prev => ({...prev, visible: false})),
-              }],
-            });
-            return;
-          }
-          setIsScanning(true);
-
-          try {
-            const barcodes = await BarcodeScanning.scan(uri);
-
-            if (barcodes.length > 0) {
-              const rawData = barcodes[0].value;
-              // Navigate to result screen with scanned data
-              // Thay thế navigate bằng reset để tránh stack lại các màn hình
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [
-                    {
-                      name: 'CCCDResult',
-                      params: {
-                        rawData,
-                        imageUri: uri,
-                        redirectTo: redirectTo || undefined,
-                        roomId: roomId || undefined,
-                      },
-                    },
-                  ],
-                })
-              );
-            } else {
-              setAlertConfig({
-                visible: true,
-                title: 'Không tìm thấy QR',
-                message: 'Không tìm thấy mã QR trong ảnh.',
-                type: 'warning',
-                buttons: [{
-                  text: 'Đóng',
-                  style: 'default',
-                  onPress: () => setAlertConfig(prev => ({...prev, visible: false})),
-                }],
-              });
-            }
-          } catch (error) {
-            console.error('QR detection failed:', error);
-            setAlertConfig({
-              visible: true,
-              title: 'Lỗi',
-              message: 'Không thể giải mã QR từ ảnh này.',
-              type: 'error',
-              buttons: [{
-                text: 'Đóng',
-                style: 'default',
-                onPress: () => setAlertConfig(prev => ({...prev, visible: false})),
-              }],
-            });
-          } finally {
-            setIsScanning(false);
-          }
-        }
-      },
-    );
-  };
+            },
+          ],
+        });
+      } else {
+        setAlertConfig({
+          visible: true,
+          title: 'Không tìm thấy QR',
+          message: 'Không tìm thấy mã QR trong ảnh.',
+          type: 'warning',
+          buttons: [
+            {
+              text: 'Đóng',
+              style: 'default',
+              onPress: () => setAlertConfig(prev => ({...prev, visible: false})),
+            },
+          ],
+        });
+      }
+    } catch (error) {
+      setAlertConfig({
+        visible: true,
+        title: 'Thông báo',
+        message: 'Không thể truy cập máy ảnh, vui lòng kiểm tra quyền truy cập',
+        type: 'error',
+        buttons: [
+          {
+            text: 'Đóng',
+            style: 'default',
+            onPress: () => setAlertConfig(prev => ({...prev, visible: false})),
+          },
+        ],
+      });
+    } finally {
+      setIsScanning(false);
+    }
+  }, [navigation, redirectTo, roomId]);
 
   const handlePickFromLibrary = () => {
     launchImageLibrary(
@@ -228,22 +242,12 @@ export default function CCCDScanning() {
               const rawData = barcodes[0].value;
               // Navigate to result screen with scanned data
               // Thay thế navigate bằng reset để tránh stack lại các màn hình
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [
-                    {
-                      name: 'CCCDResult',
-                      params: {
-                        rawData,
-                        imageUri: uri,
-                        redirectTo: redirectTo || undefined,
-                        roomId: roomId || undefined,
-                      },
-                    },
-                  ],
-                })
-              );
+              navigation.navigate('CCCDResult' as never, {
+                rawData,
+                imageUri: uri,
+                redirectTo: redirectTo || undefined,
+                roomId: roomId || undefined,
+              } as never);
             } else {
               setAlertConfig({
                 visible: true,
@@ -303,10 +307,12 @@ export default function CCCDScanning() {
         <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
         {/* Camera Background */}
         <View style={styles.cameraBackground}>
-          {/* Camera placeholder - thay bằng RNCamera nếu cần */}
-          <View style={styles.cameraPlaceholder}>
-            <Text style={styles.cameraPlaceholderText}>Camera View</Text>
-          </View>
+          <Camera
+            ref={ref => (cameraRef.current = ref)}
+            style={styles.cameraPreview}
+            cameraType={CameraType.Back}
+            flashMode="auto"
+          />
         </View>
 
         {/* Overlay Content */}
@@ -558,6 +564,11 @@ const styles = StyleSheet.create({
   cameraBackground: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: '#000000',
+  },
+  cameraPreview: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
   },
   cameraPlaceholder: {
     flex: 1,
