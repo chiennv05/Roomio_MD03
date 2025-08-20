@@ -9,6 +9,8 @@ import {
   StatusBar,
   Platform,
   TouchableOpacity,
+  Image,
+  Animated,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../../store';
@@ -16,7 +18,7 @@ import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
 import {responsiveFont, responsiveSpacing} from '../../../utils/responsive';
 import {fetchDashboard} from '../../../store/slices/dashboardSlice';
-import {StatisticCard, MainChart} from './components';
+import {StatisticCard, MainBarChart as MainChart} from './components';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
@@ -37,9 +39,21 @@ const StatisticScreen = () => {
     (state: RootState) => state.dashboard,
   );
   const [refreshing, setRefreshing] = useState(false);
-  const [chartType, _setChartType] = useState<
+  const [chartType, setChartType] = useState<
     'revenue' | 'rooms' | 'contracts'
   >('revenue');
+
+  // Segmented control animation for filter tabs (Option B)
+  const [tabsW, setTabsW] = useState(0);
+  const currentIndex = chartType === 'revenue' ? 0 : chartType === 'rooms' ? 1 : 2;
+  const tabAnim = React.useRef(new Animated.Value(currentIndex)).current;
+  useEffect(() => {
+    Animated.timing(tabAnim, {
+      toValue: currentIndex,
+      duration: 220,
+      useNativeDriver: true,
+    }).start();
+  }, [currentIndex, tabAnim]);
 
   // Lấy chiều cao của thanh trạng thái
   const statusBarHeight =
@@ -170,6 +184,114 @@ const StatisticScreen = () => {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }>
+        {/* Beautiful Stats Grid */}
+        <View style={styles.statsGrid}>
+          {/* Tổng doanh thu - Green */}
+          <View style={[styles.statCard, styles.revenueCard]}>
+            <View style={styles.statIconContainer}>
+              <Image
+                source={require('../../../assets/icons/icon_tien_coc.png')}
+                style={styles.statIcon}
+              />
+            </View>
+            <Text style={styles.statValue}>{formatMoney(data?.revenue?.totalRevenue || 4338000)}</Text>
+            <Text style={styles.statLabel}>Tổng doanh thu</Text>
+          </View>
+
+          {/* Tổng phòng - Cyan */}
+          <View style={[styles.statCard, styles.roomCard]}>
+            <View style={styles.statIconContainer}>
+              <Image
+                source={require('../../../assets/icons/icon_room.png')}
+                style={styles.statIcon}
+              />
+            </View>
+            <Text style={styles.statValue}>{data?.overview?.totalRooms || 4}</Text>
+            <Text style={styles.statLabel}>Tổng phòng</Text>
+          </View>
+
+          {/* Hợp đồng - Blue */}
+          <View style={[styles.statCard, styles.contractCard]}>
+            <View style={styles.statIconContainer}>
+              <Image
+                source={require('../../../assets/icons/icon_contract.png')}
+                style={styles.statIcon}
+              />
+            </View>
+            <Text style={styles.statValue}>{data?.overview?.totalContracts || 19}</Text>
+            <Text style={styles.statLabel}>Hợp đồng</Text>
+          </View>
+
+          {/* Đang thuê - Teal */}
+          <View style={[styles.statCard, styles.occupiedCard]}>
+            <View style={styles.statIconContainer}>
+              <Image
+                source={require('../../../assets/icons/icon_person.png')}
+                style={styles.statIcon}
+              />
+            </View>
+            <Text style={styles.statValue}>{data?.overview?.rentedRooms || 3}</Text>
+            <Text style={styles.statLabel}>Đang thuê</Text>
+          </View>
+        </View>
+
+        {/* Chart Section */}
+        <View style={styles.chartSection}>
+          {/* Chart Tabs */}
+          <View
+            style={styles.chartTabs}
+            onLayout={e => setTabsW(e.nativeEvent.layout.width)}
+          >
+            {(() => {
+              const padding = responsiveSpacing(6);
+              const segmentWidth = Math.max((tabsW - padding * 2) / 3, 0);
+              return (
+                <Animated.View
+                  style={[
+                    styles.tabIndicator,
+                    {
+                      width: segmentWidth,
+                      transform: [
+                        {
+                          translateX: tabAnim.interpolate({
+                            inputRange: [0, 1, 2],
+                            outputRange: [0, segmentWidth, segmentWidth * 2],
+                          }),
+                        },
+                      ],
+                    },
+                  ]}
+                />
+              );
+            })()}
+
+            <TouchableOpacity
+              style={[styles.chartTab]}
+              onPress={() => setChartType('revenue')}
+            >
+              <Text style={[styles.chartTabText, chartType === 'revenue' && styles.chartTabTextActive]}>
+                Doanh thu
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.chartTab]}
+              onPress={() => setChartType('rooms')}
+            >
+              <Text style={[styles.chartTabText, chartType === 'rooms' && styles.chartTabTextActive]}>
+                Phòng
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.chartTab]}
+              onPress={() => setChartType('contracts')}
+            >
+              <Text style={[styles.chartTabText, chartType === 'contracts' && styles.chartTabTextActive]}>
+                Hợp đồng
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Main Chart */}
         <View style={styles.chartsContainer}>
           <MainChart
@@ -186,93 +308,95 @@ const StatisticScreen = () => {
           />
         </View>
 
-        {/* Statistic Cards */}
-        <View style={styles.quickStatsContainer}>
-          <StatisticCard
-            title="Phòng trọ"
-            icon={require('../../../assets/icons/icon_room.png')}
-            backgroundColor={Colors.white}
-            iconColor={Colors.accentSupport}
-            stats={[
-              {
-                label: 'Tổng số phòng',
-                value: data?.overview?.totalRooms || 0,
-                color: Colors.darkGray,
-              },
-              {
-                label: 'Đã thuê',
-                value: data?.overview?.rentedRooms || 0,
-                color: '#2E7D5A', // darker green
-              },
-              {
-                label: 'Còn trống',
-                value: data?.overview?.availableRooms || 0,
-                color: Colors.accentSupport,
-              },
-              {
-                label: 'Chờ duyệt',
-                value: data?.overview?.pendingRooms || 0,
-                color: '#7DD3FC', // lighter blue
-              },
-            ]}
-            onPress={navigateToRoomStatistic}
-          />
+        {/* Modern Analysis Section */}
+        <View style={styles.modernAnalysisSection}>
+          <Text style={styles.modernSectionTitle}>Phân tích chi tiết</Text>
 
-          <StatisticCard
-            title="Doanh thu"
-            icon={require('../../../assets/icons/icon_area_black.png')}
-            backgroundColor={Colors.white}
-            iconColor={Colors.brandPrimary}
-            stats={[
-              {
-                label: 'Tổng doanh thu',
-                value: `${formatMoney(data?.revenue?.totalRevenue || 0)} đ`,
-                color: Colors.brandPrimary,
-              },
-              {
-                label: 'Giá thuê TB',
-                value: `${formatMoney(data?.revenue?.averageRent || 0)} đ`,
-                color: '#059669', // darker teal
-              },
-              {
-                label: 'Tỷ lệ lấp đầy',
-                value: `${data?.revenue?.occupancyRate || 0}%`,
-                color: '#06B6D4', // cyan
-              },
-            ]}
-            onPress={navigateToRevenueStatistic}
-          />
+          {/* Doanh thu chi tiết - Green */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={[styles.modernAnalysisCard, styles.greenBorder]}
+            onPress={navigateToRevenueStatistic}>
+            <View style={[styles.modernCardBorder, {backgroundColor: Colors.brandPrimary}]} />
+            <View style={styles.modernCardContent}>
+              <View style={[styles.modernIconContainer, styles.greenIconBg]}>
+                <Image
+                  source={require('../../../assets/icons/icon_light_report.png')}
+                  style={[styles.modernIcon, styles.greenIcon]}
+                />
+              </View>
+              <View style={styles.modernTextContainer}>
+                <Text style={styles.modernCardTitle}>Doanh thu chi tiết</Text>
+                <Text style={styles.modernCardDesc}>
+                  Biểu đồ xu hướng, phân tích hóa đơn và{'\n'}tỷ lệ lấp đầy
+                </Text>
+              </View>
+              <View style={styles.modernArrowContainer}>
+                <Image
+                  source={require('../../../assets/icons/icon_arrow_right.png')}
+                  style={styles.modernArrow}
+                />
+              </View>
+            </View>
+          </TouchableOpacity>
 
-          <StatisticCard
-            title="Hợp đồng"
-            icon={require('../../../assets/icons/icon_ban_ghe.png')}
-            backgroundColor={Colors.white}
-            iconColor={Colors.accentContract}
-            stats={[
-              {
-                label: 'Tổng hợp đồng',
-                value: data?.overview?.totalContracts || 0,
-                color: Colors.darkGray,
-              },
-              {
-                label: 'Đang hiệu lực',
-                value: data?.overview?.activeContracts || 0,
-                color: Colors.accentContract,
-              },
-              {
-                label: 'Chờ duyệt',
-                value: data?.overview?.pendingContracts || 0,
-                color: '#F59E0B', // amber
-              },
-              {
-                label: 'Đã kết thúc',
-                value: data?.overview?.terminatedContracts || 0,
-                color: '#6B7280', // gray
-              },
-            ]}
-            onPress={navigateToContractStatistic}
-          />
+          {/* Thống kê phòng trọ - Cyan */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={[styles.modernAnalysisCard, styles.cyanBorder]}
+            onPress={navigateToRoomStatistic}>
+            <View style={[styles.modernCardBorder, {backgroundColor: Colors.accentSupport}]} />
+            <View style={styles.modernCardContent}>
+              <View style={[styles.modernIconContainer, styles.cyanIconBg]}>
+                <Image
+                  source={require('../../../assets/icons/icon_room.png')}
+                  style={[styles.modernIcon, styles.cyanIcon]}
+                />
+              </View>
+              <View style={styles.modernTextContainer}>
+                <Text style={styles.modernCardTitle}>Thống kê phòng trọ</Text>
+                <Text style={styles.modernCardDesc}>
+                  Xu hướng thuê, top phòng được quan{'\n'}tâm nhất
+                </Text>
+              </View>
+              <View style={styles.modernArrowContainer}>
+                <Image
+                  source={require('../../../assets/icons/icon_arrow_right.png')}
+                  style={styles.modernArrow}
+                />
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          {/* Quản lý hợp đồng - Blue */}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            style={[styles.modernAnalysisCard, styles.blueBorder]}
+            onPress={navigateToContractStatistic}>
+            <View style={[styles.modernCardBorder, {backgroundColor: Colors.accentContract}]} />
+            <View style={styles.modernCardContent}>
+              <View style={[styles.modernIconContainer, styles.blueIconBg]}>
+                <Image
+                  source={require('../../../assets/icons/icon_contract.png')}
+                  style={[styles.modernIcon, styles.blueIcon]}
+                />
+              </View>
+              <View style={styles.modernTextContainer}>
+                <Text style={styles.modernCardTitle}>Quản lý hợp đồng</Text>
+                <Text style={styles.modernCardDesc}>
+                  Tình trạng hợp đồng, danh sách gần đây
+                </Text>
+              </View>
+              <View style={styles.modernArrowContainer}>
+                <Image
+                  source={require('../../../assets/icons/icon_arrow_right.png')}
+                  style={styles.modernArrow}
+                />
+              </View>
+            </View>
+          </TouchableOpacity>
         </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -287,6 +411,110 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: responsiveSpacing(24),
+  },
+  // New Beautiful Stats Grid
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: responsiveSpacing(16),
+    marginTop: responsiveSpacing(16),
+    gap: responsiveSpacing(12),
+  },
+  statCard: {
+    width: '47%',
+    borderRadius: 16,
+    padding: responsiveSpacing(20),
+    alignItems: 'center',
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  revenueCard: {
+    backgroundColor: Colors.brandPrimary, // Emerald
+  },
+  roomCard: {
+    backgroundColor: Colors.accentSupport, // Cyan
+  },
+  contractCard: {
+    backgroundColor: Colors.accentContract, // Blue
+  },
+  occupiedCard: {
+    backgroundColor: Colors.accentSchedule, // Teal
+  },
+  statIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: responsiveSpacing(12),
+  },
+  statIcon: {
+    width: 24,
+    height: 24,
+    tintColor: Colors.white,
+  },
+  statValue: {
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(20),
+    color: Colors.white,
+    marginBottom: responsiveSpacing(4),
+    textAlign: 'center',
+  },
+  statLabel: {
+    fontFamily: Fonts.Roboto_Medium,
+    fontSize: responsiveFont(13),
+    color: Colors.white,
+    opacity: 0.9,
+    textAlign: 'center',
+  },
+
+  // Chart Section
+  chartSection: {
+    marginTop: responsiveSpacing(24),
+    paddingHorizontal: responsiveSpacing(16),
+  },
+  chartTabs: {
+    flexDirection: 'row',
+    backgroundColor: Colors.brandPrimarySoft,
+    borderRadius: 26,
+    padding: responsiveSpacing(6),
+    marginBottom: responsiveSpacing(16),
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  chartTab: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 40,
+    borderRadius: 20,
+  },
+  chartTabActive: {
+    backgroundColor: 'transparent',
+  },
+  chartTabText: {
+    fontFamily: Fonts.Roboto_Medium,
+    fontSize: responsiveFont(13),
+    color: Colors.textSecondary,
+  },
+  chartTabTextActive: {
+    color: Colors.white,
+  },
+  tabIndicator: {
+    position: 'absolute',
+    top: responsiveSpacing(6),
+    left: responsiveSpacing(6),
+    bottom: responsiveSpacing(6),
+    backgroundColor: Colors.brandPrimary,
+    borderRadius: 20,
+    shadowColor: Colors.shadowDefault,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
   },
   loadingContainer: {
     flex: 1,
@@ -345,12 +573,111 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.white,
   },
-  quickStatsContainer: {
-    marginBottom: responsiveSpacing(16),
-  },
+
   chartsContainer: {
     marginTop: responsiveSpacing(10),
     marginBottom: responsiveSpacing(16),
+  },
+
+  // Modern Analysis Section
+  modernAnalysisSection: {
+    paddingHorizontal: responsiveSpacing(16),
+    marginTop: responsiveSpacing(24),
+    marginBottom: responsiveSpacing(24),
+  },
+  modernSectionTitle: {
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(20),
+    color: Colors.darkGray,
+    marginBottom: responsiveSpacing(20),
+  },
+  modernAnalysisCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    marginBottom: responsiveSpacing(16),
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    overflow: 'hidden',
+  },
+  modernCardBorder: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 6,
+    borderTopLeftRadius: 16,
+    borderBottomLeftRadius: 16,
+  },
+  greenBorder: {
+    borderLeftWidth: 0,
+  },
+  cyanBorder: {
+    borderLeftWidth: 0,
+  },
+  blueBorder: {
+    borderLeftWidth: 0,
+  },
+  modernCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: responsiveSpacing(20),
+    paddingLeft: responsiveSpacing(26), // Extra space for border
+  },
+  modernIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: responsiveSpacing(16),
+  },
+  greenIconBg: {
+    backgroundColor: Colors.brandPrimarySoft,
+  },
+  cyanIconBg: {
+    backgroundColor: '#E0F7FA',
+  },
+  blueIconBg: {
+    backgroundColor: '#E3F2FD',
+  },
+  modernIcon: {
+    width: 28,
+    height: 28,
+  },
+  greenIcon: {
+    tintColor: Colors.brandPrimary,
+  },
+  cyanIcon: {
+    tintColor: Colors.accentSupport,
+  },
+  blueIcon: {
+    tintColor: Colors.accentContract,
+  },
+  modernTextContainer: {
+    flex: 1,
+  },
+  modernCardTitle: {
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(17),
+    color: Colors.darkGray,
+    marginBottom: responsiveSpacing(6),
+  },
+  modernCardDesc: {
+    fontFamily: Fonts.Roboto_Regular,
+    fontSize: responsiveFont(14),
+    color: Colors.textSecondary,
+    lineHeight: responsiveFont(20),
+  },
+  modernArrowContainer: {
+    marginLeft: responsiveSpacing(12),
+  },
+  modernArrow: {
+    width: 24,
+    height: 24,
+    tintColor: '#CCCCCC',
   },
   sectionTitle: {
     fontSize: responsiveFont(18),

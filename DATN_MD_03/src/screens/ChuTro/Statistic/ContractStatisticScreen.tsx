@@ -25,9 +25,9 @@ import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
 import {LoadingAnimation} from '../../../components';
-import {StatChart, ContractCard} from './components';
 import UIHeader from '../MyRoom/components/UIHeader';
 import {Icons} from '../../../assets/icons';
+import {API_CONFIG} from '../../../configs';
 
 type ContractStatisticScreenNavigationProp =
   StackNavigationProp<RootStackParamList>;
@@ -41,6 +41,48 @@ const ContractStatisticScreen = () => {
 
   const statusBarHeight =
     Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
+
+  // Helper functions
+  const getContractStatusColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return Colors.brandPrimary;
+      case 'pending_approval':
+      case 'pending':
+        return '#F59E0B';
+      case 'expired':
+        return Colors.darkGray;
+      case 'terminated':
+      case 'cancelled':
+        return Colors.darkGray; // Đã hủy cũng dùng màu xám
+      default:
+        return Colors.mediumGray;
+    }
+  };
+
+  const getContractStatusText = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'Đang hiệu lực';
+      case 'pending_approval':
+      case 'pending':
+        return 'Chờ ký';
+      case 'expired':
+        return 'Đã hết hạn';
+      case 'terminated':
+      case 'cancelled':
+        return 'Đã hủy';
+      case 'draft':
+        return 'Nháp';
+      default:
+        return status;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+  };
 
   const fetchData = useCallback(async () => {
     if (user?.auth_token) {
@@ -95,178 +137,208 @@ const ContractStatisticScreen = () => {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }>
-        {/* Contract Overview */}
-        <View style={styles.overviewContainer}>
-          <View style={styles.overviewCard}>
-            <Text style={styles.overviewLabel}>Tổng hợp đồng</Text>
-            <Text style={styles.overviewValue}>
+        {/* Stats Grid */}
+        <View style={styles.statsGrid}>
+          {/* Tổng hợp đồng */}
+          <View style={[styles.statCard, styles.contractCard]}>
+            <View style={styles.statIconContainer}>
+              <Image
+                source={require('../../../assets/icons/icon_contract.png')}
+                style={[styles.statIcon, {tintColor: Colors.accentContract}]}
+              />
+            </View>
+            <Text style={[styles.statValue, {color: Colors.accentContract}]}>
               {data?.overview?.totalContracts || 0}
             </Text>
+            <Text style={styles.statLabel}>Tổng hợp đồng</Text>
           </View>
 
-          <View style={styles.overviewCard}>
-            <Text style={styles.overviewLabel}>Đang hiệu lực</Text>
-            <Text
-              style={[styles.overviewValue, {color: Colors.accentContract}]}>
+          {/* Đang hiệu lực */}
+          <View style={[styles.statCard, styles.activeCard]}>
+            <View style={styles.statIconContainer}>
+              <Image
+                source={require('../../../assets/icons/icon_check.png')}
+                style={[styles.statIcon, {tintColor: Colors.brandPrimary}]}
+              />
+            </View>
+            <Text style={[styles.statValue, {color: Colors.brandPrimary}]}>
               {data?.overview?.activeContracts || 0}
             </Text>
+            <Text style={styles.statLabel}>Đang hiệu lực</Text>
           </View>
 
-          <View style={styles.overviewCard}>
-            <Text style={styles.overviewLabel}>Chờ ký</Text>
-            <Text style={[styles.overviewValue, {color: '#F59E0B'}]}>
+          {/* Chờ ký */}
+          <View style={[styles.statCard, styles.pendingCard]}>
+            <View style={styles.statIconContainer}>
+              <Image
+                source={require('../../../assets/icons/icon_select_date.png')}
+                style={[styles.statIcon, {tintColor: '#F59E0B'}]}
+              />
+            </View>
+            <Text style={[styles.statValue, {color: '#F59E0B'}]}>
               {data?.overview?.pendingContracts || 0}
             </Text>
+            <Text style={styles.statLabel}>Chờ ký</Text>
           </View>
 
-          <View style={styles.overviewCard}>
-            <Text style={styles.overviewLabel}>Đã hết hạn</Text>
-            <Text style={[styles.overviewValue, {color: Colors.red}]}>
+          {/* Đã hết hạn */}
+          <View style={[styles.statCard, styles.expiredCard]}>
+            <View style={styles.statIconContainer}>
+              <Image
+                source={require('../../../assets/icons/icon_warning.png')}
+                style={[styles.statIcon, {tintColor: Colors.darkGray}]}
+              />
+            </View>
+            <Text style={[styles.statValue, {color: Colors.darkGray}]}>
               {data?.overview?.expiredContracts || 0}
             </Text>
+            <Text style={styles.statLabel}>Đã hết hạn</Text>
           </View>
         </View>
 
-        {/* Contract Chart */}
-        {data?.monthlyStats && (
-          <View style={styles.chartSection}>
-            <Text style={styles.sectionTitle}>Biểu đồ hợp đồng theo tháng</Text>
-            <StatChart
-              title="Số hợp đồng"
-              data={data.monthlyStats.contracts}
-              labels={data.monthlyStats.labels}
-              color={Colors.accentContract}
-            />
-          </View>
-        )}
+        {/* Modern Analysis Section */}
+        <View style={styles.modernAnalysisSection}>
+          <Text style={styles.modernSectionTitle}>Phân tích chi tiết</Text>
 
-        {/* Contract Status Breakdown */}
-        <View style={styles.statusContainer}>
-          <Text style={styles.sectionTitle}>Phân loại theo trạng thái</Text>
+          {/* Contract Performance Card */}
+          <View style={styles.performanceCard}>
 
-          <View style={styles.statusCard}>
-            <View style={styles.statusItem}>
-              <View style={styles.statusLeft}>
-                <View
-                  style={[
-                    styles.statusDot,
-                    {backgroundColor: Colors.darkGreen},
-                  ]}
-                />
-                <Text style={styles.statusLabel}>Đang hiệu lực</Text>
+              <View style={styles.performanceHeader}>
+                <View style={styles.performanceIconContainer}>
+                  <Image
+                    source={require('../../../assets/icons/icon_light_report.png')}
+                    style={styles.performanceIcon}
+                  />
+                </View>
+                <Text style={styles.performanceTitle}>Hiệu suất hợp đồng</Text>
               </View>
-              <Text style={styles.statusValue}>
-                {data?.overview?.activeContracts || 0}
-              </Text>
-            </View>
 
-            <View style={styles.statusItem}>
-              <View style={styles.statusLeft}>
-                <View
-                  style={[
-                    styles.statusDot,
-                    {backgroundColor: Colors.accentSchedule},
-                  ]}
-                />
-                <Text style={styles.statusLabel}>Chờ duyệt</Text>
-              </View>
-              <Text style={styles.statusValue}>
-                {data?.overview?.pendingContracts || 0}
-              </Text>
-            </View>
+              <View style={styles.performanceStats}>
+                <View style={styles.performanceItem}>
+                  <View style={[styles.performanceDot, {backgroundColor: Colors.brandPrimary}]} />
+                  <Text style={styles.performanceLabel}>Đang hiệu lực</Text>
+                  <Text style={styles.performanceValue}>{data?.overview?.activeContracts || 0}</Text>
+                </View>
 
-            <View style={styles.statusItem}>
-              <View style={styles.statusLeft}>
-                <View
-                  style={[styles.statusDot, {backgroundColor: Colors.red}]}
-                />
-                <Text style={styles.statusLabel}>Đã hết hạn</Text>
-              </View>
-              <Text style={styles.statusValue}>
-                {data?.overview?.expiredContracts || 0}
-              </Text>
-            </View>
+                <View style={styles.performanceItem}>
+                  <View style={[styles.performanceDot, {backgroundColor: '#F59E0B'}]} />
+                  <Text style={styles.performanceLabel}>Chờ duyệt</Text>
+                  <Text style={styles.performanceValue}>{data?.overview?.pendingContracts || 0}</Text>
+                </View>
 
-            <View style={styles.statusItem}>
-              <View style={styles.statusLeft}>
-                <View
-                  style={[
-                    styles.statusDot,
-                    {backgroundColor: Colors.accentContract},
-                  ]}
-                />
-                <Text style={styles.statusLabel}>Đã kết thúc</Text>
+                <View style={styles.performanceItem}>
+                  <View style={[styles.performanceDot, {backgroundColor: Colors.darkGray}]} />
+                  <Text style={styles.performanceLabel}>Đã hết hạn</Text>
+                  <Text style={styles.performanceValue}>{data?.overview?.expiredContracts || 0}</Text>
+                </View>
+
+                <View style={styles.performanceItem}>
+                  <View style={[styles.performanceDot, {backgroundColor: Colors.accentSystem}]} />
+                  <Text style={styles.performanceLabel}>Đã kết thúc</Text>
+                  <Text style={styles.performanceValue}>{data?.overview?.terminatedContracts || 0}</Text>
+                </View>
               </View>
-              <Text style={styles.statusValue}>
-                {data?.overview?.terminatedContracts || 0}
-              </Text>
-            </View>
           </View>
         </View>
 
-        {/* Active Contracts */}
+        {/* Recent Contracts - Beautiful Design */}
         <View style={styles.contractsContainer}>
-          <Text style={styles.sectionTitle}>Hợp đồng đang hiệu lực</Text>
+          <Text style={styles.modernSectionTitle}>Hợp đồng gần đây</Text>
           {data?.recentContracts && data.recentContracts.length > 0 ? (
             data.recentContracts
-              .filter((contract: any) => contract.status === 'active')
-              .slice(0, 3)
+              .slice(0, 4)
               .map((contract: any, index: number) => (
-                <ContractCard
-                  key={`active-${contract._id}-${index}`}
-                  roomNumber={contract.roomId.roomNumber}
-                  roomPhoto={contract.roomId.photos || []}
-                  tenantName={contract.tenantId.fullName}
-                  status={contract.status}
-                  createdAt={contract.createdAt}
-                  onPress={() => navigateToContractDetail(contract._id)}
-                />
-              ))
-          ) : (
-            <Text style={styles.noDataText}>
-              Không có hợp đồng đang hiệu lực
-            </Text>
-          )}
-        </View>
-
-        {/* Recent Contracts */}
-        <View style={styles.contractsContainer}>
-          <Text style={styles.sectionTitle}>Hợp đồng gần đây</Text>
-          {data?.recentContracts && data.recentContracts.length > 0 ? (
-            data.recentContracts
-              .slice(0, 3)
-              .map((contract: any, index: number) => (
-                <ContractCard
+                <TouchableOpacity
                   key={`recent-${contract._id}-${index}`}
-                  roomNumber={contract.roomId.roomNumber}
-                  roomPhoto={contract.roomId.photos || []}
-                  tenantName={contract.tenantId.fullName}
-                  status={contract.status}
-                  createdAt={contract.createdAt}
+                  style={styles.modernContractCard}
                   onPress={() => navigateToContractDetail(contract._id)}
-                />
+                  activeOpacity={0.8}>
+
+                  <View style={styles.contractContent}>
+
+                    {/* Room Image */}
+                    <View style={styles.contractImageContainer}>
+                      <Image
+                        source={
+                          contract.roomId.photos && contract.roomId.photos.length > 0
+                            ? {uri: `${API_CONFIG.BASE_URL}${contract.roomId.photos[0]}`}
+                            : require('../../../assets/images/image_backgroud_button.png')
+                        }
+                        style={styles.contractImage}
+                        resizeMode="cover"
+                      />
+                    </View>
+
+                    {/* Contract Info */}
+                    <View style={styles.contractInfo}>
+                      <Text style={styles.contractRoomTitle}>
+                        Phòng {contract.roomId.roomNumber}
+                      </Text>
+                      <Text style={styles.contractTenant}>
+                        {contract.tenantId.fullName}
+                      </Text>
+                      <View style={styles.contractMeta}>
+                        <View style={[
+                          styles.contractStatusBadge,
+                          {backgroundColor: getContractStatusColor(contract.status) + '20'}
+                        ]}>
+                          <Text style={[
+                            styles.contractStatusText,
+                            {color: getContractStatusColor(contract.status)}
+                          ]}>
+                            {getContractStatusText(contract.status)}
+                          </Text>
+                        </View>
+                        <Text style={styles.contractDate}>
+                          {formatDate(contract.createdAt)}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Arrow */}
+                    <View style={styles.contractArrow}>
+                      <Image
+                        source={require('../../../assets/icons/icon_arrow_right.png')}
+                        style={styles.arrowIcon}
+                      />
+                    </View>
+                  </View>
+                </TouchableOpacity>
               ))
           ) : (
-            <Text style={styles.noDataText}>Không có hợp đồng gần đây</Text>
+            <View style={styles.emptyState}>
+              <Image
+                source={require('../../../assets/icons/icon_contract.png')}
+                style={styles.emptyIcon}
+              />
+              <Text style={styles.emptyText}>Chưa có hợp đồng nào</Text>
+            </View>
           )}
         </View>
 
         {/* Quick Actions */}
         <View style={styles.actionsContainer}>
-          <Text style={styles.sectionTitle}>Thao tác nhanh</Text>
+          <Text style={styles.modernSectionTitle}>Thao tác nhanh</Text>
 
           <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('ContractManagement')}>
-            <Image
-              source={require('../../../assets/icons/icon_ban_ghe.png')}
-              style={styles.actionIcon}
-            />
-            <Text style={styles.actionText}>Xem tất cả hợp đồng</Text>
-            <Image
-              source={require('../../../assets/icons/icon_arrow_right.png')}
-              style={styles.arrowIcon}
-            />
+            activeOpacity={0.9}
+            onPress={() => navigation.navigate('ContractManagement')}
+            style={styles.quickCard}>
+            <View style={styles.quickCard}>
+              <View style={styles.quickLeft}>
+                <View style={styles.quickIconWrap}>
+                  <Image
+                    source={require('../../../assets/icons/icon_contract.png')}
+                    style={styles.quickIcon}
+                  />
+                </View>
+                <Text style={styles.quickText}>Xem tất cả hợp đồng</Text>
+              </View>
+              <Image
+                source={require('../../../assets/icons/icon_arrow_right.png')}
+                style={styles.quickArrow}
+              />
+            </View>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -296,88 +368,131 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: responsiveSpacing(24),
   },
-  overviewContainer: {
+  // Beautiful Stats Grid
+  statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: responsiveSpacing(16),
-    paddingTop: responsiveSpacing(16),
-    justifyContent: 'space-between',
+    marginTop: responsiveSpacing(16),
+    gap: responsiveSpacing(12),
   },
-  overviewCard: {
-    width: '48%',
+  statCard: {
+    width: '47%',
+    borderRadius: 12,
+    padding: responsiveSpacing(12),
+    alignItems: 'center',
+    minHeight: scale(100),
+    justifyContent: 'center',
+  },
+  contractCard: {
+    backgroundColor: '#E3F2FD',
+  },
+  activeCard: {
+    backgroundColor: '#E8F5E8',
+  },
+  pendingCard: {
+    backgroundColor: '#FFF8E1',
+  },
+  expiredCard: {
+    backgroundColor: '#F8F9FA', // Xám nhạt hơn
+  },
+  statIconContainer: {
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(20),
     backgroundColor: Colors.white,
-    borderRadius: scale(12),
-    padding: responsiveSpacing(16),
-    marginBottom: responsiveSpacing(12),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: responsiveSpacing(8),
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowRadius: 4,
     elevation: 3,
   },
-  overviewLabel: {
-    fontSize: responsiveFont(12),
-    fontFamily: Fonts.Roboto_Regular,
-    color: Colors.textGray,
-    marginBottom: responsiveSpacing(4),
+  statIcon: {
+    width: scale(20),
+    height: scale(20),
   },
-  overviewValue: {
-    fontSize: responsiveFont(20),
+  statValue: {
+    fontSize: responsiveFont(24),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.darkGray,
+    marginBottom: responsiveSpacing(2),
   },
-  chartSection: {
-    marginTop: responsiveSpacing(8),
+  statLabel: {
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Medium,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: responsiveFont(14),
   },
-  sectionTitle: {
+  modernSectionTitle: {
     fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.darkGray,
-    marginBottom: responsiveSpacing(10),
+    marginBottom: responsiveSpacing(16),
     paddingHorizontal: responsiveSpacing(16),
   },
-  statusContainer: {
+  // Modern Analysis Section
+  modernAnalysisSection: {
     marginTop: responsiveSpacing(16),
     paddingHorizontal: responsiveSpacing(16),
   },
-  statusCard: {
+  performanceCard: {
     backgroundColor: Colors.white,
-    borderRadius: scale(12),
-    padding: responsiveSpacing(16),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    borderRadius: 16,
+    padding: responsiveSpacing(20),
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  statusItem: {
+  performanceHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: responsiveSpacing(16),
+  },
+  performanceIconContainer: {
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(20),
+    backgroundColor: Colors.accentContract,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: responsiveSpacing(12),
+  },
+  performanceIcon: {
+    width: scale(20),
+    height: scale(20),
+    tintColor: Colors.white,
+  },
+  performanceTitle: {
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.darkGray,
+  },
+  performanceStats: {
+    gap: responsiveSpacing(12),
+  },
+  performanceItem: {
+    flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: responsiveSpacing(8),
   },
-  statusLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statusDot: {
+  performanceDot: {
     width: scale(12),
     height: scale(12),
     borderRadius: scale(6),
-    marginRight: responsiveSpacing(8),
+    marginRight: responsiveSpacing(12),
   },
-  statusLabel: {
+  performanceLabel: {
+    flex: 1,
     fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.darkGray,
   },
-  statusValue: {
+  performanceValue: {
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.darkGray,
@@ -396,37 +511,131 @@ const styles = StyleSheet.create({
     marginTop: responsiveSpacing(16),
     paddingHorizontal: responsiveSpacing(16),
   },
-  actionButton: {
+  quickCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    marginBottom: responsiveSpacing(12),
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
-    borderRadius: scale(12),
     padding: responsiveSpacing(16),
-    marginBottom: responsiveSpacing(12),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    // Bỏ shadow/elevation
   },
-  actionIcon: {
-    width: scale(24),
-    height: scale(24),
+  quickLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  quickIconWrap: {
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(20),
+    backgroundColor: Colors.accentContract + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: responsiveSpacing(12),
+  },
+  quickIcon: {
+    width: scale(20),
+    height: scale(20),
     tintColor: Colors.accentContract,
   },
-  actionText: {
-    flex: 1,
+  quickText: {
     fontSize: responsiveFont(16),
-    fontFamily: Fonts.Roboto_Regular,
+    fontFamily: Fonts.Roboto_Medium,
     color: Colors.darkGray,
+  },
+  quickArrow: {
+    width: scale(16),
+    height: scale(16),
+    tintColor: Colors.mediumGray,
+  },
+  // Modern Contract Cards
+  modernContractCard: {
+    backgroundColor: Colors.white,
+    marginHorizontal: responsiveSpacing(16),
+    marginBottom: responsiveSpacing(12),
+    borderRadius: 16,
+    padding: responsiveSpacing(16),
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  contractContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  contractImageContainer: {
+    width: scale(60),
+    height: scale(60),
+    borderRadius: scale(12),
+    overflow: 'hidden',
+    marginRight: responsiveSpacing(12),
+  },
+  contractImage: {
+    width: '100%',
+    height: '100%',
+  },
+  contractInfo: {
+    flex: 1,
+  },
+  contractRoomTitle: {
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.darkGray,
+    marginBottom: responsiveSpacing(4),
+  },
+  contractTenant: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textSecondary,
+    marginBottom: responsiveSpacing(8),
+  },
+  contractMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  contractStatusBadge: {
+    paddingHorizontal: responsiveSpacing(8),
+    paddingVertical: responsiveSpacing(4),
+    borderRadius: scale(12),
+  },
+  contractStatusText: {
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Medium,
+  },
+  contractDate: {
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
+  },
+  contractArrow: {
+    marginLeft: responsiveSpacing(8),
   },
   arrowIcon: {
     width: scale(16),
     height: scale(16),
     tintColor: Colors.mediumGray,
+  },
+  // Empty State
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: responsiveSpacing(40),
+    marginHorizontal: responsiveSpacing(16),
+  },
+  emptyIcon: {
+    width: scale(48),
+    height: scale(48),
+    tintColor: Colors.textGray,
+    marginBottom: responsiveSpacing(12),
+  },
+  emptyText: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
+    textAlign: 'center',
   },
 });
