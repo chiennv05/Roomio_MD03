@@ -104,21 +104,21 @@ const RoomStatisticScreen = () => {
 
           <View style={styles.overviewCard}>
             <Text style={styles.overviewLabel}>Phòng đã thuê</Text>
-            <Text style={[styles.overviewValue, {color: Colors.darkGreen}]}>
+            <Text style={[styles.overviewValue, {color: '#2E7D5A'}]}>
               {data?.overview?.rentedRooms || 0}
             </Text>
           </View>
 
           <View style={styles.overviewCard}>
             <Text style={styles.overviewLabel}>Phòng trống</Text>
-            <Text style={[styles.overviewValue, {color: Colors.primaryGreen}]}>
+            <Text style={[styles.overviewValue, {color: Colors.accentSupport}]}>
               {data?.overview?.availableRooms || 0}
             </Text>
           </View>
 
           <View style={styles.overviewCard}>
             <Text style={styles.overviewLabel}>Chờ duyệt</Text>
-            <Text style={[styles.overviewValue, {color: Colors.mediumGray}]}>
+            <Text style={[styles.overviewValue, {color: '#7DD3FC'}]}>
               {data?.overview?.pendingRooms || 0}
             </Text>
           </View>
@@ -134,7 +134,7 @@ const RoomStatisticScreen = () => {
               title="Số lượng phòng"
               data={data.monthlyStats.rooms}
               labels={data.monthlyStats.labels}
-              color={Colors.primaryGreen}
+              color={Colors.accentSupport}
             />
           </View>
         )}

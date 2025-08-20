@@ -108,14 +108,14 @@ const RevenueStatisticScreen = () => {
 
           <View style={styles.overviewCard}>
             <Text style={styles.overviewLabel}>Giá thuê TB</Text>
-            <Text style={[styles.overviewValue, {color: Colors.primaryGreen}]}>
+            <Text style={[styles.overviewValue, {color: '#059669'}]}>
               {formatMoney(data?.revenue?.averageRent || 0)} đ
             </Text>
           </View>
 
           <View style={styles.overviewCard}>
             <Text style={styles.overviewLabel}>Tỷ lệ lấp đầy</Text>
-            <Text style={[styles.overviewValue, {color: Colors.darkGreen}]}>
+            <Text style={[styles.overviewValue, {color: '#06B6D4'}]}>
               {data?.revenue?.occupancyRate || 0}%
             </Text>
           </View>
@@ -131,7 +131,7 @@ const RevenueStatisticScreen = () => {
               title="Doanh thu (VNĐ)"
               data={data.monthlyStats.revenue}
               labels={data.monthlyStats.labels}
-              color={Colors.primaryGreen}
+              color={Colors.brandPrimary}
             />
           </View>
         )}
@@ -144,7 +144,7 @@ const RevenueStatisticScreen = () => {
               title="Tỷ lệ lấp đầy (%)"
               data={data.monthlyStats.occupancyRate}
               labels={data.monthlyStats.labels}
-              color={Colors.darkGreen}
+              color={Colors.accentSchedule}
             />
           </View>
         )}
@@ -159,7 +159,7 @@ const RevenueStatisticScreen = () => {
                 <View
                   style={[
                     styles.colorDot,
-                    {backgroundColor: Colors.primaryGreen},
+                    {backgroundColor: Colors.brandPrimary},
                   ]}
                 />
                 <Text style={styles.breakdownLabel}>Tiền thuê phòng</Text>
@@ -184,7 +184,10 @@ const RevenueStatisticScreen = () => {
             <View style={styles.breakdownItem}>
               <View style={styles.breakdownLeft}>
                 <View
-                  style={[styles.colorDot, {backgroundColor: Colors.limeGreen}]}
+                  style={[
+                    styles.colorDot,
+                    {backgroundColor: Colors.accentSupport},
+                  ]}
                 />
                 <Text style={styles.breakdownLabel}>Phí khác</Text>
               </View>
@@ -353,7 +356,7 @@ const styles = StyleSheet.create({
     width: scale(24),
     height: scale(24),
     marginRight: responsiveSpacing(12),
-    tintColor: Colors.primaryGreen,
+    tintColor: Colors.brandPrimary,
   },
   actionText: {
     flex: 1,

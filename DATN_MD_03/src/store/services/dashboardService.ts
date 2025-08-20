@@ -34,14 +34,41 @@ export interface DashboardResponse {
       overdueInvoices: number;
       draftInvoices: number;
       pendingConfirmationInvoices: number;
-      recentInvoices: any[];
+      recentInvoices: Array<{
+        period: {
+          month: number;
+          year: number;
+        };
+        _id: string;
+        roomId: {
+          _id: string;
+          roomNumber: string;
+        };
+        tenantId: {
+          _id: string;
+          username: string;
+          fullName: string;
+        };
+        status: string;
+        dueDate: string;
+        totalAmount: number;
+        issueDate?: string;
+        id: string;
+      }>;
     };
     tenants: {
       totalTenants: number;
       activeTenants: number;
       inactiveTenants: number;
       averageStayDuration: number;
-      longestStayingTenant: any;
+      longestStayingTenant: {
+        tenantId: string;
+        username: string;
+        fullName: string;
+        stayDuration: number;
+        startDate: string;
+        contractId: string;
+      };
       contractsByStatus: {
         active: number;
         expired: number;
@@ -119,11 +146,14 @@ export interface DashboardResponse {
         coTenants: Array<{
           userId: string;
           username: string;
+          fullName: string;
           phone: string;
           email: string;
           birthDate: string | null;
           identityNumber: string;
           address: string;
+          avatar: string;
+          status: string;
           _id: string;
         }>;
         rules: string;
@@ -139,6 +169,7 @@ export interface DashboardResponse {
         _id: string;
         username: string;
         fullName: string;
+        avatar: string;
       };
       status: string;
       createdAt: string;
@@ -158,7 +189,9 @@ export interface DashboardResponse {
   };
 }
 
-export const fetchDashboardStats = async (token: string): Promise<DashboardResponse> => {
+export const fetchDashboardStats = async (
+  token: string,
+): Promise<DashboardResponse> => {
   try {
     const response = await api.get('/landlord/dashboard', {
       headers: {

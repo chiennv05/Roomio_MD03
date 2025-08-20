@@ -8,12 +8,13 @@ import {
   SafeAreaView,
   StatusBar,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../../store';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
-import {responsiveFont, responsiveSpacing, SCREEN} from '../../../utils/responsive';
+import {responsiveFont, responsiveSpacing} from '../../../utils/responsive';
 import {fetchDashboard} from '../../../store/slices/dashboardSlice';
 import {StatisticCard, MainChart} from './components';
 import {useNavigation} from '@react-navigation/native';
@@ -150,7 +151,12 @@ const StatisticScreen = () => {
         barStyle="dark-content"
         translucent
       />
-      <View style={[styles.headerContainer, {marginTop: statusBarHeight + 5}]}>
+      <View
+        style={[
+          styles.headerContainer,
+          styles.headerContainerTopPad,
+          {marginTop: statusBarHeight + 5},
+        ]}>
         <UIHeader
           title="Thống kê"
           iconLeft={Icons.IconArrowLeft}
@@ -165,13 +171,18 @@ const StatisticScreen = () => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }>
         {/* Main Chart */}
-        <View
-          style={[styles.chartsContainer, {marginTop: 10}]}>
+        <View style={styles.chartsContainer}>
           <MainChart
             title={mainChartData.title}
             data={mainChartData.data}
             labels={data?.monthlyStats?.labels || []}
-            color={Colors.success}
+            color={
+              mainChartData.valueType === 'revenue'
+                ? Colors.brandPrimary
+                : mainChartData.valueType === 'rooms'
+                ? Colors.accentSupport
+                : Colors.accentContract
+            }
           />
         </View>
 
@@ -181,7 +192,7 @@ const StatisticScreen = () => {
             title="Phòng trọ"
             icon={require('../../../assets/icons/icon_room.png')}
             backgroundColor={Colors.white}
-            iconColor={Colors.darkGreen}
+            iconColor={Colors.accentSupport}
             stats={[
               {
                 label: 'Tổng số phòng',
@@ -191,17 +202,17 @@ const StatisticScreen = () => {
               {
                 label: 'Đã thuê',
                 value: data?.overview?.rentedRooms || 0,
-                color: Colors.darkGreen,
+                color: '#2E7D5A', // darker green
               },
               {
                 label: 'Còn trống',
                 value: data?.overview?.availableRooms || 0,
-                color: Colors.primaryGreen,
+                color: Colors.accentSupport,
               },
               {
                 label: 'Chờ duyệt',
                 value: data?.overview?.pendingRooms || 0,
-                color: Colors.mediumGray,
+                color: '#7DD3FC', // lighter blue
               },
             ]}
             onPress={navigateToRoomStatistic}
@@ -211,22 +222,22 @@ const StatisticScreen = () => {
             title="Doanh thu"
             icon={require('../../../assets/icons/icon_area_black.png')}
             backgroundColor={Colors.white}
-            iconColor={Colors.darkGreen}
+            iconColor={Colors.brandPrimary}
             stats={[
               {
                 label: 'Tổng doanh thu',
                 value: `${formatMoney(data?.revenue?.totalRevenue || 0)} đ`,
-                color: Colors.darkGreen,
+                color: Colors.brandPrimary,
               },
               {
                 label: 'Giá thuê TB',
                 value: `${formatMoney(data?.revenue?.averageRent || 0)} đ`,
-                color: Colors.primaryGreen,
+                color: '#059669', // darker teal
               },
               {
                 label: 'Tỷ lệ lấp đầy',
                 value: `${data?.revenue?.occupancyRate || 0}%`,
-                color: Colors.primaryGreen,
+                color: '#06B6D4', // cyan
               },
             ]}
             onPress={navigateToRevenueStatistic}
@@ -236,7 +247,7 @@ const StatisticScreen = () => {
             title="Hợp đồng"
             icon={require('../../../assets/icons/icon_ban_ghe.png')}
             backgroundColor={Colors.white}
-            iconColor={Colors.darkGreen}
+            iconColor={Colors.accentContract}
             stats={[
               {
                 label: 'Tổng hợp đồng',
@@ -246,17 +257,17 @@ const StatisticScreen = () => {
               {
                 label: 'Đang hiệu lực',
                 value: data?.overview?.activeContracts || 0,
-                color: Colors.darkGreen,
+                color: Colors.accentContract,
               },
               {
-                label: 'Chờ ký',
+                label: 'Chờ duyệt',
                 value: data?.overview?.pendingContracts || 0,
-                color: Colors.mediumGray,
+                color: '#F59E0B', // amber
               },
               {
-                label: 'Đã hết hạn',
-                value: data?.overview?.expiredContracts || 0,
-                color: Colors.lightRed,
+                label: 'Đã kết thúc',
+                value: data?.overview?.terminatedContracts || 0,
+                color: '#6B7280', // gray
               },
             ]}
             onPress={navigateToContractStatistic}
@@ -297,7 +308,7 @@ const styles = StyleSheet.create({
     marginBottom: responsiveSpacing(16),
   },
   retryButton: {
-    backgroundColor: Colors.primaryGreen,
+    backgroundColor: Colors.brandPrimary,
     paddingHorizontal: responsiveSpacing(24),
     paddingVertical: responsiveSpacing(10),
     borderRadius: 8,
@@ -307,7 +318,7 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Bold,
   },
-  headerContainer: {
+  headerContainerTopPad: {
     paddingTop: responsiveSpacing(8),
   },
   headerBanner: {
@@ -338,6 +349,7 @@ const styles = StyleSheet.create({
     marginBottom: responsiveSpacing(16),
   },
   chartsContainer: {
+    marginTop: responsiveSpacing(10),
     marginBottom: responsiveSpacing(16),
   },
   sectionTitle: {

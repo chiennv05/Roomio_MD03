@@ -25,7 +25,7 @@ import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
 import {LoadingAnimation} from '../../../components';
-import {StatChart, RecentContractItem} from './components';
+import {StatChart, ContractCard} from './components';
 import UIHeader from '../MyRoom/components/UIHeader';
 import {Icons} from '../../../assets/icons';
 
@@ -106,14 +106,15 @@ const ContractStatisticScreen = () => {
 
           <View style={styles.overviewCard}>
             <Text style={styles.overviewLabel}>Đang hiệu lực</Text>
-            <Text style={[styles.overviewValue, {color: Colors.darkGreen}]}>
+            <Text
+              style={[styles.overviewValue, {color: Colors.accentContract}]}>
               {data?.overview?.activeContracts || 0}
             </Text>
           </View>
 
           <View style={styles.overviewCard}>
             <Text style={styles.overviewLabel}>Chờ ký</Text>
-            <Text style={[styles.overviewValue, {color: Colors.mediumGray}]}>
+            <Text style={[styles.overviewValue, {color: '#F59E0B'}]}>
               {data?.overview?.pendingContracts || 0}
             </Text>
           </View>
@@ -134,7 +135,7 @@ const ContractStatisticScreen = () => {
               title="Số hợp đồng"
               data={data.monthlyStats.contracts}
               labels={data.monthlyStats.labels}
-              color={Colors.primaryGreen}
+              color={Colors.accentContract}
             />
           </View>
         )}
@@ -164,10 +165,10 @@ const ContractStatisticScreen = () => {
                 <View
                   style={[
                     styles.statusDot,
-                    {backgroundColor: Colors.mediumGray},
+                    {backgroundColor: Colors.accentSchedule},
                   ]}
                 />
-                <Text style={styles.statusLabel}>Chờ ký</Text>
+                <Text style={styles.statusLabel}>Chờ duyệt</Text>
               </View>
               <Text style={styles.statusValue}>
                 {data?.overview?.pendingContracts || 0}
@@ -191,36 +192,60 @@ const ContractStatisticScreen = () => {
                 <View
                   style={[
                     styles.statusDot,
-                    {backgroundColor: Colors.primaryGreen},
+                    {backgroundColor: Colors.accentContract},
                   ]}
                 />
-                <Text style={styles.statusLabel}>Đã gia hạn</Text>
+                <Text style={styles.statusLabel}>Đã kết thúc</Text>
               </View>
               <Text style={styles.statusValue}>
-                {(data?.overview?.totalContracts || 0) -
-                  (data?.overview?.activeContracts || 0) -
-                  (data?.overview?.pendingContracts || 0) -
-                  (data?.overview?.expiredContracts || 0)}
+                {data?.overview?.terminatedContracts || 0}
               </Text>
             </View>
           </View>
+        </View>
+
+        {/* Active Contracts */}
+        <View style={styles.contractsContainer}>
+          <Text style={styles.sectionTitle}>Hợp đồng đang hiệu lực</Text>
+          {data?.recentContracts && data.recentContracts.length > 0 ? (
+            data.recentContracts
+              .filter((contract: any) => contract.status === 'active')
+              .slice(0, 3)
+              .map((contract: any, index: number) => (
+                <ContractCard
+                  key={`active-${contract._id}-${index}`}
+                  roomNumber={contract.roomId.roomNumber}
+                  roomPhoto={contract.roomId.photos || []}
+                  tenantName={contract.tenantId.fullName}
+                  status={contract.status}
+                  createdAt={contract.createdAt}
+                  onPress={() => navigateToContractDetail(contract._id)}
+                />
+              ))
+          ) : (
+            <Text style={styles.noDataText}>
+              Không có hợp đồng đang hiệu lực
+            </Text>
+          )}
         </View>
 
         {/* Recent Contracts */}
         <View style={styles.contractsContainer}>
           <Text style={styles.sectionTitle}>Hợp đồng gần đây</Text>
           {data?.recentContracts && data.recentContracts.length > 0 ? (
-            data.recentContracts.map((contract: any, index: number) => (
-              <RecentContractItem
-                key={`contract-${contract._id}-${index}`}
-                roomNumber={contract.roomId.roomNumber}
-                roomPhoto={contract.roomId.photos?.[0] || ''}
-                tenantName={contract.tenantId.fullName}
-                status={contract.status}
-                date={contract.createdAt}
-                onPress={() => navigateToContractDetail(contract._id)}
-              />
-            ))
+            data.recentContracts
+              .slice(0, 3)
+              .map((contract: any, index: number) => (
+                <ContractCard
+                  key={`recent-${contract._id}-${index}`}
+                  roomNumber={contract.roomId.roomNumber}
+                  roomPhoto={contract.roomId.photos || []}
+                  tenantName={contract.tenantId.fullName}
+                  status={contract.status}
+                  createdAt={contract.createdAt}
+                  onPress={() => navigateToContractDetail(contract._id)}
+                />
+              ))
           ) : (
             <Text style={styles.noDataText}>Không có hợp đồng gần đây</Text>
           )}
@@ -391,7 +416,7 @@ const styles = StyleSheet.create({
     width: scale(24),
     height: scale(24),
     marginRight: responsiveSpacing(12),
-    tintColor: Colors.primaryGreen,
+    tintColor: Colors.accentContract,
   },
   actionText: {
     flex: 1,
