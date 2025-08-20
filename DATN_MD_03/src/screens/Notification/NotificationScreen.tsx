@@ -193,33 +193,28 @@ const NotificationScreen = () => {
     setSelectedNotification(null);
   };
 
-  // Function để navigate đến màn hình hóa đơn
+  // Function để navigate đến màn hình hóa đơn (có kiểm tra id hợp lệ)
   const navigateToBillScreen = (invoiceId?: string | null) => {
     closeModal();
-    if (invoiceId) {
-      // Nếu có invoiceId, navigate đến chi tiết hóa đơn
-      navigation.navigate('BillDetails', {invoiceId});
+    const valid =
+      !!invoiceId && /^(?:[0-9a-f]{24}|[A-Za-z0-9_-]{6,})$/.test(invoiceId);
+    if (valid) {
+      navigation.navigate('BillDetails', {invoiceId: invoiceId!});
     } else {
-      // Nếu không có invoiceId, navigate đến danh sách hóa đơn
       navigation.navigate('Bill');
     }
   };
 
   // Function để navigate đến màn hình hợp đồng
-  const navigateToContractScreen = (roomId?: string | null) => {
+  const navigateToContractScreen = (_roomId?: string | null) => {
     closeModal();
 
-    // Kiểm tra nếu có selectedNotification để lấy thêm thông tin
-    if (selectedNotification) {
+    // Nếu là chủ trọ và đây là thông báo yêu cầu thuê -> sang AddContract
+    if (user?.role === 'chuTro' && selectedNotification) {
       const originalNotification = notifications.find(
         n => n._id === selectedNotification.id,
       );
-
-      // Nếu có thông báo gốc và có rentRequestData, navigate đến AddContract
-      if (
-        originalNotification &&
-        originalNotification.rentRequestData?.tenantInfo
-      ) {
+      if (originalNotification?.rentRequestData?.tenantInfo) {
         console.log(
           'Navigate to AddContract with notificationId:',
           selectedNotification.id,
@@ -231,15 +226,22 @@ const NotificationScreen = () => {
       }
     }
 
-    // Nếu có roomId, navigate đến chi tiết phòng
-    if (roomId) {
-      console.log('Navigate to room detail with roomId:', roomId);
-      navigation.navigate('DetailRoomLandlord', {id: roomId});
-    } else {
-      // Fallback: navigate đến quản lý hợp đồng
-      console.log('Navigate to contract management');
-      navigation.navigate('ContractManagement');
+    // Người thuê: đưa sang màn hợp đồng của người thuê
+    if (user?.role === 'nguoiThue') {
+      console.log('Navigate to tenant contracts');
+      navigation.navigate('ContractLessee');
+      return;
     }
+
+    // Chủ trọ: đưa sang màn quản lý hợp đồng
+    if (user?.role === 'chuTro') {
+      console.log('Navigate to landlord contract management');
+      navigation.navigate('ContractManagement');
+      return;
+    }
+
+    // Fallback
+    navigation.navigate('ContractLessee');
   };
 
   // Function để navigate đến màn hình quản lý phòng
