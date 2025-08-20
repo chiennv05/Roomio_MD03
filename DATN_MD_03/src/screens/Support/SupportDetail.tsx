@@ -100,7 +100,7 @@ const SupportDetail: React.FC = () => {
         };
       case 'hoanTat':
         return {
-          color: Colors.figmaGreen,
+          color: Colors.darkGreen,
           textColor: Colors.white,
           text: 'Hoàn tất',
         };

@@ -37,18 +37,18 @@ export const handleNotificationTap = async (notificationId?: string) => {
       console.log('Navigating to Notification screen');
 
       // Reset to UITab first if not already there
-      const currentRoute = navigationRef.getCurrentRoute();
-      console.log('Current route:', currentRoute?.name);
+      // const currentRoute = navigationRef.getCurrentRoute();
+      // console.log('Current route:', currentRoute?.name);
 
-      if (currentRoute?.name !== 'UITab') {
-        navigationRef.reset({
-          index: 0,
-          routes: [{name: 'UITab'}],
-        });
+      // if (currentRoute?.name !== 'UITab') {
+      //   navigationRef.reset({
+      //     index: 0,
+      //     routes: [{name: 'UITab'}],
+      //   });
 
-        // Wait a bit for tab navigation to settle
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
+      //   // Wait a bit for tab navigation to settle
+      //   await new Promise(resolve => setTimeout(resolve, 500));
+      // }
 
       // Navigate to notification screen
       navigationRef.navigate('Notification', {
@@ -75,7 +75,7 @@ export const checkNotificationLaunch = async () => {
     const now = Date.now();
 
     // If last tap was within 5 seconds, consider it a recent notification tap
-    if (lastTap && now - parseInt(lastTap) < 5000) {
+    if (lastTap && now - parseInt(lastTap, 10) < 5000) {
       console.log('App likely opened from notification');
       return true;
     }
@@ -109,9 +109,10 @@ export const initNotificationHandler = () => {
 
   // Listen for app state changes
   const {AppState} = require('react-native');
-  AppState.addEventListener('change', handleAppStateChange);
+  const subscription = AppState.addEventListener('change', handleAppStateChange);
 
   return () => {
-    AppState.removeEventListener('change', handleAppStateChange);
+    // RN >= 0.65 returns a subscription object
+    subscription?.remove?.();
   };
 };

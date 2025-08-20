@@ -39,7 +39,7 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
         };
       case 'hoanTat':
         return {
-          color: Colors.figmaGreen,
+          color: Colors.darkGreen,
           text: 'Hoàn tất',
           bgColor: Colors.lightGreenBackground,
         };
