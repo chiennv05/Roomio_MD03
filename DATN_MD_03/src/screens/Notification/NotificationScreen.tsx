@@ -44,12 +44,7 @@ const NotificationScreen = () => {
   } = useSelector((state: RootState) => state.notification);
 
   // Custom Alert Hook
-  const {
-    alertConfig,
-    visible: alertVisible,
-    hideAlert,
-    showSuccess,
-  } = useCustomAlert();
+  const {alertConfig, visible: alertVisible, hideAlert} = useCustomAlert();
 
   const [activeTab, setActiveTab] = useState<
     'all' | 'heThong' | 'hopDong' | 'thanhToan' | 'hoTro'
@@ -85,45 +80,20 @@ const NotificationScreen = () => {
     ]).start();
   }, [dispatch, user, token, fadeAnim, slideAnim]);
 
-  // Handle navigation from notification tap
+  // Handle navigation from notification tap: chỉ vào màn Thông báo, KHÔNG mở dialog
   useEffect(() => {
     const params = route.params as any;
-    if (params?.fromPush && params?.notificationId) {
-      console.log('Opened from notification:', params.notificationId);
-
-      // Show success message
-      setTimeout(() => {
-        showSuccess(
-          'Đã mở từ thông báo!',
-          'Thông báo đã được mở thành công',
-          true,
-        );
-      }, 1000);
-
-      // Optionally, find and highlight the specific notification
-      // or open its detail modal
-      const targetNotification = notifications.find(
-        notif => (notif._id || (notif as any).id) === params.notificationId,
+    if (params?.fromPush) {
+      console.log(
+        'Opened from status-bar notification → stay on Notification list',
       );
-
-      if (targetNotification) {
-        // Auto-open the notification detail modal
-        const formatted: FormattedNotification = {
-          id: targetNotification._id || '',
-          title: getNotificationTitle(targetNotification.type),
-          content: targetNotification.content,
-          time: formatRelativeTime(targetNotification.createdAt),
-          date: formatFullDate(targetNotification.createdAt),
-          isRead: targetNotification.status === 'read',
-          type: targetNotification.type,
-        };
-        setTimeout(() => {
-          setSelectedNotification(formatted);
-          setModalVisible(true);
-        }, 1500);
-      }
+      // Đảm bảo không hiện bất kỳ modal nào
+      setModalVisible(false);
+      setSelectedNotification(null);
+      // Optional: có thể refresh nhanh danh sách để người dùng thấy mục mới
+      // if (user && token) dispatch(refreshNotifications({ token, limit: 20 }));
     }
-  }, [route.params, notifications, showSuccess]);
+  }, [route.params]);
 
   // Handle refresh
   const handleRefresh = useCallback(() => {
@@ -280,8 +250,6 @@ const NotificationScreen = () => {
     },
     [],
   );
-
-
 
   // Filter notifications based on active tab
   const getFilteredNotifications = useCallback(() => {
