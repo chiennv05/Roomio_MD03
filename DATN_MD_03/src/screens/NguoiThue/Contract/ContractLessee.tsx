@@ -6,6 +6,8 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {useDispatch, useSelector} from 'react-redux';
@@ -28,7 +30,6 @@ import {RootStackParamList} from '../../../types/route';
 import {UIHeader} from '../../ChuTro/MyRoom/components';
 import EmptyContract from '../../ChuTro/Contract/components/EmptyContract';
 import ContractItem from '../../ChuTro/Contract/components/ContractItem';
-import Pagination from '../../ChuTro/Contract/components/Pagination';
 import {filterOptionsContract} from './utils/filterContract';
 
 const ContractLessee = () => {
@@ -40,7 +41,7 @@ const ContractLessee = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
-  const {contracts, pagination, loading} = useSelector(
+  const {contracts, loading} = useSelector(
     (state: RootState) => state.contract,
   );
 
@@ -86,11 +87,6 @@ const ContractLessee = () => {
     setCurrentPage(1);
   }, []);
 
-  // Chuyển trang
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
   const handleGoBack = () => {
     navigation.goBack();
   };
@@ -98,39 +94,42 @@ const ContractLessee = () => {
   const handleGoContractDetail = (contractId: string) => {
     navigation.navigate('ContractDetailLessee', {contractId});
   };
+  const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
   return (
     <SafeAreaView style={styles.container}>
-      <UIHeader
-        title="Hợp đồng của tôi"
-        iconLeft={Icons.IconArrowLeft}
-        onPressLeft={handleGoBack}
-      />
-
-      <View style={styles.conatinerFilter}>
-        <FlatList
-          keyExtractor={(_, index) => index.toString()}
-          horizontal={true}
-          showsHorizontalScrollIndicator={false}
-          data={filterOptionsContract}
-          renderItem={({item, index}) => (
-            <FilterStatusItem
-              item={item}
-              isSelected={item.value === selectedFilter}
-              onPress={handleClickFilter}
-              index={index}
-            />
-          )}
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+      <View style={[styles.content, {paddingTop: statusBarHeight}]}>
+        <UIHeader
+          title="Hợp đồng của tôi"
+          iconLeft={Icons.IconArrowLeft}
+          onPressLeft={handleGoBack}
         />
-      </View>
-      <View style={styles.containerListRooms}>
-        {loading && !refreshing ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.darkGreen} />
-          </View>
-        ) : contracts.length === 0 ? (
-          <EmptyContract />
-        ) : (
-          <>
+
+        <View style={styles.conatinerFilter}>
+          <FlatList
+            keyExtractor={(_, index) => index.toString()}
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            data={filterOptionsContract}
+            renderItem={({item, index}) => (
+              <FilterStatusItem
+                item={item}
+                isSelected={item.value === selectedFilter}
+                onPress={handleClickFilter}
+                index={index}
+              />
+            )}
+          />
+        </View>
+
+        <View style={styles.containerListRooms}>
+          {loading && !refreshing ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={Colors.darkGreen} />
+            </View>
+          ) : contracts.length === 0 ? (
+            <EmptyContract />
+          ) : (
             <FlatList
               data={contracts}
               keyExtractor={(_, index) => index.toString()}
@@ -152,16 +151,8 @@ const ContractLessee = () => {
                 />
               }
             />
-
-            {pagination && (
-              <Pagination
-                currentPage={pagination.page}
-                totalPages={pagination.totalPages}
-                onPageChange={handlePageChange}
-              />
-            )}
-          </>
-        )}
+          )}
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -169,6 +160,10 @@ const ContractLessee = () => {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: Colors.white,
+  },
+  content: {
     flex: 1,
     backgroundColor: Colors.backgroud,
     alignItems: 'center',
@@ -213,8 +208,6 @@ const styles = StyleSheet.create({
   },
   containerListRooms: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
 

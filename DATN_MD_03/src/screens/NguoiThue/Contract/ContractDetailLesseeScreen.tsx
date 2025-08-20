@@ -12,6 +12,7 @@ import {
   Platform,
   UIManager,
   LayoutAnimation,
+  StatusBar,
 } from 'react-native';
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -118,18 +119,23 @@ const ContractDetailLesseeScreen = () => {
     setIsVisibleImage(true);
   };
 
+  const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
+
   // Hiển thị màn hình loading
   if (selectedContractLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <UIHeader
-          title="Chi tiết hợp đồng"
-          iconLeft={Icons.IconArrowLeft}
-          onPressLeft={handleGoBack}
-        />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.darkGreen} />
-          <Text style={styles.loadingText}>Đang tải thông tin hợp đồng...</Text>
+        <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+        <View style={[styles.content, {paddingTop: statusBarHeight}]}>
+          <UIHeader
+            title="Chi tiết hợp đồng"
+            iconLeft={Icons.IconArrowLeft}
+            onPressLeft={handleGoBack}
+          />
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.darkGreen} />
+            <Text style={styles.loadingText}>Đang tải thông tin hợp đồng...</Text>
+          </View>
         </View>
       </SafeAreaView>
     );
@@ -139,20 +145,23 @@ const ContractDetailLesseeScreen = () => {
   if (selectedContractError) {
     return (
       <SafeAreaView style={styles.container}>
-        <UIHeader
-          title="Chi tiết hợp đồng"
-          iconLeft={Icons.IconArrowLeft}
-          onPressLeft={handleGoBack}
-        />
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>
-            Có lỗi xảy ra: {selectedContractError}. Vui lòng thử lại.
-          </Text>
-          <TouchableOpacity
-            style={styles.retryButton}
-            onPress={() => dispatch(fetchContractDetail(contractId))}>
-            <Text style={styles.retryText}>Thử lại</Text>
-          </TouchableOpacity>
+        <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+        <View style={[styles.content, {paddingTop: statusBarHeight}]}>
+          <UIHeader
+            title="Chi tiết hợp đồng"
+            iconLeft={Icons.IconArrowLeft}
+            onPressLeft={handleGoBack}
+          />
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>
+              Có lỗi xảy ra: {selectedContractError}. Vui lòng thử lại.
+            </Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={() => dispatch(fetchContractDetail(contractId))}>
+              <Text style={styles.retryText}>Thử lại</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </SafeAreaView>
     );
@@ -162,15 +171,18 @@ const ContractDetailLesseeScreen = () => {
   if (!selectedContract) {
     return (
       <SafeAreaView style={styles.container}>
-        <UIHeader
-          title="Chi tiết hợp đồng"
-          iconLeft={Icons.IconArrowLeft}
-          onPressLeft={handleGoBack}
-        />
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>
-            Không tìm thấy thông tin hợp đồng
-          </Text>
+        <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+        <View style={[styles.content, {paddingTop: statusBarHeight}]}>
+          <UIHeader
+            title="Chi tiết hợp đồng"
+            iconLeft={Icons.IconArrowLeft}
+            onPressLeft={handleGoBack}
+          />
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>
+              Không tìm thấy thông tin hợp đồng
+            </Text>
+          </View>
         </View>
       </SafeAreaView>
     );
@@ -182,15 +194,17 @@ const ContractDetailLesseeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <UIHeader
-        title="Chi tiết hợp đồng"
-        iconLeft={Icons.IconArrowLeft}
-        onPressLeft={handleGoBack}
-      />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+      <View style={[styles.content, {paddingTop: statusBarHeight}]}>
+        <UIHeader
+          title="Chi tiết hợp đồng"
+          iconLeft={Icons.IconArrowLeft}
+          onPressLeft={handleGoBack}
+        />
 
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}>
         {/* Trạng thái hợp đồng */}
         <View style={styles.statusContainer}>
           <Text style={styles.sectionTitle}>Trạng thái hợp đồng</Text>
@@ -398,7 +412,7 @@ const ContractDetailLesseeScreen = () => {
             />
             {showHistory &&
               contract.statusHistory.map((history, index) => {
-                const statusInfo = getContractStatusInfo(history.status);
+                const historyStatusInfo = getContractStatusInfo(history.status);
                 return (
                   <View key={history._id || index} style={styles.historyItem}>
                     <View style={styles.historyHeader}>
@@ -407,7 +421,7 @@ const ContractDetailLesseeScreen = () => {
                       </Text>
                       <View style={[styles.historyStatus]}>
                         <Text style={styles.historyStatusText}>
-                          {statusInfo.label}
+                          {historyStatusInfo.label}
                         </Text>
                       </View>
                     </View>
@@ -444,6 +458,7 @@ const ContractDetailLesseeScreen = () => {
           onClose={() => setIsVisibleImage(false)}
         />
       </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -452,6 +467,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
+  },
+  content: {
+    flex: 1,
+    backgroundColor: Colors.backgroud,
     alignItems: 'center',
   },
   scrollView: {

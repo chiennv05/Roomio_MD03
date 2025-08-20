@@ -1,4 +1,4 @@
-import {View, StyleSheet, Alert, StatusBar, Animated} from 'react-native';
+import {View, StyleSheet, Alert, StatusBar, Animated, Linking} from 'react-native';
 import React, {useEffect, useCallback, useState, useRef} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -19,12 +19,12 @@ import NotificationHeader from './components/NotificationHeader';
 import NotificationListContainer, {
   FormattedNotification,
 } from './components/NotificationListContainer';
-import CustomAlertModal from '../../components/CustomAlertModal';
+// import CustomAlertModal from '../../components/CustomAlertModal';
 import LoadingAnimation from '../../components/LoadingAnimation';
 import {useCustomAlert} from './components';
 import {Colors} from '../../theme/color';
 import {responsiveSpacing} from '../../utils/responsive';
-import CustomAlertModalNotification from '../../components/CutomAlaertModalNotification';
+import CustomAlertModalNotification from '../../components/CutCusomAlaertModalNotification';
 import {Icons} from '../../assets/icons';
 
 type NotificationScreenNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -257,6 +257,46 @@ const NotificationScreen = () => {
     navigation.navigate('SupportScreen');
   };
 
+  // Extract phone number from content
+  const extractPhoneNumber = (text: string): string | null => {
+    if (!text) {
+      return null;
+    }
+    // Match Vietnamese phones: +84 or 0 followed by 9-10 digits, allow spaces/dots
+    const cleaned = text.replace(/[^+\d]/g, ' ');
+    const candidates = cleaned.match(/(\+84\s?\d{9,10}|0\s?\d{9,10})/g);
+    if (!candidates || candidates.length === 0) {
+      return null;
+    }
+    let phone = candidates[0].replace(/\s|\./g, '');
+    if (phone.startsWith('+84')) {
+      phone = '0' + phone.slice(3);
+    }
+    return phone;
+  };
+
+  const shouldShowCallButton = (): boolean => {
+    if (!selectedNotification) {
+      return false;
+    }
+    const content = (selectedNotification.content || '').toLowerCase();
+    const hasPhone = !!extractPhoneNumber(selectedNotification.content || '');
+    const isViewSchedule =
+      content.includes('xem phòng') ||
+      content.includes('đặt lịch') ||
+      content.includes('muốn thuê phòng');
+    return hasPhone && isViewSchedule;
+  };
+
+  const handleCall = () => {
+    const phone = extractPhoneNumber(selectedNotification?.content || '');
+    if (phone) {
+      Linking.openURL(`tel:${phone}`);
+    } else {
+      Alert.alert('Không tìm thấy số điện thoại hợp lệ');
+    }
+  };
+
   // Handle notification press - Hiển thị modal chi tiết
   const handleNotificationPress = useCallback(
     (notification: FormattedNotification) => {
@@ -374,63 +414,70 @@ const NotificationScreen = () => {
       </Animated.View>
 
       {/* Modal chi tiết thông báo */}
-      <CustomAlertModal
+      <CustomAlertModalNotification
         visible={modalVisible}
         title={selectedNotification?.title || 'Thông báo'}
         message={selectedNotification?.content || ''}
         onClose={closeModal}
         isRead={selectedNotification?.isRead || false}
         type="info"
-        buttons={[
-          {
-            text: 'Xem chi tiết',
+        buttons={(() => {
+          const arr: Array<{text: string; onPress: () => void; style?: 'default' | 'cancel' | 'destructive' | 'primary'}> = [];
+          if (shouldShowCallButton()) {
+            arr.push({
+              text: 'Gọi',
+              onPress: handleCall,
+              style: 'default',
+            });
+          }
+          const isCreateContract = (() => {
+            if (!selectedNotification) {
+              return false;
+            }
+            const originalNotification = notifications.find(
+              n => n._id === selectedNotification.id,
+            );
+            return !!originalNotification?.rentRequestData?.tenantInfo;
+          })();
+
+          arr.push({
+            text: isCreateContract ? 'Tạo Hợp Đồng' : 'Xem chi tiết',
             onPress: () => {
               closeModal();
-              // Xử lý navigation dựa trên loại thông báo
               if (selectedNotification) {
                 switch (selectedNotification.type) {
                   case 'thanhToan':
-                    // Thông báo thanh toán - navigate đến BillScreen
                     navigateToBillScreen();
                     break;
                   case 'hopDong':
-                    // Thông báo hợp đồng - kiểm tra nếu có rentRequestData thì navigate đến AddContract
                     const originalNotification = notifications.find(
                       n => n._id === selectedNotification.id,
                     );
                     if (originalNotification?.rentRequestData?.tenantInfo) {
-                      // Có thông tin người thuê - navigate đến AddContract
                       navigation.navigate('AddContract', {
                         notificationId: selectedNotification.id,
                       });
                     } else {
-                      // Không có thông tin người thuê - navigate đến ContractManagement
                       navigateToContractScreen();
                     }
                     break;
                   case 'heThong':
-                    // Thông báo hệ thống - navigate đến RoomManagement
                     navigateToRoomManagement();
                     break;
                   case 'hoTro':
-                    // Thông báo hỗ trợ - navigate đến SupportScreen
                     navigateToSupport();
                     break;
                   default:
-                    // Mặc định - navigate đến RoomManagement
                     navigateToRoomManagement();
                     break;
                 }
               }
             },
-            style: 'default', // Đổi từ 'primary' sang 'default' để sử dụng darkGreen
-          },
-          {
-            text: 'Đóng',
-            onPress: closeModal,
-            style: 'cancel',
-          },
-        ]}
+            style: 'default',
+          });
+          arr.push({text: 'Đóng', onPress: closeModal, style: 'cancel'});
+          return arr;
+        })()}
       />
 
       {/* Custom Alert Modal */}
@@ -440,11 +487,7 @@ const NotificationScreen = () => {
         message={alertConfig?.message || ''}
         onClose={hideAlert}
         type={alertConfig?.type}
-        timestamp={alertConfig?.timestamp}
-        icon={alertConfig?.icon}
-        showIcon={alertConfig?.showIcon}
         buttons={alertConfig?.buttons}
-        customStyles={alertConfig?.customStyles}
       />
     </SafeAreaView>
   );
