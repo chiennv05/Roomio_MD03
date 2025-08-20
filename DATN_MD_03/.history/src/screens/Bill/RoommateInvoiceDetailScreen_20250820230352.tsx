@@ -26,7 +26,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../types/route';
 import { Colors } from '../../theme/color';
 import { Icons } from '../../assets/icons';
-import { scale, verticalScale, responsiveSpacing } from '../../utils/responsive';
+import { scale, verticalScale } from '../../utils/responsive';
 import { formatDate } from '../../utils/formatDate';
 import { InvoiceStatus, BillStatus } from '../../types/Bill';
 import CustomAlertModal from '../../components/CustomAlertModal';
@@ -733,7 +733,7 @@ const styles = StyleSheet.create({
   invoiceSummaryCard: {
     backgroundColor: Colors.white,
     marginTop: 10,
-    paddingHorizontal: responsiveSpacing(20),
+    paddingHorizontal: 20,
     paddingVertical: 20,
     borderRadius: 8,
     marginHorizontal: 15,

@@ -1769,7 +1769,7 @@ const styles = StyleSheet.create({
     },
     dropdownOption: {
         paddingVertical: 12,
-        paddingHorizontal: responsiveSpacing(20),
+        paddingHorizontal: 20,
         borderRadius: 50,
         borderBottomWidth: 0.5,
         borderBottomColor: 'rgba(242, 242, 242, 0.4)',

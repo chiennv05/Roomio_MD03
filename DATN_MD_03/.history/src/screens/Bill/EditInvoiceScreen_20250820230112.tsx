@@ -2634,7 +2634,7 @@ const styles = StyleSheet.create({
     },
     addItemButton: {
         backgroundColor: Colors.limeGreen,
-        paddingHorizontal: responsiveSpacing(20),
+        paddingHorizontal: 20,
         paddingVertical: 12,
         borderRadius: 50,
         width: '100%',

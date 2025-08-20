@@ -406,7 +406,7 @@ const InvoiceCreationModal: React.FC<InvoiceCreationModalProps> = ({
                         disabled={loading}
                     >
                         {loading ? (
-                            <ActivityIndicator size="small" color={Colors.white} />
+                            <ActivityIndicator size="small" color={Colors.black} />
                         ) : (
                             <Text style={styles.createButtonText}>Tạo hóa đơn</Text>
                         )}
@@ -520,7 +520,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     createButtonText: {
-        color: Colors.black,
+        color: Colors.white,
         fontSize: responsiveFont(16),
         fontWeight: 'bold',
     },

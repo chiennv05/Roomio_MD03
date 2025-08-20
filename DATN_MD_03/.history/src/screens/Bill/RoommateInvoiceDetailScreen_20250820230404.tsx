@@ -733,7 +733,7 @@ const styles = StyleSheet.create({
   invoiceSummaryCard: {
     backgroundColor: Colors.white,
     marginTop: 10,
-    paddingHorizontal: responsiveSpacing(20),
+    paddingHorizontal: 20,
     paddingVertical: 20,
     borderRadius: 8,
     marginHorizontal: 15,
