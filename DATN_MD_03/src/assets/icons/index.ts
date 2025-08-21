@@ -391,7 +391,6 @@ export const Icons = {
     android: 'asset:/icons/icon_union.png',
   }),
 
-
   IconRoomOutline: Platform.select({
     ios: 'icon_room_ouline',
     android: 'asset:/icons/icon_room_ouline.png',
@@ -668,7 +667,6 @@ export const Icons = {
   IconDownLoad: Platform.select({
     ios: 'icon_download',
     android: 'asset:/icons/icon_download.png',
-
   }),
   IconCalendar: Platform.select({
     ios: 'icon_calendar',
@@ -687,7 +685,6 @@ export const Icons = {
   IconArrowRightGreen: Platform.select({
     ios: 'icon_arrow_right_green',
     android: 'asset:/icons/icon_arrow_right_green.png',
-
   }),
   IconSaveTemplate: Platform.select({
     ios: 'icon_save_template',
@@ -745,5 +742,17 @@ export const Icons = {
   IconHoTro: Platform.select({
     ios: 'icon_ho_tro',
     android: 'asset:/icons/icon_ho_tro.png',
+  }),
+  IconQuanLyPhongTro: Platform.select({
+    ios: 'iconRoomOutline',
+    android: 'asset:/icons/iconRoomOutline.png',
+  }),
+  IconDanhSachNguoiThue: Platform.select({
+    ios: 'iconUltimateHuman',
+    android: 'asset:/icons/iconUltimateHuman.png',
+  }),
+  IconThongKe: Platform.select({
+    ios: 'iconSolar',
+    android: 'asset:/icons/iconSolar.png',
   }),
 };

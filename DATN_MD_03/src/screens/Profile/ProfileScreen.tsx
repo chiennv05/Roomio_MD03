@@ -87,7 +87,6 @@ export default function ProfileScreen() {
         );
       });
       // Load notification toggle from storage on mount
-     
 
       setLocationPermissionGranted(granted);
       return granted;
@@ -261,14 +260,11 @@ export default function ProfileScreen() {
       // Dù có lỗi API, vẫn logout local và navigate
       setShowLogoutModal(false);
       navigation.navigate('Login', {});
-
     }
   };
 
   const handleLogin = () => {
-
     navigation.replace('Login', {});
-
   };
 
   const hanleUpdateProfile = () => {
@@ -340,8 +336,7 @@ export default function ProfileScreen() {
       return;
     }
     navigation.navigate('Bill');
-
-  }
+  };
 
   // // Hàm xử lý khi nhấn vào "Danh sách người thuê"
   // const handleTenantListPress = () => {
@@ -445,25 +440,23 @@ export default function ProfileScreen() {
             onPress={handleNavigateToBill}
           />
 
-
-
           {/* Chỉ hiển thị các tùy chọn cho chủ trọ nếu user có role là chuTro */}
           {isLandlord && (
             <>
               <SettingItem
-                iconStat={Icons.IconPersonDefault}
+                iconStat={Icons.IconDanhSachNguoiThue}
                 label="Danh sách người thuê"
                 iconEnd={Icons.IconNext}
                 onPress={handleTenantListPress}
               />
               <SettingItem
-                iconStat={Icons.IconPaper}
+                iconStat={Icons.IconThongKe}
                 label="Thống kê "
                 iconEnd={Icons.IconNext}
                 onPress={handleGoStatistic}
               />
               <SettingItem
-                iconStat={Icons.IconPaper}
+                iconStat={Icons.IconQuanLyPhongTro}
                 label="Quản lý phòng trọ "
                 iconEnd={Icons.IconNext}
                 onPress={handleGoLandlord}
