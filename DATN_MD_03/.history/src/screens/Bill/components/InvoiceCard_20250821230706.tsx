@@ -462,9 +462,10 @@ const styles = StyleSheet.create({
     },
     actionContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
-        gap: 63,
+        justifyContent: 'center',
+        gap: 32,
         marginBottom: 8,
+        paddingHorizontal: 4,
         height: 40,
     },
     actionButton: {
@@ -474,7 +475,7 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.limeGreen,
         minWidth: 130,
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'space-between',
         ...Platform.select({
             ios: {
                 shadowColor: '#000',

@@ -463,7 +463,7 @@ const styles = StyleSheet.create({
     actionContainer: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        gap: 63,
+        gap: 64,
         marginBottom: 8,
         height: 40,
     },
