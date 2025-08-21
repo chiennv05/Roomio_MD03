@@ -274,20 +274,6 @@ const BillDetailScreen = () => {
         }
     };
 
-    // Map payment method to Vietnamese text
-    const getPaymentMethodText = (pm?: string) => {
-        const key = (pm || '').toLowerCase();
-        switch (key) {
-            case 'bank_transfer':
-            case 'bank-transfer':
-                return 'Chuyển khoản ngân hàng';
-            case 'cash':
-                return 'Tiền mặt';
-            default:
-                return pm || '-';
-        }
-    };
-
     // Xử lý xác nhận thanh toán
     const handleConfirmPayment = () => {
 
@@ -463,12 +449,6 @@ const BillDetailScreen = () => {
                         <View style={styles.detailRow}>
                             <Text style={styles.detailLabel}>Ngày thanh toán</Text>
                             <Text style={styles.detailValue}>{formatDate(selectedInvoice.paymentDate)}</Text>
-                        </View>
-                    )}
-                    {(selectedInvoice.status === 'pending_confirmation' || selectedInvoice.status === 'paid') && !!selectedInvoice.paymentMethod && (
-                        <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Phương thức thanh toán</Text>
-                            <Text style={styles.detailValue}>{getPaymentMethodText(String(selectedInvoice.paymentMethod))}</Text>
                         </View>
                     )}
                     <View style={styles.detailRow}>
