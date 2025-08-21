@@ -351,7 +351,7 @@ export default function ProfileScreen() {
   //   // >>>>>>> origin/chien
 
   // };
-
+  
   // Show guest screen if not logged in
   if (isGuest) {
     return (
