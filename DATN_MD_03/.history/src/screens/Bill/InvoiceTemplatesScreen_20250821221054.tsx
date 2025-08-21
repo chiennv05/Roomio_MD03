@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     templateAmount: {
         fontSize: responsiveFont(16),
         fontWeight: 'bold',
-        color: Colors.darkGreen,
+        color: Colors.primaryGreen,
     },
     templateDetails: {
         marginBottom: responsiveSpacing(12),

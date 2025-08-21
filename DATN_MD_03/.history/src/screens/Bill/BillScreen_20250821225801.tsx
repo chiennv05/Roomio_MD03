@@ -1737,10 +1737,10 @@ const styles = StyleSheet.create({
         minHeight: 40,
     },
     activeDropdownButton: {
-        borderColor: Colors.darkGreen,
+        borderColor: Colors.primaryGreen,
         borderRadius: 50,
         borderWidth: 2,
-        backgroundColor: Colors.brandPrimarySoft,
+        backgroundColor: 'rgba(139, 195, 74, 0.1)',
     },
     dropdownButtonText: {
         color: Colors.dearkOlive,
@@ -1757,7 +1757,7 @@ const styles = StyleSheet.create({
     },
     dropdownIconRotated: {
         transform: [{ rotate: '180deg' }],
-        tintColor: Colors.darkGreen,
+        tintColor: Colors.primaryGreen,
     },
     dropdownOptionsContainer: {
         backgroundColor: 'rgba(255, 255, 255, 0.98)',
@@ -1780,10 +1780,10 @@ const styles = StyleSheet.create({
         marginBottom: 2,
     },
     dropdownOptionSelected: {
-        backgroundColor: Colors.brandPrimarySoft,
+        backgroundColor: 'rgba(139, 195, 74, 0.12)',
         borderRadius: 50,
         borderWidth: 1,
-        borderColor: Colors.darkGreen,
+        borderColor: 'rgba(139, 195, 74, 0.3)',
     },
     dropdownOptionText: {
         fontSize: 15,
@@ -1793,13 +1793,13 @@ const styles = StyleSheet.create({
     },
     dropdownOptionTextSelected: {
         fontWeight: '700',
-        color: Colors.darkGreen,
+        color: Colors.primaryGreen,
         letterSpacing: 0.3,
     },
     checkIcon: {
         width: 18,
         height: 18,
-        tintColor: Colors.darkGreen,
+        tintColor: Colors.primaryGreen,
     },
     dropdownContentWrapper: {
         marginHorizontal: 16,
@@ -1894,7 +1894,7 @@ const styles = StyleSheet.create({
         marginLeft: 6,
     },
     applyDateBtnText: {
-        color: Colors.black,
+        color: Colors.white,
         fontWeight: '700',
     },
 });

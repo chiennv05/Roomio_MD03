@@ -281,6 +281,12 @@ const BillDetailScreen = () => {
             case 'bank_transfer':
             case 'bank-transfer':
                 return 'Chuyển khoản ngân hàng';
+            case 'momo':
+                return 'Ví MoMo';
+            case 'vnpay':
+                return 'VNPay';
+            case 'zalopay':
+                return 'ZaloPay';
             case 'cash':
                 return 'Tiền mặt';
             default:

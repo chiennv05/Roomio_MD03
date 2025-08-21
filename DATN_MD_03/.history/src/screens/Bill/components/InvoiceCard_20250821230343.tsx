@@ -377,6 +377,7 @@ const styles = StyleSheet.create({
     container: {
         padding: 20,
         marginBottom: -20,
+        height: 300,
         ...Platform.select({
             ios: {
                 shadowColor: '#000',
@@ -462,10 +463,10 @@ const styles = StyleSheet.create({
     },
     actionContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
-        gap: 63,
+        justifyContent: 'center',
+        gap: 32,
         marginBottom: 8,
-        height: 40,
+        paddingHorizontal: 4,
     },
     actionButton: {
         paddingVertical: 6,
@@ -490,7 +491,7 @@ const styles = StyleSheet.create({
     editButtonText: {
         color: Colors.black,
         fontWeight: '600',
-        fontSize: 14,
+        fontSize: 13,
         textAlign: 'center',
     },
     deleteButton: {
@@ -499,7 +500,7 @@ const styles = StyleSheet.create({
     deleteButtonText: {
         color: Colors.white,
         fontWeight: '600',
-        fontSize: 14,
+        fontSize: 13,
         textAlign: 'center',
     },
     roommateBadge: {

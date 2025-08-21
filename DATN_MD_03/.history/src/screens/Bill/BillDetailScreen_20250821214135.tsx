@@ -220,21 +220,6 @@ const BillDetailScreen = () => {
                 return status;
         }
     };
-    const getStatusTextColor = (status: string) => {
-        switch (status) {
-            case 'issued': // yellow background
-                return Colors.black;
-            case 'paid': // bright lime
-                return Colors.black;
-            case 'draft':
-            case 'pending':
-            case 'pending_confirmation':
-            case 'overdue':
-            case 'canceled':
-            default:
-                return Colors.white;
-        }
-    };
 
     // Get status color
     const getStatusColor = (status: string) => {
@@ -271,20 +256,6 @@ const BillDetailScreen = () => {
                 return 'Phí đỗ xe';
             default:
                 return 'Khác';
-        }
-    };
-
-    // Map payment method to Vietnamese text
-    const getPaymentMethodText = (pm?: string) => {
-        const key = (pm || '').toLowerCase();
-        switch (key) {
-            case 'bank_transfer':
-            case 'bank-transfer':
-                return 'Chuyển khoản ngân hàng';
-            case 'cash':
-                return 'Tiền mặt';
-            default:
-                return pm || '-';
         }
     };
 
@@ -325,12 +296,7 @@ const BillDetailScreen = () => {
 
     // Xử lý khi hóa đơn đã quá hạn
     const handleOverduePress = () => {
-        showAlert({
-            title: 'Quá hạn',
-            message: 'Hóa đơn này đã quá hạn. Vui lòng liên hệ chủ trọ để được cập nhật và thanh toán.',
-            type: 'warning',
-            autoHide: false,
-        });
+        showAlert("Hóa đơn này đã quá hạn. Vui lòng liên hệ chủ trọ để được cập nhật và thanh toán.");
     };
 
     // Xử lý chọn phương thức thanh toán
@@ -427,12 +393,7 @@ const BillDetailScreen = () => {
                 <View style={styles.roomNumberRow}>
                     <Text style={styles.roomNumber}>{getRoomInfo()}</Text>
                     <View style={[styles.statusBadge, { backgroundColor: getStatusColor(selectedInvoice.status) }]}>
-                    <Text style={[
-                                styles.statusText,
-                                { color: getStatusTextColor(selectedInvoice.status) },
-                            ]}>
-                                {getStatusText(selectedInvoice.status)}
-                            </Text>
+                        <Text style={styles.statusBadgeText}>{getStatusText(selectedInvoice.status)}</Text>
                     </View>
                 </View>
                 
@@ -463,12 +424,6 @@ const BillDetailScreen = () => {
                         <View style={styles.detailRow}>
                             <Text style={styles.detailLabel}>Ngày thanh toán</Text>
                             <Text style={styles.detailValue}>{formatDate(selectedInvoice.paymentDate)}</Text>
-                        </View>
-                    )}
-                    {(selectedInvoice.status === 'pending_confirmation' || selectedInvoice.status === 'paid') && !!selectedInvoice.paymentMethod && (
-                        <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Phương thức thanh toán</Text>
-                            <Text style={styles.detailValue}>{getPaymentMethodText(String(selectedInvoice.paymentMethod))}</Text>
                         </View>
                     )}
                     <View style={styles.detailRow}>
@@ -1098,6 +1053,7 @@ const styles = StyleSheet.create({
     statusBadgeText: {
         fontSize: 12,
         fontWeight: 'bold',
+        color: Colors.white,
     },
     invoiceDetailsGrid: {
         gap: 12,

@@ -333,17 +333,6 @@ const styles = StyleSheet.create({
         borderRadius: scale(8),
         marginBottom: responsiveSpacing(12),
         flexDirection: 'row',
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.12,
-                shadowRadius: 12,
-            },
-            android: {
-                elevation: 6,
-            },
-        }),
     },
     templateContent: {
         flex: 1,
@@ -364,7 +353,7 @@ const styles = StyleSheet.create({
     templateAmount: {
         fontSize: responsiveFont(16),
         fontWeight: 'bold',
-        color: Colors.darkGreen,
+        color: Colors.primaryGreen,
     },
     templateDetails: {
         marginBottom: responsiveSpacing(12),
@@ -384,7 +373,7 @@ const styles = StyleSheet.create({
     },
     templatePeriod: {
         fontSize: responsiveFont(13),
-        color: Colors.black,
+        color: Colors.mediumGray,
     },
     emptyContainer: {
         alignItems: 'center',
