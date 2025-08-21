@@ -105,11 +105,8 @@ const MainChart = ({title, data, labels, color}: MainChartProps) => {
   } as const;
 
   // Format Y label
-  const isPercent =
-    title.includes('%') || title.toLowerCase().includes('tỷ lệ');
-  const isCurrency =
-    title.toLowerCase().includes('vnđ') ||
-    title.toLowerCase().includes('doanh thu');
+  const isPercent = title.includes('%') || title.toLowerCase().includes('tỷ lệ');
+  const isCurrency = title.toLowerCase().includes('vnđ');
   const formatYLabel = (v: string) => {
     const num = parseFloat(v);
     if (isNaN(num)) return v;
@@ -130,7 +127,7 @@ const MainChart = ({title, data, labels, color}: MainChartProps) => {
           ]}
           resizeMode="contain"
         />
-        <Text style={styles.chartTitle}>{title}</Text>
+        {/* Ẩn title trong content theo yêu cầu, giữ latest value nếu cần */}
         <Text style={styles.latestValue}>
           Tháng gần nhất: {Number(latest || 0).toLocaleString('vi-VN')}
         </Text>

@@ -66,21 +66,14 @@ const CustomAlertModalNotification: React.FC<CustomAlertModalProps> = ({
     });
   };
 
-  // Lấy icon theo loại thông báo
+  // Lấy icon theo loại thông báo (dùng bộ icon mới màu green)
   const getTypeIcon = () => {
-    if (title.toLowerCase().includes('hợp đồng')) {
-      return Icons.IconHopDong;
-    }
-    if (title.toLowerCase().includes('hệ thống')) {
-      return Icons.IconHeThong;
-    }
-    if (title.toLowerCase().includes('thanh toán')) {
-      return Icons.IconThanhToan;
-    }
-    if (title.toLowerCase().includes('hỗ trợ')) {
-      return Icons.IconHoTro;
-    }
-    return Icons.IconNotification;
+    const t = title.toLowerCase();
+    if (t.includes('hợp đồng')) return Icons.IconHopDongGreen;
+    if (t.includes('hệ thống')) return Icons.IconHeThongGreen;
+    if (t.includes('thanh toán')) return Icons.IconThanhToanGreen;
+    if (t.includes('hỗ trợ')) return Icons.IconHoTroGreen;
+    return Icons.IconLightReport;
   };
 
   // Lấy màu theo loại thông báo
@@ -100,7 +93,6 @@ const CustomAlertModalNotification: React.FC<CustomAlertModalProps> = ({
     return Colors.gray;
   };
 
-  const typeColor = getTypeColor();
 
   // Parse message để hiển thị với icon thực sự
   const parseMessageWithIcons = (rawMessage: string) => {
@@ -151,7 +143,7 @@ const CustomAlertModalNotification: React.FC<CustomAlertModalProps> = ({
           <View key={index} style={styles.infoRow}>
             <Image
               source={{uri: Icons.IconPhone}}
-              style={[styles.infoIcon, {tintColor: typeColor}]}
+              style={styles.infoIcon}
               resizeMode="contain"
             />
             <Text style={styles.infoText}>{line.replace(/[📞📱]/g, '').trim()}</Text>
@@ -175,7 +167,7 @@ const CustomAlertModalNotification: React.FC<CustomAlertModalProps> = ({
           <View key={index} style={styles.infoRow}>
             <Image
               source={{uri: Icons.IconNotification}}
-              style={[styles.infoIcon, {tintColor: typeColor}]}
+              style={styles.infoIcon}
               resizeMode="contain"
             />
             <Text style={styles.infoText}>{line.replace(/[💬💭]/g, '').trim()}</Text>
@@ -208,10 +200,10 @@ const CustomAlertModalNotification: React.FC<CustomAlertModalProps> = ({
               <View style={styles.content}>
                 {/* Header với icon */}
                 <View style={styles.header}>
-                  <View style={[styles.iconContainer, {backgroundColor: typeColor + '20'}]}>
+                  <View style={styles.iconContainer}>
                     <Image
                       source={{uri: getTypeIcon()}}
-                      style={[styles.icon, {tintColor: typeColor}]}
+                      style={styles.icon}
                       resizeMode="contain"
                     />
                   </View>
@@ -231,15 +223,18 @@ const CustomAlertModalNotification: React.FC<CustomAlertModalProps> = ({
                         key={idx}
                         style={[
                           styles.button,
-                          btn.style === 'default' && {backgroundColor: typeColor},
+                          (btn.style === 'default' || btn.style === 'primary') && {backgroundColor: Colors.limeGreen},
+                          btn.style === 'destructive' && {backgroundColor: '#FF3B30'},
+                          btn.style === 'cancel' && {backgroundColor: 'transparent'},
                         ]}
                         onPress={btn.onPress}
                         activeOpacity={0.8}>
                         <Text
                           style={[
                             styles.buttonText,
+                            (btn.style === 'default' || btn.style === 'primary') && {color: Colors.black},
+                            btn.style === 'destructive' && {color: Colors.white},
                             btn.style === 'cancel' && styles.cancelText,
-                            btn.style === 'default' && styles.confirmText,
                           ]}>
                           {btn.text}
                         </Text>
@@ -290,16 +285,16 @@ const styles = StyleSheet.create({
     marginBottom: responsiveSpacing(12),
   },
   iconContainer: {
-    width: responsiveSpacing(40),
-    height: responsiveSpacing(40),
-    borderRadius: responsiveSpacing(20),
+    width: responsiveSpacing(64),
+    height: responsiveSpacing(64),
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: responsiveSpacing(12),
+    marginRight: responsiveSpacing(8),
+    backgroundColor: 'transparent',
   },
   icon: {
-    width: responsiveSpacing(24),
-    height: responsiveSpacing(24),
+    width: responsiveSpacing(42),
+    height: responsiveSpacing(42),
   },
   title: {
     fontSize: responsiveFont(18),

@@ -17,15 +17,16 @@ export interface FormattedNotification {
   id: string;
   title: string;
   content: string;
-  time: string;
-  date: string;
+  time: string; // text hiển thị tương đối
+  date: string; // DD/MM/YYYY hiển thị trong thẻ
+  groupLabel: string; // Nhãn nhóm: Hôm nay | Hôm qua | DD/MM/YYYY
+  timestamp: number; // Dùng để sắp xếp chính xác
   isRead: boolean;
   type: string;
 }
 
 // Interface cho nhóm thông báo theo ngày
 interface NotificationGroup {
-  date: string;
   dateLabel: string; // "Hôm nay", "Hôm qua", "19/08/2025"
   notifications: FormattedNotification[];
 }
@@ -56,49 +57,28 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
   // Hàm nhóm thông báo theo ngày
   const groupNotificationsByDate = (notifications: FormattedNotification[]): NotificationGroup[] => {
     const groups: { [key: string]: FormattedNotification[] } = {};
-    
+
     notifications.forEach(notification => {
-      const dateKey = notification.date;
-      if (!groups[dateKey]) {
-        groups[dateKey] = [];
-      }
-      groups[dateKey].push(notification);
+      const key = notification.groupLabel || notification.date;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(notification);
     });
 
-    // Chuyển đổi thành array và sắp xếp theo ngày
-    return Object.keys(groups)
-      .map(dateKey => {
-        const today = new Date();
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        
-        let dateLabel = dateKey;
-        if (dateKey === 'Hôm nay') {
-          dateLabel = 'Hôm nay';
-        } else if (dateKey === 'Hôm qua') {
-          dateLabel = 'Hôm qua';
-        } else {
-          // Giữ nguyên format ngày nếu không phải hôm nay/hôm qua
-          dateLabel = dateKey;
-        }
+    const orderIndex = (label: string) => (label === 'Hôm nay' ? 0 : label === 'Hôm qua' ? 1 : 2);
 
-        return {
-          date: dateKey,
-          dateLabel,
-          notifications: groups[dateKey].sort((a, b) => {
-            // Sắp xếp theo thời gian, mới nhất lên đầu
-            const timeA = new Date(a.time).getTime();
-            const timeB = new Date(b.time).getTime();
-            return timeB - timeA;
-          }),
-        };
-      })
+    return Object.keys(groups)
+      .map(label => ({
+        dateLabel: label,
+        notifications: groups[label].sort((a, b) => b.timestamp - a.timestamp),
+      }))
       .sort((a, b) => {
-        // Sắp xếp nhóm theo ngày, mới nhất lên đầu
-        const dateOrder = { 'Hôm nay': 0, 'Hôm qua': 1 };
-        const orderA = dateOrder[a.dateLabel as keyof typeof dateOrder] ?? 2;
-        const orderB = dateOrder[b.dateLabel as keyof typeof dateOrder] ?? 2;
-        return orderA - orderB;
+        const aOrder = orderIndex(a.dateLabel);
+        const bOrder = orderIndex(b.dateLabel);
+        if (aOrder !== bOrder) return aOrder - bOrder;
+        // If both are custom dates, sort by latest item's timestamp desc
+        const aTs = a.notifications[0]?.timestamp ?? 0;
+        const bTs = b.notifications[0]?.timestamp ?? 0;
+        return bTs - aTs;
       });
   };
 
@@ -129,8 +109,8 @@ const NotificationListContainer: React.FC<NotificationListContainerProps> = ({
 
   const renderDateHeader = (dateLabel: string) => (
     <View style={styles.dateHeader}>
+      <View style={styles.dateHeaderIndicator} />
       <Text style={styles.dateHeaderText}>{dateLabel}</Text>
-      <View style={styles.dateHeaderLine} />
     </View>
   );
 
@@ -197,24 +177,27 @@ const styles = StyleSheet.create({
   dateHeader: {
     paddingVertical: responsiveSpacing(12),
     paddingHorizontal: responsiveSpacing(16),
-    backgroundColor: Colors.white,
+    backgroundColor: 'transparent',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   dateHeaderText: {
     fontSize: moderateScale(16),
     fontFamily: Fonts.Roboto_Bold, // Đổi sang Bold để nổi bật
     color: Colors.black, // Đổi về black để rõ ràng
-    marginBottom: responsiveSpacing(6),
+    marginBottom: 0,
     letterSpacing: 0.5, // Giảm letter spacing
     fontWeight: '700', // Font weight mạnh
   },
-  dateHeaderLine: {
-    height: 2, // Tăng từ 1 lên 2 để đậm hơn
-    backgroundColor: Colors.darkGray, // Đổi về darkGray để nổi bật
-    width: '100%',
-    opacity: 1, // Bỏ opacity để rõ ràng
+  dateHeaderIndicator: {
+    width: moderateScale(4),
+    height: moderateScale(18),
+    backgroundColor: Colors.limeGreen,
+    borderRadius: moderateScale(2),
+    marginRight: responsiveSpacing(8),
   },
   groupContainer: {
-    backgroundColor: Colors.white,
+    backgroundColor: 'transparent',
     marginBottom: responsiveSpacing(8),
   },
   notificationWrapper: {

@@ -2,7 +2,7 @@ import {View, StyleSheet, Alert, StatusBar, Animated, Linking} from 'react-nativ
 import React, {useEffect, useCallback, useState, useRef} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import {useNavigation, useRoute, useFocusEffect} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../types/route';
 import {RootState, AppDispatch} from '../../store';
@@ -94,6 +94,16 @@ const NotificationScreen = () => {
       // if (user && token) dispatch(refreshNotifications({ token, limit: 20 }));
     }
   }, [route.params]);
+
+  // Always refresh when screen is focused (covers cases when navigating from Home)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user && token) {
+        dispatch(refreshNotifications({token, limit: 20}));
+      }
+      return undefined; // no cleanup needed
+    }, [dispatch, user, token]),
+  );
 
   // Handle refresh
   const handleRefresh = useCallback(() => {
@@ -309,21 +319,28 @@ const NotificationScreen = () => {
 
   // Convert Redux notification data to component format
   const formattedNotifications: FormattedNotification[] =
-    getFilteredNotifications().map(notification => ({
-      id: notification._id || '',
-      title: getNotificationTitle(notification.type),
-      content: notification.content,
-      time: formatRelativeTime(notification.createdAt),
-      date: formatFullDate(notification.createdAt),
-      isRead: notification.status === 'read',
-      type: notification.type,
-    }));
+    getFilteredNotifications().map(notification => {
+      const createdAt = notification.createdAt;
+      const displayDate = formatDisplayDate(createdAt); // DD/MM/YYYY
+      const groupLabel = formatGroupLabel(createdAt); // Hôm nay | Hôm qua | DD/MM/YYYY
+      return {
+        id: notification._id || '',
+        title: getNotificationTitle(notification.type),
+        content: notification.content,
+        time: formatRelativeTime(createdAt),
+        date: displayDate,
+        groupLabel,
+        timestamp: new Date(createdAt).getTime(),
+        isRead: notification.status === 'read',
+        type: notification.type,
+      };
+    });
 
   // Loading state với beautiful animation
   if (loading && notifications.length === 0) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+        <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroud} />
         <View style={styles.headerContainer}>
           <UIHeader
             title="Thông báo"
@@ -340,7 +357,7 @@ const NotificationScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroud} />
 
       {/* Header và Filter gộp chung */}
       <View style={styles.headerContainer}>
@@ -463,36 +480,37 @@ const NotificationScreen = () => {
   );
 };
 
-// Helper function để format ngày đầy đủ (VD: "24/06/2025")
-const formatFullDate = (dateString: string): string => {
+// Helper: nhãn nhóm ngày (Hôm nay | Hôm qua | DD/MM/YYYY)
+const formatGroupLabel = (dateString: string): string => {
   try {
     const date = new Date(dateString);
     const today = new Date();
-
-    // Kiểm tra nếu là hôm nay
     const isToday = date.toDateString() === today.toDateString();
-
     if (isToday) {
       return 'Hôm nay';
     }
-
-    // Kiểm tra nếu là hôm qua
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    const isYesterday = date.toDateString() === yesterday.toDateString();
-
-    if (isYesterday) {
+    if (date.toDateString() === yesterday.toDateString()) {
       return 'Hôm qua';
     }
-
-    // Format DD/MM/YYYY
     return date.toLocaleDateString('vi-VN', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
     });
-  } catch (error) {
+  } catch {
     return 'Không xác định';
+  }
+};
+
+// Helper: ngày hiển thị bên trong thẻ (luôn DD/MM/YYYY)
+const formatDisplayDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'});
+  } catch {
+    return '';
   }
 };
 
@@ -549,10 +567,10 @@ const getNotificationTitle = (type: string): string => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.backgroud,
   },
   headerContainer: {
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.backgroud,
     paddingBottom: responsiveSpacing(8),
   },
   container: {

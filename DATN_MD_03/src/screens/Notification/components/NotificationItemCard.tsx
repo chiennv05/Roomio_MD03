@@ -37,7 +37,7 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
   title,
   content,
   time,
-  date: _date,
+  date,
   isRead,
   type,
   icon: _icon,
@@ -77,19 +77,29 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
     }).start();
   };
 
-  // Icon dựa trên loại thông báo thay vì trạng thái đọc/chưa đọc
+  // Icon theo loại sử dụng biến thể màu xanh lá như yêu cầu
   const getTypeIcon = () => {
     switch (type) {
+      // Vietnamese keys
       case 'heThong':
-        return Icons.IconHeThong;
+        return Icons.IconHeThongGreen;
       case 'hopDong':
-        return Icons.IconHopDong;
+        return Icons.IconHopDongGreen;
       case 'thanhToan':
-        return Icons.IconThanhToan;
+        return Icons.IconThanhToanGreen;
       case 'hoTro':
-        return Icons.IconHoTro;
+        return Icons.IconHoTroGreen;
+      // English keys
+      case 'system':
+        return Icons.IconHeThongGreen;
+      case 'contract':
+        return Icons.IconHopDongGreen;
+      case 'payment':
+        return Icons.IconThanhToanGreen;
+      case 'support':
+        return Icons.IconHoTroGreen;
       default:
-        return Icons.IconPaper; // Icon mặc định
+        return Icons.IconPaper;
     }
   };
 
@@ -245,7 +255,7 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
             style={styles.deleteButtonInner}
             activeOpacity={0.8}>
             <LinearGradient
-              colors={['#ff4757', '#ff3742']}
+              colors={['#FF3B30', '#FF3B30']}
               style={styles.deleteGradient}
               start={{x: 0, y: 0}}
               end={{x: 1, y: 1}}>
@@ -280,17 +290,14 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
           style={[
             styles.container,
             {
-              backgroundColor: isUnread ? '#E3F2FD' : statusColors.cardBg, // Background xanh nhạt cho chưa đọc
-              borderLeftWidth: 4,
-              borderLeftColor: statusColors.borderColor,
-              borderTopWidth: 0.2, // Thêm viền trên
-              borderTopColor: statusColors.borderColor, // Cùng màu với viền trái
-              borderBottomWidth: 0.2, // Thêm viền dưới
-              borderBottomColor: statusColors.borderColor, // Cùng màu với viền trái
-              borderRightWidth: 0.2, // Thêm viền phải
-              borderRightColor: statusColors.borderColor, // Cùng màu với viền trái
+              backgroundColor: isUnread ? Colors.limeGreenLight : statusColors.cardBg,
+              // Bỏ toàn bộ viền màu bên trái và viền xung quanh
+              borderLeftWidth: 0,
+              borderTopWidth: 0,
+              borderBottomWidth: 0,
+              borderRightWidth: 0,
               shadowColor: statusColors.shadowColor,
-              shadowOffset: {width: 0, height: 2},
+              shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.06,
               shadowRadius: 3,
               elevation: 2,
@@ -305,28 +312,18 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
             <View
               style={[
                 styles.gradientOverlay,
-                {backgroundColor: 'rgba(0,0,0,0.02)'},
+                {backgroundColor: Colors.limeGreenLight},
               ]}
             />
           )}
 
-          {/* Icon trạng thái với nền tròn màu (không gradient) */}
+          {/* Icon trạng thái: dùng ảnh có viền sẵn, không bọc viền */}
           <View style={styles.iconContainer}>
-            <View
-              style={[
-                styles.iconGradient,
-                {
-                  backgroundColor: Colors.white,
-                  borderColor: statusColors.borderColor,
-                  borderWidth: 1,
-                },
-              ]}>
-              <Image
-                source={getImageSource()}
-                style={[styles.iconImage, {tintColor: statusColors.iconTint}]}
-                resizeMode="contain"
-              />
-            </View>
+            <Image
+              source={getImageSource()}
+              style={styles.iconImage}
+              resizeMode="contain"
+            />
           </View>
 
           {/* Nội dung */}
@@ -355,9 +352,9 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
             <Text
               style={[
                 styles.time,
-                {color: statusColors.contentColor, opacity: 0.6},
+                {color: statusColors.contentColor, opacity: 0.7},
               ]}>
-              {time}
+              {date}
             </Text>
           </View>
         </TouchableOpacity>
@@ -370,7 +367,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     padding: responsiveSpacing(20),
-    borderRadius: responsiveSpacing(14),
+    borderRadius: responsiveSpacing(20),
     marginBottom: responsiveSpacing(12),
     marginHorizontal: responsiveSpacing(4),
     minHeight: moderateScale(104),
@@ -383,24 +380,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: responsiveSpacing(16),
+    borderRadius: responsiveSpacing(20),
   },
   iconContainer: {
-    width: moderateScale(50),
-    height: moderateScale(50),
-    borderRadius: moderateScale(25),
-    justifyContent: 'center',
-    alignItems: 'center',
     alignSelf: 'center',
     marginRight: responsiveSpacing(16),
-    shadowColor: Colors.shadowDefault,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
   },
   iconGradient: {
     width: moderateScale(50),
@@ -408,10 +392,21 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(25),
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: Colors.white,
+    borderColor: Colors.gray200, // viền xám nhạt, dùng token màu hệ thống
+    borderWidth: 2,
+  },
+  innerCircle: {
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: moderateScale(20),
+    backgroundColor: Colors.limeGreen,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   iconImage: {
-    width: moderateScale(24),
-    height: moderateScale(24),
+    width: moderateScale(56),
+    height: moderateScale(56),
   },
   contentContainer: {
     flex: 1,
@@ -432,62 +427,57 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5, // Thêm letter spacing đẹp
   },
   time: {
-    fontSize: responsiveFont(11),
+    fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Regular, // Đổi về Regular
     color: Colors.textGray,
-    letterSpacing: 0.3, // Thêm letter spacing
+    letterSpacing: 0.6, // Thêm letter spacing
   },
   rightActionContainer: {
-    width: moderateScale(90),
+    width: moderateScale(69),
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingRight: responsiveSpacing(4),
+    paddingRight: 0,
   },
   deleteButton: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: responsiveSpacing(16),
-    marginVertical: responsiveSpacing(6),
-    shadowColor: '#ff4757',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    borderRadius: responsiveSpacing(24),
+    marginVertical: 0,
+    // Loại bỏ bóng để không còn "đỏ đỏ" ngoài biên
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+    backgroundColor: 'transparent',
   },
   deleteButtonInner: {
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
     height: '100%',
-    borderRadius: responsiveSpacing(16),
+    borderRadius: responsiveSpacing(24),
   },
   deleteGradient: {
-    flex: 1,
-    width: '100%',
+    width: moderateScale(69),
+    height: moderateScale(117),
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: responsiveSpacing(16),
-    paddingVertical: responsiveSpacing(8),
-    paddingHorizontal: responsiveSpacing(12),
+    borderRadius: moderateScale(20),
   },
   deleteIcon: {
-    width: moderateScale(20),
-    height: moderateScale(20),
+    width: moderateScale(28),
+    height: moderateScale(28),
     tintColor: Colors.white,
-    marginBottom: responsiveSpacing(4),
+    marginBottom: responsiveSpacing(2),
   },
   deleteText: {
     color: Colors.white,
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Bold,
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: {width: 0, height: 1},
-    textShadowRadius: 2,
   },
 });
 

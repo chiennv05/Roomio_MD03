@@ -13,12 +13,13 @@ import {
   Animated,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
+
 import {AppDispatch, RootState} from '../../../store';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
 import {responsiveFont, responsiveSpacing} from '../../../utils/responsive';
 import {fetchDashboard} from '../../../store/slices/dashboardSlice';
-import {StatisticCard, MainBarChart as MainChart} from './components';
+import {MainBarChart as MainChart} from './components';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
@@ -186,20 +187,20 @@ const StatisticScreen = () => {
         }>
         {/* Beautiful Stats Grid */}
         <View style={styles.statsGrid}>
-          {/* Tổng doanh thu - Green */}
-          <View style={[styles.statCard, styles.revenueCard]}>
-            <View style={styles.statIconContainer}>
+          {/* Trên trái - LimeGreen thuần */}
+          <View style={[styles.statCard, styles.limeCard]}>
+            <View style={[styles.statIconContainer, styles.statIconContainerLight]}>
               <Image
                 source={require('../../../assets/icons/icon_tien_coc.png')}
-                style={styles.statIcon}
+                style={[styles.statIcon, styles.statIconDark]}
               />
             </View>
-            <Text style={styles.statValue}>{formatMoney(data?.revenue?.totalRevenue || 4338000)}</Text>
-            <Text style={styles.statLabel}>Tổng doanh thu</Text>
+            <Text style={[styles.statValue, styles.statValueDark]}>{formatMoney(data?.revenue?.totalRevenue || 4338000)}</Text>
+            <Text style={[styles.statLabel, styles.statLabelDark]}>Tổng doanh thu</Text>
           </View>
 
-          {/* Tổng phòng - Cyan */}
-          <View style={[styles.statCard, styles.roomCard]}>
+          {/* Trên phải - Đen (đổi sang xám than mềm) */}
+          <View style={[styles.statCard, styles.darkCard]}>
             <View style={styles.statIconContainer}>
               <Image
                 source={require('../../../assets/icons/icon_room.png')}
@@ -210,8 +211,8 @@ const StatisticScreen = () => {
             <Text style={styles.statLabel}>Tổng phòng</Text>
           </View>
 
-          {/* Hợp đồng - Blue */}
-          <View style={[styles.statCard, styles.contractCard]}>
+          {/* Dưới trái - Đen (xám than) */}
+          <View style={[styles.statCard, styles.darkCard]}>
             <View style={styles.statIconContainer}>
               <Image
                 source={require('../../../assets/icons/icon_contract.png')}
@@ -222,16 +223,16 @@ const StatisticScreen = () => {
             <Text style={styles.statLabel}>Hợp đồng</Text>
           </View>
 
-          {/* Đang thuê - Teal */}
-          <View style={[styles.statCard, styles.occupiedCard]}>
-            <View style={styles.statIconContainer}>
+          {/* Dưới phải - LimeGreen thuần */}
+          <View style={[styles.statCard, styles.limeCard]}>
+            <View style={[styles.statIconContainer, styles.statIconContainerLight]}>
               <Image
                 source={require('../../../assets/icons/icon_person.png')}
-                style={styles.statIcon}
+                style={[styles.statIcon, styles.statIconDark]}
               />
             </View>
-            <Text style={styles.statValue}>{data?.overview?.rentedRooms || 3}</Text>
-            <Text style={styles.statLabel}>Đang thuê</Text>
+            <Text style={[styles.statValue, styles.statValueDark]}>{data?.overview?.rentedRooms || 3}</Text>
+            <Text style={[styles.statLabel, styles.statLabelDark]}>Đang thuê</Text>
           </View>
         </View>
 
@@ -291,6 +292,23 @@ const StatisticScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Cầu nối đồng màu giữa tab active và chart */}
+        {(() => {
+          const padding = responsiveSpacing(6);
+          const segmentWidth = Math.max((tabsW - padding * 2) / 3, 0);
+          const left = padding + segmentWidth * currentIndex;
+          return (
+            <View style={[styles.tabToChartBridgeContainer]}>
+              <View
+                style={[
+                  styles.tabToChartBridge,
+                  {width: segmentWidth, marginLeft: left},
+                ]}
+              />
+            </View>
+          );
+        })()}
 
         {/* Main Chart */}
         <View style={styles.chartsContainer}>
@@ -417,59 +435,93 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: responsiveSpacing(16),
-    marginTop: responsiveSpacing(16),
-    gap: responsiveSpacing(12),
+    marginTop: responsiveSpacing(20),
+    gap: responsiveSpacing(16),
   },
   statCard: {
     width: '47%',
-    borderRadius: 16,
-    padding: responsiveSpacing(20),
+    borderRadius: 24,
+    padding: responsiveSpacing(24),
     alignItems: 'center',
     shadowColor: Colors.shadowDefault,
-    shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOffset: {width: 0, height: 8},
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  limeCard: {
+    backgroundColor: Colors.limeGreen,
+    shadowColor: Colors.limeGreen,
+    shadowOpacity: 0.3,
   },
   revenueCard: {
-    backgroundColor: Colors.brandPrimary, // Emerald
+    backgroundColor: Colors.primary, // Lime (trên trái)
   },
   roomCard: {
-    backgroundColor: Colors.accentSupport, // Cyan
+    backgroundColor: Colors.black, // Đen (trên phải)
   },
   contractCard: {
-    backgroundColor: Colors.accentContract, // Blue
+    backgroundColor: Colors.black, // Đen (dưới trái)
   },
   occupiedCard: {
-    backgroundColor: Colors.accentSchedule, // Teal
+    backgroundColor: Colors.primary, // Lime (dưới phải)
+  },
+  darkCard: {
+    backgroundColor: '#111827',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    shadowColor: '#000000',
+    shadowOpacity: 0.25,
   },
   statIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: responsiveSpacing(12),
+    marginBottom: responsiveSpacing(16),
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   statIcon: {
-    width: 24,
-    height: 24,
+    width: 28,
+    height: 28,
     tintColor: Colors.white,
+  },
+  statIconDark: {
+    tintColor: '#1F2937', // xám đậm cho nền lime
   },
   statValue: {
     fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(20),
+    fontSize: responsiveFont(22),
     color: Colors.white,
-    marginBottom: responsiveSpacing(4),
+    marginBottom: responsiveSpacing(6),
     textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  statValueDark: {
+    color: '#111827',
   },
   statLabel: {
     fontFamily: Fonts.Roboto_Medium,
-    fontSize: responsiveFont(13),
+    fontSize: responsiveFont(14),
     color: Colors.white,
-    opacity: 0.9,
+    opacity: 0.95,
     textAlign: 'center',
+    letterSpacing: 0.3,
+  },
+  statLabelDark: {
+    color: '#1F2937',
+    opacity: 0.95,
+  },
+  statIconContainerLight: {
+    backgroundColor: 'rgba(17,24,39,0.12)',
   },
 
   // Chart Section
@@ -482,9 +534,15 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.brandPrimarySoft,
     borderRadius: 26,
     padding: responsiveSpacing(6),
-    marginBottom: responsiveSpacing(16),
+    marginBottom: 0,
     position: 'relative',
-    overflow: 'hidden',
+    overflow: 'visible',
+  },
+  tabToChartBridgeContainer: {
+    height: 0,
+  },
+  tabToChartBridge: {
+    height: 0,
   },
   chartTab: {
     flex: 1,
@@ -499,18 +557,21 @@ const styles = StyleSheet.create({
   chartTabText: {
     fontFamily: Fonts.Roboto_Medium,
     fontSize: responsiveFont(13),
-    color: Colors.textSecondary,
+    color: Colors.black,
   },
   chartTabTextActive: {
-    color: Colors.white,
+    color: Colors.black,
   },
   tabIndicator: {
     position: 'absolute',
     top: responsiveSpacing(6),
     left: responsiveSpacing(6),
-    bottom: responsiveSpacing(6),
-    backgroundColor: Colors.brandPrimary,
-    borderRadius: 20,
+    bottom: -responsiveSpacing(8),
+    backgroundColor: Colors.limeGreen,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
     shadowColor: Colors.shadowDefault,
     shadowOpacity: 0.15,
     shadowRadius: 6,
@@ -575,7 +636,8 @@ const styles = StyleSheet.create({
   },
 
   chartsContainer: {
-    marginTop: responsiveSpacing(10),
+    marginTop: -responsiveSpacing(8),
+    paddingTop: 0,
     marginBottom: responsiveSpacing(16),
   },
 

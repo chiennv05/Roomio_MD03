@@ -5,11 +5,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Image,
 } from 'react-native';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
-import {Icons} from '../../../assets/icons';
 import {
   responsiveFont,
   responsiveSpacing,
@@ -32,36 +30,26 @@ const NotificationHeader: React.FC<NotificationHeaderProps> = ({
       key: 'all',
       label: 'Tất cả',
       badge: unreadCount,
-      icon: Icons.IconNotification,
-      color: '#6B7280', // gray-500 - màu trung tính cho Tất cả
     },
     {
       key: 'heThong',
       label: 'Hệ Thống',
       badge: 0,
-      icon: Icons.IconHeThong,
-      color: '#2563EB', // blue-600
     },
     {
       key: 'hopDong',
       label: 'Hợp Đồng',
       badge: 0,
-      icon: Icons.IconHopDong,
-      color: '#059669', // green-600 - màu xanh lá của Tất cả
     },
     {
       key: 'thanhToan',
       label: 'Thanh Toán',
       badge: 0,
-      icon: Icons.IconThanhToan,
-      color: '#EA580C', // orange-600
     },
     {
       key: 'hoTro',
       label: 'Hỗ Trợ',
       badge: 0,
-      icon: Icons.IconHoTro,
-      color: '#9333EA', // purple-600 - màu tím
     },
   ];
 
@@ -86,21 +74,8 @@ const NotificationHeader: React.FC<NotificationHeaderProps> = ({
                 onPress={() => onTabChange(tab.key as any)}
                 activeOpacity={0.8}>
                 {isActive ? (
-                  <View
-                    style={[
-                      styles.activeTab,
-                      {
-                        borderColor: tab.color,
-                        backgroundColor: Colors.brandPrimarySoft,
-                      },
-                    ]}>
-                    <Image
-                      source={{uri: tab.icon}}
-                      style={[styles.iconImageActive, {tintColor: tab.color}]}
-                    />
-                    <Text style={[styles.activeTabText, {color: Colors.black}]}>
-                      {tab.label}
-                    </Text>
+                  <View style={styles.activeTab}>
+                    <Text style={styles.activeTabText}>{tab.label}</Text>
                     {tab.badge > 0 && (
                       <View style={styles.badge}>
                         <Text style={styles.badgeText}>{tab.badge}</Text>
@@ -109,10 +84,6 @@ const NotificationHeader: React.FC<NotificationHeaderProps> = ({
                   </View>
                 ) : (
                   <View style={styles.inactiveTab}>
-                    <Image
-                      source={{uri: tab.icon}}
-                      style={styles.iconImageInactive}
-                    />
                     <Text style={styles.tabText}>{tab.label}</Text>
                     {tab.badge > 0 && (
                       <View style={styles.badge}>
@@ -135,14 +106,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     paddingVertical: responsiveSpacing(8),
     paddingHorizontal: responsiveSpacing(8),
-    marginTop: responsiveSpacing(25), // Giảm từ 25 xuống 8
+    marginTop: responsiveSpacing(8),
   },
   scrollContainer: {
-    marginBottom: responsiveSpacing(4), // Giảm từ 8 xuống 4
+    marginBottom: responsiveSpacing(4),
   },
   scrollContent: {
     paddingHorizontal: responsiveSpacing(8),
-    paddingRight: responsiveSpacing(16), // Thêm padding phải để đảm bảo tab cuối hiển thị đầy đủ
+    paddingRight: responsiveSpacing(16),
   },
   tabContainer: {
     flexDirection: 'row',
@@ -158,16 +129,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: moderateScale(24),
     position: 'relative',
-    marginRight: responsiveSpacing(8), // Giảm từ 10 xuống 8
+    marginRight: responsiveSpacing(8),
     minHeight: moderateScale(40),
     overflow: 'hidden',
-    minWidth: moderateScale(80), // Thêm minWidth để đảm bảo tab có kích thước tối thiểu
+    minWidth: moderateScale(80),
   },
   firstTab: {
     marginLeft: 0,
   },
   lastTab: {
-    marginRight: responsiveSpacing(8), // Thêm margin cho tab cuối
+    marginRight: responsiveSpacing(8),
   },
   activeTab: {
     flex: 1,
@@ -175,11 +146,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: responsiveSpacing(6),
+    paddingVertical: responsiveSpacing(8),
     paddingHorizontal: responsiveSpacing(12),
     borderRadius: moderateScale(18),
-    backgroundColor: 'transparent',
-    borderWidth: 2, // Tăng từ 1 lên 2 để đậm hơn
+    backgroundColor: Colors.limeGreen,
+    borderWidth: 0,
   },
   inactiveTab: {
     flex: 1,
@@ -187,45 +158,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: responsiveSpacing(10), // Giảm từ 12 xuống 10
-    paddingHorizontal: responsiveSpacing(12), // Giảm từ 16 xuống 12
-    backgroundColor: 'transparent',
+    paddingVertical: responsiveSpacing(8),
+    paddingHorizontal: responsiveSpacing(12),
+    backgroundColor: Colors.white,
     borderRadius: moderateScale(24),
   },
-  iconImageActive: {
-    width: responsiveFont(16), // Giảm từ 18 xuống 16
-    height: responsiveFont(16),
-    marginRight: responsiveSpacing(4), // Giảm từ 6 xuống 4
-  },
-  iconImageInactive: {
-    width: responsiveFont(14), // Giảm từ 16 xuống 14
-    height: responsiveFont(14),
-    marginRight: responsiveSpacing(3), // Giảm từ 4 xuống 3
-    opacity: 0.6,
-    tintColor: Colors.unselectedText,
-  },
   tabText: {
-    fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Regular, // Đổi về Regular
-    color: Colors.textGray,
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Medium,
+    color: Colors.dearkOlive,
     textAlign: 'center',
-    letterSpacing: 0.3, // Thêm letter spacing
+    letterSpacing: 0.3,
+    paddingHorizontal: responsiveSpacing(12),
   },
   activeTabText: {
-    fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Bold, // Giữ Bold cho tab active
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Medium,
     color: Colors.black,
     textAlign: 'center',
-    letterSpacing: 0.3, // Thêm letter spacing
+    letterSpacing: 0.3,
+    paddingHorizontal: responsiveSpacing(12),
   },
   badge: {
     position: 'absolute',
-    top: responsiveSpacing(-4),
-    right: responsiveSpacing(6), // Giảm từ 8 xuống 6
+    top: responsiveSpacing(2), // đẩy xuống dưới để không bị cắt góc
+    right: responsiveSpacing(6),
     backgroundColor: Colors.error,
-    borderRadius: moderateScale(10), // Giảm từ 12 xuống 10
-    minWidth: moderateScale(18), // Giảm từ 20 xuống 18
-    height: moderateScale(18), // Giảm từ 20 xuống 18
+    borderRadius: moderateScale(10),
+    minWidth: moderateScale(18),
+    height: moderateScale(18),
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,

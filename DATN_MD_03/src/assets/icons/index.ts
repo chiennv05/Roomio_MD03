@@ -746,4 +746,20 @@ export const Icons = {
     ios: 'icon_ho_tro',
     android: 'asset:/icons/icon_ho_tro.png',
   }),
+  IconHopDongGreen: Platform.select({
+    ios: 'icon_hop_dong_green',
+    android: 'asset:/icons/icon_hop_dong_green.png',
+  }),
+  IconThanhToanGreen: Platform.select({
+    ios: 'icon_thanh_toan_green',
+    android: 'asset:/icons/icon_thanh_toan_green.png',
+  }),
+  IconHoTroGreen: Platform.select({
+    ios: 'icon_ho_tro_green',
+    android: 'asset:/icons/icon_ho_tro_green.png',
+  }),
+  IconHeThongGreen: Platform.select({
+    ios: 'icon_he_thong_green',
+    android: 'asset:/icons/icon_he_thong_green.png',
+  })
 };
