@@ -88,8 +88,21 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
 
   const handleDelete = (e: any) => {
     e.stopPropagation(); // Prevent triggering the onPress event
+    console.log(
+      '🗑️ SupportItem handleDelete called for item:',
+      item._id,
+      'canModify:',
+      canModify,
+    );
     if (onDelete && canModify) {
       onDelete(item);
+    } else {
+      console.log(
+        '❌ Cannot delete - onDelete:',
+        !!onDelete,
+        'canModify:',
+        canModify,
+      );
     }
   };
 

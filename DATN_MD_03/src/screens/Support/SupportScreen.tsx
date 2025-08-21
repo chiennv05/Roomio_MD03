@@ -11,7 +11,7 @@ import {
   Platform,
   StatusBar,
 } from 'react-native';
-import {useDispatch, useSelector} from 'react-redux';
+import {useAppDispatch, useAppSelector} from '../../hooks/redux';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
@@ -21,7 +21,6 @@ import {responsiveFont, responsiveSpacing, scale} from '../../utils/responsive';
 import {Icons} from '../../assets/icons';
 
 import {Support} from '../../types/Support';
-import {RootState} from '../../store';
 import {
   fetchSupportRequests,
   deleteSupportRequest,
@@ -43,9 +42,9 @@ type SupportScreenNavigationProp = NativeStackNavigationProp<
 >;
 
 const SupportScreen: React.FC = () => {
-  const dispatch = useDispatch();
-  const {supportRequests, loading, pagination, error} = useSelector(
-    (state: RootState) => state.support,
+  const dispatch = useAppDispatch();
+  const {supportRequests, loading, pagination, error} = useAppSelector(
+    state => state.support,
   );
   const navigation = useNavigation<SupportScreenNavigationProp>();
   const {alertConfig, visible, showError, showSuccess, showConfirm, hideAlert} =
@@ -77,7 +76,7 @@ const SupportScreen: React.FC = () => {
         params.category = categoryFilter;
       }
 
-      dispatch(fetchSupportRequests(params) as any);
+      dispatch(fetchSupportRequests(params));
     },
     [dispatch, statusFilter, categoryFilter],
   );
@@ -103,32 +102,52 @@ const SupportScreen: React.FC = () => {
 
   // Handle delete item
   const handleDeleteItem = (item: Support) => {
-    if (item.status === 'hoanTat') {
-      showError('Yêu cầu hỗ trợ đã hoàn tất không thể xóa.', 'Không thể xóa');
+    console.log('🗑️ Attempting to delete support item:', item);
+
+    // Kiểm tra điều kiện xóa - chỉ cho phép xóa khi status là 'mo'
+    if (item.status !== 'mo') {
+      const statusText =
+        item.status === 'dangXuLy'
+          ? 'đang xử lý'
+          : item.status === 'hoanTat'
+          ? 'đã hoàn tất'
+          : 'không xác định';
+      showError(`Yêu cầu hỗ trợ ${statusText} không thể xóa.`, 'Không thể xóa');
       return;
     }
 
+    if (!item._id) {
+      showError('Không tìm thấy ID yêu cầu hỗ trợ', 'Lỗi');
+      return;
+    }
+
+    const performDelete = () => {
+      console.log('🔄 Dispatching delete action for ID:', item._id);
+      dispatch(deleteSupportRequest(item._id!))
+        .unwrap()
+        .then(() => {
+          console.log('✅ Delete successful');
+          showSuccess('Đã xóa yêu cầu hỗ trợ', 'Thành công');
+          // Refresh danh sách sau khi xóa thành công
+          loadSupportRequests(pagination.page || 1);
+        })
+        .catch((err: any) => {
+          console.log('❌ Delete failed:', err);
+          showError(err || 'Không thể xóa yêu cầu hỗ trợ', 'Lỗi');
+        });
+    };
+
     showConfirm(
       'Bạn có chắc chắn muốn xóa yêu cầu hỗ trợ này?',
-      () => {
-        if (item._id) {
-          dispatch(deleteSupportRequest(item._id) as any)
-            .unwrap()
-            .then(() => {
-              showSuccess('Đã xóa yêu cầu hỗ trợ', 'Thành công');
-            })
-            .catch((err: any) => {
-              showError(err || 'Không thể xóa yêu cầu hỗ trợ', 'Lỗi');
-            });
-        }
-      },
+      performDelete,
       'Xác nhận xóa',
       [
         {text: 'Hủy', onPress: hideAlert, style: 'cancel'},
         {
           text: 'Xóa',
           onPress: () => {
-            /* handled in onConfirm */
+            hideAlert();
+            performDelete();
           },
           style: 'destructive',
         },
@@ -246,7 +265,7 @@ const SupportScreen: React.FC = () => {
       {/* Global Alert Modal for this screen */}
       {alertConfig && (
         <CustomAlertModal
-          visible={true}
+          visible={visible}
           title={alertConfig.title || 'Thông báo'}
           message={alertConfig.message}
           onClose={hideAlert}

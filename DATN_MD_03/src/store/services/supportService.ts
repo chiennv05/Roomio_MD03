@@ -84,7 +84,33 @@ export const supportService = {
 
   // Delete a support request by ID
   deleteSupportRequest: async (id: string) => {
-    return api.delete<{success: boolean; message: string}>(`/support/${id}`);
+    console.log('🗑️ Calling delete API for support ID:', id);
+    try {
+      const response = await api.delete<{success: boolean; message: string}>(
+        `/support/${id}`,
+      );
+      console.log('📡 Delete API response:', response);
+
+      // Kiểm tra nếu response là error
+      if ('isError' in response) {
+        console.log('❌ API returned error:', response.message);
+        throw new Error(response.message);
+      }
+
+      // Kiểm tra response structure
+      if (!response.data || !response.data.success) {
+        const errorMsg = response.data?.message || 'Xóa không thành công';
+        console.log('❌ API response not successful:', errorMsg);
+        throw new Error(errorMsg);
+      }
+
+      console.log('✅ Delete API successful');
+      return response;
+    } catch (error: any) {
+      console.log('❌ Delete API error:', error);
+      // Re-throw để async thunk có thể catch
+      throw error;
+    }
   },
 
   // Reply to a support request

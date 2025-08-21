@@ -65,13 +65,19 @@ export const deleteSupportRequest = createAsyncThunk(
   'support/deleteSupportRequest',
   async (id: string, {rejectWithValue}) => {
     try {
+      console.log('🗑️ Bắt đầu xóa support request với ID:', id);
       const response = await supportService.deleteSupportRequest(id);
-      if ('isError' in response) {
-        return rejectWithValue(response.message);
-      }
+
+      console.log('📡 Response từ supportService:', response);
+      console.log('✅ Xóa support request thành công');
       return id; // Return the ID of the deleted support request
-    } catch (error) {
-      return rejectWithValue('Không thể xóa yêu cầu hỗ trợ');
+    } catch (error: any) {
+      console.log('❌ Lỗi khi xóa support request:', error);
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Không thể xóa yêu cầu hỗ trợ';
+      return rejectWithValue(errorMessage);
     }
   },
 );
@@ -105,11 +111,17 @@ const supportSlice = createSlice({
         state.error = null;
       })
       .addCase(deleteSupportRequest.fulfilled, (state, action) => {
+        console.log('✅ Delete fulfilled with payload:', action.payload);
         state.loading = false;
         // Remove the deleted support request from the state
+        const deletedId = action.payload;
+        const initialCount = state.supportRequests.length;
         state.supportRequests = state.supportRequests.filter(
-          request => request._id !== action.payload,
+          request => request._id !== deletedId,
         );
+        const finalCount = state.supportRequests.length;
+        console.log(`📊 Removed ${initialCount - finalCount} items from state`);
+
         // Update summary counts
         if (state.summary) {
           state.summary.totalRequests = Math.max(
@@ -117,8 +129,14 @@ const supportSlice = createSlice({
             state.summary.totalRequests - 1,
           );
         }
+
+        // Update pagination if needed
+        if (state.pagination) {
+          state.pagination.total = Math.max(0, state.pagination.total - 1);
+        }
       })
       .addCase(deleteSupportRequest.rejected, (state, action) => {
+        console.log('❌ Delete rejected with error:', action.payload);
         state.loading = false;
         state.error = action.payload as string;
       });
