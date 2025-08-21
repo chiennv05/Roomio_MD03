@@ -253,12 +253,9 @@ const ContractDetailScreen = () => {
   // gia hạn hợp đồng
   const onExtendContract = () => {
     if (!selectedContract) return;
-    if (
-      selectedContract.status !== 'pending_signature' &&
-      selectedContract.status !== 'active'
-    ) {
+    if (selectedContract.status !== 'active') {
       showError(
-        'Chỉ có thể gia hạn hợp đồng ở trạng thái Chờ ký.',
+        'Chỉ có thể gia hạn hợp đồng ở trạng thái đang hiệu lực.',
         'Không thể gia hạn',
       );
       return;
@@ -483,7 +480,7 @@ const ContractDetailScreen = () => {
               />
             }
           />
-          </View>
+        </View>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.darkGreen} />
           <Text style={styles.loadingText}>Đang tải thông tin hợp đồng...</Text>

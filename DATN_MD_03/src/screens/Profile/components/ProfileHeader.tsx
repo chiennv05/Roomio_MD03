@@ -19,7 +19,11 @@ export default function ProfileHeader() {
   const planLabel = (currentPlan || '').toUpperCase();
   const isLandlord = nguoiDung?.role === 'chuTro';
   const avatar = nguoiDung?.avatar;
-  const firstLetter = (nguoiDung?.fullName?.[0] || nguoiDung?.username?.[0] || '?').toUpperCase();
+  const firstLetter = (
+    nguoiDung?.fullName?.[0] ||
+    nguoiDung?.username?.[0] ||
+    '?'
+  ).toUpperCase();
 
   return (
     <ContainerLinearGradent>
@@ -43,7 +47,9 @@ export default function ProfileHeader() {
             </View>
           )}
         </View>
-        <Text style={styles.email}>{nguoiDung?.email || 'Chưa có email'}</Text>
+        <Text style={styles.email}>
+          {nguoiDung?.username || 'Chưa có username'}
+        </Text>
       </View>
     </ContainerLinearGradent>
   );

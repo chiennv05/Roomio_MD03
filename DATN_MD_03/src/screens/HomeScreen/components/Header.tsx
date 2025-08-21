@@ -13,14 +13,14 @@ import {
 import {useSelector, useDispatch} from 'react-redux';
 import LinearGradient from 'react-native-linear-gradient';
 import {RootState, AppDispatch} from '../../../store';
-import { Icons } from '../../../assets/icons';
+import {Icons} from '../../../assets/icons';
 import {
   responsiveFont,
   responsiveIcon,
   responsiveSpacing,
 } from '../../../utils/responsive';
-import { Colors } from '../../../theme/color';
-import { Fonts } from '../../../theme/fonts';
+import {Colors} from '../../../theme/color';
+import {Fonts} from '../../../theme/fonts';
 
 interface HeaderProps {
   onNotificationPress?: () => void;
@@ -39,17 +39,19 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   // Get user info from Redux store
   const dispatch = useDispatch<AppDispatch>();
-  const { user } = useSelector((state: RootState) => state.auth);
-  const { unreadCount } = useSelector((state: RootState) => state.notification);
+  const {user} = useSelector((state: RootState) => state.auth);
+  const {unreadCount} = useSelector((state: RootState) => state.notification);
   const avatar = user?.avatar;
 
   // Get display name and avatar
-  const displayName = user?.username || 'Guest';
+  const displayName = user?.fullName || user?.username || 'Guest';
   const isGuest = !user;
 
   // Create avatar from first letter
   const getAvatarLetter = (name: string) => {
-    if (name === 'Guest') {return 'G';}
+    if (name === 'Guest') {
+      return 'G';
+    }
     return name.charAt(0).toUpperCase();
   };
 
@@ -67,8 +69,10 @@ const Header: React.FC<HeaderProps> = ({
   // Fetch notifications to populate unread count when header mounts or user changes
   useEffect(() => {
     if (token) {
-      const { fetchNotifications } = require('../../../store/slices/notificationSlice');
-      dispatch(fetchNotifications({ token, page: 1, limit: 20 }));
+      const {
+        fetchNotifications,
+      } = require('../../../store/slices/notificationSlice');
+      dispatch(fetchNotifications({token, page: 1, limit: 20}));
     }
   }, [dispatch, token]);
 
@@ -76,10 +80,30 @@ const Header: React.FC<HeaderProps> = ({
     return () => {
       bellAnim.setValue(0);
       Animated.sequence([
-        Animated.timing(bellAnim, { toValue: 1, duration: 80, easing: Easing.linear, useNativeDriver: true }),
-        Animated.timing(bellAnim, { toValue: -1, duration: 160, easing: Easing.linear, useNativeDriver: true }),
-        Animated.timing(bellAnim, { toValue: 1, duration: 160, easing: Easing.linear, useNativeDriver: true }),
-        Animated.timing(bellAnim, { toValue: 0, duration: 100, easing: Easing.linear, useNativeDriver: true }),
+        Animated.timing(bellAnim, {
+          toValue: 1,
+          duration: 80,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bellAnim, {
+          toValue: -1,
+          duration: 160,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bellAnim, {
+          toValue: 1,
+          duration: 160,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bellAnim, {
+          toValue: 0,
+          duration: 100,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
       ]).start();
     };
   }, [bellAnim]);
@@ -88,16 +112,32 @@ const Header: React.FC<HeaderProps> = ({
     return () => {
       badgeScale.setValue(0);
       Animated.sequence([
-        Animated.spring(badgeScale, { toValue: 1, friction: 5, tension: 120, useNativeDriver: true }),
-        Animated.timing(badgeScale, { toValue: 0.9, duration: 120, useNativeDriver: true }),
-        Animated.spring(badgeScale, { toValue: 1, friction: 5, tension: 120, useNativeDriver: true }),
+        Animated.spring(badgeScale, {
+          toValue: 1,
+          friction: 5,
+          tension: 120,
+          useNativeDriver: true,
+        }),
+        Animated.timing(badgeScale, {
+          toValue: 0.9,
+          duration: 120,
+          useNativeDriver: true,
+        }),
+        Animated.spring(badgeScale, {
+          toValue: 1,
+          friction: 5,
+          tension: 120,
+          useNativeDriver: true,
+        }),
       ]).start();
     };
   }, [badgeScale]);
 
   // Occasional shake every ~25s when there are unread notifications
   useEffect(() => {
-    if (!unreadCount) {return;}
+    if (!unreadCount) {
+      return;
+    }
     const id = setInterval(() => {
       triggerBellShake();
     }, 25000);
@@ -118,7 +158,16 @@ const Header: React.FC<HeaderProps> = ({
     inputRange: [-1, 0, 1],
     outputRange: ['-15deg', '0deg', '15deg'],
   });
-  const badgeTransform = { transform: [{ scale: badgeScale.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) }] } as any;
+  const badgeTransform = {
+    transform: [
+      {
+        scale: badgeScale.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.9, 1],
+        }),
+      },
+    ],
+  } as any;
   const unreadDisplay = unreadCount > 99 ? '99+' : unreadCount?.toString();
 
   return (
@@ -129,8 +178,7 @@ const Header: React.FC<HeaderProps> = ({
           <TouchableOpacity
             style={styles.userInfo}
             onPress={onUserPress}
-            activeOpacity={0.7}
-          >
+            activeOpacity={0.7}>
             {avatar ? (
               <Image source={{uri: avatar}} style={styles.avatarContainer} />
             ) : (
@@ -150,11 +198,10 @@ const Header: React.FC<HeaderProps> = ({
           <TouchableOpacity
             style={styles.notificationButton}
             onPress={onNotificationPress}
-            activeOpacity={0.8}
-          >
-            <Animated.View style={{ transform: [{ rotate }] }}>
+            activeOpacity={0.8}>
+            <Animated.View style={{transform: [{rotate}]}}>
               <Image
-                source={{ uri: Icons.IconNotification }}
+                source={{uri: Icons.IconNotification}}
                 style={styles.notificationIcon}
               />
             </Animated.View>
@@ -178,12 +225,8 @@ const Header: React.FC<HeaderProps> = ({
           />
           <TouchableOpacity
             style={styles.searchButton}
-            onPress={onSearchSubmit}
-          >
-            <Image
-              source={{ uri: Icons.IconSearch }}
-              style={styles.searchIcon}
-            />
+            onPress={onSearchSubmit}>
+            <Image source={{uri: Icons.IconSearch}} style={styles.searchIcon} />
           </TouchableOpacity>
         </View>
       </View>
@@ -210,7 +253,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: responsiveIcon(45),
-    flex: 0.6,
+    flex: 0.7,
     backgroundColor: Colors.white,
     borderWidth: 0.6,
     borderColor: 'rgba(0, 0, 0, 0.1)',
