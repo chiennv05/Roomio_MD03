@@ -63,6 +63,7 @@ export default function MyRoomScreen() {
 
   const [searchText, setSearchText] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [approvalStatusFilter, setApprovalStatusFilter] = useState('all');
 
   useEffect(() => {
     dispatch(loadPlans());
@@ -99,15 +100,23 @@ export default function MyRoomScreen() {
       pageToLoad = page,
       limit = itemsPerPage,
       status = selectedFilter,
-    }: {pageToLoad?: number; limit?: number; status?: string} = {}) => {
+      approvalStatus = approvalStatusFilter,
+    }: {
+      pageToLoad?: number;
+      limit?: number;
+      status?: string;
+      approvalStatus?: string;
+    } = {}) => {
       if (!user?.auth_token) return;
       const statusToSend = status === 'all' ? '' : status;
+      const approvalStatusToSend =
+        approvalStatus === 'all' ? '' : approvalStatus;
       await dispatch(
         // getLandlordRooms thunk should accept an object with token & params
         getLandlordRooms({
           token: user.auth_token,
           status: statusToSend,
-          approvalStatus: '',
+          approvalStatus: approvalStatusToSend,
           page: pageToLoad,
           limit,
           roomName: searchText,
@@ -121,19 +130,29 @@ export default function MyRoomScreen() {
       user?.auth_token,
       dispatch,
       searchText,
+      approvalStatusFilter,
     ],
   );
 
   // Gọi load khi user.token, selectedFilter hoặc page thay đổi
   useEffect(() => {
-    loadRooms({pageToLoad: page, limit: itemsPerPage, status: selectedFilter});
+    loadRooms({
+      pageToLoad: page,
+      limit: itemsPerPage,
+      status: selectedFilter,
+      approvalStatus: approvalStatusFilter,
+    });
     // reset to page 1 when filter changed handled below
-  }, [loadRooms, page, selectedFilter, itemsPerPage]);
+  }, [loadRooms, page, selectedFilter, itemsPerPage, approvalStatusFilter]);
 
-  const handleClickFilter = useCallback((value: string) => {
-    setSelectedFilter(value);
-    setPage(1); // khi đổi filter, load lại từ trang 1
-  }, []);
+  const handleClickFilter = useCallback(
+    (value: string, approvalStatus: string) => {
+      setSelectedFilter(value);
+      setApprovalStatusFilter(approvalStatus);
+      setPage(1); // khi đổi filter, load lại từ trang 1
+    },
+    [],
+  );
 
   const handleClickItemRooms = useCallback(
     (id: string) => {
@@ -269,7 +288,10 @@ export default function MyRoomScreen() {
             renderItem={({item, index}) => (
               <ItemFilter
                 item={item}
-                isSelected={item.value === selectedFilter}
+                isSelected={
+                  item.value === selectedFilter &&
+                  item.approvalStatus === approvalStatusFilter
+                }
                 onPress={handleClickFilter}
                 index={index}
               />

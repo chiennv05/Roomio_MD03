@@ -12,7 +12,7 @@ import {Fonts} from '../../../../theme/fonts';
 interface FilterProps {
   item: RoomSatus;
   isSelected: boolean;
-  onPress: (value: string) => void;
+  onPress: (value: string, approvalStatus: string) => void;
   index: number;
 }
 
@@ -24,7 +24,7 @@ const ItemFilter = ({item, isSelected, onPress, index}: FilterProps) => {
         isSelected ? styles.selected : styles.default,
         index === 0 && {marginLeft: responsiveSpacing(10)},
       ])}
-      onPress={() => onPress(item.value)}>
+      onPress={() => onPress(item.value, item.approvalStatus)}>
       <Text style={styles.textLabel}>{item.label}</Text>
     </TouchableOpacity>
   );
