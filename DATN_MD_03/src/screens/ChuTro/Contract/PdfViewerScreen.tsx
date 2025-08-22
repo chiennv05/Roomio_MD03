@@ -89,7 +89,103 @@ const PdfViewerScreen = () => {
       setIsLoading(false);
     };
     loadPdf();
-  }, [pdfUrl]); // pdfUrl từ route param
+  }, [pdfUrl]);
+
+  // Hàm kiểm tra và tạo thư mục nếu cần
+  const ensureDirectoryExists = async (dirPath: string): Promise<boolean> => {
+    try {
+      const exists = await RNFS.exists(dirPath);
+      if (!exists) {
+        await RNFS.mkdir(dirPath);
+        console.log('Created directory:', dirPath);
+      }
+      return true;
+    } catch (error) {
+      console.warn('Error creating directory:', error);
+      return false;
+    }
+  };
+
+  // Hàm lấy đường dẫn download phù hợp
+  const getDownloadPath = async (filename: string): Promise<string | null> => {
+    try {
+      if (Platform.OS === 'ios') {
+        return `${RNFS.DocumentDirectoryPath}/${filename}`;
+      }
+
+      // Android - thử các đường dẫn khác nhau
+      const androidVersion = Platform.Version;
+      console.log('Android version:', androidVersion);
+
+      // Đường dẫn 1: Thư mục Documents của app (luôn có quyền)
+      const documentsPath = `${RNFS.DocumentDirectoryPath}/${filename}`;
+      
+      // Đường dẫn 2: External storage (nếu có quyền)
+      let externalPath = null;
+      if (androidVersion >= 29) {
+        // Android 10+ - sử dụng scoped storage
+        const externalDir = RNFS.ExternalDirectoryPath;
+        if (externalDir) {
+          externalPath = `${externalDir}/${filename}`;
+        }
+      } else {
+        // Android < 10 - sử dụng Downloads folder
+        const downloadDir = RNFS.DownloadDirectoryPath;
+        if (downloadDir) {
+          const dirExists = await ensureDirectoryExists(downloadDir);
+          if (dirExists) {
+            externalPath = `${downloadDir}/${filename}`;
+          }
+        }
+      }
+
+      // Thử external path trước, fallback về documents
+      if (externalPath) {
+        try {
+          const dirExists = await ensureDirectoryExists(externalPath.substring(0, externalPath.lastIndexOf('/')));
+          if (dirExists) {
+            return externalPath;
+          }
+        } catch (error) {
+          console.warn('Cannot use external path, falling back to documents:', error);
+        }
+      }
+
+      return documentsPath;
+    } catch (error) {
+      console.warn('getDownloadPath error:', error);
+      return `${RNFS.DocumentDirectoryPath}/${filename}`;
+    }
+  };
+
+  const requestStoragePermission = async (): Promise<boolean> => {
+    if (Platform.OS !== 'android') return true;
+
+    const androidVersion = Platform.Version;
+    
+    // Android 10+ không cần WRITE_EXTERNAL_STORAGE cho app-specific directories
+    if (androidVersion >= 29) {
+      return true;
+    }
+
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        {
+          title: 'Quyền truy cập bộ nhớ',
+          message: 'Ứng dụng cần quyền truy cập bộ nhớ để tải file PDF.',
+          buttonNeutral: 'Hỏi lại sau',
+          buttonNegative: 'Từ chối',
+          buttonPositive: 'Đồng ý',
+        },
+      );
+
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    } catch (err) {
+      console.warn('Permission request error:', err);
+      return false; // Không có quyền nhưng vẫn có thể thử tải về Documents
+    }
+  };
 
   const handleDownloadPdf = async () => {
     try {
@@ -98,7 +194,7 @@ const PdfViewerScreen = () => {
         return;
       }
 
-      // Create filename
+      // Tạo tên file
       let filename = 'contract.pdf';
       if (pdfLink.includes('/')) {
         const parts = pdfLink.split('/');
@@ -108,102 +204,98 @@ const PdfViewerScreen = () => {
         }
       }
 
-      // Permissions (Android < 10)
-      if (Platform.OS === 'android') {
-        const androidVersion = Platform.Version;
-        if (androidVersion < 29) {
-          try {
-            const granted = await PermissionsAndroid.request(
-              PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-              {
-                title: 'Quyền truy cập bộ nhớ',
-                message: 'Ứng dụng cần quyền truy cập bộ nhớ để tải file PDF.',
-                buttonNeutral: 'Hỏi lại sau',
-                buttonNegative: 'Từ chối',
-                buttonPositive: 'Đồng ý',
-              },
-            );
+      // Thêm timestamp để tránh trùng lặp
+      const timestamp = new Date().getTime();
+      const nameWithoutExt = filename.replace('.pdf', '');
+      filename = `${nameWithoutExt}_${timestamp}.pdf`;
 
-            if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-              showError(
-                'Bạn cần cấp quyền truy cập bộ nhớ để tải file PDF.',
-                'Thông báo',
-              );
-              return;
-            }
-          } catch (err) {
-            console.warn('permission request error', err);
-            // tiếp tục cố gắng tải — có thiết bị gặp lỗi API permission
-          }
-        } else {
-          console.log(
-            'Android 10+ (API 29+): không cần WRITE_EXTERNAL_STORAGE cho thư mục app',
-          );
-        }
+      // Yêu cầu quyền nếu cần
+      const hasPermission = await requestStoragePermission();
+      if (!hasPermission) {
+        console.warn('No storage permission, but will try to download to app directory');
       }
 
-      // Set download path
-      let downloadPath: string;
-      if (Platform.OS === 'ios') {
-        downloadPath = `${RNFS.DocumentDirectoryPath}/${filename}`;
-      } else {
-        downloadPath = `${RNFS.DownloadDirectoryPath}/${filename}`;
+      // Lấy đường dẫn download
+      const downloadPath = await getDownloadPath(filename);
+      if (!downloadPath) {
+        showError('Không thể xác định vị trí lưu file.', 'Lỗi');
+        return;
       }
 
-      // Hiện alert download (không tự ẩn)
+      console.log('Download path:', downloadPath);
+
+      // Hiển thị thông báo đang tải
       showSuccess('Đang tải xuống PDF...', 'Thông báo', false);
 
-      // Nếu muốn đảm bảo không dùng file cũ khi đặt cùng tên, xóa file cũ nếu tồn tại
+      // Xóa file cũ nếu tồn tại
       try {
         const exists = await RNFS.exists(downloadPath);
         if (exists) {
-          try {
-            await RNFS.unlink(downloadPath);
-            console.log('Deleted old file before download:', downloadPath);
-          } catch (unlinkErr) {
-            console.warn('unlink error', unlinkErr);
-          }
+          await RNFS.unlink(downloadPath);
+          console.log('Deleted existing file:', downloadPath);
         }
-      } catch (existsErr) {
-        console.warn('RNFS.exists error', existsErr);
+      } catch (unlinkErr) {
+        console.warn('Error deleting existing file:', unlinkErr);
       }
 
-      const {promise} = RNFS.downloadFile({
+      // Tải file
+      const downloadOptions = {
         fromUrl: pdfLink,
         toFile: downloadPath,
         background: true,
         discretionary: true,
-        progress: res => {
-          // Optional: bạn có thể cập nhật progress state nếu cần
+        cacheable: false,
+        progress: (res: any) => {
           const progress = res.contentLength
             ? (res.bytesWritten / res.contentLength) * 100
             : 0;
           console.log(`Download progress: ${progress.toFixed(2)}%`);
         },
-      });
+      };
 
+      const {promise} = RNFS.downloadFile(downloadOptions);
       const result = await promise;
 
-      // Ẩn alert "Đang tải" trước khi show kết quả
       hideAlert();
 
       if (result.statusCode === 200) {
-        if (Platform.OS === 'android') {
-          ToastAndroid.show('Tải xuống thành công', ToastAndroid.LONG);
-        } else {
-          showSuccess('File PDF đã được tải xuống.', 'Thành công');
+        // Kiểm tra file đã được tải thành công
+        const fileExists = await RNFS.exists(downloadPath);
+        if (!fileExists) {
+          showError('File không được lưu thành công.', 'Lỗi');
+          return;
         }
 
+        const fileStats = await RNFS.stat(downloadPath);
+        console.log('Downloaded file size:', fileStats.size);
+
+        if (fileStats.size === 0) {
+          showError('File tải về bị lỗi (kích thước 0).', 'Lỗi');
+          return;
+        }
+
+        // Thông báo thành công
+        const downloadLocation = downloadPath.includes('Documents') 
+          ? 'thư mục Documents của ứng dụng' 
+          : 'thư mục Download';
+
+        if (Platform.OS === 'android') {
+          ToastAndroid.show(`Tải xuống thành công vào ${downloadLocation}`, ToastAndroid.LONG);
+        } else {
+          showSuccess(`File PDF đã được tải xuống vào ${downloadLocation}.`, 'Thành công');
+        }
+
+        // Chuẩn bị chia sẻ
         const shareOptions = {
           title: 'Chia sẻ file PDF',
           message: 'Chia sẻ hợp đồng',
-          url: `file://${downloadPath}`,
+          url: Platform.OS === 'ios' ? downloadPath : `file://${downloadPath}`,
           type: 'application/pdf',
         };
 
-        // Dùng showConfirm với nút tuỳ chỉnh "Không" / "Mở file"
+        // Hiển thị dialog xác nhận mở file
         showConfirm(
-          'File PDF đã được tải xuống. Bạn có muốn mở file không?',
+          `File PDF đã được lưu vào ${downloadLocation}.\nBạn có muốn mở file không?`,
           () => {}, // onConfirm không dùng vì ta truyền customButtons
           'Thành công',
           [
@@ -220,6 +312,11 @@ const PdfViewerScreen = () => {
                 try {
                   await Share.open(shareOptions);
                 } catch (shareErr) {
+                  console.warn('Share error:', shareErr);
+                  // Fallback: thử mở bằng cách khác
+                  if (Platform.OS === 'android') {
+                    ToastAndroid.show('Không thể mở file. Vui lòng tìm file trong trình quản lý file.', ToastAndroid.LONG);
+                  }
                 } finally {
                   hideAlert();
                 }
@@ -229,12 +326,21 @@ const PdfViewerScreen = () => {
           ],
         );
       } else {
-        showError('Không thể tải xuống file PDF. Vui lòng thử lại sau.', 'Lỗi');
+        showError(`Không thể tải xuống file PDF. Status: ${result.statusCode}`, 'Lỗi');
       }
     } catch (error) {
       console.error('Download error:', error);
-      hideAlert(); // ẩn nếu đang hiển thị cảnh báo trước đó
-      showError('Đã xảy ra lỗi khi tải xuống file PDF.', 'Lỗi');
+      hideAlert();
+      let errorMessage = 'Đã xảy ra lỗi khi tải xuống file PDF.';
+      if (error instanceof Error && error.message) {
+        if (error.message.includes('ENOENT')) {
+          errorMessage = 'Không thể truy cập thư mục lưu file. Thử lại sau.';
+        } else if (error.message.includes('EACCES')) {
+          errorMessage = 'Không có quyền ghi file. Kiểm tra quyền ứng dụng.';
+        }
+      }
+      
+      showError(errorMessage, 'Lỗi');
     }
   };
   
