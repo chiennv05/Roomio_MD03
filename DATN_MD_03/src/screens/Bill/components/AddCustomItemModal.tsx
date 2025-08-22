@@ -106,13 +106,6 @@ const AddCustomItemModal: React.FC<AddCustomItemModalProps> = ({ visible, loadin
               {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
             </View>
 
-            <View style={styles.noteWrapper}>
-              <View style={styles.noteBox}>
-                <View style={styles.noteAccent} />
-                <Text style={styles.noteText}>Lưu ý: Các khoản mục tùy chỉnh có thể chỉnh sửa hoặc xóa sau khi tạo</Text>
-              </View>
-            </View>
-
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Mô tả</Text>
               <TextInput
@@ -167,13 +160,6 @@ const AddCustomItemModal: React.FC<AddCustomItemModalProps> = ({ visible, loadin
                 ))}
               </View>
             </View>
-
-            <TouchableOpacity style={styles.checkboxRow} onPress={() => setIsRecurring(!isRecurring)} activeOpacity={0.8}>
-              <View style={[styles.checkboxBox, isRecurring && styles.checkboxBoxChecked]}>
-                {isRecurring ? <Text style={styles.checkboxTick}>✓</Text> : null}
-              </View>
-              <Text style={styles.checkboxLabel}>Tính định kỳ của khoản mục</Text>
-            </TouchableOpacity>
           </ScrollView>
 
           <View style={styles.bottomBar}>

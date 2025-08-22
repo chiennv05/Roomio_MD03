@@ -371,6 +371,11 @@ const EditInvoiceScreen = () => {
         return result !== undefined ? result : defaultValue;
     };
 
+    // Helper function to check if invoice can be edited
+    const canEditInvoice = () => {
+        return selectedInvoice && (selectedInvoice.status === 'draft' || selectedInvoice.status === 'overdue');
+    };
+
     // Format date function
     const formatDate = (dateString?: string) => {
         if (!dateString) {return '';}
@@ -1285,9 +1290,12 @@ const EditInvoiceScreen = () => {
         }
 
         // Hiển thị xác nhận phát hành
+        const confirmMessage = selectedInvoice.status === 'overdue' 
+            ? "Bạn có chắc chắn muốn cập nhật và phát hành lại hóa đơn quá hạn này không? Sau khi phát hành, hóa đơn sẽ được gửi đến người thuê và không thể chỉnh sửa."
+            : "Bạn có chắc chắn muốn phát hành hóa đơn này không? Sau khi phát hành, hóa đơn sẽ được gửi đến người thuê và không thể chỉnh sửa.";
 
         showConfirm(
-            "Bạn có chắc chắn muốn phát hành hóa đơn này không? Sau khi phát hành, hóa đơn sẽ được gửi đến người thuê và không thể chỉnh sửa.",
+            confirmMessage,
             () => {
                         // Hiển thị loading
                         setIsLoading(true);
@@ -2014,7 +2022,7 @@ const EditInvoiceScreen = () => {
             <View style={styles.itemsSection}>
                                       <View style={styles.sectionTitleRow}>
                          
-                                                      {selectedInvoice && selectedInvoice.status === 'draft' && (
+                                                      {canEditInvoice() && (
                                 <TouchableOpacity
                                     style={styles.addItemButton}
                                     onPress={() => setCustomItemModalVisible(true)}
@@ -2027,7 +2035,7 @@ const EditInvoiceScreen = () => {
                                 </TouchableOpacity>
                             )}
                       </View>
-                {selectedInvoice && selectedInvoice.status === 'draft' && (
+                {canEditInvoice() && (
                     <View style={styles.customItemNote}>
                         <Text style={styles.customItemNoteText}>
                             Bạn có thể thêm các khoản mục tùy chỉnh như điện nước, dịch vụ, bảo trì hoặc các khoản khác.
@@ -2037,7 +2045,7 @@ const EditInvoiceScreen = () => {
                 )}
 
                 {/* Nút áp dụng chỉ số từ kỳ trước */}
-                {selectedInvoice && selectedInvoice.status === 'draft' && 
+                {canEditInvoice() && 
                  previousInvoiceData.meterReadings && 
                  Object.keys(previousInvoiceData.meterReadings).length > 0 && 
                  !hasAppliedPreviousReadings && (
@@ -2085,7 +2093,7 @@ const EditInvoiceScreen = () => {
                 )}
 
                 {/* Hiển thị thông báo khi không tìm thấy dữ liệu kỳ trước */}
-                {selectedInvoice && selectedInvoice.status === 'draft' && 
+                {canEditInvoice() && 
                  !loadingPreviousInvoice && 
                  !previousInvoiceData.meterReadings && 
                  !hasAppliedPreviousReadings && (
@@ -2128,7 +2136,7 @@ const EditInvoiceScreen = () => {
                                     <Text style={styles.itemCategory}>{getCategoryText(item.category)}</Text>
                                     
                                     {/* Delete button for all items except rent */}
-                                    {item.category !== 'rent' && selectedInvoice?.status === 'draft' && (
+                                    {item.category !== 'rent' && canEditInvoice() && (
                                         <TouchableOpacity
                                             style={styles.deleteButton}
                                             onPress={() => handleDeleteItem(item)}
@@ -2471,29 +2479,33 @@ const EditInvoiceScreen = () => {
                 {renderInvoiceItems()}
                 {renderSummary()}
 
-                <View style={styles.buttonGroup}>
-                    <TouchableOpacity
-                        style={styles.saveDraftButton}
-                        onPress={handleSaveDraft}
-                        disabled={isLoading || !selectedInvoice}>
-                        {isLoading ? (
-                            <ActivityIndicator size="small" color={Colors.black} />
-                        ) : (
-                            <Text style={styles.saveDraftText}>Lưu nháp</Text>
-                        )}
-                    </TouchableOpacity>
+                {canEditInvoice() && (
+                    <View style={styles.buttonGroup}>
+                        <TouchableOpacity
+                            style={styles.saveDraftButton}
+                            onPress={handleSaveDraft}
+                            disabled={isLoading || !selectedInvoice}>
+                            {isLoading ? (
+                                <ActivityIndicator size="small" color={Colors.black} />
+                            ) : (
+                                <Text style={styles.saveDraftText}>Lưu nháp</Text>
+                            )}
+                        </TouchableOpacity>
 
-                    <TouchableOpacity
-                        style={[styles.saveButton, { backgroundColor: Colors.limeGreen }]}
-                        onPress={handleIssueInvoice}
-                        disabled={updateInvoiceLoading}>
-                        {updateInvoiceLoading ? (
-                            <ActivityIndicator size="small" color={Colors.black} />
-                        ) : (
-                            <Text style={styles.saveButtonText}>Phát hành hóa đơn</Text>
-                        )}
-                    </TouchableOpacity>
-                </View>
+                        <TouchableOpacity
+                            style={[styles.saveButton, { backgroundColor: Colors.limeGreen }]}
+                            onPress={handleIssueInvoice}
+                            disabled={updateInvoiceLoading}>
+                            {updateInvoiceLoading ? (
+                                <ActivityIndicator size="small" color={Colors.black} />
+                            ) : (
+                                <Text style={styles.saveButtonText}>
+                                    {selectedInvoice?.status === 'overdue' ? 'Cập nhật hóa đơn' : 'Phát hành hóa đơn'}
+                                </Text>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                )}
             </ScrollView>
 
             {/* Modal container */}
