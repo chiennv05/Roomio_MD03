@@ -43,23 +43,6 @@ const ContractStatisticScreen = () => {
     Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
 
   // Helper functions
-  const getContractStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return Colors.brandPrimary;
-      case 'pending_approval':
-      case 'pending':
-        return '#F59E0B';
-      case 'expired':
-        return Colors.darkGray;
-      case 'terminated':
-      case 'cancelled':
-        return Colors.darkGray; // Đã hủy cũng dùng màu xám
-      default:
-        return Colors.mediumGray;
-    }
-  };
-
   const getContractStatusText = (status: string) => {
     switch (status) {
       case 'active':
@@ -71,11 +54,36 @@ const ContractStatisticScreen = () => {
         return 'Đã hết hạn';
       case 'terminated':
       case 'cancelled':
-        return 'Đã hủy';
+        return 'Đã chấm dứt';
       case 'draft':
         return 'Nháp';
       default:
         return status;
+    }
+  };
+
+  // Helper function to get readable text color for status badges
+  const getContractStatusTextColor = (_status: string) => {
+    // Using black for all status text for better readability
+    return Colors.black;
+  };
+
+  // Helper function to get background color for status badges
+  const getContractStatusBgColor = (status: string) => {
+    switch (status) {
+      case 'active':
+        return Colors.limeGreen + '20'; // Light lime green background to match performance dot
+      case 'pending_signature':
+      case 'draft':
+        return Colors.mediumGray + '20'; // Light gray background to match performance dot
+      case 'pending_approval':
+        return '#ffc107' + '20'; // Light yellow background to match performance dot
+      case 'expired':
+      case 'terminated':
+      case 'cancelled':
+        return Colors.lightRed + '20'; // Light red background to match performance dot
+      default:
+        return Colors.mediumGray + '20';
     }
   };
 
@@ -143,7 +151,7 @@ const ContractStatisticScreen = () => {
           <View style={[styles.statCard, styles.contractCard]}>
             <View style={styles.statIconContainer}>
               <Image
-                source={require('../../../assets/icons/icon_contract.png')}
+                source={{uri: Icons.IconContract}}
                 style={[styles.statIcon, {tintColor: Colors.accentContract}]}
               />
             </View>
@@ -157,11 +165,11 @@ const ContractStatisticScreen = () => {
           <View style={[styles.statCard, styles.activeCard]}>
             <View style={styles.statIconContainer}>
               <Image
-                source={require('../../../assets/icons/icon_check.png')}
-                style={[styles.statIcon, {tintColor: Colors.brandPrimary}]}
+                source={{uri: Icons.IconCheck}}
+                style={[styles.statIcon, {tintColor: Colors.limeGreen}]}
               />
             </View>
-            <Text style={[styles.statValue, {color: Colors.brandPrimary}]}>
+            <Text style={[styles.statValue, {color: Colors.limeGreen}]}>
               {data?.overview?.activeContracts || 0}
             </Text>
             <Text style={styles.statLabel}>Đang hiệu lực</Text>
@@ -171,11 +179,11 @@ const ContractStatisticScreen = () => {
           <View style={[styles.statCard, styles.pendingCard]}>
             <View style={styles.statIconContainer}>
               <Image
-                source={require('../../../assets/icons/icon_select_date.png')}
-                style={[styles.statIcon, {tintColor: '#F59E0B'}]}
+                source={{uri: Icons.IconSelectDate}}
+                style={[styles.statIcon, {tintColor: Colors.mediumGray}]}
               />
             </View>
-            <Text style={[styles.statValue, {color: '#F59E0B'}]}>
+            <Text style={[styles.statValue, {color: Colors.mediumGray}]}>
               {data?.overview?.pendingContracts || 0}
             </Text>
             <Text style={styles.statLabel}>Chờ ký</Text>
@@ -186,13 +194,27 @@ const ContractStatisticScreen = () => {
             <View style={styles.statIconContainer}>
               <Image
                 source={require('../../../assets/icons/icon_warning.png')}
-                style={[styles.statIcon, {tintColor: Colors.darkGray}]}
+                style={[styles.statIcon, {tintColor: Colors.lightRed}]}
               />
             </View>
-            <Text style={[styles.statValue, {color: Colors.darkGray}]}>
+            <Text style={[styles.statValue, {color: Colors.lightRed}]}>
               {data?.overview?.expiredContracts || 0}
             </Text>
             <Text style={styles.statLabel}>Đã hết hạn</Text>
+          </View>
+
+          {/* Đã chấm dứt */}
+          <View style={[styles.statCard, styles.terminatedCard]}>
+            <View style={styles.statIconContainer}>
+              <Image
+                source={{uri: Icons.IconWarning}}
+                style={[styles.statIcon, {tintColor: Colors.lightRed}]}
+              />
+            </View>
+            <Text style={[styles.statValue, {color: Colors.lightRed}]}>
+              {data?.overview?.terminatedContracts || 0}
+            </Text>
+            <Text style={styles.statLabel}>Đã chấm dứt</Text>
           </View>
         </View>
 
@@ -206,7 +228,7 @@ const ContractStatisticScreen = () => {
               <View style={styles.performanceHeader}>
                 <View style={styles.performanceIconContainer}>
                   <Image
-                    source={require('../../../assets/icons/icon_light_report.png')}
+                    source={{uri: Icons.IconLightReport}}
                     style={styles.performanceIcon}
                   />
                 </View>
@@ -215,26 +237,32 @@ const ContractStatisticScreen = () => {
 
               <View style={styles.performanceStats}>
                 <View style={styles.performanceItem}>
-                  <View style={[styles.performanceDot, {backgroundColor: Colors.brandPrimary}]} />
+                  <View style={[styles.performanceDot, {backgroundColor: Colors.limeGreen}]} />
                   <Text style={styles.performanceLabel}>Đang hiệu lực</Text>
                   <Text style={styles.performanceValue}>{data?.overview?.activeContracts || 0}</Text>
                 </View>
 
                 <View style={styles.performanceItem}>
-                  <View style={[styles.performanceDot, {backgroundColor: '#F59E0B'}]} />
+                  <View style={[styles.performanceDot, {backgroundColor: Colors.mediumGray}]} />
+                  <Text style={styles.performanceLabel}>Chờ ký</Text>
+                  <Text style={styles.performanceValue}>{data?.overview?.pendingContracts || 0}</Text>
+                </View>
+
+                <View style={styles.performanceItem}>
+                  <View style={[styles.performanceDot, {backgroundColor: '#ffc107'}]} />
                   <Text style={styles.performanceLabel}>Chờ duyệt</Text>
                   <Text style={styles.performanceValue}>{data?.overview?.pendingContracts || 0}</Text>
                 </View>
 
                 <View style={styles.performanceItem}>
-                  <View style={[styles.performanceDot, {backgroundColor: Colors.darkGray}]} />
+                  <View style={[styles.performanceDot, {backgroundColor: Colors.lightRed}]} />
                   <Text style={styles.performanceLabel}>Đã hết hạn</Text>
                   <Text style={styles.performanceValue}>{data?.overview?.expiredContracts || 0}</Text>
                 </View>
 
                 <View style={styles.performanceItem}>
-                  <View style={[styles.performanceDot, {backgroundColor: Colors.accentSystem}]} />
-                  <Text style={styles.performanceLabel}>Đã kết thúc</Text>
+                  <View style={[styles.performanceDot, {backgroundColor: Colors.lightRed}]} />
+                  <Text style={styles.performanceLabel}>Đã chấm dứt</Text>
                   <Text style={styles.performanceValue}>{data?.overview?.terminatedContracts || 0}</Text>
                 </View>
               </View>
@@ -280,11 +308,11 @@ const ContractStatisticScreen = () => {
                       <View style={styles.contractMeta}>
                         <View style={[
                           styles.contractStatusBadge,
-                          {backgroundColor: getContractStatusColor(contract.status) + '20'}
+                          {backgroundColor: getContractStatusBgColor(contract.status)}
                         ]}>
                           <Text style={[
                             styles.contractStatusText,
-                            {color: getContractStatusColor(contract.status)}
+                            {color: getContractStatusTextColor(contract.status)}
                           ]}>
                             {getContractStatusText(contract.status)}
                           </Text>
@@ -298,7 +326,7 @@ const ContractStatisticScreen = () => {
                     {/* Arrow */}
                     <View style={styles.contractArrow}>
                       <Image
-                        source={require('../../../assets/icons/icon_arrow_right.png')}
+                        source={{uri: Icons.IconArrowRight}}
                         style={styles.arrowIcon}
                       />
                     </View>
@@ -308,7 +336,7 @@ const ContractStatisticScreen = () => {
           ) : (
             <View style={styles.emptyState}>
               <Image
-                source={require('../../../assets/icons/icon_contract.png')}
+                source={{uri: Icons.IconContract}}
                 style={styles.emptyIcon}
               />
               <Text style={styles.emptyText}>Chưa có hợp đồng nào</Text>
@@ -328,14 +356,14 @@ const ContractStatisticScreen = () => {
               <View style={styles.quickLeft}>
                 <View style={styles.quickIconWrap}>
                   <Image
-                    source={require('../../../assets/icons/icon_contract.png')}
+                    source={{uri: Icons.IconContract}}
                     style={styles.quickIcon}
                   />
                 </View>
                 <Text style={styles.quickText}>Xem tất cả hợp đồng</Text>
               </View>
               <Image
-                source={require('../../../assets/icons/icon_arrow_right.png')}
+                source={{uri: Icons.IconArrowRight}}
                 style={styles.quickArrow}
               />
             </View>
@@ -375,6 +403,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: responsiveSpacing(16),
     marginTop: responsiveSpacing(16),
     gap: responsiveSpacing(12),
+    // Support 5 cards with 2-2-1 layout
   },
   statCard: {
     width: '47%',
@@ -396,6 +425,9 @@ const styles = StyleSheet.create({
   expiredCard: {
     backgroundColor: '#F8F9FA', // Xám nhạt hơn
   },
+  terminatedCard: {
+    backgroundColor: '#F1F5F9', // Light gray for terminated
+  },
   statIconContainer: {
     width: scale(40),
     height: scale(40),
@@ -415,9 +447,10 @@ const styles = StyleSheet.create({
     height: scale(20),
   },
   statValue: {
-    fontSize: responsiveFont(24),
+    fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
     marginBottom: responsiveSpacing(2),
+    flexWrap: 'nowrap',
   },
   statLabel: {
     fontSize: responsiveFont(12),
@@ -537,7 +570,7 @@ const styles = StyleSheet.create({
   quickIcon: {
     width: scale(20),
     height: scale(20),
-    tintColor: Colors.accentContract,
+    tintColor: Colors.darkGreen,
   },
   quickText: {
     fontSize: responsiveFont(16),

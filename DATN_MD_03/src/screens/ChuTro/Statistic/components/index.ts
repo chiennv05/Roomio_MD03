@@ -1,10 +1,6 @@
-export {default as StatChart} from './StatChart';
-export {default as TopRoomCard} from './TopRoomCard';
 export {default as TopRoomCardFancy} from './TopRoomCardFancy';
-export {default as RecentContractItem} from './RecentContractItem';
-export {default as StatItem} from './StatItem';
-export {default as StatGroup} from './StatGroup';
-export {default as StatisticCard} from './StatisticCard';
-export {default as MainChart} from './MainChart';
 export {default as MainBarChart} from './MainBarChart';
-export {default as ContractCard} from './ContractCard';
+export {default as OverviewTab} from './OverviewTab';
+export {default as RoomsTab} from './RoomsTab';
+export {default as RevenueTab} from './RevenueTab';
+export {default as ContractsTab} from './ContractsTab';

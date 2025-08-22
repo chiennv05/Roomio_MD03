@@ -4,128 +4,168 @@ import {
   Text,
   View,
   Dimensions,
-  Image,
   Animated,
   Easing,
   TouchableOpacity,
 } from 'react-native';
 import {BarChart} from 'react-native-chart-kit';
-import Color from 'color';
 import {Colors} from '../../../../theme/color';
 import {Fonts} from '../../../../theme/fonts';
 import {
   responsiveFont,
   responsiveSpacing,
-  scale,
 } from '../../../../utils/responsive';
-import {Icons} from '../../../../assets/icons';
+import {useSelector} from 'react-redux';
+import {RootState} from '../../../../store';
 
 interface Props {
   title: string;
-  data: number[];
-  labels: string[];
-  color: string;
+  data?: number[];
+  labels?: string[];
+  color?: string;
+  onNavigate?: (direction: 'prev' | 'next') => void;
+  currentPeriod?: string;
+  onMonthSelect?: (month: number) => void;
+  chartType?: 'revenue' | 'rooms' | 'contracts' | 'invoices'; // Thêm loại biểu đồ
+  onTabChange?: (tabType: 'revenue' | 'rooms' | 'contracts') => void; // Thêm callback khi đổi tab
 }
 
-// A bar chart matching the provided visual reference, while keeping
-// the same props/behavior as MainChart for drop‑in use on StatisticScreen.
-export default function MainBarChart({title, data, labels, color}: Props) {
-  const screenWidth = Dimensions.get('window').width - responsiveSpacing(40);
+export default function MainBarChart({title, onNavigate, onMonthSelect, chartType = 'revenue', onTabChange}: Props) {
+  const screenWidth = Dimensions.get('window').width - responsiveSpacing(60); // Giảm width để căn giữa
+  const {data: dashboardData} = useSelector((state: RootState) => state.dashboard);
 
-  // Windowed view over full dataset (5 points), with arrows to navigate
-  const WINDOW_SIZE = 5;
-
-  // Normalize labels (e.g., "thg 4 2025" => "04/2025") to match existing charts
-  const processedLabels = (labels || []).map(label => {
-    if (typeof label === 'string' && label.includes('thg')) {
-      const parts = label.replace('thg ', '').split(' ');
-      if (parts.length === 2) {
-        const month = parts[0].padStart(2, '0');
-        const year = parts[1];
-        return `${month}/${year}`;
-      }
-    }
-    return label;
-  });
-  // Find current month index to focus initially
-  const currentMMYY = (() => {
-    const d = new Date();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const yy = String(d.getFullYear());
-    return `${mm}/${yy}`;
-  })();
-  const foundIdx = processedLabels.lastIndexOf(currentMMYY);
-  const lastIdx = Math.max(0, processedLabels.length - 1);
-  const initialEndIndex = foundIdx >= 0 ? foundIdx : lastIdx;
-  const [endIndex, setEndIndex] = React.useState(initialEndIndex);
-  // Keep endIndex synced when labels change
-  React.useEffect(() => {
-    const idx = processedLabels.lastIndexOf(currentMMYY);
-    const target = idx >= 0 ? idx : Math.max(0, processedLabels.length - 1);
-    if (target !== endIndex) setEndIndex(target);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [processedLabels.length]);
-
-  const startIndex = Math.max(0, Math.min(endIndex - WINDOW_SIZE + 1, Math.max(0, processedLabels.length - WINDOW_SIZE)));
-
-  const safeData = data && data.length > 0 ? data : [0];
-  const displayLabels = processedLabels.slice(startIndex, Math.min(endIndex + 1, processedLabels.length));
-  const displayData = safeData.slice(startIndex, Math.min(endIndex + 1, safeData.length));
-
-  // Hiển thị "dấu chấm" cho giá trị 0 bằng cách dùng giá trị siêu nhỏ chỉ để vẽ chiều cao,
-  // nhưng vẫn giữ số hiển thị là 0 (decimalPlaces=0 sẽ làm tròn về 0)
-  const maxVal = Math.max(...displayData, 0);
-  const hasAnyPositive = displayData.some(v => v > 0);
-  const tiny = hasAnyPositive ? Math.max(maxVal * 0.015, 0.001) : 0; // chỉ dùng tiny khi có ít nhất 1 giá trị > 0
-  const adjustedData = hasAnyPositive
-    ? displayData.map(v => (v === 0 ? Math.min(tiny, Math.max(0.01, maxVal * 0.02)) : v))
-    : displayData; // tất cả = 0 thì không vẽ chấm để tránh trục Y bị sai
-
-  const barColors = displayData.map((v, i) => {
-    const ratio = maxVal > 0 ? v / maxVal : 0; // 0..1
-    const opacity = 0.3 + 0.7 * Math.max(0, Math.min(1, ratio)); // 0.3..1
-    // Nhấn mạnh cột tháng hiện tại (cuối cửa sổ)
-    if (i === displayData.length - 1) {
-      return Color(Colors.black).alpha(0.95).rgb().string();
-    }
-    return Color(Colors.dearkOlive).alpha(opacity).rgb().string();
+  // State for current period navigation
+  const [currentPeriod, setCurrentPeriod] = React.useState(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1; // 1-12
+    const currentYear = now.getFullYear();
+    return { month: currentMonth, year: currentYear };
   });
 
-  const latest = displayData[displayData.length - 1] ?? 0;
+  // Generate month labels for current period
+  const generateMonthLabels = () => {
+    if (!dashboardData?.monthlyStats?.labels) {
+      return ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6'];
+    }
 
-  const canPrev = startIndex > 0;
-  const canNext = endIndex < processedLabels.length - 1;
-  const goPrev = () => canPrev && setEndIndex(prev => Math.max(WINDOW_SIZE - 1, prev - 1));
-  const goNext = () => canNext && setEndIndex(prev => Math.min(processedLabels.length - 1, prev + 1));
+    const labels = dashboardData.monthlyStats.labels;
+    const currentMonthLabel = `thg ${currentPeriod.month} ${currentPeriod.year}`;
+    const currentMonthIndex = labels.findIndex(label => label === currentMonthLabel);
+    
+    if (currentMonthIndex === -1) {
+      // Nếu không tìm thấy tháng hiện tại, trả về 6 tháng cuối cùng
+      return labels.slice(-6).map(label => {
+        // Convert "thg 8 2025" to "Tháng 8"
+        const match = label.match(/thg (\d+) \d+/);
+        return match ? `Tháng ${match[1]}` : label;
+      });
+    }
+    
+    // Lấy 6 tháng liên tiếp từ tháng hiện tại trở về trước
+    const startIndex = Math.max(0, currentMonthIndex - 5);
+    const endIndex = currentMonthIndex + 1;
+    const displayLabels = labels.slice(startIndex, endIndex);
+    
+    // Nếu không đủ 6 tháng, thêm tháng trước vào đầu
+    while (displayLabels.length < 6) {
+      const firstMonth = parseInt(displayLabels[0]?.match(/thg (\d+)/)?.[1] || '1');
+      const prevMonth = firstMonth - 1;
+      const prevYear = prevMonth <= 0 ? currentPeriod.year - 1 : currentPeriod.year;
+      const actualPrevMonth = prevMonth <= 0 ? 12 : prevMonth;
+      displayLabels.unshift(`thg ${actualPrevMonth} ${prevYear}`);
+    }
+    
+    return displayLabels.slice(-6).map(label => {
+      // Convert "thg 8 2025" to "Tháng 8"
+      const match = label.match(/thg (\d+) \d+/);
+      return match ? `Tháng ${match[1]}` : label;
+    });
+  };
 
-  const base = Color(color);
-  const barColor = Colors.dearkOlive; // Dark bar color as in reference
 
-  // Chart-kit config to mimic the visual style in the reference image
+
+  // Get current display data based on chart type
+  const getCurrentDisplayData = () => {
+    if (!dashboardData?.monthlyStats) {
+      return [0, 0, 0, 0, 0, 0]; // Trả về toàn bộ 0 nếu không có dữ liệu
+    }
+
+    let sourceData: number[] = [];
+    
+    // Chọn dữ liệu theo loại biểu đồ
+    switch (chartType) {
+      case 'revenue':
+        sourceData = dashboardData.monthlyStats.revenue || [];
+        break;
+      case 'rooms':
+        sourceData = dashboardData.monthlyStats.rooms || [];
+        break;
+      case 'contracts':
+        sourceData = dashboardData.monthlyStats.contracts || [];
+        break;
+      case 'invoices':
+        sourceData = dashboardData.monthlyStats.invoices || [];
+        break;
+      default:
+        sourceData = dashboardData.monthlyStats.revenue || [];
+    }
+    
+    const labels = dashboardData.monthlyStats.labels || [];
+    
+    // Tìm tháng hiện tại trong labels
+    const currentMonthLabel = `thg ${currentPeriod.month} ${currentPeriod.year}`;
+    const currentMonthIndex = labels.findIndex(label => label === currentMonthLabel);
+    
+    if (currentMonthIndex === -1) {
+      // Nếu không tìm thấy tháng hiện tại, trả về 6 tháng cuối cùng
+      return sourceData.slice(-6);
+    }
+    
+    // Lấy 6 tháng liên tiếp từ tháng hiện tại trở về trước
+    const startIndex = Math.max(0, currentMonthIndex - 5);
+    const endIndex = currentMonthIndex + 1;
+    const displayData = sourceData.slice(startIndex, endIndex);
+    
+    // Nếu không đủ 6 tháng, thêm 0 vào đầu
+    while (displayData.length < 6) {
+      displayData.unshift(0);
+    }
+    
+    const finalData = displayData.slice(-6); // Đảm bảo chỉ trả về 6 tháng
+    
+    // Trả về dữ liệu thực từ API
+    return finalData;
+  };
+
+  const displayLabels = generateMonthLabels();
+  const displayData = getCurrentDisplayData();
+
+  // Chart configuration to match Figma exactly
   const chartConfig = {
     backgroundGradientFrom: Colors.limeGreen,
     backgroundGradientTo: Colors.limeGreen,
     backgroundGradientFromOpacity: 1,
     backgroundGradientToOpacity: 1,
     decimalPlaces: 0,
-    color: () => barColor, // bars color
-    labelColor: () => 'rgba(0,0,0,0.65)',
-    barPercentage: 0.58,
-    fillShadowGradient: barColor,
+    color: () => Colors.black,
+    labelColor: () => Colors.black,
+    barPercentage: 0.7, // Tăng độ rộng bar để giống như trong hình
+    fillShadowGradient: Colors.black,
     fillShadowGradientOpacity: 1,
     propsForBackgroundLines: {
-      stroke: 'rgba(0,0,0,0.06)',
-      strokeDasharray: '4 6',
+      stroke: 'rgba(0,0,0,0.1)',
+      strokeDasharray: '5,5',
     },
     propsForLabels: {
       fontSize: 11,
+      fontFamily: Fonts.Roboto_Regular,
     },
     style: {
       borderRadius: 16,
     },
   } as const;
 
-  // Animation (fade/slide) consistent with MainChart
+  // Animation
   const anim = React.useRef(new Animated.Value(0)).current;
   React.useEffect(() => {
     anim.setValue(0);
@@ -135,7 +175,8 @@ export default function MainBarChart({title, data, labels, color}: Props) {
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
-  }, [endIndex, displayData.length]);
+  }, [currentPeriod, anim]);
+
   const animatedStyle = {
     opacity: anim,
     transform: [
@@ -144,160 +185,265 @@ export default function MainBarChart({title, data, labels, color}: Props) {
     ],
   } as const;
 
-  // Format Y label theo ngữ cảnh (currency/count/percent)
-  const isPercent = title.includes('%') || title.toLowerCase().includes('tỷ lệ');
-  const isCurrency =
-    title.toLowerCase().includes('vnđ') ||
-    title.toLowerCase().includes('doanh thu');
-  const formatYLabel = (v: string) => {
-    const num = parseFloat(v);
-    if (isNaN(num)) return v;
-    if (isPercent) return `${Math.round(num)}%`;
-    if (isCurrency) return `${Math.round(num).toLocaleString('vi-VN')}`;
-    return `${Math.round(num)}`;
+  const handleNavigate = (direction: 'prev' | 'next') => {
+    const newPeriod = { ...currentPeriod };
+    
+    if (direction === 'prev') {
+      // Lùi 6 tháng
+      newPeriod.month -= 6;
+      if (newPeriod.month <= 0) {
+        newPeriod.month += 12;
+        newPeriod.year -= 1;
+      }
+    } else {
+      // Tiến 6 tháng
+      newPeriod.month += 6;
+      if (newPeriod.month > 12) {
+        newPeriod.month -= 12;
+        newPeriod.year += 1;
+      }
+    }
+    
+    setCurrentPeriod(newPeriod);
+    
+    if (onNavigate) {
+      onNavigate(direction);
+    }
   };
 
+  // Format update time
+  const formatUpdateTime = () => {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const year = now.getFullYear();
+    
+    return `Cập nhật: ${hours}:${minutes}:${seconds}, ${day}/${month}/${year}`;
+  };
+
+
+
   return (
-    <Animated.View style={[styles.chartContainer, animatedStyle]}>
-      <View style={[styles.contentContainer]}>        
-        <Image
-          source={{uri: Icons.IconReport as string}}
-          style={[styles.watermarkIcon, {tintColor: base.fade(0.85).rgb().string()}]}
-          resizeMode="contain"
-        />
-        <Text style={styles.chartTitle}>{title}</Text>
-        <Text style={styles.latestValue}>
-          Tháng gần nhất: {formatYLabel(String(latest || 0))}
-        </Text>
-
-        {/* Navigation header */}
-        <View style={styles.navHeader}>
-          <TouchableOpacity activeOpacity={0.8} onPress={goPrev} disabled={!canPrev} hitSlop={{top:8,bottom:8,left:8,right:8}}>
-            <View style={[styles.navCircle, !canPrev && {opacity: 0.35}]}>
-              <Image source={{uri: Icons.IconArrowLeft as string}} style={styles.navIconWhite} />
-            </View>
-          </TouchableOpacity>
-          <Text style={styles.navHeaderText}>
-            {displayLabels[0]} — {displayLabels[displayLabels.length - 1]}
+    <View style={styles.container}>
+      {/* Tab Navigation - Tương tác được dựa trên chartType */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, chartType === 'revenue' && styles.activeTab]}
+          onPress={() => onTabChange && onTabChange('revenue')}
+        >
+          <Text style={[styles.tabText, chartType === 'revenue' && styles.activeTabText]}>
+            Doanh thu
           </Text>
-          <TouchableOpacity activeOpacity={0.8} onPress={goNext} disabled={!canNext} hitSlop={{top:8,bottom:8,left:8,right:8}}>
-            <View style={[styles.navCircle, !canNext && {opacity: 0.35}]}>
-              <Image source={{uri: Icons.IconArrowRight as string}} style={styles.navIconWhite} />
-            </View>
-          </TouchableOpacity>
-        </View>
-
-        <BarChart
-          data={{
-            labels: displayLabels,
-            datasets: [
-              {
-                // Giữ data thật để tính màu, nhưng dùng adjustedData để vẽ "dấu chấm" cho 0
-                data: adjustedData,
-                colors: barColors.map(c => ((_opacity: number = 1) => c)),
-              },
-            ],
-          }}
-          width={screenWidth}
-          height={240}
-          fromZero
-          yAxisInterval={1}
-          yLabelsOffset={8}
-          xLabelsOffset={12}
-          chartConfig={chartConfig}
-          style={styles.chart}
-          withInnerLines={true}
-          showBarTops={false}
-          withCustomBarColorFromData={true}
-          flatColor={true}
-          segments={4}
-          yAxisLabel=""
-          yAxisSuffix=""
-          showValuesOnTopOfBars={false}
-        />
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.tab, chartType === 'rooms' && styles.activeTab]}
+          onPress={() => onTabChange && onTabChange('rooms')}
+        >
+          <Text style={[styles.tabText, chartType === 'rooms' && styles.activeTabText]}>
+            Phòng trọ
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.tab, chartType === 'contracts' && styles.activeTab]}
+          onPress={() => onTabChange && onTabChange('contracts')}
+        >
+          <Text style={[styles.tabText, chartType === 'contracts' && styles.activeTabText]}>
+            Hợp đồng
+          </Text>
+        </TouchableOpacity>
       </View>
-    </Animated.View>
+
+      {/* Chart Container */}
+      <Animated.View style={[styles.chartContainer, animatedStyle]}>
+        <View style={styles.contentContainer}>        
+          <Text style={styles.chartTitle}>{title}</Text>
+
+                      <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                // Tạm thời chọn tháng hiện tại khi bấm vào chart
+                if (onMonthSelect) {
+                  onMonthSelect(currentPeriod.month);
+                }
+              }}
+            >
+              <BarChart
+                data={{
+                  labels: displayLabels,
+                  datasets: [
+                    {
+                      data: displayData,
+                      colors: displayData.map((value, index) => {
+                        // Nếu giá trị = 0 thì không hiển thị (transparent)
+                        if (value === 0) {
+                          return () => 'transparent';
+                        }
+                        
+                        // Lấy tháng tương ứng với index
+                        const labels = dashboardData?.monthlyStats?.labels || [];
+                        const currentMonthLabel = `thg ${currentPeriod.month} ${currentPeriod.year}`;
+                        const currentMonthIndex = labels.findIndex(label => label === currentMonthLabel);
+                        
+                        if (currentMonthIndex !== -1) {
+                          // Tính index của tháng trong displayData
+                          const startIndex = Math.max(0, currentMonthIndex - 5);
+                          const monthIndex = startIndex + index;
+                          
+                          // Nếu là tháng hiện tại thì màu đen
+                          if (monthIndex === currentMonthIndex) {
+                            return () => '#17190F'; // Màu đen cho tháng hiện tại
+                          }
+                        }
+                        
+                        // Tất cả đều là dữ liệu thực từ API
+                        return () => 'rgba(23, 25, 15, 0.6)'; // Màu đen với 60% opacity
+                      }),
+                    },
+                  ],
+                }}
+                width={screenWidth}
+                height={200}
+                fromZero
+                yAxisInterval={1}
+                yLabelsOffset={8}
+                xLabelsOffset={8}
+                chartConfig={chartConfig}
+                style={styles.chart}
+                withInnerLines={true}
+                showBarTops={false}
+                withCustomBarColorFromData={true}
+                flatColor={true}
+                segments={4}
+                yAxisLabel=""
+                yAxisSuffix=""
+                showValuesOnTopOfBars={false}
+                withVerticalLabels={true}
+                withHorizontalLabels={false}
+              />
+            </TouchableOpacity>
+
+          {/* Navigation Arrows */}
+          <View style={styles.navigationContainer}>
+            <TouchableOpacity
+              style={styles.arrowButton}
+              onPress={() => handleNavigate('prev')}
+            >
+              <Text style={styles.arrowText}>‹</Text>
+            </TouchableOpacity>
+            
+            <Text style={styles.updateText}>
+              {formatUpdateTime()}
+            </Text>
+            
+            <TouchableOpacity
+              style={styles.arrowButton}
+              onPress={() => handleNavigate('next')}
+            >
+              <Text style={styles.arrowText}>›</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  chartContainer: {
+  container: {
+    flex: 1,
+  },
+  tabContainer: {
+    flexDirection: 'row',
     backgroundColor: Colors.white,
-    borderRadius: 14,
+    borderRadius: 12,
     marginHorizontal: responsiveSpacing(16),
     marginBottom: responsiveSpacing(16),
-    flexDirection: 'row',
+    padding: responsiveSpacing(4),
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: responsiveSpacing(12),
+    paddingHorizontal: responsiveSpacing(16),
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  activeTab: {
+    backgroundColor: Colors.limeGreen,
+  },
+  tabText: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Medium,
+    color: Colors.black,
+  },
+  activeTabText: {
+    color: Colors.black,
+  },
+  chartContainer: {
+    backgroundColor: Colors.limeGreen,
+    borderRadius: 16,
+    marginHorizontal: responsiveSpacing(16),
+    marginBottom: responsiveSpacing(16),
     shadowColor: Colors.shadowDefault,
     shadowOffset: {width: 0, height: 4},
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
     elevation: 4,
     overflow: 'hidden',
   },
   contentContainer: {
     flex: 1,
-    padding: responsiveSpacing(12),
-    backgroundColor: Colors.limeGreen, // lime background like reference
-    borderRadius: 14,
+    padding: responsiveSpacing(16),
+    backgroundColor: Colors.limeGreen,
+    borderRadius: 16,
+    alignItems: 'center', // Căn giữa nội dung
   },
   chartTitle: {
-    fontSize: responsiveFont(18),
+    fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
-  },
-  latestValue: {
-    marginTop: responsiveSpacing(4),
-    fontSize: responsiveFont(12),
-    color: Colors.dearkOlive,
-    marginBottom: responsiveSpacing(6),
+    textAlign: 'center',
+    marginBottom: responsiveSpacing(12),
   },
   chart: {
     marginVertical: responsiveSpacing(8),
     borderRadius: 12,
+    alignSelf: 'center', // Căn giữa chart
   },
-  watermarkIcon: {
-    position: 'absolute',
-    right: responsiveSpacing(10),
-    top: responsiveSpacing(10),
-    width: scale(22),
-    height: scale(22),
-    opacity: 1,
-  },
-  navHeader: {
-    marginTop: responsiveSpacing(8),
-    marginBottom: responsiveSpacing(6),
-    paddingHorizontal: responsiveSpacing(12),
+  navigationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    width: '100%',
+    marginTop: responsiveSpacing(16),
   },
-  navHeaderText: {
-    fontFamily: Fonts.Roboto_Medium,
-    fontSize: responsiveFont(12),
-    color: Colors.darkGray,
-  },
-  navHeaderChevron: {
-    fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(16),
-    color: Colors.white,
-    textAlign: 'center',
-    width: 22,
-  },
-  navCircle: {
+  arrowButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(23,25,15,0.6)', // Colors.dearkOlive with alpha for strong contrast on lime
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
+    backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: Colors.shadowDefault,
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
     shadowOffset: {width: 0, height: 2},
-    elevation: 3,
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  navIconWhite: {width: 16, height: 16, tintColor: Colors.white},
+  arrowText: {
+    fontSize: responsiveFont(20),
+    color: Colors.black,
+    fontWeight: 'bold',
+  },
+  updateText: {
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.black,
+    textAlign: 'center',
+  },
 });
 

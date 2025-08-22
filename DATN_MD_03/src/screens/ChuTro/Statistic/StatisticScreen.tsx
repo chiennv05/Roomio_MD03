@@ -9,8 +9,6 @@ import {
   StatusBar,
   Platform,
   TouchableOpacity,
-  Image,
-  Animated,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 
@@ -18,14 +16,15 @@ import {AppDispatch, RootState} from '../../../store';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
 import {responsiveFont, responsiveSpacing} from '../../../utils/responsive';
-import {fetchDashboard} from '../../../store/slices/dashboardSlice';
-import {MainBarChart as MainChart} from './components';
+import {fetchDashboard, clearDashboardData} from '../../../store/slices/dashboardSlice';
+import {MainBarChart, OverviewTab, RoomsTab, RevenueTab, ContractsTab} from './components';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
 import {LoadingAnimation} from '../../../components';
 import UIHeader from '../MyRoom/components/UIHeader';
 import {Icons} from '../../../assets/icons';
+import {scale, SCREEN} from '../../../utils/responsive';
 
 type StatisticScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -40,39 +39,54 @@ const StatisticScreen = () => {
     (state: RootState) => state.dashboard,
   );
   const [refreshing, setRefreshing] = useState(false);
-  const [chartType, setChartType] = useState<
-    'revenue' | 'rooms' | 'contracts'
-  >('revenue');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [primaryTab, setPrimaryTab] = useState<'overview' | 'rooms' | 'revenue' | 'contracts'>('overview');
+  const [selectedMonth, _setSelectedMonth] = useState(8); // Tháng được chọn, mặc định tháng 8
+  const [chartTab, setChartTab] = useState<'revenue' | 'rooms' | 'contracts'>('revenue'); // Tab con trong biểu đồ
 
-  // Segmented control animation for filter tabs (Option B)
-  const [tabsW, setTabsW] = useState(0);
-  const currentIndex = chartType === 'revenue' ? 0 : chartType === 'rooms' ? 1 : 2;
-  const tabAnim = React.useRef(new Animated.Value(currentIndex)).current;
-  useEffect(() => {
-    Animated.timing(tabAnim, {
-      toValue: currentIndex,
-      duration: 220,
-      useNativeDriver: true,
-    }).start();
-  }, [currentIndex, tabAnim]);
 
   // Lấy chiều cao của thanh trạng thái
   const statusBarHeight =
     Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (forceRefresh = false) => {
     if (user?.auth_token) {
-      dispatch(fetchDashboard(user.auth_token));
+      // Check if user has changed or force refresh is requested
+      const userChanged = currentUserId !== user._id;
+      if (userChanged || forceRefresh || !data) {
+        // Clear existing data when user changes to prevent showing stale data
+        if (userChanged) {
+          setCurrentUserId(user._id || null);
+          dispatch(clearDashboardData()); // Clear cached data
+        }
+        dispatch(fetchDashboard(user.auth_token));
+      }
     }
-  }, [dispatch, user?.auth_token]);
+  }, [dispatch, user?.auth_token, user?._id, currentUserId, data]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
+  // Detect user changes and force refresh
+  useEffect(() => {
+    if (user?._id && currentUserId && currentUserId !== user._id) {
+      // User has changed, force refresh data
+      fetchData(true);
+    }
+  }, [user?._id, currentUserId, fetchData]);
+
+  // Initial load and user tracking
+  useEffect(() => {
+    if (user?._id && !currentUserId) {
+      setCurrentUserId(user._id || null);
+      fetchData(true);
+    }
+  }, [user?._id, currentUserId, fetchData]);
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchData();
+    await fetchData(true); // Force refresh on manual pull-to-refresh
     setRefreshing(false);
   };
 
@@ -81,17 +95,39 @@ const StatisticScreen = () => {
     navigation.goBack();
   };
 
-  // Navigation functions cho các màn hình chi tiết
-  const navigateToRoomStatistic = () => {
-    navigation.navigate('RoomStatisticScreen');
+  // Navigation helper functions
+  const navigateToRoomDetail = (roomId: string) => {
+    navigation.navigate('DetailRoomLandlord', {id: roomId});
   };
 
-  const navigateToRevenueStatistic = () => {
-    navigation.navigate('RevenueStatisticScreen');
+  const navigateToContractDetail = (contractId: string) => {
+    navigation.navigate('ContractDetail', {contractId});
   };
 
-  const navigateToContractStatistic = () => {
-    navigation.navigate('ContractStatisticScreen');
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+  };
+
+  // Xử lý khi người dùng chọn tab trong biểu đồ
+  const handleChartTabChange = (tabType: 'revenue' | 'rooms' | 'contracts') => {
+    // Chỉ thay đổi tab con trong biểu đồ, không thay đổi primaryTab
+    setChartTab(tabType);
+  };
+
+  // Helper functions for contract status
+  const getContractStatusText = (status: string) => {
+    switch (status) {
+      case 'active': return 'Hiệu lực';
+      case 'pending_signature': return 'Chờ ký';
+      case 'expired': return 'Hết hạn';
+      case 'terminated': return 'Đã chấm dứt';
+      case 'cancelled': return 'Đã chấm dứt';
+      case 'draft': return 'Nháp';
+      case 'pending_approval': return 'Chờ duyệt';
+      case 'rejected': return 'Từ chối';
+      default: return status;
+    }
   };
 
   // Format money
@@ -99,44 +135,7 @@ const StatisticScreen = () => {
     return value.toLocaleString('vi-VN');
   };
 
-  // Helper function để lấy metric chính dựa trên chartType
-  const getMainChartData = () => {
-    switch (chartType) {
-      case 'revenue':
-        return {
-          title: 'Doanh thu hàng tháng',
-          mainValue: formatMoney(data?.revenue?.totalRevenue || 0),
-          data: data?.monthlyStats?.revenue || [],
-          valueType: 'revenue' as const,
-        };
 
-      case 'rooms':
-        return {
-          title: 'Phòng trọ hàng tháng',
-          mainValue: (data?.overview?.totalRooms || 0).toString(),
-          data: data?.monthlyStats?.rooms || [],
-          valueType: 'rooms' as const,
-        };
-
-      case 'contracts':
-        return {
-          title: 'Hợp đồng hàng tháng',
-          mainValue: (data?.overview?.totalContracts || 0).toString(),
-          data: data?.monthlyStats?.contracts || [],
-          valueType: 'contracts' as const,
-        };
-
-      default:
-        return {
-          title: 'Doanh thu hàng tháng',
-          mainValue: formatMoney(data?.revenue?.totalRevenue || 0),
-          data: data?.monthlyStats?.revenue || [],
-          valueType: 'revenue' as const,
-        };
-    }
-  };
-
-  const mainChartData = getMainChartData();
 
   if (loading && !refreshing && !data) {
     return (
@@ -152,7 +151,7 @@ const StatisticScreen = () => {
         <Text style={styles.errorText}>
           {error || 'Đã có lỗi xảy ra khi tải thông tin thống kê'}
         </Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchData}>
+        <TouchableOpacity style={styles.retryButton} onPress={() => fetchData(true)}>
           <Text style={styles.retryText}>Thử lại</Text>
         </TouchableOpacity>
       </View>
@@ -185,235 +184,115 @@ const StatisticScreen = () => {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }>
-        {/* Beautiful Stats Grid */}
-        <View style={styles.statsGrid}>
-          {/* Trên trái - LimeGreen thuần */}
-          <View style={[styles.statCard, styles.limeCard]}>
-            <View style={[styles.statIconContainer, styles.statIconContainerLight]}>
-              <Image
-                source={require('../../../assets/icons/icon_tien_coc.png')}
-                style={[styles.statIcon, styles.statIconDark]}
-              />
-            </View>
-            <Text style={[styles.statValue, styles.statValueDark]}>{formatMoney(data?.revenue?.totalRevenue || 4338000)}</Text>
-            <Text style={[styles.statLabel, styles.statLabelDark]}>Tổng doanh thu</Text>
-          </View>
-
-          {/* Trên phải - Đen (đổi sang xám than mềm) */}
-          <View style={[styles.statCard, styles.darkCard]}>
-            <View style={styles.statIconContainer}>
-              <Image
-                source={require('../../../assets/icons/icon_room.png')}
-                style={styles.statIcon}
-              />
-            </View>
-            <Text style={styles.statValue}>{data?.overview?.totalRooms || 4}</Text>
-            <Text style={styles.statLabel}>Tổng phòng</Text>
-          </View>
-
-          {/* Dưới trái - Đen (xám than) */}
-          <View style={[styles.statCard, styles.darkCard]}>
-            <View style={styles.statIconContainer}>
-              <Image
-                source={require('../../../assets/icons/icon_contract.png')}
-                style={styles.statIcon}
-              />
-            </View>
-            <Text style={styles.statValue}>{data?.overview?.totalContracts || 19}</Text>
-            <Text style={styles.statLabel}>Hợp đồng</Text>
-          </View>
-
-          {/* Dưới phải - LimeGreen thuần */}
-          <View style={[styles.statCard, styles.limeCard]}>
-            <View style={[styles.statIconContainer, styles.statIconContainerLight]}>
-              <Image
-                source={require('../../../assets/icons/icon_person.png')}
-                style={[styles.statIcon, styles.statIconDark]}
-              />
-            </View>
-            <Text style={[styles.statValue, styles.statValueDark]}>{data?.overview?.rentedRooms || 3}</Text>
-            <Text style={[styles.statLabel, styles.statLabelDark]}>Đang thuê</Text>
-          </View>
-        </View>
-
-        {/* Chart Section */}
-        <View style={styles.chartSection}>
-          {/* Chart Tabs */}
-          <View
-            style={styles.chartTabs}
-            onLayout={e => setTabsW(e.nativeEvent.layout.width)}
+        
+        {/* Primary Navigation Tabs */}
+        <View style={styles.primaryTabsWrapper}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.primaryTabsContainer}
           >
-            {(() => {
-              const padding = responsiveSpacing(6);
-              const segmentWidth = Math.max((tabsW - padding * 2) / 3, 0);
-              return (
-                <Animated.View
-                  style={[
-                    styles.tabIndicator,
-                    {
-                      width: segmentWidth,
-                      transform: [
-                        {
-                          translateX: tabAnim.interpolate({
-                            inputRange: [0, 1, 2],
-                            outputRange: [0, segmentWidth, segmentWidth * 2],
-                          }),
-                        },
-                      ],
-                    },
-                  ]}
-                />
-              );
-            })()}
-
-            <TouchableOpacity
-              style={[styles.chartTab]}
-              onPress={() => setChartType('revenue')}
+          <TouchableOpacity
+            style={[styles.primaryTab, primaryTab === 'overview' && styles.primaryTabActive]}
+            onPress={() => setPrimaryTab('overview')}
+          >
+            <Text style={[styles.primaryTabText, primaryTab === 'overview' && styles.primaryTabTextActive]}>
+              Tổng quan
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.primaryTab, primaryTab === 'rooms' && styles.primaryTabActive]}
+            onPress={() => setPrimaryTab('rooms')}
+          >
+            <Text style={[styles.primaryTabText, primaryTab === 'rooms' && styles.primaryTabTextActive]}>
+              Phòng trọ
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.primaryTab, primaryTab === 'revenue' && styles.primaryTabActive]}
+            onPress={() => setPrimaryTab('revenue')}
+          >
+            <Text style={[styles.primaryTabText, primaryTab === 'revenue' && styles.primaryTabTextActive]}>
+              Doanh thu
+            </Text>
+          </TouchableOpacity>
+                      <TouchableOpacity
+              style={[styles.primaryTab, primaryTab === 'contracts' && styles.primaryTabActive]}
+              onPress={() => setPrimaryTab('contracts')}
             >
-              <Text style={[styles.chartTabText, chartType === 'revenue' && styles.chartTabTextActive]}>
-                Doanh thu
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.chartTab]}
-              onPress={() => setChartType('rooms')}
-            >
-              <Text style={[styles.chartTabText, chartType === 'rooms' && styles.chartTabTextActive]}>
-                Phòng
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.chartTab]}
-              onPress={() => setChartType('contracts')}
-            >
-              <Text style={[styles.chartTabText, chartType === 'contracts' && styles.chartTabTextActive]}>
+              <Text style={[styles.primaryTabText, primaryTab === 'contracts' && styles.primaryTabTextActive]}>
                 Hợp đồng
               </Text>
             </TouchableOpacity>
-          </View>
+          </ScrollView>
         </View>
 
-        {/* Cầu nối đồng màu giữa tab active và chart */}
-        {(() => {
-          const padding = responsiveSpacing(6);
-          const segmentWidth = Math.max((tabsW - padding * 2) / 3, 0);
-          const left = padding + segmentWidth * currentIndex;
-          return (
-            <View style={[styles.tabToChartBridgeContainer]}>
-              <View
-                style={[
-                  styles.tabToChartBridge,
-                  {width: segmentWidth, marginLeft: left},
-                ]}
-              />
-            </View>
-          );
-        })()}
+        {/* Tab-specific Content */}
+        {primaryTab === 'overview' && (
+          <OverviewTab data={data} formatMoney={formatMoney} />
+        )}
 
-        {/* Main Chart */}
-        <View style={styles.chartsContainer}>
-          <MainChart
-            title={mainChartData.title}
-            data={mainChartData.data}
-            labels={data?.monthlyStats?.labels || []}
-            color={
-              mainChartData.valueType === 'revenue'
-                ? Colors.brandPrimary
-                : mainChartData.valueType === 'rooms'
-                ? Colors.accentSupport
-                : Colors.accentContract
-            }
+        {/* Phòng trọ Tab Content */}
+        {primaryTab === 'rooms' && (
+          <RoomsTab 
+            data={data} 
+            navigateToRoomDetail={navigateToRoomDetail} 
+            navigation={navigation} 
           />
-        </View>
+        )}
 
-        {/* Modern Analysis Section */}
-        <View style={styles.modernAnalysisSection}>
-          <Text style={styles.modernSectionTitle}>Phân tích chi tiết</Text>
+        {/* Hợp đồng Tab Content */}
+        {primaryTab === 'contracts' && (
+          <ContractsTab 
+            data={data}
+            getContractStatusText={getContractStatusText}
+            formatDate={formatDate}
+            navigateToContractDetail={navigateToContractDetail}
+          />
+        )}
 
-          {/* Doanh thu chi tiết - Green */}
-          <TouchableOpacity
-            activeOpacity={0.7}
-            style={[styles.modernAnalysisCard, styles.greenBorder]}
-            onPress={navigateToRevenueStatistic}>
-            <View style={[styles.modernCardBorder, {backgroundColor: Colors.brandPrimary}]} />
-            <View style={styles.modernCardContent}>
-              <View style={[styles.modernIconContainer, styles.greenIconBg]}>
-                <Image
-                  source={require('../../../assets/icons/icon_light_report.png')}
-                  style={[styles.modernIcon, styles.greenIcon]}
-                />
-              </View>
-              <View style={styles.modernTextContainer}>
-                <Text style={styles.modernCardTitle}>Doanh thu chi tiết</Text>
-                <Text style={styles.modernCardDesc}>
-                  Biểu đồ xu hướng, phân tích hóa đơn và{'\n'}tỷ lệ lấp đầy
-                </Text>
-              </View>
-              <View style={styles.modernArrowContainer}>
-                <Image
-                  source={require('../../../assets/icons/icon_arrow_right.png')}
-                  style={styles.modernArrow}
-                />
-              </View>
-            </View>
-          </TouchableOpacity>
+        {/* Doanh thu Tab Content */}
+        {primaryTab === 'revenue' && (
+          <RevenueTab data={data} formatMoney={formatMoney} />
+        )}
 
-          {/* Thống kê phòng trọ - Cyan */}
-          <TouchableOpacity
-            activeOpacity={0.7}
-            style={[styles.modernAnalysisCard, styles.cyanBorder]}
-            onPress={navigateToRoomStatistic}>
-            <View style={[styles.modernCardBorder, {backgroundColor: Colors.accentSupport}]} />
-            <View style={styles.modernCardContent}>
-              <View style={[styles.modernIconContainer, styles.cyanIconBg]}>
-                <Image
-                  source={require('../../../assets/icons/icon_room.png')}
-                  style={[styles.modernIcon, styles.cyanIcon]}
-                />
-              </View>
-              <View style={styles.modernTextContainer}>
-                <Text style={styles.modernCardTitle}>Thống kê phòng trọ</Text>
-                <Text style={styles.modernCardDesc}>
-                  Xu hướng thuê, top phòng được quan{'\n'}tâm nhất
-                </Text>
-              </View>
-              <View style={styles.modernArrowContainer}>
-                <Image
-                  source={require('../../../assets/icons/icon_arrow_right.png')}
-                  style={styles.modernArrow}
-                />
-              </View>
-            </View>
-          </TouchableOpacity>
 
-          {/* Quản lý hợp đồng - Blue */}
-          <TouchableOpacity
-            activeOpacity={0.7}
-            style={[styles.modernAnalysisCard, styles.blueBorder]}
-            onPress={navigateToContractStatistic}>
-            <View style={[styles.modernCardBorder, {backgroundColor: Colors.accentContract}]} />
-            <View style={styles.modernCardContent}>
-              <View style={[styles.modernIconContainer, styles.blueIconBg]}>
-                <Image
-                  source={require('../../../assets/icons/icon_contract.png')}
-                  style={[styles.modernIcon, styles.blueIcon]}
-                />
-              </View>
-              <View style={styles.modernTextContainer}>
-                <Text style={styles.modernCardTitle}>Quản lý hợp đồng</Text>
-                <Text style={styles.modernCardDesc}>
-                  Tình trạng hợp đồng, danh sách gần đây
-                </Text>
-              </View>
-              <View style={styles.modernArrowContainer}>
-                <Image
-                  source={require('../../../assets/icons/icon_arrow_right.png')}
-                  style={styles.modernArrow}
-                />
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
+
+        {/* Main Chart - chỉ hiển thị ở tab Tổng quan */}
+        {primaryTab === 'overview' && (
+          <View style={styles.chartsContainer}>
+            <MainBarChart
+              title={`Biểu đồ ${chartTab === 'revenue' ? 'doanh thu' : 
+                     chartTab === 'rooms' ? 'phòng trọ' : 'hợp đồng'} 6 tháng đầu năm 2025`}
+              chartType={chartTab}
+              onNavigate={(direction: 'prev' | 'next') => {
+                console.log(`Navigating ${direction}`);
+                // Handle navigation logic here if needed
+              }}
+              onMonthSelect={(month) => {
+                console.log(`Selected month: ${month}`);
+                // Handle month selection if needed
+              }}
+              onTabChange={handleChartTabChange}
+            />
+          </View>
+        )}
+
+        {/* Bottom Summary Card - chỉ hiển thị ở tab Tổng quan */}
+        {primaryTab === 'overview' && (
+          <View style={styles.bottomRevenueCard}>
+            <Text style={styles.bottomRevenueTitle}>
+              {chartTab === 'revenue' && `Doanh thu tháng ${selectedMonth}`}
+              {chartTab === 'rooms' && `Số phòng tháng ${selectedMonth}`}
+              {chartTab === 'contracts' && `Hợp đồng tháng ${selectedMonth}`}
+            </Text>
+            <Text style={styles.bottomRevenueValue}>
+              {chartTab === 'revenue' && `${formatMoney(data?.monthlyStats?.revenue?.[selectedMonth - 3] || 0)} VND`}
+              {chartTab === 'rooms' && `${data?.monthlyStats?.rooms?.[selectedMonth - 3] || 0} Phòng`}
+              {chartTab === 'contracts' && `${data?.monthlyStats?.contracts?.[selectedMonth - 3] || 0} Hợp đồng`}
+            </Text>
+          </View>
+        )}
 
       </ScrollView>
     </SafeAreaView>
@@ -430,7 +309,47 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: responsiveSpacing(24),
   },
-  // New Beautiful Stats Grid
+  
+  // Primary Navigation Tabs
+  primaryTabsWrapper: {
+    marginHorizontal: responsiveSpacing(16),
+    marginTop: responsiveSpacing(20),
+  },
+  primaryTabsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: responsiveSpacing(20),
+    gap: responsiveSpacing(8),
+    height: 44,
+  },
+  primaryTab: {
+    paddingVertical: responsiveSpacing(12),
+    paddingHorizontal: responsiveSpacing(16),
+    borderRadius: 50,
+    backgroundColor: Colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    minWidth: 121,
+    height: 44,
+  },
+  primaryTabActive: {
+    backgroundColor: Colors.limeGreen,
+  },
+  primaryTabText: {
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(13),
+    color: Colors.black,
+  },
+  primaryTabTextActive: {
+    color: Colors.black,
+    fontFamily: Fonts.Roboto_Bold,
+  },
+
+  // Stats Grid
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -440,143 +359,84 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '47%',
-    borderRadius: 24,
-    padding: responsiveSpacing(24),
-    alignItems: 'center',
+    borderRadius: 16,
+    padding: responsiveSpacing(16),
     shadowColor: Colors.shadowDefault,
-    shadowOffset: {width: 0, height: 8},
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  limeCard: {
-    backgroundColor: Colors.limeGreen,
-    shadowColor: Colors.limeGreen,
-    shadowOpacity: 0.3,
-  },
-  revenueCard: {
-    backgroundColor: Colors.primary, // Lime (trên trái)
-  },
-  roomCard: {
-    backgroundColor: Colors.black, // Đen (trên phải)
-  },
-  contractCard: {
-    backgroundColor: Colors.black, // Đen (dưới trái)
-  },
-  occupiedCard: {
-    backgroundColor: Colors.primary, // Lime (dưới phải)
-  },
-  darkCard: {
-    backgroundColor: '#111827',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    shadowColor: '#000000',
-    shadowOpacity: 0.25,
-  },
-  statIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: responsiveSpacing(16),
-    shadowColor: Colors.shadowDefault,
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  whiteCard: {
+    backgroundColor: Colors.white,
+  },
+  statHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: responsiveSpacing(8),
   },
   statIcon: {
-    width: 28,
-    height: 28,
-    tintColor: Colors.white,
-  },
-  statIconDark: {
-    tintColor: '#1F2937', // xám đậm cho nền lime
-  },
-  statValue: {
-    fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(22),
-    color: Colors.white,
-    marginBottom: responsiveSpacing(6),
-    textAlign: 'center',
-    letterSpacing: 0.5,
-  },
-  statValueDark: {
-    color: '#111827',
+    width: 16,
+    height: 16,
+    tintColor: Colors.darkGreen,
+    marginRight: responsiveSpacing(8),
   },
   statLabel: {
     fontFamily: Fonts.Roboto_Medium,
-    fontSize: responsiveFont(14),
-    color: Colors.white,
-    opacity: 0.95,
-    textAlign: 'center',
-    letterSpacing: 0.3,
+    fontSize: responsiveFont(12),
+    color: Colors.textSecondary,
   },
-  statLabelDark: {
-    color: '#1F2937',
-    opacity: 0.95,
-  },
-  statIconContainerLight: {
-    backgroundColor: 'rgba(17,24,39,0.12)',
+  statValue: {
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(18),
+    color: Colors.black,
   },
 
-  // Chart Section
-  chartSection: {
-    marginTop: responsiveSpacing(24),
-    paddingHorizontal: responsiveSpacing(16),
-  },
-  chartTabs: {
-    flexDirection: 'row',
-    backgroundColor: Colors.brandPrimarySoft,
-    borderRadius: 26,
-    padding: responsiveSpacing(6),
-    marginBottom: 0,
-    position: 'relative',
-    overflow: 'visible',
-  },
-  tabToChartBridgeContainer: {
-    height: 0,
-  },
-  tabToChartBridge: {
-    height: 0,
-  },
-  chartTab: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 40,
-    borderRadius: 20,
-  },
-  chartTabActive: {
-    backgroundColor: 'transparent',
-  },
-  chartTabText: {
-    fontFamily: Fonts.Roboto_Medium,
-    fontSize: responsiveFont(13),
-    color: Colors.black,
-  },
-  chartTabTextActive: {
-    color: Colors.black,
-  },
-  tabIndicator: {
-    position: 'absolute',
-    top: responsiveSpacing(6),
-    left: responsiveSpacing(6),
-    bottom: -responsiveSpacing(8),
+
+
+  // Charts Container
+  chartsContainer: {
     backgroundColor: Colors.limeGreen,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
+    paddingBottom: responsiveSpacing(20),
+    borderRadius: 16,
+    marginHorizontal: responsiveSpacing(16),
+    marginTop: responsiveSpacing(24), // Thêm khoảng cách phía trên
+    marginBottom: responsiveSpacing(16),
     shadowColor: Colors.shadowDefault,
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
+
+  // Bottom Revenue Card
+  bottomRevenueCard: {
+    backgroundColor: Colors.limeGreen,
+    marginHorizontal: responsiveSpacing(16),
+    marginTop: responsiveSpacing(8), // Giảm khoảng cách từ 20 xuống 8
+    padding: responsiveSpacing(20),
+    borderRadius: 16,
+    alignItems: 'center',
+    shadowColor: Colors.limeGreen,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  bottomRevenueTitle: {
+    fontFamily: Fonts.Roboto_Medium,
+    fontSize: responsiveFont(16),
+    color: Colors.black,
+    marginBottom: responsiveSpacing(8),
+  },
+  bottomRevenueValue: {
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(20),
+    color: Colors.black,
+  },
+
+
+
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -610,149 +470,210 @@ const styles = StyleSheet.create({
   headerContainerTopPad: {
     paddingTop: responsiveSpacing(8),
   },
-  headerBanner: {
-    height: 120,
-    marginHorizontal: responsiveSpacing(16),
-    marginBottom: responsiveSpacing(16),
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  bannerContent: {
-    flex: 1,
-    padding: responsiveSpacing(16),
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-  },
-  welcomeText: {
-    fontSize: responsiveFont(20),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.white,
-    marginBottom: responsiveSpacing(4),
-  },
-  subtitle: {
-    fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Regular,
-    color: Colors.white,
-  },
-
-  chartsContainer: {
-    marginTop: -responsiveSpacing(8),
-    paddingTop: 0,
-    marginBottom: responsiveSpacing(16),
-  },
-
-  // Modern Analysis Section
-  modernAnalysisSection: {
+  headerContainer: {
+    alignItems: 'center',
+    backgroundColor: Colors.backgroud,
     paddingHorizontal: responsiveSpacing(16),
-    marginTop: responsiveSpacing(24),
-    marginBottom: responsiveSpacing(24),
+    paddingVertical: responsiveSpacing(8),
   },
-  modernSectionTitle: {
-    fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(20),
-    color: Colors.darkGray,
-    marginBottom: responsiveSpacing(20),
-  },
-  modernAnalysisCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    marginBottom: responsiveSpacing(16),
-    shadowColor: Colors.shadowDefault,
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-    overflow: 'hidden',
-  },
-  modernCardBorder: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 6,
-    borderTopLeftRadius: 16,
-    borderBottomLeftRadius: 16,
-  },
-  greenBorder: {
-    borderLeftWidth: 0,
-  },
-  cyanBorder: {
-    borderLeftWidth: 0,
-  },
-  blueBorder: {
-    borderLeftWidth: 0,
-  },
-  modernCardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: responsiveSpacing(20),
-    paddingLeft: responsiveSpacing(26), // Extra space for border
-  },
-  modernIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: responsiveSpacing(16),
-  },
-  greenIconBg: {
-    backgroundColor: Colors.brandPrimarySoft,
-  },
-  cyanIconBg: {
-    backgroundColor: '#E0F7FA',
-  },
-  blueIconBg: {
-    backgroundColor: '#E3F2FD',
-  },
-  modernIcon: {
-    width: 28,
-    height: 28,
-  },
-  greenIcon: {
-    tintColor: Colors.brandPrimary,
-  },
-  cyanIcon: {
-    tintColor: Colors.accentSupport,
-  },
-  blueIcon: {
-    tintColor: Colors.accentContract,
-  },
-  modernTextContainer: {
+
+  // Tab Content
+  tabContent: {
     flex: 1,
   },
-  modernCardTitle: {
-    fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(17),
-    color: Colors.darkGray,
-    marginBottom: responsiveSpacing(6),
-  },
-  modernCardDesc: {
-    fontFamily: Fonts.Roboto_Regular,
-    fontSize: responsiveFont(14),
-    color: Colors.textSecondary,
-    lineHeight: responsiveFont(20),
-  },
-  modernArrowContainer: {
-    marginLeft: responsiveSpacing(12),
-  },
-  modernArrow: {
-    width: 24,
-    height: 24,
-    tintColor: '#CCCCCC',
+
+  // Section Container
+  sectionContainer: {
+    backgroundColor: Colors.white,
+    marginHorizontal: responsiveSpacing(16),
+    marginTop: responsiveSpacing(20),
+    padding: responsiveSpacing(16),
+    borderRadius: 16,
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   sectionTitle: {
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(16),
+    color: Colors.black,
+    marginBottom: responsiveSpacing(16),
+  },
+
+  // Room Item
+  roomItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: responsiveSpacing(12),
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.lightGray,
+  },
+  roomRank: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.limeGreen,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: responsiveSpacing(12),
+  },
+  roomRankText: {
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(14),
+    color: Colors.black,
+  },
+  roomInfo: {
+    flex: 1,
+  },
+  roomNumber: {
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(14),
+    color: Colors.black,
+    marginBottom: responsiveSpacing(4),
+  },
+  roomPrice: {
+    fontFamily: Fonts.Roboto_Medium,
+    fontSize: responsiveFont(13),
+    color: Colors.darkGreen,
+    marginBottom: responsiveSpacing(2),
+  },
+  roomStats: {
+    fontFamily: Fonts.Roboto_Regular,
+    fontSize: responsiveFont(12),
+    color: Colors.textSecondary,
+  },
+
+  // Contract Item (for old style - keep for compatibility)
+  contractItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: responsiveSpacing(12),
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.lightGray,
+  },
+  contractInfo: {
+    flex: 1,
+  },
+  contractRoom: {
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(14),
+    color: Colors.black,
+    marginBottom: responsiveSpacing(4),
+  },
+  contractPrice: {
+    fontFamily: Fonts.Roboto_Medium,
+    fontSize: responsiveFont(12),
+    color: Colors.darkGreen,
+  },
+  contractStatus: {
+    paddingHorizontal: responsiveSpacing(12),
+    paddingVertical: responsiveSpacing(6),
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Rooms Tab Styles from RoomStatisticScreen
+  overviewContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: responsiveSpacing(16),
+    paddingTop: responsiveSpacing(16),
+    justifyContent: 'space-between',
+  },
+  singleColumnContainer: {
+    paddingHorizontal: responsiveSpacing(16),
+    paddingTop: responsiveSpacing(16),
+  },
+  overviewCardFull: {
+    width: '100%',
+    backgroundColor: Colors.white,
+    borderRadius: scale(12),
+    padding: responsiveSpacing(16),
+    marginBottom: responsiveSpacing(12),
+    borderWidth: 1,
+    borderColor: Colors.gray200,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: scale(80),
+  },
+  overviewCardSimple: {
+    width: '48%',
+    backgroundColor: Colors.white,
+    borderRadius: scale(12),
+    padding: responsiveSpacing(12),
+    marginBottom: responsiveSpacing(12),
+    borderWidth: 1,
+    borderColor: Colors.gray200,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: scale(80),
+  },
+  cardTotal: {},
+  cardRented: {},
+  cardAvailable: {},
+  cardPending: {},
+  iconBadge: {
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(12),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: responsiveSpacing(12),
+  },
+  iconWrap: {
+    backgroundColor: Colors.brandPrimarySoft,
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.12,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  iconWrapNeutral: {
+    backgroundColor: Colors.neutralSoft,
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  overviewIcon: {
+    width: scale(20),
+    height: scale(20),
+  },
+  overviewContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  overviewLabel: {
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textSecondary,
+    marginBottom: responsiveSpacing(4),
+  },
+  overviewValue: {
     fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.darkGray,
-    marginBottom: responsiveSpacing(10),
+    color: Colors.dearkOlive,
+    flexWrap: 'nowrap',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: responsiveSpacing(16),
+    marginBottom: responsiveSpacing(10),
+  },
+  sectionIcon: {
+    width: 20,
+    height: 20,
+    marginRight: responsiveSpacing(8),
+    tintColor: Colors.textSecondary,
   },
   topRoomsContainer: {
-    marginBottom: responsiveSpacing(24),
-  },
-  contractsContainer: {
-    marginBottom: responsiveSpacing(24),
+    marginTop: responsiveSpacing(16),
   },
   noDataText: {
     fontSize: responsiveFont(14),
@@ -761,10 +682,370 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginVertical: responsiveSpacing(20),
   },
-  headerContainer: {
-    alignItems: 'center',
-    backgroundColor: Colors.backgroud,
+  actionsContainer: {
+    marginTop: responsiveSpacing(8),
     paddingHorizontal: responsiveSpacing(16),
+    paddingBottom: responsiveSpacing(12),
+  },
+  quickCard: {
+    borderRadius: scale(14),
+    overflow: 'hidden',
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  quickGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: responsiveSpacing(16),
+    paddingHorizontal: responsiveSpacing(16),
+  },
+  quickLeft: {flexDirection: 'row', alignItems: 'center'},
+  quickIconWrap: {
+    width: scale(34),
+    height: scale(34),
+    borderRadius: scale(10),
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: responsiveSpacing(10),
+  },
+  quickIcon: {width: scale(18), height: scale(18), tintColor: Colors.darkGreen},
+  quickText: {fontFamily: Fonts.Roboto_Bold, fontSize: responsiveFont(16), color: Colors.white},
+  quickArrow: {width: scale(18), height: scale(18), tintColor: Colors.white},
+
+  // Revenue Tab Styles from RevenueStatisticScreen
+  revenueStatsGrid: {
+    paddingHorizontal: responsiveSpacing(16),
+    paddingTop: responsiveSpacing(12),
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  revenueStatCard: {
+    width: (SCREEN.width - responsiveSpacing(16) * 2 - responsiveSpacing(12)) / 2,
+    borderRadius: scale(16),
+    padding: responsiveSpacing(16),
+    marginBottom: responsiveSpacing(12),
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.16,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  revenueCard: {
+    backgroundColor: Colors.brandPrimary,
+  },
+  avgCard: {
+    backgroundColor: Colors.accentSupport,
+  },
+  revenueStatIconContainer: {
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(20),
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: responsiveSpacing(10),
+  },
+  revenueStatIcon: {
+    width: scale(20),
+    height: scale(20),
+    tintColor: Colors.white,
+  },
+  revenueStatValue: {
+    fontSize: responsiveFont(20),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.white,
+  },
+  revenueStatLabel: {
+    marginTop: responsiveSpacing(4),
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.white,
+    opacity: 0.9,
+  },
+  revenueValue: { color: Colors.white },
+  avgValue: { color: Colors.white },
+  breakdownContainer: {
+    marginTop: responsiveSpacing(16),
+    paddingHorizontal: responsiveSpacing(16),
+  },
+  breakdownCard: {
+    backgroundColor: Colors.white,
+    borderRadius: scale(12),
+    padding: responsiveSpacing(16),
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  breakdownItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: responsiveSpacing(8),
+  },
+  breakdownLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  breakdownIcon: {
+    width: scale(16),
+    height: scale(16),
+  },
+  breakdownLabel: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.darkGray,
+  },
+  breakdownValue: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.darkGray,
+  },
+
+  // Contract Tab Styles from ContractStatisticScreen
+  contractStatsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: responsiveSpacing(16),
+    marginTop: responsiveSpacing(16),
+    gap: responsiveSpacing(12),
+  },
+  contractStatCard: {
+    width: '47%',
+    borderRadius: 12,
+    padding: responsiveSpacing(12),
+    alignItems: 'center',
+    minHeight: scale(100),
+    justifyContent: 'center',
+  },
+  contractCard: {
+    backgroundColor: '#E3F2FD',
+  },
+  activeCard: {
+    backgroundColor: '#E8F5E8',
+  },
+  pendingCard: {
+    backgroundColor: '#FFF8E1',
+  },
+  expiredCard: {
+    backgroundColor: '#F8F9FA',
+  },
+  contractStatIconContainer: {
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(20),
+    backgroundColor: Colors.white,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: responsiveSpacing(8),
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  contractStatIcon: {
+    width: scale(20),
+    height: scale(20),
+  },
+  contractStatValue: {
+    fontSize: responsiveFont(24),
+    fontFamily: Fonts.Roboto_Bold,
+    marginBottom: responsiveSpacing(2),
+  },
+  contractStatLabel: {
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Medium,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: responsiveFont(14),
+  },
+  modernSectionTitle: {
+    fontSize: responsiveFont(18),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.darkGray,
+    marginBottom: responsiveSpacing(16),
+    paddingHorizontal: responsiveSpacing(16),
+  },
+  modernAnalysisSection: {
+    marginTop: responsiveSpacing(16),
+    paddingHorizontal: responsiveSpacing(16),
+  },
+  performanceCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: responsiveSpacing(20),
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  performanceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: responsiveSpacing(16),
+  },
+  performanceIconContainer: {
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(20),
+    backgroundColor: Colors.brandPrimary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: responsiveSpacing(12),
+  },
+  performanceIcon: {
+    width: scale(20),
+    height: scale(20),
+    tintColor: Colors.white,
+  },
+  performanceTitle: {
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.darkGray,
+  },
+  performanceStats: {
+    gap: responsiveSpacing(12),
+  },
+  performanceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: responsiveSpacing(8),
+  },
+  performanceDot: {
+    width: scale(12),
+    height: scale(12),
+    borderRadius: scale(6),
+    marginRight: responsiveSpacing(12),
+  },
+  performanceLabel: {
+    flex: 1,
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.darkGray,
+  },
+  performanceValue: {
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.darkGray,
+  },
+  contractsContainer: {
+    marginTop: responsiveSpacing(16),
+  },
+  modernContractCard: {
+    backgroundColor: Colors.white,
+    marginHorizontal: responsiveSpacing(16),
+    marginBottom: responsiveSpacing(12),
+    borderRadius: 16,
+    padding: responsiveSpacing(16),
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  contractContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  contractImageContainer: {
+    width: scale(60),
+    height: scale(60),
+    borderRadius: scale(12),
+    overflow: 'hidden',
+    marginRight: responsiveSpacing(12),
+  },
+  contractImage: {
+    width: '100%',
+    height: '100%',
+  },
+  contractRoomTitle: {
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.darkGray,
+    marginBottom: responsiveSpacing(4),
+  },
+  contractTenant: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textSecondary,
+    marginBottom: responsiveSpacing(8),
+  },
+  contractMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  contractStatusBadge: {
+    paddingHorizontal: responsiveSpacing(8),
+    paddingVertical: responsiveSpacing(4),
+    borderRadius: scale(12),
+  },
+  contractStatusText: {
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Medium,
+  },
+  contractDate: {
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
+  },
+  contractArrow: {
+    marginLeft: responsiveSpacing(8),
+  },
+  arrowIcon: {
+    width: scale(16),
+    height: scale(16),
+    tintColor: Colors.mediumGray,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: responsiveSpacing(40),
+    marginHorizontal: responsiveSpacing(16),
+  },
+  emptyIcon: {
+    width: scale(48),
+    height: scale(48),
+    tintColor: Colors.textGray,
+    marginBottom: responsiveSpacing(12),
+  },
+  emptyText: {
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.textGray,
+    textAlign: 'center',
+  },
+  contractQuickCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    marginBottom: responsiveSpacing(12),
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: responsiveSpacing(16),
+  },
+  contractQuickIconWrap: {
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(20),
+    backgroundColor: Colors.accentContract + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: responsiveSpacing(12),
+  },
+  contractQuickIcon: {
+    width: scale(20),
+    height: scale(20),
+    tintColor: Colors.accentContract,
   },
 });

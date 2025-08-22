@@ -104,7 +104,7 @@ const RevenueStatisticScreen = () => {
           <View style={[styles.statCard, styles.revenueCard]}>
             <View style={styles.statIconContainer}>
               <Image
-                source={require('../../../assets/icons/icon_tien_coc.png')}
+                source={{uri: Icons.IconTienCoc}}
                 style={styles.statIcon}
               />
             </View>
@@ -118,7 +118,7 @@ const RevenueStatisticScreen = () => {
           <View style={[styles.statCard, styles.avgCard]}>
             <View style={styles.statIconContainer}>
               <Image
-                source={require('../../../assets/icons/icon_light_report.png')}
+                source={{uri: Icons.IconLightReport}}
                 style={styles.statIcon}
               />
             </View>
@@ -139,7 +139,7 @@ const RevenueStatisticScreen = () => {
             <View style={styles.breakdownItem}>
               <View style={styles.breakdownLeft}>
                 <View style={[styles.iconBadge, {backgroundColor: Colors.lightBlueBackground}]}>
-                  <Image source={require('../../../assets/icons/icon_room.png')} style={[styles.breakdownIcon, {tintColor: Colors.brandPrimary}]} />
+                  <Image source={{uri: Icons.IconRoom}} style={[styles.breakdownIcon, {tintColor: Colors.brandPrimary}]} />
                 </View>
                 <Text style={styles.breakdownLabel}>Tiền thuê phòng</Text>
               </View>
@@ -151,7 +151,7 @@ const RevenueStatisticScreen = () => {
             <View style={styles.breakdownItem}>
               <View style={styles.breakdownLeft}>
                 <View style={[styles.iconBadge, {backgroundColor: '#E9F7F0'}]}>
-                  <Image source={require('../../../assets/icons/icon_servive_black.png')} style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]} />
+                  <Image source={{uri: Icons.IconServiceSelected}} style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]} />
                 </View>
                 <Text style={styles.breakdownLabel}>Phí dịch vụ</Text>
               </View>
@@ -163,7 +163,7 @@ const RevenueStatisticScreen = () => {
             <View style={styles.breakdownItem}>
               <View style={styles.breakdownLeft}>
                 <View style={[styles.iconBadge, {backgroundColor: '#F1F7FF'}]}>
-                  <Image source={require('../../../assets/icons/icon_union.png')} style={[styles.breakdownIcon, {tintColor: Colors.accentSupport}]} />
+                  <Image source={{uri: Icons.IconUnion}} style={[styles.breakdownIcon, {tintColor: Colors.accentSupport}]} />
                 </View>
                 <Text style={styles.breakdownLabel}>Phí khác</Text>
               </View>
@@ -192,14 +192,14 @@ const RevenueStatisticScreen = () => {
               <View style={styles.quickLeft}>
                 <View style={styles.quickIconWrap}>
                   <Image
-                    source={require('../../../assets/icons/icon_thanh_toan.png')}
+                    source={{uri: Icons.IconThanhToan}}
                     style={styles.quickIcon}
                   />
                 </View>
                 <Text style={styles.quickText}>Xem tất cả hóa đơn</Text>
               </View>
               <Image
-                source={require('../../../assets/icons/icon_arrow_right.png')}
+                source={{uri: Icons.IconArrowRight}}
                 style={styles.quickArrow}
               />
             </LinearGradient>
