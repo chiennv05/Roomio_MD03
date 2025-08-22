@@ -43,21 +43,30 @@ const NotificationDetailModal: React.FC<NotificationDetailModalProps> = ({
     showConfirm,
     showNotificationAlert,
   } = useCustomAlert();
-  // Function để extract invoiceId từ notification content
+  // Function để extract invoiceId từ notification content (tránh bắt "mới"/"tháng")
   const extractInvoiceIdFromContent = (content: string): string | null => {
-    // Tìm kiếm pattern cho invoiceId trong content
-    const patterns = [
-      /hóa đơn\s+([A-Za-z0-9]+)/i,
-      /invoice\s+([A-Za-z0-9]+)/i,
-      /ID:\s*([A-Za-z0-9]+)/i,
-      /mã\s+hóa\s+đơn:\s*([A-Za-z0-9]+)/i,
-      /([0-9a-f]{24})/i, // MongoDB ObjectId pattern
+    if (!content) return null;
+
+    // Chỉ chấp nhận các pattern rõ ràng cho mã hóa đơn
+    const patterns: RegExp[] = [
+      /mã\s*hóa\s*đơn\s*[:#-]?\s*([A-Za-z0-9_-]{6,})/i, // "Mã hóa đơn: ABC123"
+      /invoice\s*id\s*[:#-]?\s*([A-Za-z0-9_-]{6,})/i, // "Invoice ID: ..."
+      /\b([0-9a-f]{24})\b/i, // MongoDB ObjectId
+      /\bHD[-_]?\d{6,}\b/i, // Ví dụ: HD123456
     ];
 
     for (const pattern of patterns) {
       const match = content.match(pattern);
       if (match && match[1]) {
-        return match[1];
+        const candidate = match[1];
+        // Loại bỏ các giá trị không hợp lệ (ví dụ từ ngữ, tháng/năm)
+        if (
+          candidate.length >= 6 &&
+          !/[\/\s]/.test(candidate) &&
+          !/(moi|mới|thang|tháng|vnd)/i.test(candidate)
+        ) {
+          return candidate;
+        }
       }
     }
     return null;
@@ -91,7 +100,7 @@ const NotificationDetailModal: React.FC<NotificationDetailModalProps> = ({
   const getContractActionText = () => {
     const content = notification?.content || '';
 
-    // Kiểm tra nếu là thông báo yêu cầu thuê phòng
+    // Nếu là thông báo yêu cầu thuê phòng, hiển thị nút xử lý yêu cầu
     if (
       content.includes('muốn thuê phòng') ||
       content.includes('yêu cầu thuê')
@@ -99,15 +108,7 @@ const NotificationDetailModal: React.FC<NotificationDetailModalProps> = ({
       return 'Xử lý yêu cầu thuê';
     }
 
-    // Kiểm tra nếu là thông báo phê duyệt hợp đồng
-    if (
-      content.includes('đã được admin phê duyệt') ||
-      content.includes('có hiệu lực')
-    ) {
-      const roomId = extractRoomIdFromContent(content);
-      return roomId ? `Xem phòng ${roomId}` : 'Xem hợp đồng';
-    }
-
+    // Mặc định: điều hướng sang màn quản lý hợp đồng
     return 'Xem hợp đồng';
   };
 

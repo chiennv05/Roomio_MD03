@@ -93,7 +93,7 @@ const CustomAlertModal: React.FC<CustomAlertModalProps> = ({
                         <Text
                           style={[
                             btn.style === 'cancel' && styles.cancelText,
-                            btn.style === 'default' && styles.confirmText,
+btn.style === 'default' && styles.confirmText,
                             btn.style === 'destructive' &&
                               styles.destructiveText,
                           ]}>

@@ -56,7 +56,7 @@ export default function ModalSearchRoom({
   // fetch rooms once
   useEffect(() => {
     if (user?.auth_token && (!rooms || rooms.length === 0)) {
-      dispatch(getLandlordRooms(user.auth_token));
+      dispatch(getLandlordRooms({}));
     }
   }, [dispatch, rooms, user?.auth_token]);
 

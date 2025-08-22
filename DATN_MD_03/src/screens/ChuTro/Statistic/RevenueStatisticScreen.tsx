@@ -26,9 +26,10 @@ import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
 import {LoadingAnimation} from '../../../components';
-import {StatChart} from './components';
+
 import UIHeader from '../MyRoom/components/UIHeader';
 import {Icons} from '../../../assets/icons';
+import LinearGradient from 'react-native-linear-gradient';
 
 type RevenueStatisticScreenNavigationProp =
   StackNavigationProp<RootStackParamList>;
@@ -97,57 +98,38 @@ const RevenueStatisticScreen = () => {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }>
-        {/* Revenue Overview */}
-        <View style={styles.overviewContainer}>
-          <View style={[styles.overviewCard, styles.mainCard]}>
-            <Text style={styles.overviewLabel}>Tổng doanh thu</Text>
-            <Text style={[styles.overviewValue, styles.mainValue]}>
+        {/* Stats Grid - consistent with main Statistic screen */}
+        <View style={styles.statsGrid}>
+          {/* Tổng doanh thu */}
+          <View style={[styles.statCard, styles.revenueCard]}>
+            <View style={styles.statIconContainer}>
+              <Image
+                source={require('../../../assets/icons/icon_tien_coc.png')}
+                style={styles.statIcon}
+              />
+            </View>
+            <Text style={[styles.statValue, styles.revenueValue]}>
               {formatMoney(data?.revenue?.totalRevenue || 0)} đ
             </Text>
+            <Text style={styles.statLabel}>Tổng doanh thu</Text>
           </View>
 
-          <View style={styles.overviewCard}>
-            <Text style={styles.overviewLabel}>Giá thuê TB</Text>
-            <Text style={[styles.overviewValue, {color: Colors.primaryGreen}]}>
+          {/* Giá thuê trung bình */}
+          <View style={[styles.statCard, styles.avgCard]}>
+            <View style={styles.statIconContainer}>
+              <Image
+                source={require('../../../assets/icons/icon_light_report.png')}
+                style={styles.statIcon}
+              />
+            </View>
+            <Text style={[styles.statValue, styles.avgValue]}>
               {formatMoney(data?.revenue?.averageRent || 0)} đ
             </Text>
+            <Text style={styles.statLabel}>Giá thuê TB</Text>
           </View>
 
-          <View style={styles.overviewCard}>
-            <Text style={styles.overviewLabel}>Tỷ lệ lấp đầy</Text>
-            <Text style={[styles.overviewValue, {color: Colors.darkGreen}]}>
-              {data?.revenue?.occupancyRate || 0}%
-            </Text>
-          </View>
         </View>
 
-        {/* Revenue Chart */}
-        {data?.monthlyStats && (
-          <View style={styles.chartSection}>
-            <Text style={styles.sectionTitle}>
-              Biểu đồ doanh thu theo tháng
-            </Text>
-            <StatChart
-              title="Doanh thu (VNĐ)"
-              data={data.monthlyStats.revenue}
-              labels={data.monthlyStats.labels}
-              color={Colors.primaryGreen}
-            />
-          </View>
-        )}
-
-        {/* Occupancy Rate Chart */}
-        {data?.monthlyStats && (
-          <View style={styles.chartSection}>
-            <Text style={styles.sectionTitle}>Tỷ lệ lấp đầy theo tháng</Text>
-            <StatChart
-              title="Tỷ lệ lấp đầy (%)"
-              data={data.monthlyStats.occupancyRate}
-              labels={data.monthlyStats.labels}
-              color={Colors.darkGreen}
-            />
-          </View>
-        )}
 
         {/* Revenue Breakdown */}
         <View style={styles.breakdownContainer}>
@@ -156,12 +138,9 @@ const RevenueStatisticScreen = () => {
           <View style={styles.breakdownCard}>
             <View style={styles.breakdownItem}>
               <View style={styles.breakdownLeft}>
-                <View
-                  style={[
-                    styles.colorDot,
-                    {backgroundColor: Colors.primaryGreen},
-                  ]}
-                />
+                <View style={[styles.iconBadge, {backgroundColor: Colors.lightBlueBackground}]}>
+                  <Image source={require('../../../assets/icons/icon_room.png')} style={[styles.breakdownIcon, {tintColor: Colors.brandPrimary}]} />
+                </View>
                 <Text style={styles.breakdownLabel}>Tiền thuê phòng</Text>
               </View>
               <Text style={styles.breakdownValue}>
@@ -171,9 +150,9 @@ const RevenueStatisticScreen = () => {
 
             <View style={styles.breakdownItem}>
               <View style={styles.breakdownLeft}>
-                <View
-                  style={[styles.colorDot, {backgroundColor: Colors.darkGreen}]}
-                />
+                <View style={[styles.iconBadge, {backgroundColor: '#E9F7F0'}]}>
+                  <Image source={require('../../../assets/icons/icon_servive_black.png')} style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]} />
+                </View>
                 <Text style={styles.breakdownLabel}>Phí dịch vụ</Text>
               </View>
               <Text style={styles.breakdownValue}>
@@ -183,9 +162,9 @@ const RevenueStatisticScreen = () => {
 
             <View style={styles.breakdownItem}>
               <View style={styles.breakdownLeft}>
-                <View
-                  style={[styles.colorDot, {backgroundColor: Colors.limeGreen}]}
-                />
+                <View style={[styles.iconBadge, {backgroundColor: '#F1F7FF'}]}>
+                  <Image source={require('../../../assets/icons/icon_union.png')} style={[styles.breakdownIcon, {tintColor: Colors.accentSupport}]} />
+                </View>
                 <Text style={styles.breakdownLabel}>Phí khác</Text>
               </View>
               <Text style={styles.breakdownValue}>
@@ -200,17 +179,30 @@ const RevenueStatisticScreen = () => {
           <Text style={styles.sectionTitle}>Thao tác nhanh</Text>
 
           <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('Bill')}>
-            <Image
-              source={require('../../../assets/icons/icon_arrow_down.png')}
-              style={styles.actionIcon}
-            />
-            <Text style={styles.actionText}>Xem tất cả hóa đơn</Text>
-            <Image
-              source={require('../../../assets/icons/icon_arrow_right.png')}
-              style={styles.arrowIcon}
-            />
+            activeOpacity={0.9}
+            onPress={() => navigation.navigate('Bill')}
+            style={styles.quickCard}
+          >
+            <LinearGradient
+              colors={[Colors.limeGreen, '#E9FFB7']}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 1}}
+              style={styles.quickGradient}
+            >
+              <View style={styles.quickLeft}>
+                <View style={styles.quickIconWrap}>
+                  <Image
+                    source={require('../../../assets/icons/icon_thanh_toan.png')}
+                    style={styles.quickIcon}
+                  />
+                </View>
+                <Text style={styles.quickText}>Xem tất cả hóa đơn</Text>
+              </View>
+              <Image
+                source={require('../../../assets/icons/icon_arrow_right.png')}
+                style={styles.quickArrow}
+              />
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -240,42 +232,64 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: responsiveSpacing(24),
   },
-  overviewContainer: {
+  // New stats grid styles
+  statsGrid: {
     paddingHorizontal: responsiveSpacing(16),
-    paddingTop: responsiveSpacing(16),
+    paddingTop: responsiveSpacing(12),
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
-  overviewCard: {
-    backgroundColor: Colors.white,
-    borderRadius: scale(12),
+  statCard: {
+    width: (SCREEN.width - responsiveSpacing(16) * 2 - responsiveSpacing(12)) / 2,
+    borderRadius: scale(16),
     padding: responsiveSpacing(16),
     marginBottom: responsiveSpacing(12),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.16,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  mainCard: {
-    backgroundColor: Colors.lightBlueBackground,
+  revenueCard: {
+    backgroundColor: Colors.brandPrimary, // Emerald - giống màn chính
   },
-  overviewLabel: {
+  avgCard: {
+    backgroundColor: Colors.accentSupport, // Cyan - giống màn chính
+  },
+  occupancyCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.accentSupport,
+  },
+  statIconContainer: {
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(20),
+    backgroundColor: 'rgba(255, 255, 255, 0.2)', // Giống màn chính
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: responsiveSpacing(10),
+  },
+  statIcon: {
+    width: scale(20),
+    height: scale(20),
+    tintColor: Colors.white, // Giống màn chính
+  },
+  statValue: {
+    fontSize: responsiveFont(20),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.white, // Giống màn chính
+  },
+  statLabel: {
+    marginTop: responsiveSpacing(4),
     fontSize: responsiveFont(12),
     fontFamily: Fonts.Roboto_Regular,
-    color: Colors.textGray,
-    marginBottom: responsiveSpacing(4),
+    color: Colors.white, // Giống màn chính
+    opacity: 0.9,
   },
-  overviewValue: {
-    fontSize: responsiveFont(18),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.darkGray,
-  },
-  mainValue: {
-    fontSize: responsiveFont(24),
-    color: Colors.darkGreen,
-  },
+  revenueValue: { color: Colors.white },
+  avgValue: { color: Colors.white },
+  occupancyValue: { color: Colors.accentSupport },
   chartSection: {
     marginTop: responsiveSpacing(8),
   },
@@ -319,6 +333,19 @@ const styles = StyleSheet.create({
     borderRadius: scale(6),
     marginRight: responsiveSpacing(8),
   },
+  // icon badge for breakdown
+  iconBadge: {
+    width: scale(28),
+    height: scale(28),
+    borderRadius: scale(8),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: responsiveSpacing(8),
+  },
+  breakdownIcon: {
+    width: scale(16),
+    height: scale(16),
+  },
   breakdownLabel: {
     fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Regular,
@@ -333,37 +360,33 @@ const styles = StyleSheet.create({
     marginTop: responsiveSpacing(16),
     paddingHorizontal: responsiveSpacing(16),
   },
-  actionButton: {
+  quickCard: {
+    borderRadius: scale(14),
+    overflow: 'hidden',
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  quickGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.white,
-    borderRadius: scale(12),
-    padding: responsiveSpacing(16),
-    marginBottom: responsiveSpacing(12),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    justifyContent: 'space-between',
+    paddingVertical: responsiveSpacing(16),
+    paddingHorizontal: responsiveSpacing(16),
   },
-  actionIcon: {
-    width: scale(24),
-    height: scale(24),
-    marginRight: responsiveSpacing(12),
-    tintColor: Colors.primaryGreen,
+  quickLeft: {flexDirection: 'row', alignItems: 'center'},
+  quickIconWrap: {
+    width: scale(34),
+    height: scale(34),
+    borderRadius: scale(10),
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: responsiveSpacing(10),
   },
-  actionText: {
-    flex: 1,
-    fontSize: responsiveFont(16),
-    fontFamily: Fonts.Roboto_Regular,
-    color: Colors.darkGray,
-  },
-  arrowIcon: {
-    width: scale(16),
-    height: scale(16),
-    tintColor: Colors.mediumGray,
-  },
+  quickIcon: {width: scale(18), height: scale(18), tintColor: Colors.darkGray},
+  quickText: {fontFamily: Fonts.Roboto_Bold, fontSize: responsiveFont(16), color: Colors.dearkOlive},
+  quickArrow: {width: scale(18), height: scale(18), tintColor: Colors.dearkOlive},
 });

@@ -18,7 +18,7 @@ import {useRooms} from '../../hooks/useRooms';
 import Geolocation from '@react-native-community/geolocation';
 
 // Components
-import SearchBar from './components/SearchBar';
+// import SearchBar from './components/SearchBar';
 import RoomMarker from './components/RoomMarker';
 import RoomCard from './components/RoomCard';
 
@@ -47,7 +47,7 @@ const calculateDistance = (
 
 const FindMapScreen: React.FC = () => {
   const mapRef = useRef<MapView>(null);
-  const [searchText, setSearchText] = useState('');
+  // const [searchText, setSearchText] = useState('');
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{
@@ -160,20 +160,15 @@ const FindMapScreen: React.FC = () => {
     setSelectedRoom(null);
   }, []);
 
-  const handleFilterPress = () => {
-    // TODO: Implement filter functionality
-    console.log('Filter pressed');
-  };
-
   const filteredRooms = rooms.filter(room => {
     // Lọc theo text search
-    if (searchText) {
-      const searchLower = searchText.toLowerCase();
-      const matchesSearch =
-        room.description?.toLowerCase().includes(searchLower) ||
-        room.location?.addressText?.toLowerCase().includes(searchLower);
-      if (!matchesSearch) {return false;}
-    }
+    // if (searchText) {
+    //   const searchLower = searchText.toLowerCase();
+    //   const matchesSearch =
+    //     room.description?.toLowerCase().includes(searchLower) ||
+    //     room.location?.addressText?.toLowerCase().includes(searchLower);
+    //   if (!matchesSearch) {return false;}
+    // }
 
     // Lọc theo bán kính nếu có vị trí được chọn
     if (selectedLocation) {
@@ -197,13 +192,13 @@ const FindMapScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {/* Search Bar */}
-      <View style={styles.searchBarContainer}>
+      {/* <View style={styles.searchBarContainer}>
         <SearchBar
           value={searchText}
           onChangeText={setSearchText}
           onFilterPress={handleFilterPress}
         />
-      </View>
+      </View> */}
 
       {/* Map */}
       <MapView

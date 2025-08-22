@@ -28,7 +28,9 @@ const ModalConfirmContract = ({
   setValue,
   onSubmit,
 }: Props) => {
-  if (!action) {return null;}
+  if (!action) {
+    return null;
+  }
 
   const isExtend = action === 'extend';
 
@@ -113,7 +115,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Bold,
   },
   confirmText: {
-    color: Colors.success,
+    color: Colors.darkGreen,
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Bold,
   },

@@ -53,11 +53,6 @@ const EmptyNotification = () => {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={['rgba(139, 195, 74, 0.1)', 'rgba(168, 230, 0, 0.05)']}
-        style={styles.gradientBackground}
-      />
-
       <Animated.View
         style={[
           styles.content,
@@ -69,11 +64,14 @@ const EmptyNotification = () => {
         {/* Beautiful icon with gradient background */}
         <View style={styles.iconContainer}>
           <LinearGradient
-            colors={[Colors.limeGreen, '#A8E600']}
+            colors={[Colors.limeGreen, Colors.darkGreen]}
             style={styles.iconGradient}
             start={{x: 0, y: 0}}
             end={{x: 1, y: 1}}>
-            <Text style={styles.iconEmoji}>🔔</Text>
+            <Image
+              source={{uri: Icons.IconNotification}}
+              style={styles.iconImage}
+            />
           </LinearGradient>
         </View>
 
@@ -90,7 +88,9 @@ const EmptyNotification = () => {
           <View
             style={[styles.decorativeDot, {backgroundColor: Colors.limeGreen}]}
           />
-          <View style={[styles.decorativeDot, {backgroundColor: '#A8E600'}]} />
+          <View
+            style={[styles.decorativeDot, {backgroundColor: Colors.darkGreen}]}
+          />
           <View
             style={[styles.decorativeDot, {backgroundColor: Colors.limeGreen}]}
           />
@@ -107,20 +107,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: responsiveSpacing(32),
     backgroundColor: 'transparent',
-    position: 'relative',
-  },
-  gradientBackground: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: responsiveSpacing(20),
-    margin: responsiveSpacing(16),
   },
   content: {
     alignItems: 'center',
-    zIndex: 1,
   },
   iconContainer: {
     marginBottom: responsiveSpacing(32),
@@ -140,8 +129,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  iconEmoji: {
-    fontSize: responsiveFont(48),
+  iconImage: {
+    width: moderateScale(48),
+    height: moderateScale(48),
+    tintColor: Colors.white,
   },
   title: {
     fontSize: responsiveFont(24),

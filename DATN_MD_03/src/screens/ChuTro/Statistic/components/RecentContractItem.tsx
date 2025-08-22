@@ -35,10 +35,13 @@ const RecentContractItem = ({
         return Colors.darkGreen;
       case 'pending_approval':
       case 'chờ ký':
-        return Colors.mediumGray;
+        return Colors.accentSchedule;
       case 'expired':
       case 'hết hạn':
         return Colors.red;
+      case 'terminated':
+      case 'đã kết thúc':
+        return Colors.textSecondary;
       default:
         return Colors.textGray;
     }
@@ -50,9 +53,11 @@ const RecentContractItem = ({
       case 'active':
         return 'Đang hiệu lực';
       case 'pending_approval':
-        return 'Chờ ký';
+        return 'Chờ duyệt';
       case 'expired':
         return 'Hết hạn';
+      case 'terminated':
+        return 'Đã kết thúc';
       default:
         return status;
     }
@@ -116,6 +121,7 @@ const styles = StyleSheet.create({
   image: {
     width: 100,
     height: 100,
+    borderRadius: 8,
   },
   content: {
     flex: 1,

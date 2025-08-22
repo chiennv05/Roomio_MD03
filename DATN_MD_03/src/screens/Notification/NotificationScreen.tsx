@@ -1,10 +1,9 @@
-import {View, StyleSheet, Alert, StatusBar, Animated} from 'react-native';
+import {View, StyleSheet, Alert, StatusBar, Animated, Linking} from 'react-native';
 import React, {useEffect, useCallback, useState, useRef} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import {useNavigation, useRoute, useFocusEffect} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
-import LinearGradient from 'react-native-linear-gradient';
 import {RootStackParamList} from '../../types/route';
 import {RootState, AppDispatch} from '../../store';
 import {
@@ -15,17 +14,18 @@ import {
   deleteNotificationById,
 } from '../../store/slices/notificationSlice';
 import EmptyNotification from './components/EmptyNotification';
-import NotificationScreenHeader from './components/NotificationScreenHeader';
+import UIHeader from '../ChuTro/MyRoom/components/UIHeader';
 import NotificationHeader from './components/NotificationHeader';
 import NotificationListContainer, {
   FormattedNotification,
 } from './components/NotificationListContainer';
-import NotificationDetailModal from './components/NotificationDetailModal';
+// import CustomAlertModal from '../../components/CustomAlertModal';
 import LoadingAnimation from '../../components/LoadingAnimation';
-import {CustomAlertModal, useCustomAlert} from './components';
+import {useCustomAlert} from './components';
 import {Colors} from '../../theme/color';
 import {responsiveSpacing} from '../../utils/responsive';
-import CustomAlertModalNotification from '../../components/CutomAlaertModalNotification';
+import CustomAlertModalNotification from '../../components/CutCusomAlaertModalNotification';
+import {Icons} from '../../assets/icons';
 
 type NotificationScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -44,15 +44,10 @@ const NotificationScreen = () => {
   } = useSelector((state: RootState) => state.notification);
 
   // Custom Alert Hook
-  const {
-    alertConfig,
-    visible: alertVisible,
-    hideAlert,
-    showSuccess,
-  } = useCustomAlert();
+  const {alertConfig, visible: alertVisible, hideAlert} = useCustomAlert();
 
   const [activeTab, setActiveTab] = useState<
-    'all' | 'schedule' | 'bill' | 'contract'
+    'all' | 'heThong' | 'hopDong' | 'thanhToan' | 'hoTro'
   >('all');
 
   // State cho modal chi tiết thông báo
@@ -85,36 +80,30 @@ const NotificationScreen = () => {
     ]).start();
   }, [dispatch, user, token, fadeAnim, slideAnim]);
 
-  // Handle navigation from notification tap
+  // Handle navigation from notification tap: chỉ vào màn Thông báo, KHÔNG mở dialog
   useEffect(() => {
     const params = route.params as any;
-    if (params?.fromPush && params?.notificationId) {
-      console.log('Opened from notification:', params.notificationId);
-
-      // Show success message
-      setTimeout(() => {
-        showSuccess(
-          'Đã mở từ thông báo!',
-          'Thông báo đã được mở thành công',
-          true,
-        );
-      }, 1000);
-
-      // Optionally, find and highlight the specific notification
-      // or open its detail modal
-      const targetNotification = notifications.find(
-        notif => notif.id === params.notificationId,
+    if (params?.fromPush) {
+      console.log(
+        'Opened from status-bar notification → stay on Notification list',
       );
-
-      if (targetNotification) {
-        // Auto-open the notification detail modal
-        setTimeout(() => {
-          setSelectedNotification(targetNotification);
-          setModalVisible(true);
-        }, 1500);
-      }
+      // Đảm bảo không hiện bất kỳ modal nào
+      setModalVisible(false);
+      setSelectedNotification(null);
+      // Optional: có thể refresh nhanh danh sách để người dùng thấy mục mới
+      // if (user && token) dispatch(refreshNotifications({ token, limit: 20 }));
     }
-  }, [route.params, notifications, showSuccess]);
+  }, [route.params]);
+
+  // Always refresh when screen is focused (covers cases when navigating from Home)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user && token) {
+        dispatch(refreshNotifications({token, limit: 20}));
+      }
+      return undefined; // no cleanup needed
+    }, [dispatch, user, token]),
+  );
 
   // Handle refresh
   const handleRefresh = useCallback(() => {
@@ -185,33 +174,28 @@ const NotificationScreen = () => {
     setSelectedNotification(null);
   };
 
-  // Function để navigate đến màn hình hóa đơn
+  // Function để navigate đến màn hình hóa đơn (có kiểm tra id hợp lệ)
   const navigateToBillScreen = (invoiceId?: string | null) => {
     closeModal();
-    if (invoiceId) {
-      // Nếu có invoiceId, navigate đến chi tiết hóa đơn
-      navigation.navigate('BillDetails', {invoiceId});
+    const valid =
+      !!invoiceId && /^(?:[0-9a-f]{24}|[A-Za-z0-9_-]{6,})$/.test(invoiceId);
+    if (valid) {
+      navigation.navigate('BillDetails', {invoiceId: invoiceId!});
     } else {
-      // Nếu không có invoiceId, navigate đến danh sách hóa đơn
       navigation.navigate('Bill');
     }
   };
 
   // Function để navigate đến màn hình hợp đồng
-  const navigateToContractScreen = (roomId?: string | null) => {
+  const navigateToContractScreen = (_roomId?: string | null) => {
     closeModal();
 
-    // Kiểm tra nếu có selectedNotification để lấy thêm thông tin
-    if (selectedNotification) {
+    // Nếu là chủ trọ và đây là thông báo yêu cầu thuê -> sang AddContract
+    if (user?.role === 'chuTro' && selectedNotification) {
       const originalNotification = notifications.find(
         n => n._id === selectedNotification.id,
       );
-
-      // Nếu có thông báo gốc và có rentRequestData, navigate đến AddContract
-      if (
-        originalNotification &&
-        originalNotification.rentRequestData?.tenantInfo
-      ) {
+      if (originalNotification?.rentRequestData?.tenantInfo) {
         console.log(
           'Navigate to AddContract with notificationId:',
           selectedNotification.id,
@@ -223,15 +207,22 @@ const NotificationScreen = () => {
       }
     }
 
-    // Nếu có roomId, navigate đến chi tiết phòng
-    if (roomId) {
-      console.log('Navigate to room detail with roomId:', roomId);
-      navigation.navigate('DetailRoomLandlord', {id: roomId});
-    } else {
-      // Fallback: navigate đến quản lý hợp đồng
-      console.log('Navigate to contract management');
-      navigation.navigate('ContractManagement');
+    // Người thuê: đưa sang màn hợp đồng của người thuê
+    if (user?.role === 'nguoiThue') {
+      console.log('Navigate to tenant contracts');
+      navigation.navigate('ContractLessee');
+      return;
     }
+
+    // Chủ trọ: đưa sang màn quản lý hợp đồng
+    if (user?.role === 'chuTro') {
+      console.log('Navigate to landlord contract management');
+      navigation.navigate('ContractManagement');
+      return;
+    }
+
+    // Fallback
+    navigation.navigate('ContractLessee');
   };
 
   // Function để navigate đến màn hình quản lý phòng
@@ -246,6 +237,46 @@ const NotificationScreen = () => {
     closeModal();
     console.log('Navigate to support screen');
     navigation.navigate('SupportScreen');
+  };
+
+  // Extract phone number from content
+  const extractPhoneNumber = (text: string): string | null => {
+    if (!text) {
+      return null;
+    }
+    // Match Vietnamese phones: +84 or 0 followed by 9-10 digits, allow spaces/dots
+    const cleaned = text.replace(/[^+\d]/g, ' ');
+    const candidates = cleaned.match(/(\+84\s?\d{9,10}|0\s?\d{9,10})/g);
+    if (!candidates || candidates.length === 0) {
+      return null;
+    }
+    let phone = candidates[0].replace(/\s|\./g, '');
+    if (phone.startsWith('+84')) {
+      phone = '0' + phone.slice(3);
+    }
+    return phone;
+  };
+
+  const shouldShowCallButton = (): boolean => {
+    if (!selectedNotification) {
+      return false;
+    }
+    const content = (selectedNotification.content || '').toLowerCase();
+    const hasPhone = !!extractPhoneNumber(selectedNotification.content || '');
+    const isViewSchedule =
+      content.includes('xem phòng') ||
+      content.includes('đặt lịch') ||
+      content.includes('muốn thuê phòng');
+    return hasPhone && isViewSchedule;
+  };
+
+  const handleCall = () => {
+    const phone = extractPhoneNumber(selectedNotification?.content || '');
+    if (phone) {
+      Linking.openURL(`tel:${phone}`);
+    } else {
+      Alert.alert('Không tìm thấy số điện thoại hợp lệ');
+    }
   };
 
   // Handle notification press - Hiển thị modal chi tiết
@@ -264,26 +295,23 @@ const NotificationScreen = () => {
 
   // Handle tab change
   const handleTabChange = useCallback(
-    (tab: 'all' | 'schedule' | 'bill' | 'contract') => {
+    (tab: 'all' | 'heThong' | 'hopDong' | 'thanhToan' | 'hoTro') => {
       setActiveTab(tab);
     },
     [],
   );
 
-  // Handle menu press
-  const handleMenuPress = useCallback(() => {
-    console.log('Menu pressed');
-  }, []);
-
   // Filter notifications based on active tab
   const getFilteredNotifications = useCallback(() => {
     switch (activeTab) {
-      case 'schedule':
-        return notifications.filter(n => n.type === 'lichXemPhong');
-      case 'bill':
-        return notifications.filter(n => n.type === 'thanhToan');
-      case 'contract':
+      case 'heThong':
+        return notifications.filter(n => n.type === 'heThong');
+      case 'hopDong':
         return notifications.filter(n => n.type === 'hopDong');
+      case 'thanhToan':
+        return notifications.filter(n => n.type === 'thanhToan');
+      case 'hoTro':
+        return notifications.filter(n => n.type === 'hoTro');
       default:
         return notifications;
     }
@@ -291,43 +319,59 @@ const NotificationScreen = () => {
 
   // Convert Redux notification data to component format
   const formattedNotifications: FormattedNotification[] =
-    getFilteredNotifications().map(notification => ({
-      id: notification._id || '',
-      title: getNotificationTitle(notification.type),
-      content: notification.content,
-      time: formatRelativeTime(notification.createdAt),
-      date: formatFullDate(notification.createdAt),
-      isRead: notification.status === 'read',
-      type: notification.type,
-    }));
+    getFilteredNotifications().map(notification => {
+      const createdAt = notification.createdAt;
+      const displayDate = formatDisplayDate(createdAt); // DD/MM/YYYY
+      const groupLabel = formatGroupLabel(createdAt); // Hôm nay | Hôm qua | DD/MM/YYYY
+      return {
+        id: notification._id || '',
+        title: getNotificationTitle(notification.type),
+        content: notification.content,
+        time: formatRelativeTime(createdAt),
+        date: displayDate,
+        groupLabel,
+        timestamp: new Date(createdAt).getTime(),
+        isRead: notification.status === 'read',
+        type: notification.type,
+      };
+    });
 
   // Loading state với beautiful animation
   if (loading && notifications.length === 0) {
     return (
-      <LinearGradient
-        colors={[Colors.limeGreen, '#A8E600']}
-        style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" backgroundColor={Colors.limeGreen} />
-        <NotificationScreenHeader onMenuPress={handleMenuPress} />
-        <View style={styles.loadingContainer}>
-          <LoadingAnimation size="large" color={Colors.white} />
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroud} />
+        <View style={styles.headerContainer}>
+          <UIHeader
+            title="Thông báo"
+            iconLeft={Icons.IconArrowLeft}
+            onPressLeft={() => navigation.goBack()}
+          />
         </View>
-      </LinearGradient>
+        <View style={styles.loadingContainer}>
+          <LoadingAnimation size="large" color={Colors.limeGreen} />
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={Colors.limeGreen} />
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroud} />
 
-      {/* Beautiful gradient header với limeGreen */}
-      <LinearGradient
-        colors={[Colors.limeGreen, '#A8E600']}
-        style={styles.headerGradient}>
-        <SafeAreaView>
-          <NotificationScreenHeader onMenuPress={handleMenuPress} />
-        </SafeAreaView>
-      </LinearGradient>
+      {/* Header và Filter gộp chung */}
+      <View style={styles.headerContainer}>
+        <UIHeader
+          title="Thông báo"
+          iconLeft={Icons.IconArrowLeft}
+          onPressLeft={() => navigation.goBack()}
+        />
+        <NotificationHeader
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          unreadCount={unreadCount}
+        />
+      </View>
 
       {/* Main content with animation */}
       <Animated.View
@@ -338,15 +382,6 @@ const NotificationScreen = () => {
             transform: [{translateY: slideAnim}],
           },
         ]}>
-        {/* Enhanced header with glass effect */}
-        <View style={styles.headerContainer}>
-          <NotificationHeader
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
-            unreadCount={unreadCount}
-          />
-        </View>
-
         {/* Content area */}
         <View style={styles.contentArea}>
           {formattedNotifications.length === 0 ? (
@@ -366,14 +401,70 @@ const NotificationScreen = () => {
       </Animated.View>
 
       {/* Modal chi tiết thông báo */}
-      <NotificationDetailModal
+      <CustomAlertModalNotification
         visible={modalVisible}
-        notification={selectedNotification}
+        title={selectedNotification?.title || 'Thông báo'}
+        message={selectedNotification?.content || ''}
         onClose={closeModal}
-        onNavigateToBill={navigateToBillScreen}
-        onNavigateToContract={navigateToContractScreen}
-        onNavigateToRoomManagement={navigateToRoomManagement}
-        onNavigateToSupport={navigateToSupport}
+        isRead={selectedNotification?.isRead || false}
+        type="info"
+        buttons={(() => {
+          const arr: Array<{text: string; onPress: () => void; style?: 'default' | 'cancel' | 'destructive' | 'primary'}> = [];
+          if (shouldShowCallButton()) {
+            arr.push({
+              text: 'Gọi',
+              onPress: handleCall,
+              style: 'default',
+            });
+          }
+          const isCreateContract = (() => {
+            if (!selectedNotification) {
+              return false;
+            }
+            const originalNotification = notifications.find(
+              n => n._id === selectedNotification.id,
+            );
+            return !!originalNotification?.rentRequestData?.tenantInfo;
+          })();
+
+          arr.push({
+            text: isCreateContract ? 'Tạo Hợp Đồng' : 'Xem chi tiết',
+            onPress: () => {
+              closeModal();
+              if (selectedNotification) {
+                switch (selectedNotification.type) {
+                  case 'thanhToan':
+                    navigateToBillScreen();
+                    break;
+                  case 'hopDong':
+                    const originalNotification = notifications.find(
+                      n => n._id === selectedNotification.id,
+                    );
+                    if (originalNotification?.rentRequestData?.tenantInfo) {
+                      navigation.navigate('AddContract', {
+                        notificationId: selectedNotification.id,
+                      });
+                    } else {
+                      navigateToContractScreen();
+                    }
+                    break;
+                  case 'heThong':
+                    navigateToRoomManagement();
+                    break;
+                  case 'hoTro':
+                    navigateToSupport();
+                    break;
+                  default:
+                    navigateToRoomManagement();
+                    break;
+                }
+              }
+            },
+            style: 'default',
+          });
+          arr.push({text: 'Đóng', onPress: closeModal, style: 'cancel'});
+          return arr;
+        })()}
       />
 
       {/* Custom Alert Modal */}
@@ -383,46 +474,43 @@ const NotificationScreen = () => {
         message={alertConfig?.message || ''}
         onClose={hideAlert}
         type={alertConfig?.type}
-        timestamp={alertConfig?.timestamp}
-        icon={alertConfig?.icon}
-        showIcon={alertConfig?.showIcon}
         buttons={alertConfig?.buttons}
-        customStyles={alertConfig?.customStyles}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
-// Helper function để format ngày đầy đủ (VD: "24/06/2025")
-const formatFullDate = (dateString: string): string => {
+// Helper: nhãn nhóm ngày (Hôm nay | Hôm qua | DD/MM/YYYY)
+const formatGroupLabel = (dateString: string): string => {
   try {
     const date = new Date(dateString);
     const today = new Date();
-
-    // Kiểm tra nếu là hôm nay
     const isToday = date.toDateString() === today.toDateString();
-
     if (isToday) {
       return 'Hôm nay';
     }
-
-    // Kiểm tra nếu là hôm qua
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    const isYesterday = date.toDateString() === yesterday.toDateString();
-
-    if (isYesterday) {
+    if (date.toDateString() === yesterday.toDateString()) {
       return 'Hôm qua';
     }
-
-    // Format DD/MM/YYYY
     return date.toLocaleDateString('vi-VN', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
     });
-  } catch (error) {
+  } catch {
     return 'Không xác định';
+  }
+};
+
+// Helper: ngày hiển thị bên trong thẻ (luôn DD/MM/YYYY)
+const formatDisplayDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'});
+  } catch {
+    return '';
   }
 };
 
@@ -479,41 +567,20 @@ const getNotificationTitle = (type: string): string => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: Colors.backgroud,
   },
-  headerGradient: {
-    paddingBottom: responsiveSpacing(20),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 10,
+  headerContainer: {
+    backgroundColor: Colors.backgroud,
+    paddingBottom: responsiveSpacing(8),
   },
   container: {
     flex: 1,
     backgroundColor: 'transparent',
-    marginTop: -responsiveSpacing(15), // Overlap effect
-  },
-  headerContainer: {
-    backgroundColor: Colors.white,
-    marginHorizontal: responsiveSpacing(16),
-    borderRadius: responsiveSpacing(20),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-    marginBottom: responsiveSpacing(16),
   },
   contentArea: {
     flex: 1,
     paddingHorizontal: responsiveSpacing(16),
+    paddingTop: responsiveSpacing(8),
   },
   loadingContainer: {
     flex: 1,

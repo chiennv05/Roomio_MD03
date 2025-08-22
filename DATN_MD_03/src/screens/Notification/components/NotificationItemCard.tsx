@@ -7,7 +7,6 @@ import {
   Image,
   ImageSourcePropType,
   Animated,
-  I18nManager,
 } from 'react-native';
 import {Swipeable} from 'react-native-gesture-handler';
 import LinearGradient from 'react-native-linear-gradient';
@@ -31,6 +30,7 @@ interface NotificationItemCardProps {
   onPress?: () => void;
   onDelete?: () => void; // Callback khi nhấn nút xóa
   id: string; // ID của thông báo
+  isUnread?: boolean; // Thêm prop để biết có phải chưa đọc không
 }
 
 const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
@@ -40,10 +40,11 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
   date,
   isRead,
   type,
-  icon,
+  icon: _icon,
   onPress,
   onDelete,
-  id,
+  id: _id,
+  isUnread = false,
 }) => {
   // Tham chiếu đến Swipeable để có thể đóng sau khi xóa
   const swipeableRef = React.useRef<Swipeable>(null);
@@ -76,17 +77,34 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
     }).start();
   };
 
-  // Icon dựa trên trạng thái đọc/chưa đọc
-  const getStatusIcon = () => {
-    if (isRead) {
-      return Icons.IconTick; // Tick icon cho đã đọc
-    } else {
-      return Icons.IconWarning; // Warning icon cho chưa đọc
+  // Icon theo loại sử dụng biến thể màu xanh lá như yêu cầu
+  const getTypeIcon = () => {
+    switch (type) {
+      // Vietnamese keys
+      case 'heThong':
+        return Icons.IconHeThongGreen;
+      case 'hopDong':
+        return Icons.IconHopDongGreen;
+      case 'thanhToan':
+        return Icons.IconThanhToanGreen;
+      case 'hoTro':
+        return Icons.IconHoTroGreen;
+      // English keys
+      case 'system':
+        return Icons.IconHeThongGreen;
+      case 'contract':
+        return Icons.IconHopDongGreen;
+      case 'payment':
+        return Icons.IconThanhToanGreen;
+      case 'support':
+        return Icons.IconHoTroGreen;
+      default:
+        return Icons.IconPaper;
     }
   };
 
   const getImageSource = () => {
-    const iconSource = getStatusIcon();
+    const iconSource = getTypeIcon();
     if (!iconSource) {
       return undefined;
     }
@@ -96,109 +114,99 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
     return iconSource;
   };
 
-  // Màu icon và background dựa trên loại thông báo
+  // Màu sắc toned-down theo loại, ưu tiên nền trắng + viền chỉ báo màu
   const getStatusColor = () => {
-    // Định nghĩa màu sắc cho từng loại thông báo với độ tương phản cao
-    const notificationColors = {
-      // Thông báo hỗ trợ - màu xanh lá tươi với gradient
+    const neutralText = Colors.black;
+    const mutedText = Colors.textGray;
+
+    const map = {
       support: {
-        background: isRead ? '#E8F5E9' : '#A5D6A7',
-        gradient: ['#4CAF50', '#66BB6A'],
-        iconBg: '#4CAF50',
-        border: '#388E3C',
-        textColor: '#1B5E20',
-        shadowColor: '#4CAF50',
+        background: Colors.white,
+        iconTint: '#9333EA', // Màu tím của filter Hỗ Trợ
+        border: '#9333EA', // Màu tím của filter Hỗ Trợ
+        titleColor: neutralText,
+        contentColor: mutedText,
+        shadowColor: Colors.shadowDefault,
       },
-      // Thông báo hợp đồng - màu xanh dương với gradient
       contract: {
-        background: isRead ? '#E3F2FD' : '#90CAF9',
-        gradient: ['#2196F3', '#42A5F5'],
-        iconBg: '#2196F3',
-        border: '#1976D2',
-        textColor: '#0D47A1',
-        shadowColor: '#2196F3',
+        background: Colors.white,
+        iconTint: '#059669', // Màu xanh lá của filter Hợp Đồng
+        border: '#059669', // Màu xanh lá của filter Hợp Đồng
+        titleColor: neutralText,
+        contentColor: mutedText,
+        shadowColor: Colors.shadowDefault,
       },
-      // Thông báo hệ thống - màu tím với gradient
       system: {
-        background: isRead ? '#F3E5F5' : '#CE93D8',
-        gradient: ['#9C27B0', '#BA68C8'],
-        iconBg: '#9C27B0',
-        border: '#7B1FA2',
-        textColor: '#4A148C',
-        shadowColor: '#9C27B0',
+        background: Colors.white,
+        iconTint: '#2563EB', // Màu xanh dương của filter Hệ Thống
+        border: '#2563EB', // Màu xanh dương của filter Hệ Thống
+        titleColor: neutralText,
+        contentColor: mutedText,
+        shadowColor: Colors.shadowDefault,
       },
-      // Thông báo thanh toán - màu cam với gradient
       payment: {
-        background: isRead ? '#FFF3E0' : '#FFCC80',
-        gradient: ['#FF9800', '#FFB74D'],
-        iconBg: '#FF9800',
-        border: '#F57C00',
-        textColor: '#E65100',
-        shadowColor: '#FF9800',
+        background: Colors.white,
+        iconTint: '#EA580C', // Màu cam của filter Thanh Toán
+        border: '#EA580C', // Màu cam của filter Thanh Toán
+        titleColor: neutralText,
+        contentColor: mutedText,
+        shadowColor: Colors.shadowDefault,
       },
-      // Lịch xem phòng - màu xanh mint với gradient
       schedule: {
-        background: isRead ? '#E0F2F1' : '#80CBC4',
-        gradient: ['#26A69A', '#4DB6AC'],
-        iconBg: '#26A69A',
-        border: '#00695C',
-        textColor: '#004D40',
-        shadowColor: '#26A69A',
+        background: Colors.white,
+        iconTint: Colors.accentSchedule,
+        border: Colors.accentSchedule,
+        titleColor: neutralText,
+        contentColor: mutedText,
+        shadowColor: Colors.shadowDefault,
       },
-      // Thông báo mặc định - màu xám với gradient
       default: {
-        background: isRead ? '#F5F5F5' : '#E0E0E0',
-        gradient: ['#757575', '#9E9E9E'],
-        iconBg: '#757575',
-        border: '#424242',
-        textColor: '#212121',
-        shadowColor: '#757575',
+        background: Colors.white,
+        iconTint: Colors.gray150,
+        border: Colors.gray200,
+        titleColor: neutralText,
+        contentColor: mutedText,
+        shadowColor: Colors.shadowDefault,
       },
-    };
+    } as const;
 
-    // Xác định loại thông báo dựa trên type từ API
-    let colorScheme = notificationColors.default;
-
+    let scheme = map.default;
     switch (type) {
       case 'hoTro':
-        colorScheme = notificationColors.support;
+        scheme = map.support;
         break;
       case 'hopDong':
-        colorScheme = notificationColors.contract;
+        scheme = map.contract;
         break;
       case 'heThong':
-        colorScheme = notificationColors.system;
+        scheme = map.system;
         break;
       case 'thanhToan':
-        colorScheme = notificationColors.payment;
+        scheme = map.payment;
         break;
       case 'lichXemPhong':
-        colorScheme = notificationColors.schedule;
+        scheme = map.schedule;
         break;
       default:
-        // Fallback: kiểm tra title nếu type không khớp
-        if (title.toLowerCase().includes('hỗ trợ')) {
-          colorScheme = notificationColors.support;
-        } else if (title.toLowerCase().includes('hợp đồng')) {
-          colorScheme = notificationColors.contract;
-        } else if (title.toLowerCase().includes('hệ thống')) {
-          colorScheme = notificationColors.system;
-        } else if (
+        if (title.toLowerCase().includes('hỗ trợ')) scheme = map.support;
+        else if (title.toLowerCase().includes('hợp đồng'))
+          scheme = map.contract;
+        else if (title.toLowerCase().includes('hệ thống')) scheme = map.system;
+        else if (
           title.toLowerCase().includes('thanh toán') ||
           title.toLowerCase().includes('hóa đơn')
-        ) {
-          colorScheme = notificationColors.payment;
-        }
+        )
+          scheme = map.payment;
         break;
     }
 
     return {
-      cardBg: colorScheme.background,
-      gradient: colorScheme.gradient,
-      iconBg: colorScheme.iconBg,
-      borderColor: colorScheme.border,
-      textColor: colorScheme.textColor,
-      shadowColor: colorScheme.shadowColor,
+      cardBg: scheme.background,
+      iconTint: scheme.iconTint,
+      borderColor: scheme.border,
+      titleColor: scheme.titleColor,
+      contentColor: scheme.contentColor,
+      shadowColor: scheme.shadowColor,
     };
   };
 
@@ -247,7 +255,7 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
             style={styles.deleteButtonInner}
             activeOpacity={0.8}>
             <LinearGradient
-              colors={['#ff4757', '#ff3742']}
+              colors={['#FF3B30', '#FF3B30']}
               style={styles.deleteGradient}
               start={{x: 0, y: 0}}
               end={{x: 1, y: 1}}>
@@ -282,54 +290,40 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
           style={[
             styles.container,
             {
-              backgroundColor: statusColors.cardBg,
-              borderLeftWidth: 6,
-              borderLeftColor: statusColors.borderColor,
+              backgroundColor: isUnread ? Colors.limeGreenLight : statusColors.cardBg,
+              // Bỏ toàn bộ viền màu bên trái và viền xung quanh
+              borderLeftWidth: 0,
+              borderTopWidth: 0,
+              borderBottomWidth: 0,
+              borderRightWidth: 0,
               shadowColor: statusColors.shadowColor,
-              shadowOffset: {
-                width: 0,
-                height: isRead ? 2 : 4,
-              },
-              shadowOpacity: isRead ? 0.1 : 0.2,
-              shadowRadius: isRead ? 4 : 8,
-              elevation: isRead ? 3 : 6,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06,
+              shadowRadius: 3,
+              elevation: 2,
             },
           ]}
           onPress={onPress}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           activeOpacity={0.9}>
-          {/* Gradient overlay for unread notifications */}
+          {/* Subtle overlay for unread notifications */}
           {!isRead && (
-            <LinearGradient
-              colors={[
-                statusColors.gradient[0] + '10',
-                statusColors.gradient[1] + '05',
+            <View
+              style={[
+                styles.gradientOverlay,
+                {backgroundColor: Colors.limeGreenLight},
               ]}
-              style={styles.gradientOverlay}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 1}}
             />
           )}
 
-          {/* Icon trạng thái với gradient background */}
+          {/* Icon trạng thái: dùng ảnh có viền sẵn, không bọc viền */}
           <View style={styles.iconContainer}>
-            <LinearGradient
-              colors={statusColors.gradient}
-              style={styles.iconGradient}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 1}}>
-              <Image
-                source={getImageSource()}
-                style={[
-                  styles.iconImage,
-                  {
-                    tintColor: Colors.white,
-                  },
-                ]}
-                resizeMode="contain"
-              />
-            </LinearGradient>
+            <Image
+              source={getImageSource()}
+              style={styles.iconImage}
+              resizeMode="contain"
+            />
           </View>
 
           {/* Nội dung */}
@@ -338,8 +332,8 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
               style={[
                 styles.title,
                 {
-                  color: statusColors.textColor,
-                  fontWeight: isRead ? 'normal' : 'bold', // Bold nếu chưa đọc
+                  color: statusColors.titleColor,
+                  fontWeight: isRead ? 'normal' : 'bold',
                 },
               ]}
               numberOfLines={1}>
@@ -349,10 +343,7 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
             <Text
               style={[
                 styles.content,
-                {
-                  color: statusColors.textColor,
-                  opacity: isRead ? 0.7 : 0.9, // Mờ hơn nếu đã đọc
-                },
+                {color: Colors.textSecondary, opacity: isRead ? 0.8 : 1},
               ]}
               numberOfLines={2}>
               {content}
@@ -361,12 +352,9 @@ const NotificationItemCard: React.FC<NotificationItemCardProps> = ({
             <Text
               style={[
                 styles.time,
-                {
-                  color: statusColors.textColor,
-                  opacity: 0.6,
-                },
+                {color: statusColors.contentColor, opacity: 0.7},
               ]}>
-              {time}
+              {date}
             </Text>
           </View>
         </TouchableOpacity>
@@ -379,10 +367,10 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     padding: responsiveSpacing(20),
-    borderRadius: responsiveSpacing(16),
+    borderRadius: responsiveSpacing(20),
     marginBottom: responsiveSpacing(12),
     marginHorizontal: responsiveSpacing(4),
-    minHeight: moderateScale(110),
+    minHeight: moderateScale(104),
     position: 'relative',
     overflow: 'hidden',
   },
@@ -392,24 +380,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: responsiveSpacing(16),
+    borderRadius: responsiveSpacing(20),
   },
   iconContainer: {
-    width: moderateScale(50),
-    height: moderateScale(50),
-    borderRadius: moderateScale(25),
-    justifyContent: 'center',
-    alignItems: 'center',
     alignSelf: 'center',
     marginRight: responsiveSpacing(16),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
   },
   iconGradient: {
     width: moderateScale(50),
@@ -417,83 +392,92 @@ const styles = StyleSheet.create({
     borderRadius: moderateScale(25),
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: Colors.white,
+    borderColor: Colors.gray200, // viền xám nhạt, dùng token màu hệ thống
+    borderWidth: 2,
+  },
+  innerCircle: {
+    width: moderateScale(40),
+    height: moderateScale(40),
+    borderRadius: moderateScale(20),
+    backgroundColor: Colors.limeGreen,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   iconImage: {
-    width: moderateScale(24),
-    height: moderateScale(24),
+    width: moderateScale(56),
+    height: moderateScale(56),
   },
   contentContainer: {
     flex: 1,
   },
   title: {
     fontSize: responsiveFont(16),
-    fontFamily: Fonts.Roboto_Medium,
+    fontFamily: Fonts.Roboto_Bold,
     marginBottom: responsiveSpacing(4),
-    // Màu sẽ được override bởi inline style
+    color: Colors.black,
+    letterSpacing: 0.3, // Thêm letter spacing
   },
   content: {
     fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Regular,
+    fontFamily: Fonts.Roboto_Regular, // Đổi về Regular
     lineHeight: responsiveFont(18),
     marginBottom: responsiveSpacing(6),
-    // Màu sẽ được override bởi inline style
+    color: Colors.textSecondary,
+    letterSpacing: 0.5, // Thêm letter spacing đẹp
   },
   time: {
-    fontSize: responsiveFont(11),
-    fontFamily: Fonts.Roboto_Regular,
-    // Màu sẽ được override bởi inline style
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Regular, // Đổi về Regular
+    color: Colors.textGray,
+    letterSpacing: 0.6, // Thêm letter spacing
   },
   rightActionContainer: {
-    width: moderateScale(90),
+    width: moderateScale(69),
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingRight: responsiveSpacing(4),
+    paddingRight: 0,
   },
   deleteButton: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: responsiveSpacing(16),
-    marginVertical: responsiveSpacing(6),
-    shadowColor: '#ff4757',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    borderRadius: responsiveSpacing(24),
+    marginVertical: 0,
+    // Loại bỏ bóng để không còn "đỏ đỏ" ngoài biên
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+    backgroundColor: 'transparent',
   },
   deleteButtonInner: {
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
     height: '100%',
-    borderRadius: responsiveSpacing(16),
+    borderRadius: responsiveSpacing(24),
   },
   deleteGradient: {
-    flex: 1,
-    width: '100%',
+    width: moderateScale(69),
+    height: moderateScale(117),
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: responsiveSpacing(16),
-    paddingVertical: responsiveSpacing(8),
-    paddingHorizontal: responsiveSpacing(12),
+    borderRadius: moderateScale(20),
   },
   deleteIcon: {
-    width: moderateScale(20),
-    height: moderateScale(20),
+    width: moderateScale(28),
+    height: moderateScale(28),
     tintColor: Colors.white,
-    marginBottom: responsiveSpacing(4),
+    marginBottom: responsiveSpacing(2),
   },
   deleteText: {
     color: Colors.white,
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Bold,
     textAlign: 'center',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: {width: 0, height: 1},
-    textShadowRadius: 2,
   },
 });
 

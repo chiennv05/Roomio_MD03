@@ -54,7 +54,7 @@ const PolicyTerms = () => {
               <Text style={styles.sectionNumberText}>1</Text>
             </View>
             <View >
-              <Text >Điều khoản sử dụng</Text>
+              <Text style={styles.sectionTitle}>Điều khoản sử dụng</Text>
               <Text >Terms of Use</Text>
             </View>
           </View>

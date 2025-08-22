@@ -391,7 +391,6 @@ export const Icons = {
     android: 'asset:/icons/icon_union.png',
   }),
 
-
   IconRoomOutline: Platform.select({
     ios: 'icon_room_ouline',
     android: 'asset:/icons/icon_room_ouline.png',
@@ -668,7 +667,6 @@ export const Icons = {
   IconDownLoad: Platform.select({
     ios: 'icon_download',
     android: 'asset:/icons/icon_download.png',
-
   }),
   IconCalendar: Platform.select({
     ios: 'icon_calendar',
@@ -687,7 +685,6 @@ export const Icons = {
   IconArrowRightGreen: Platform.select({
     ios: 'icon_arrow_right_green',
     android: 'asset:/icons/icon_arrow_right_green.png',
-
   }),
   IconSaveTemplate: Platform.select({
     ios: 'icon_save_template',
@@ -728,5 +725,50 @@ export const Icons = {
   IconUsername: Platform.select({
     ios: 'icon_username',
     android: 'asset:/icons/icon_username.png',
+  }),
+  // He Thong, Hop Dong, Thanh Toan, Ho Tro
+  IconHeThong: Platform.select({
+    ios: 'icon_he_thong',
+    android: 'asset:/icons/icon_he_thong.png',
+  }),
+  IconHopDong: Platform.select({
+    ios: 'icon_hop_dong',
+    android: 'asset:/icons/icon_hop_dong.png',
+  }),
+  IconThanhToan: Platform.select({
+    ios: 'icon_thanh_toan',
+    android: 'asset:/icons/icon_thanh_toan.png',
+  }),
+  IconHoTro: Platform.select({
+    ios: 'icon_ho_tro',
+    android: 'asset:/icons/icon_ho_tro.png',
+  }),
+  IconHopDongGreen: Platform.select({
+    ios: 'icon_hop_dong_green',
+    android: 'asset:/icons/icon_hop_dong_green.png',
+  }),
+  IconThanhToanGreen: Platform.select({
+    ios: 'icon_thanh_toan_green',
+    android: 'asset:/icons/icon_thanh_toan_green.png',
+  }),
+  IconHoTroGreen: Platform.select({
+    ios: 'icon_ho_tro_green',
+    android: 'asset:/icons/icon_ho_tro_green.png',
+  }),
+  IconHeThongGreen: Platform.select({
+    ios: 'icon_he_thong_green',
+    android: 'asset:/icons/icon_he_thong_green.png',
+  }),
+  IconQuanLyPhongTro: Platform.select({
+    ios: 'iconRoomOutline',
+    android: 'asset:/icons/iconRoomOutline.png',
+  }),
+  IconDanhSachNguoiThue: Platform.select({
+    ios: 'iconUltimateHuman',
+    android: 'asset:/icons/iconUltimateHuman.png',
+  }),
+  IconThongKe: Platform.select({
+    ios: 'iconSolar',
+    android: 'asset:/icons/iconSolar.png',
   }),
 };

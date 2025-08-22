@@ -39,15 +39,20 @@ const ItemService = ({status = false, item, onPress}: ServiceProps) => {
       khac: {
         perPerson: '/người',
         perRoom: '/phòng',
+        perUsage: '/sử dụng',
       },
     };
+    const key =
+      item.value === 'electricity' || item.value === 'water'
+        ? item.value
+        : 'khac';
 
-    return unitMap[item.value]?.[item.priceType ?? ''] ?? '';
+    return unitMap[key]?.[item.priceType ?? ''] ?? '';
   };
 
   const priceUnit = getPriceUnit(item);
   const displayPrice = item.price ?? 0;
-
+  console.log('priceUnit:', item);
   return (
     <View
       style={[
@@ -56,10 +61,12 @@ const ItemService = ({status = false, item, onPress}: ServiceProps) => {
       ]}>
       <Image source={{uri: icon}} style={styles.styleIconCenter} />
       <Text style={styles.textTitle}>{item.label}</Text>
-      <Text style={styles.textPrice}>
-        {displayPrice}
-        {priceUnit ? ` ${priceUnit}` : ''}
-      </Text>
+      {item.label !== 'Dịch vụ khác' && (
+        <Text style={styles.textPrice}>
+          {displayPrice}
+          {priceUnit ? ` ${priceUnit}` : ''}
+        </Text>
+      )}
       <TouchableOpacity
         style={[
           styles.button,
@@ -67,7 +74,14 @@ const ItemService = ({status = false, item, onPress}: ServiceProps) => {
         ]}
         onPress={() => onPress(item)}>
         <Image
-          source={{uri: status ? Icons.IconEditWhite : Icons.IconEditBlack}}
+          source={{
+            uri:
+              item.label === 'Dịch vụ khác'
+                ? Icons.IconAdd
+                : status
+                ? Icons.IconEditWhite
+                : Icons.IconEditBlack,
+          }}
           style={styles.styleIcon}
           resizeMode="contain"
         />

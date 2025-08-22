@@ -226,6 +226,11 @@ const roomSlice = createSlice({
       state.relatedRooms = [];
       state.relatedRoomsError = null;
     },
+    setRelatedRooms: (state, action) => {
+      state.relatedRooms = action.payload;
+      state.relatedRoomsLoading = false;
+      state.relatedRoomsError = null;
+    },
     clearFavoriteError: state => {
       state.favoriteError = null;
     },
@@ -394,6 +399,7 @@ export const {
   resetRooms,
   clearRoomDetail,
   clearRelatedRooms,
+  setRelatedRooms,
   clearFavoriteError,
   updateRoomFavoriteStatus,
 } = roomSlice.actions;

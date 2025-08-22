@@ -57,6 +57,9 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
   const handleViewDetail = () => {
     navigation.navigate('TenantDetail', {
       tenantId: item._id,
+      // Truyền toàn bộ dữ liệu tenant sang màn chi tiết để không cần gọi API
+      // Dùng any để tránh phải thay đổi RootStackParamList
+      ...( { tenantData: item } as any ),
     });
   };
 

@@ -8,6 +8,8 @@ import {
   SafeAreaView,
   StatusBar,
   Platform,
+  Image,
+  TouchableOpacity,
 } from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {AppDispatch, RootState} from '../../../store';
@@ -24,9 +26,10 @@ import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../types/route';
 import {LoadingAnimation} from '../../../components';
-import {StatChart, TopRoomCard} from './components';
+import {TopRoomCardFancy} from './components';
 import UIHeader from '../MyRoom/components/UIHeader';
 import {Icons} from '../../../assets/icons';
+import LinearGradient from 'react-native-linear-gradient';
 
 type RoomStatisticScreenNavigationProp =
   StackNavigationProp<RootStackParamList>;
@@ -95,56 +98,61 @@ const RoomStatisticScreen = () => {
         }>
         {/* Overview Cards */}
         <View style={styles.overviewContainer}>
-          <View style={styles.overviewCard}>
-            <Text style={styles.overviewLabel}>Tổng số phòng</Text>
-            <Text style={styles.overviewValue}>
-              {data?.overview?.totalRooms || 0}
-            </Text>
+          {/* Tổng số phòng */}
+          <View style={[styles.overviewCardSimple, styles.cardTotal]}>
+            <View style={[styles.iconBadge, styles.iconWrap]}>
+              <Image source={require('../../../assets/icons/icon_room.png')} style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]} />
+            </View>
+            <View style={styles.overviewContent}>
+              <Text style={styles.overviewLabel}>Tổng số phòng</Text>
+              <Text style={styles.overviewValue}>{data?.overview?.totalRooms || 0}</Text>
+            </View>
           </View>
 
-          <View style={styles.overviewCard}>
-            <Text style={styles.overviewLabel}>Phòng đã thuê</Text>
-            <Text style={[styles.overviewValue, {color: Colors.darkGreen}]}>
-              {data?.overview?.rentedRooms || 0}
-            </Text>
+          {/* Phòng đã thuê */}
+          <View style={[styles.overviewCardSimple, styles.cardRented]}>
+            <View style={[styles.iconBadge, styles.iconWrap]}>
+              <Image source={require('../../../assets/icons/icon_person.png')} style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]} />
+            </View>
+            <View style={styles.overviewContent}>
+              <Text style={styles.overviewLabel}>Phòng đã thuê</Text>
+              <Text style={styles.overviewValue}>{data?.overview?.rentedRooms || 0}</Text>
+            </View>
           </View>
 
-          <View style={styles.overviewCard}>
-            <Text style={styles.overviewLabel}>Phòng trống</Text>
-            <Text style={[styles.overviewValue, {color: Colors.primaryGreen}]}>
-              {data?.overview?.availableRooms || 0}
-            </Text>
+          {/* Phòng trống */}
+          <View style={[styles.overviewCardSimple, styles.cardAvailable]}>
+            <View style={[styles.iconBadge, styles.iconWrap]}>
+              <Image source={require('../../../assets/icons/icon_room.png')} style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]} />
+            </View>
+            <View style={styles.overviewContent}>
+              <Text style={styles.overviewLabel}>Phòng trống</Text>
+              <Text style={styles.overviewValue}>{data?.overview?.availableRooms || 0}</Text>
+            </View>
           </View>
 
-          <View style={styles.overviewCard}>
-            <Text style={styles.overviewLabel}>Chờ duyệt</Text>
-            <Text style={[styles.overviewValue, {color: Colors.mediumGray}]}>
-              {data?.overview?.pendingRooms || 0}
-            </Text>
+          {/* Chờ duyệt */}
+          <View style={[styles.overviewCardSimple, styles.cardPending]}>
+            <View style={[styles.iconBadge, styles.iconWrapNeutral]}>
+              <Image source={require('../../../assets/icons/icon_light_report.png')} style={[styles.overviewIcon, {tintColor: Colors.textSecondary}]} />
+            </View>
+            <View style={styles.overviewContent}>
+              <Text style={styles.overviewLabel}>Chờ duyệt</Text>
+              <Text style={styles.overviewValue}>{data?.overview?.pendingRooms || 0}</Text>
+            </View>
           </View>
         </View>
 
-        {/* Room Statistics Chart */}
-        {data?.monthlyStats && (
-          <View style={styles.chartSection}>
-            <Text style={styles.sectionTitle}>
-              Biểu đồ phòng trọ theo tháng
-            </Text>
-            <StatChart
-              title="Số lượng phòng"
-              data={data.monthlyStats.rooms}
-              labels={data.monthlyStats.labels}
-              color={Colors.primaryGreen}
-            />
-          </View>
-        )}
 
         {/* Top Viewed Rooms */}
         <View style={styles.topRoomsContainer}>
-          <Text style={styles.sectionTitle}>Phòng được xem nhiều nhất</Text>
+          <View style={styles.sectionHeader}>
+            <Image source={require('../../../assets/icons/icon_view_light.png')} style={styles.sectionIcon} />
+            <Text style={styles.sectionTitle}>Phòng được xem nhiều nhất</Text>
+          </View>
           {data?.topViewedRooms && data.topViewedRooms.length > 0 ? (
-            data.topViewedRooms.map((room: any, index: number) => (
-              <TopRoomCard
+            data.topViewedRooms.slice(0, 3).map((room: any, index: number) => (
+              <TopRoomCardFancy
                 key={`view-${room._id}-${index}`}
                 roomNumber={room.roomNumber}
                 rentPrice={room.rentPrice}
@@ -161,10 +169,13 @@ const RoomStatisticScreen = () => {
 
         {/* Top Favorite Rooms */}
         <View style={styles.topRoomsContainer}>
-          <Text style={styles.sectionTitle}>Phòng được yêu thích nhất</Text>
+          <View style={styles.sectionHeader}>
+            <Image source={require('../../../assets/icons/icon_heart_favourite.png')} style={styles.sectionIcon} />
+            <Text style={styles.sectionTitle}>Phòng được yêu thích nhất</Text>
+          </View>
           {data?.topFavoriteRooms && data.topFavoriteRooms.length > 0 ? (
-            data.topFavoriteRooms.map((room: any, index: number) => (
-              <TopRoomCard
+            data.topFavoriteRooms.slice(0, 3).map((room: any, index: number) => (
+              <TopRoomCardFancy
                 key={`fav-${room._id}-${index}`}
                 roomNumber={room.roomNumber}
                 rentPrice={room.rentPrice}
@@ -178,6 +189,42 @@ const RoomStatisticScreen = () => {
             <Text style={styles.noDataText}>Không có dữ liệu</Text>
           )}
         </View>
+
+        {/* Quick Actions */}
+        <View style={styles.actionsContainer}>
+          <View style={styles.sectionHeader}>
+            <Image source={require('../../../assets/icons/icon_light_report.png')} style={styles.sectionIcon} />
+            <Text style={styles.sectionTitle}>Thao tác nhanh</Text>
+          </View>
+
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => navigation.navigate('LandlordRoom')}
+            style={styles.quickCard}
+          >
+            <LinearGradient
+              colors={[Colors.limeGreen, '#E9FFB7']}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 1}}
+              style={styles.quickGradient}
+            >
+              <View style={styles.quickLeft}>
+                <View style={styles.quickIconWrap}>
+                  <Image
+                    source={require('../../../assets/icons/icon_room.png')}
+                    style={styles.quickIcon}
+                  />
+                </View>
+                <Text style={styles.quickText}>Xem tất cả phòng</Text>
+              </View>
+              <Image
+                source={require('../../../assets/icons/icon_arrow_right.png')}
+                style={styles.quickArrow}
+              />
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -216,37 +263,119 @@ const styles = StyleSheet.create({
     width: '48%',
     backgroundColor: Colors.white,
     borderRadius: scale(12),
-    padding: responsiveSpacing(16),
+    padding: responsiveSpacing(14),
     marginBottom: responsiveSpacing(12),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.16,
+    shadowRadius: 6,
+    elevation: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
+  overviewCardGd: {
+    width: '48%',
+    borderRadius: scale(12),
+    padding: responsiveSpacing(14),
+    marginBottom: responsiveSpacing(12),
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.16,
+    shadowRadius: 6,
+    elevation: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  // New simple card style with white background for better readability
+  overviewCardSimple: {
+    width: '48%',
+    backgroundColor: Colors.white,
+    borderRadius: scale(12),
+    padding: responsiveSpacing(14),
+    marginBottom: responsiveSpacing(12),
+    borderWidth: 1,
+    borderColor: Colors.gray200,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cardTotal: {},
+  cardRented: {},
+  cardAvailable: {},
+  cardPending: {},
+  iconBadgeOverlay: {
+    backgroundColor: 'rgba(255,255,255,0.25)',
+  },
+  iconWhite: {
+    tintColor: Colors.white,
+  },
+  overviewLabelLight: {
+    fontSize: responsiveFont(12),
+    fontFamily: Fonts.Roboto_Regular,
+    color: Colors.white,
+    marginBottom: responsiveSpacing(4),
+  },
+  overviewValueLight: {
+    fontSize: responsiveFont(20),
+    fontFamily: Fonts.Roboto_Bold,
+    color: Colors.white,
+  },
+  iconBadge: {
+    width: scale(40),
+    height: scale(40),
+    borderRadius: scale(12),
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: responsiveSpacing(12),
+  },
+  // Wrapped icon styles
+  iconWrap: {
+    backgroundColor: Colors.brandPrimarySoft,
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.12,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  iconWrapNeutral: {
+    backgroundColor: Colors.neutralSoft,
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  overviewIcon: {
+    width: scale(20),
+    height: scale(20),
+  },
+  overviewContent: {flex: 1},
   overviewLabel: {
     fontSize: responsiveFont(12),
     fontFamily: Fonts.Roboto_Regular,
-    color: Colors.textGray,
+    color: Colors.textSecondary,
     marginBottom: responsiveSpacing(4),
   },
   overviewValue: {
-    fontSize: responsiveFont(20),
+    fontSize: responsiveFont(22),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.darkGray,
+    color: Colors.dearkOlive,
   },
-  chartSection: {
-    marginTop: responsiveSpacing(8),
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: responsiveSpacing(16),
+    marginBottom: responsiveSpacing(10),
+  },
+  sectionIcon: {
+    width: 20,
+    height: 20,
+    marginRight: responsiveSpacing(8),
+    tintColor: Colors.textSecondary,
   },
   sectionTitle: {
     fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.darkGray,
-    marginBottom: responsiveSpacing(10),
-    paddingHorizontal: responsiveSpacing(16),
   },
   topRoomsContainer: {
     marginTop: responsiveSpacing(16),
@@ -258,4 +387,38 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginVertical: responsiveSpacing(20),
   },
+  actionsContainer: {
+    marginTop: responsiveSpacing(8),
+    paddingHorizontal: responsiveSpacing(16),
+    paddingBottom: responsiveSpacing(12),
+  },
+  quickCard: {
+    borderRadius: scale(14),
+    overflow: 'hidden',
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 3},
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  quickGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: responsiveSpacing(16),
+    paddingHorizontal: responsiveSpacing(16),
+  },
+  quickLeft: {flexDirection: 'row', alignItems: 'center'},
+  quickIconWrap: {
+    width: scale(34),
+    height: scale(34),
+    borderRadius: scale(10),
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: responsiveSpacing(10),
+  },
+  quickIcon: {width: scale(18), height: scale(18), tintColor: Colors.darkGray},
+  quickText: {fontFamily: Fonts.Roboto_Bold, fontSize: responsiveFont(16), color: Colors.dearkOlive},
+  quickArrow: {width: scale(18), height: scale(18), tintColor: Colors.dearkOlive},
 });

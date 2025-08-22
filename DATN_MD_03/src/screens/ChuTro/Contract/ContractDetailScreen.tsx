@@ -253,12 +253,9 @@ const ContractDetailScreen = () => {
   // gia hạn hợp đồng
   const onExtendContract = () => {
     if (!selectedContract) return;
-    if (
-      selectedContract.status !== 'pending_signature' &&
-      selectedContract.status !== 'active'
-    ) {
+    if (selectedContract.status !== 'active') {
       showError(
-        'Chỉ có thể gia hạn hợp đồng ở trạng thái Chờ ký.',
+        'Chỉ có thể gia hạn hợp đồng ở trạng thái đang hiệu lực.',
         'Không thể gia hạn',
       );
       return;
@@ -942,14 +939,15 @@ const ContractDetailScreen = () => {
         )}
 
         {/* Nút xem PDF */}
-        <TouchableOpacity style={styles.pdfButton} onPress={onViewPDF}>
-          <Text style={styles.pdfButtonText}>
-            {contract.status === 'draft'
-              ? 'Tạo Hợp đồng PDF'
-              : 'Xem Hợp đồng PDF'}
-          </Text>
-        </TouchableOpacity>
-
+        {contract.status !== 'expired' && (
+          <TouchableOpacity style={styles.pdfButton} onPress={onViewPDF}>
+            <Text style={styles.pdfButtonText}>
+              {contract.status === 'draft'
+                ? 'Tạo Hợp đồng PDF'
+                : 'Xem Hợp đồng PDF'}
+            </Text>
+          </TouchableOpacity>
+        )}
         <View style={styles.bottomSpace} />
         <ModalLoading
           loading={true}
@@ -977,7 +975,7 @@ const ContractDetailScreen = () => {
           message={alertConfig.message}
           onClose={hideAlert}
           type={alertConfig.type}
-          buttons={alertConfig.buttons}
+          buttons={alertConfig.buttons as any}
         />
       )}
     </SafeAreaView>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, {useState, useEffect, useCallback, useMemo, useRef} from 'react';
 import {
   View,
   StyleSheet,
@@ -9,22 +9,22 @@ import {
   FlatList,
   ViewToken,
 } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {useSelector} from 'react-redux';
+import {RootState} from '../../store';
 import Header from './components/Header';
 import FilterTabs from './components/FilterTabs';
 import RoomCard from './components/RoomCard';
-import { RoomFilters } from '../../types/Room';
-import { District } from '../../types/Address';
-import { useRooms } from '../../hooks';
-import { Colors } from '../../theme/color';
-import { responsiveSpacing, responsiveFont } from '../../utils/responsive';
-import { RootStackParamList } from '../../types/route';
-import { Fonts } from '../../theme/fonts';
-import { validateRoomByFilters, sortRoomsByScore } from '../../utils/roomUtils';
+import {RoomFilters} from '../../types/Room';
+import {District} from '../../types/Address';
+import {useRooms} from '../../hooks';
+import {Colors} from '../../theme/color';
+import {responsiveSpacing, responsiveFont} from '../../utils/responsive';
+import {RootStackParamList} from '../../types/route';
+import {Fonts} from '../../theme/fonts';
+import {validateRoomByFilters, sortRoomsByScore} from '../../utils/roomUtils';
 import {
   requestLocationPermission,
   getCurrentPosition,
@@ -35,13 +35,16 @@ import LoadingAnimation from '../../components/LoadingAnimation';
 import LoginPromptModal from '../../components/LoginPromptModal';
 
 // Type cho navigation
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DetailRoom'>;
+type HomeScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'DetailRoom'
+>;
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
 
   // Get user info from Redux store
-  const { user } = useSelector((state: RootState) => state.auth);
+  const {user} = useSelector((state: RootState) => state.auth);
 
   // Animation states
   const fadeAnim = useMemo(() => new Animated.Value(1), []);
@@ -53,25 +56,37 @@ const HomeScreen: React.FC = () => {
   const viewableItems = useRef<Set<string>>(new Set()).current;
 
   // Memoize static data
-  const filters = useMemo(() => ['Khu vực', 'Khoảng giá', 'Diện tích', 'Nội thất', 'Tiện nghi'], []);
+  const filters = useMemo(
+    () => ['Khu vực', 'Khoảng giá', 'Diện tích', 'Nội thất', 'Tiện nghi'],
+    [],
+  );
 
   const [selectedFilters, setSelectedFilters] = useState<number[]>([]);
   const [selectedRegions, setSelectedRegions] = useState<District[]>([]);
-  const [priceRange, setPriceRange] = useState<{min: number, max: number} | null>(null);
-  const [areaRange, setAreaRange] = useState<{min: number, max: number} | null>(null);
+  const [priceRange, setPriceRange] = useState<{
+    min: number;
+    max: number;
+  } | null>(null);
+  const [areaRange, setAreaRange] = useState<{min: number; max: number} | null>(
+    null,
+  );
   const [selectedFurniture, setSelectedFurniture] = useState<string[]>([]);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
-  const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
+  const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [locationPermissionGranted, setLocationPermissionGranted] =
+    useState(false);
   // Xoá modal search, chỉ dùng input trực tiếp
 
   // Toggle để kiểm soát client-side filtering (có thể tắt nếu backend đã fix)
   const useClientSideFiltering = true;
 
-  const { rooms, loading, loadRooms } = useRooms();
+  const {rooms, loading, loadRooms} = useRooms();
 
   // Hàm lấy vị trí người dùng
   const getUserLocation = useCallback(async () => {
@@ -101,53 +116,62 @@ const HomeScreen: React.FC = () => {
 
       // Lấy vị trí người dùng khi vào màn hình
       getUserLocation();
-    }, [fadeAnim, scaleAnim, overlayAnim, getUserLocation])
+    }, [fadeAnim, scaleAnim, overlayAnim, getUserLocation]),
   );
 
   // Initialize animation value for a room
-  const getAnimatedValue = useCallback((roomId: string) => {
-    if (!animatedValues.has(roomId)) {
-      animatedValues.set(roomId, new Animated.Value(0));
-    }
-    return animatedValues.get(roomId)!;
-  }, [animatedValues]);
+  const getAnimatedValue = useCallback(
+    (roomId: string) => {
+      if (!animatedValues.has(roomId)) {
+        animatedValues.set(roomId, new Animated.Value(0));
+      }
+      return animatedValues.get(roomId)!;
+    },
+    [animatedValues],
+  );
 
   // Handle viewability change for room cards
-  const onViewableItemsChanged = useCallback(({ viewableItems: visibleItems }: { viewableItems: ViewToken[] }) => {
-    visibleItems.forEach(({ item, isViewable }) => {
-      if (item && item._id) {
-        const animValue = getAnimatedValue(item._id);
+  const onViewableItemsChanged = useCallback(
+    ({viewableItems: visibleItems}: {viewableItems: ViewToken[]}) => {
+      visibleItems.forEach(({item, isViewable}) => {
+        if (item && item._id) {
+          const animValue = getAnimatedValue(item._id);
 
-        if (isViewable && !viewableItems.has(item._id)) {
-          viewableItems.add(item._id);
+          if (isViewable && !viewableItems.has(item._id)) {
+            viewableItems.add(item._id);
 
-          // Animate in with stagger effect
-          Animated.timing(animValue, {
-            toValue: 1,
-            duration: 600,
-            easing: Easing.out(Easing.cubic),
-            useNativeDriver: true,
-          }).start();
-        } else if (!isViewable && viewableItems.has(item._id)) {
-          viewableItems.delete(item._id);
+            // Animate in with stagger effect
+            Animated.timing(animValue, {
+              toValue: 1,
+              duration: 600,
+              easing: Easing.out(Easing.cubic),
+              useNativeDriver: true,
+            }).start();
+          } else if (!isViewable && viewableItems.has(item._id)) {
+            viewableItems.delete(item._id);
 
-          // Optional: animate out when not viewable
-          Animated.timing(animValue, {
-            toValue: 0,
-            duration: 300,
-            easing: Easing.in(Easing.cubic),
-            useNativeDriver: true,
-          }).start();
+            // Optional: animate out when not viewable
+            Animated.timing(animValue, {
+              toValue: 0,
+              duration: 300,
+              easing: Easing.in(Easing.cubic),
+              useNativeDriver: true,
+            }).start();
+          }
         }
-      }
-    });
-  }, [getAnimatedValue, viewableItems]);
+      });
+    },
+    [getAnimatedValue, viewableItems],
+  );
 
   // Viewability config
-  const viewabilityConfig = useMemo(() => ({
-    itemVisiblePercentThreshold: 20, // Trigger when 20% of item is visible
-    minimumViewTime: 100, // Minimum time in ms before triggering
-  }), []);
+  const viewabilityConfig = useMemo(
+    () => ({
+      itemVisiblePercentThreshold: 20, // Trigger when 20% of item is visible
+      minimumViewTime: 100, // Minimum time in ms before triggering
+    }),
+    [],
+  );
 
   // Navigation với animation
   const handleNotificationPress = useCallback(() => {
@@ -175,21 +199,37 @@ const HomeScreen: React.FC = () => {
 
   // Memoize hasNoFilters check
   const hasNoFilters = useMemo(() => {
-    return selectedAmenities.length === 0 &&
-           selectedFurniture.length === 0 &&
-           selectedRegions.length === 0 &&
-           !priceRange &&
-           !areaRange;
-  }, [selectedAmenities.length, selectedFurniture.length, selectedRegions.length, priceRange, areaRange]);
+    return (
+      selectedAmenities.length === 0 &&
+      selectedFurniture.length === 0 &&
+      selectedRegions.length === 0 &&
+      !priceRange &&
+      !areaRange
+    );
+  }, [
+    selectedAmenities.length,
+    selectedFurniture.length,
+    selectedRegions.length,
+    priceRange,
+    areaRange,
+  ]);
 
   // Memoize hasActiveFilters check
   const hasActiveFilters = useMemo(() => {
-    return selectedAmenities.length > 0 ||
-           selectedFurniture.length > 0 ||
-           selectedRegions.length > 0 ||
-           !!priceRange ||
-           !!areaRange;
-  }, [selectedAmenities.length, selectedFurniture.length, selectedRegions.length, priceRange, areaRange]);
+    return (
+      selectedAmenities.length > 0 ||
+      selectedFurniture.length > 0 ||
+      selectedRegions.length > 0 ||
+      !!priceRange ||
+      !!areaRange
+    );
+  }, [
+    selectedAmenities.length,
+    selectedFurniture.length,
+    selectedRegions.length,
+    priceRange,
+    areaRange,
+  ]);
 
   // Filter rooms ở phía client và sắp xếp theo vị trí
   const filteredRooms = useMemo(() => {
@@ -204,7 +244,7 @@ const HomeScreen: React.FC = () => {
           selectedFurniture,
           regionsToFilter,
           priceRange || undefined,
-          areaRange || undefined
+          areaRange || undefined,
         );
         return isValid;
       });
@@ -212,7 +252,11 @@ const HomeScreen: React.FC = () => {
 
     // Sắp xếp theo vị trí và độ phổ biến
     if (userLocation && locationPermissionGranted) {
-      return sortRoomsByLocationAndPopularity(roomsToProcess, userLocation, 6000);
+      return sortRoomsByLocationAndPopularity(
+        roomsToProcess,
+        userLocation,
+        6000,
+      );
     } else {
       // Nếu không có vị trí, sắp xếp theo điểm số thông thường
       return sortRoomsByScore(roomsToProcess);
@@ -258,16 +302,34 @@ const HomeScreen: React.FC = () => {
     }
 
     return filterParams;
-  }, [priceRange, areaRange, selectedFurniture, selectedAmenities, selectedRegions]);
+  }, [
+    priceRange,
+    areaRange,
+    selectedFurniture,
+    selectedAmenities,
+    selectedRegions,
+  ]);
 
   // Load data when component mounts or filters change
   useEffect(() => {
     loadRooms(buildFilters);
   }, [buildFilters, loadRooms]);
 
-  // Khi searchQuery hoặc filter thay đổi, gọi lại loadRooms
+  // Debounce search query để tránh gọi API liên tục khi gõ
   useEffect(() => {
-    loadRooms({ ...buildFilters, search: searchQuery });
+    // Nếu không có searchQuery, không cần debounce
+    if (!searchQuery.trim()) {
+      loadRooms(buildFilters);
+      return;
+    }
+
+    // Debounce 800ms - chỉ gọi API sau khi người dùng ngừng gõ 800ms
+    const timeoutId = setTimeout(() => {
+      loadRooms({...buildFilters, search: searchQuery});
+    }, 800);
+
+    // Cleanup timeout khi searchQuery thay đổi hoặc component unmount
+    return () => clearTimeout(timeoutId);
   }, [buildFilters, loadRooms, searchQuery]);
 
   // Memoized callbacks
@@ -294,12 +356,15 @@ const HomeScreen: React.FC = () => {
     setSelectedRegions(regions);
   }, []);
 
-  const handlePriceRangeSelect = useCallback((minPrice: number, maxPrice: number) => {
-    setPriceRange({ min: minPrice, max: maxPrice });
-  }, []);
+  const handlePriceRangeSelect = useCallback(
+    (minPrice: number, maxPrice: number) => {
+      setPriceRange({min: minPrice, max: maxPrice});
+    },
+    [],
+  );
 
   const handleAreaSelect = useCallback((minArea: number, maxArea: number) => {
-    setAreaRange({ min: minArea, max: maxArea });
+    setAreaRange({min: minArea, max: maxArea});
   }, []);
 
   const handleFurnitureSelect = useCallback((items: string[]) => {
@@ -315,59 +380,61 @@ const HomeScreen: React.FC = () => {
   }, [buildFilters, loadRooms]);
 
   // Hàm xử lý khi nhấn vào room card
-  const handleRoomPress = useCallback((roomId: string) => {
-    console.log('Navigating to DetailRoom with roomId:', roomId);
-    navigation.navigate('DetailRoom', { roomId });
-  }, [navigation]);
+  const handleRoomPress = useCallback(
+    (roomId: string) => {
+      console.log('Navigating to DetailRoom with roomId:', roomId);
+      navigation.navigate('DetailRoom', {roomId});
+    },
+    [navigation],
+  );
 
   // Animated Room Card Component
-  const AnimatedRoomCard = useCallback(({ item }: { item: any }) => {
-    const animValue = getAnimatedValue(item._id);
+  const AnimatedRoomCard = useCallback(
+    ({item}: {item: any}) => {
+      const animValue = getAnimatedValue(item._id);
 
-    const translateY = animValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: [50, 0], // Slide up from 50px below
-    });
+      const translateY = animValue.interpolate({
+        inputRange: [0, 1],
+        outputRange: [50, 0], // Slide up from 50px below
+      });
 
-    const opacity = animValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, 1],
-    });
+      const opacity = animValue.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 1],
+      });
 
-    const scale = animValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0.8, 1], // Scale from 80% to 100%
-    });
+      const scale = animValue.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0.8, 1], // Scale from 80% to 100%
+      });
 
-    return (
-      <Animated.View
-        style={[
-          styles.animatedCard,
-          {
-            opacity,
-            transform: [
-              { translateY },
-              { scale },
-            ],
-          },
-        ]}
-      >
-        <RoomCard
-          item={item}
-          onPress={handleRoomPress}
-        />
-      </Animated.View>
-    );
-  }, [getAnimatedValue, handleRoomPress]);
+      return (
+        <Animated.View
+          style={[
+            styles.animatedCard,
+            {
+              opacity,
+              transform: [{translateY}, {scale}],
+            },
+          ]}>
+          <RoomCard item={item} onPress={handleRoomPress} />
+        </Animated.View>
+      );
+    },
+    [getAnimatedValue, handleRoomPress],
+  );
 
   // Memoized RefreshControl
-  const refreshControl = useMemo(() => (
-    <RefreshControl
-      refreshing={loading && filteredRooms.length === 0}
-      onRefresh={handleRefresh}
-      colors={[Colors.limeGreen]}
-    />
-  ), [loading, filteredRooms.length, handleRefresh]);
+  const refreshControl = useMemo(
+    () => (
+      <RefreshControl
+        refreshing={loading && filteredRooms.length === 0}
+        onRefresh={handleRefresh}
+        colors={[Colors.limeGreen]}
+      />
+    ),
+    [loading, filteredRooms.length, handleRefresh],
+  );
 
   // Hàm xác nhận search (ấn Enter hoặc nút tìm kiếm)
   const handleSearchSubmit = useCallback(() => {
@@ -375,98 +442,109 @@ const HomeScreen: React.FC = () => {
   }, []);
 
   // Header component for FlatList
-  const ListHeaderComponent = useMemo(() => (
-    <View>
-      <Header
-        searchValue={searchQuery}
-        onChangeSearchText={setSearchQuery}
-        onSearchSubmit={handleSearchSubmit}
-        onNotificationPress={handleNotificationPress}
-        onUserPress={handleUserPress}
-      />
-      <FilterTabs
-        filters={filters}
-        selectedIndices={selectedFilters}
-        onSelect={handleFilterSelect}
-        onClearAll={handleClearAll}
-        onRegionSelect={handleRegionSelect}
-        selectedRegions={selectedRegions}
-        onPriceRangeSelect={handlePriceRangeSelect}
-        onAreaSelect={handleAreaSelect}
-        selectedPriceRange={priceRange || undefined}
-        selectedAreaRange={areaRange || undefined}
-        onFurnitureSelect={handleFurnitureSelect}
-        onAmenitySelect={handleAmenitySelect}
-        selectedFurniture={selectedFurniture}
-        selectedAmenities={selectedAmenities}
-      />
-      <Text style={styles.recommendationTitle}>Đề xuất cho bạn</Text>
-    </View>
-  ), [
-    searchQuery,
-    setSearchQuery,
-    handleSearchSubmit,
-    handleNotificationPress,
-    handleUserPress,
-    filters,
-    selectedFilters,
-    handleFilterSelect,
-    handleClearAll,
-    handleRegionSelect,
-    selectedRegions,
-    handlePriceRangeSelect,
-    handleAreaSelect,
-    priceRange,
-    areaRange,
-    handleFurnitureSelect,
-    handleAmenitySelect,
-    selectedFurniture,
-    selectedAmenities,
-  ]);
+  const ListHeaderComponent = useMemo(
+    () => (
+      <View>
+        <Header
+          searchValue={searchQuery}
+          onChangeSearchText={setSearchQuery}
+          onSearchSubmit={handleSearchSubmit}
+          onNotificationPress={handleNotificationPress}
+          onUserPress={handleUserPress}
+        />
+        <FilterTabs
+          filters={filters}
+          selectedIndices={selectedFilters}
+          onSelect={handleFilterSelect}
+          onClearAll={handleClearAll}
+          onRegionSelect={handleRegionSelect}
+          selectedRegions={selectedRegions}
+          onPriceRangeSelect={handlePriceRangeSelect}
+          onAreaSelect={handleAreaSelect}
+          selectedPriceRange={priceRange || undefined}
+          selectedAreaRange={areaRange || undefined}
+          onFurnitureSelect={handleFurnitureSelect}
+          onAmenitySelect={handleAmenitySelect}
+          selectedFurniture={selectedFurniture}
+          selectedAmenities={selectedAmenities}
+        />
+        <Text style={styles.recommendationTitle}>Đề xuất cho bạn</Text>
+      </View>
+    ),
+    [
+      searchQuery,
+      setSearchQuery,
+      handleSearchSubmit,
+      handleNotificationPress,
+      handleUserPress,
+      filters,
+      selectedFilters,
+      handleFilterSelect,
+      handleClearAll,
+      handleRegionSelect,
+      selectedRegions,
+      handlePriceRangeSelect,
+      handleAreaSelect,
+      priceRange,
+      areaRange,
+      handleFurnitureSelect,
+      handleAmenitySelect,
+      selectedFurniture,
+      selectedAmenities,
+    ],
+  );
 
   // Empty component
   const ListEmptyComponent = useMemo(() => {
+    if (loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <LoadingAnimation size="large" color={Colors.limeGreen} />
+          <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
+        </View>
+      );
+    }
     if (!filteredRooms.length) {
       return (
         <EmptySearchAnimation
-          title={hasActiveFilters ? 'Không tìm thấy phòng phù hợp' : 'Không có phòng nào'}
-          subtitle={hasActiveFilters
-            ? 'Thử thay đổi bộ lọc để tìm kiếm phòng khác'
-            : 'Hiện tại chưa có phòng nào được đăng'
+          title={
+            hasActiveFilters
+              ? 'Không tìm thấy phòng phù hợp'
+              : 'Không có phòng nào'
+          }
+          subtitle={
+            hasActiveFilters
+              ? 'Thử thay đổi bộ lọc để tìm kiếm phòng khác'
+              : 'Hiện tại chưa có phòng nào được đăng'
           }
         />
       );
     }
     return null;
-  }, [filteredRooms.length, hasActiveFilters]);
+  }, [filteredRooms.length, hasActiveFilters, loading]);
 
   // Footer component
-  const ListFooterComponent = useMemo(() => (
-    loading && filteredRooms.length > 0 ? (
-      <View style={styles.footer}>
-        <LoadingAnimation size="medium" color={Colors.limeGreen} />
-      </View>
-    ) : null
-  ), [loading, filteredRooms.length]);
+  const ListFooterComponent = useMemo(
+    () =>
+      loading && filteredRooms.length > 0 ? (
+        <View style={styles.footer}>
+          <LoadingAnimation size="medium" color={Colors.limeGreen} />
+        </View>
+      ) : null,
+    [loading, filteredRooms.length],
+  );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <LoadingAnimation size="large" color={Colors.limeGreen} />
-          <Text style={styles.loadingText}>Đang tải dữ liệu...</Text>
-        </View>
-      ) : (
-        <Animated.View
-          style={[
-            styles.container,
-            {
-              opacity: fadeAnim,
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
-        >
-          <FlatList
+      <Animated.View
+        style={[
+          styles.container,
+          {
+            opacity: fadeAnim,
+            transform: [{scale: scaleAnim}],
+          },
+        ]}>
+        <FlatList
           data={filteredRooms}
           renderItem={AnimatedRoomCard}
           keyExtractor={(item, index) => item._id || index.toString()}
@@ -485,7 +563,6 @@ const HomeScreen: React.FC = () => {
           windowSize={10}
         />
       </Animated.View>
-      )}
 
       {/* Overlay để tạo hiệu ứng transition mượt mà */}
       {showSearchOverlay && (

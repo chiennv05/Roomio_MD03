@@ -5,9 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Animated,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import {Colors} from '../../../theme/color';
 import {Fonts} from '../../../theme/fonts';
 import {
@@ -17,8 +15,8 @@ import {
 } from '../../../utils/responsive';
 
 interface NotificationHeaderProps {
-  activeTab: 'all' | 'schedule' | 'bill' | 'contract';
-  onTabChange: (tab: 'all' | 'schedule' | 'bill' | 'contract') => void;
+  activeTab: 'all' | 'heThong' | 'hopDong' | 'thanhToan' | 'hoTro';
+  onTabChange: (tab: 'all' | 'heThong' | 'hopDong' | 'thanhToan' | 'hoTro') => void;
   unreadCount: number;
 }
 
@@ -32,29 +30,26 @@ const NotificationHeader: React.FC<NotificationHeaderProps> = ({
       key: 'all',
       label: 'Tất cả',
       badge: unreadCount,
-      icon: '📋',
-      gradient: [Colors.limeGreen, '#A8E600'],
     },
     {
-      key: 'schedule',
-      label: 'Lịch xem phòng',
+      key: 'heThong',
+      label: 'Hệ Thống',
       badge: 0,
-      icon: '📅',
-      gradient: ['#11998e', '#38ef7d'],
     },
     {
-      key: 'bill',
-      label: 'Hóa đơn',
+      key: 'hopDong',
+      label: 'Hợp Đồng',
       badge: 0,
-      icon: '💰',
-      gradient: ['#f093fb', '#f5576c'],
     },
     {
-      key: 'contract',
-      label: 'Hợp đồng',
+      key: 'thanhToan',
+      label: 'Thanh Toán',
       badge: 0,
-      icon: '📄',
-      gradient: ['#4facfe', '#00f2fe'],
+    },
+    {
+      key: 'hoTro',
+      label: 'Hỗ Trợ',
+      badge: 0,
     },
   ];
 
@@ -79,22 +74,16 @@ const NotificationHeader: React.FC<NotificationHeaderProps> = ({
                 onPress={() => onTabChange(tab.key as any)}
                 activeOpacity={0.8}>
                 {isActive ? (
-                  <LinearGradient
-                    colors={tab.gradient}
-                    style={styles.activeTabGradient}
-                    start={{x: 0, y: 0}}
-                    end={{x: 1, y: 1}}>
-                    <Text style={styles.iconText}>{tab.icon}</Text>
+                  <View style={styles.activeTab}>
                     <Text style={styles.activeTabText}>{tab.label}</Text>
                     {tab.badge > 0 && (
                       <View style={styles.badge}>
                         <Text style={styles.badgeText}>{tab.badge}</Text>
                       </View>
                     )}
-                  </LinearGradient>
+                  </View>
                 ) : (
                   <View style={styles.inactiveTab}>
-                    <Text style={styles.iconTextInactive}>{tab.icon}</Text>
                     <Text style={styles.tabText}>{tab.label}</Text>
                     {tab.badge > 0 && (
                       <View style={styles.badge}>
@@ -115,29 +104,24 @@ const NotificationHeader: React.FC<NotificationHeaderProps> = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: 'transparent',
-    paddingVertical: responsiveSpacing(20),
-    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(8),
+    paddingHorizontal: responsiveSpacing(8),
+    marginTop: responsiveSpacing(8),
   },
   scrollContainer: {
-    marginBottom: responsiveSpacing(8),
+    marginBottom: responsiveSpacing(4),
   },
   scrollContent: {
-    paddingHorizontal: responsiveSpacing(4),
+    paddingHorizontal: responsiveSpacing(8),
+    paddingRight: responsiveSpacing(16),
   },
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: '#f8fafc',
-    borderRadius: moderateScale(30),
-    padding: responsiveSpacing(6),
+    backgroundColor: 'transparent',
+    borderRadius: 0,
+    padding: 0,
     minWidth: '100%',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    borderWidth: 0,
   },
   tab: {
     flex: 1,
@@ -145,33 +129,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: moderateScale(24),
     position: 'relative',
-    marginHorizontal: responsiveSpacing(2),
-    minHeight: moderateScale(48),
+    marginRight: responsiveSpacing(8),
+    minHeight: moderateScale(40),
     overflow: 'hidden',
+    minWidth: moderateScale(80),
   },
   firstTab: {
     marginLeft: 0,
   },
   lastTab: {
-    marginRight: 0,
+    marginRight: responsiveSpacing(8),
   },
-  activeTabGradient: {
+  activeTab: {
     flex: 1,
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: responsiveSpacing(12),
-    paddingHorizontal: responsiveSpacing(16),
-    borderRadius: moderateScale(24),
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    paddingVertical: responsiveSpacing(8),
+    paddingHorizontal: responsiveSpacing(12),
+    borderRadius: moderateScale(18),
+    backgroundColor: Colors.limeGreen,
+    borderWidth: 0,
   },
   inactiveTab: {
     flex: 1,
@@ -179,49 +158,40 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: responsiveSpacing(12),
-    paddingHorizontal: responsiveSpacing(16),
-    backgroundColor: 'transparent',
-  },
-  iconText: {
-    fontSize: responsiveFont(16),
-    marginRight: responsiveSpacing(6),
-  },
-  iconTextInactive: {
-    fontSize: responsiveFont(14),
-    marginRight: responsiveSpacing(4),
-    opacity: 0.6,
+    paddingVertical: responsiveSpacing(8),
+    paddingHorizontal: responsiveSpacing(12),
+    backgroundColor: Colors.white,
+    borderRadius: moderateScale(24),
   },
   tabText: {
-    fontSize: responsiveFont(13),
+    fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Medium,
-    color: '#64748b',
+    color: Colors.dearkOlive,
     textAlign: 'center',
-    flex: 1,
+    letterSpacing: 0.3,
+    paddingHorizontal: responsiveSpacing(12),
   },
   activeTabText: {
-    fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Bold,
-    color: Colors.white,
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Medium,
+    color: Colors.black,
     textAlign: 'center',
-    flex: 1,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: {width: 0, height: 1},
-    textShadowRadius: 2,
+    letterSpacing: 0.3,
+    paddingHorizontal: responsiveSpacing(12),
   },
   badge: {
     position: 'absolute',
-    top: responsiveSpacing(-4),
-    right: responsiveSpacing(8),
-    backgroundColor: '#ef4444',
-    borderRadius: moderateScale(12),
-    minWidth: moderateScale(20),
-    height: moderateScale(20),
+    top: responsiveSpacing(2), // đẩy xuống dưới để không bị cắt góc
+    right: responsiveSpacing(6),
+    backgroundColor: Colors.error,
+    borderRadius: moderateScale(10),
+    minWidth: moderateScale(18),
+    height: moderateScale(18),
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: Colors.white,
-    shadowColor: '#ef4444',
+    shadowColor: Colors.error,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -231,7 +201,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   badgeText: {
-    fontSize: responsiveFont(10),
+    fontSize: responsiveFont(9), // Giảm từ 10 xuống 9
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.white,
   },
