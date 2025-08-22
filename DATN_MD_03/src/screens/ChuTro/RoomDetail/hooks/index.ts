@@ -1,0 +1,1 @@
+export {useRoomDetail} from './useRoomDetail';
