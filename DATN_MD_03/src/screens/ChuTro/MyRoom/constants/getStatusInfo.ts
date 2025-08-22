@@ -9,6 +9,13 @@ export const getStatusInfo = (status: string, approvalStatus: string) => {
       textColor: Colors.gray60,
     }; // vàng
   }
+  if (approvalStatus === 'tuChoi') {
+    return {
+      label: 'Từ chối',
+      color: Colors.red,
+      textColor: Colors.white,
+    };
+  }
 
   // Ưu tiên 3: Nếu đã được duyệt thì xét trạng thái phòng
   switch (status) {

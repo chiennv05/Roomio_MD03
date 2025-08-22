@@ -41,7 +41,10 @@ export const useRoomDetail = (roomId: string) => {
     }
 
     if (selectedRoom) {
-      if (selectedRoom.approvalStatus === 'choDuyet') {
+      if (
+        selectedRoom.approvalStatus === 'choDuyet' ||
+        selectedRoom.approvalStatus === 'tuChoi'
+      ) {
         navigation.navigate('UpdateRoomScreen', {item: selectedRoom});
         return;
       }
@@ -67,6 +70,26 @@ export const useRoomDetail = (roomId: string) => {
   const handleDeleteRoom = () => {
     if (selectedRoom?.status === 'daThue') {
       showError('Phòng này đã được thuê, không thể xóa.', 'Thông báo');
+      return;
+    }
+
+    if (
+      selectedRoom?.approvalStatus === 'choDuyet' ||
+      selectedRoom?.approvalStatus === 'tuChoi'
+    ) {
+      showConfirm(
+        'Bạn có chắc chắn muốn xóa phòng này không?',
+        async () => {
+          try {
+            await dispatch(deleteLandlordRoom(roomId)).unwrap();
+            showSuccess('Xóa phòng thành công!', 'Thành công');
+            navigation.goBack();
+          } catch (err: any) {
+            showError(err || 'Không thể xóa phòng', 'Lỗi');
+          }
+        },
+        'Xác nhận xóa',
+      );
       return;
     }
 

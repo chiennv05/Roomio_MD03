@@ -939,14 +939,15 @@ const ContractDetailScreen = () => {
         )}
 
         {/* Nút xem PDF */}
-        <TouchableOpacity style={styles.pdfButton} onPress={onViewPDF}>
-          <Text style={styles.pdfButtonText}>
-            {contract.status === 'draft'
-              ? 'Tạo Hợp đồng PDF'
-              : 'Xem Hợp đồng PDF'}
-          </Text>
-        </TouchableOpacity>
-
+        {contract.status !== 'expired' && (
+          <TouchableOpacity style={styles.pdfButton} onPress={onViewPDF}>
+            <Text style={styles.pdfButtonText}>
+              {contract.status === 'draft'
+                ? 'Tạo Hợp đồng PDF'
+                : 'Xem Hợp đồng PDF'}
+            </Text>
+          </TouchableOpacity>
+        )}
         <View style={styles.bottomSpace} />
         <ModalLoading
           loading={true}
