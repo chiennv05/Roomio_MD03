@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useEffect } from 'react';
+import React, { useMemo, useCallback, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   StatusBar,
@@ -17,45 +17,52 @@ import EmptyFavorite from './components/EmptyFavorite';
 const FavoriteScreen: React.FC = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch<AppDispatch>();
+  
+  // Refs để tránh tạo lại animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(100)).current;
+  const scaleAnim = useRef(new Animated.Value(1.05)).current;
+  const hasAnimated = useRef(false);
+  const lastUserId = useRef<string | null>(null);
 
-  // Get data from Redux store
-  const {
-    favoriteRooms,
-  } = useSelector((state: RootState) => state.room);
-
+  // Get data from Redux store với shallow equal
+  const favoriteRooms = useSelector((state: RootState) => state.room.favoriteRooms);
+  
   // Get user info for authentication
-  const { user } = useSelector((state: RootState) => state.auth);
-
-  // Animation states
-  const fadeAnim = useMemo(() => new Animated.Value(0), []);
-  const slideAnim = useMemo(() => new Animated.Value(100), []);
-  const scaleAnim = useMemo(() => new Animated.Value(1.05), []);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const authToken = user?.auth_token;
+  const userId = user?._id;
 
 
-  // Load favorite rooms when component mounts or user changes
+  // Load favorite rooms chỉ khi cần thiết
   useEffect(() => {
-    if (user?.auth_token) {
-      dispatch(fetchFavoriteRooms(user.auth_token));
+    if (authToken && (!lastUserId.current || lastUserId.current !== userId)) {
+      lastUserId.current = userId || null;
+      dispatch(fetchFavoriteRooms(authToken));
     }
-  }, [dispatch, user?.auth_token]);
+  }, [dispatch, authToken, userId]);
 
-  // Reload favorites when screen comes into focus
+  // Reload favorites khi focus (chỉ nếu đã có data trước đó)
   useFocusEffect(
     useCallback(() => {
-      if (user?.auth_token) {
-        dispatch(fetchFavoriteRooms(user.auth_token));
+      if (authToken && favoriteRooms && favoriteRooms.length >= 0) {
+        // Chỉ fetch lại nếu đã có data (để refresh)
+        dispatch(fetchFavoriteRooms(authToken));
       }
-    }, [dispatch, user?.auth_token])
+    }, [dispatch, authToken, favoriteRooms])
   );
 
-  // Danh sách hiển thị: toàn bộ phòng yêu thích
+  // Danh sách hiển thị: toàn bộ phòng yêu thích (memoized)
   const roomsToRender = useMemo(() => {
-    if (!favoriteRooms || !Array.isArray(favoriteRooms)) {return [];}
+    if (!favoriteRooms || !Array.isArray(favoriteRooms)) return [];
     return favoriteRooms;
   }, [favoriteRooms]);
 
-  // Animation khi vào màn hình - slide up từ dưới
+  // Animation chỉ chạy lần đầu
   const animateIn = useCallback(() => {
+    if (hasAnimated.current) return;
+    
+    hasAnimated.current = true;
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -78,49 +85,38 @@ const FavoriteScreen: React.FC = () => {
     ]).start();
   }, [fadeAnim, slideAnim, scaleAnim]);
 
-  // Reset và chạy animation khi screen focus
-  useFocusEffect(
-    useCallback(() => {
-      // Reset animation values để tạo hiệu ứng slide up từ dưới
-      fadeAnim.setValue(0);
-      slideAnim.setValue(100);
-      scaleAnim.setValue(1.05);
+  // Chỉ animate lần đầu khi mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      animateIn();
+    }, 100);
 
-      // Start animation
-      const timer = setTimeout(() => {
-        animateIn();
-      }, 0);
-
-      return () => clearTimeout(timer);
-    }, [fadeAnim, slideAnim, scaleAnim, animateIn])
-  );
+    return () => clearTimeout(timer);
+  }, [animateIn]);
 
   // Không còn tìm kiếm, bỏ handler
 
-  // Hàm xử lý nhấn vào room card
+  // Hàm xử lý nhấn vào room card (memoized)
   const handleRoomPress = useCallback((roomId: string) => {
-    // Navigate to DetailRoom screen in the stack navigator
     (navigation as any).navigate('DetailRoom', { roomId });
   }, [navigation]);
 
-  // Tiêu đề đơn giản cho danh sách yêu thích
-  const favoriteTitle = useMemo(() => 'Phòng yêu thích', []);
-
-  // Check if user is logged in
-  const isLoggedIn = !!user?.auth_token;
-
-  // Handle login navigation
+  // Handle login navigation (memoized)
   const handleLoginPress = useCallback(() => {
     (navigation as any).navigate('Login');
   }, [navigation]);
 
-  // Show empty state only for non-logged users
+  // Computed values
+  const isLoggedIn = !!authToken;
+  const favoriteTitle = 'Phòng yêu thích';
+
+  // Early return cho trường hợp chưa đăng nhập
   if (!isLoggedIn) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor={Colors.backgroud} />
         <EmptyFavorite
-          isLoggedIn={isLoggedIn}
+          isLoggedIn={false}
           onLoginPress={handleLoginPress}
         />
       </SafeAreaView>

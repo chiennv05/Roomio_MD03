@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -28,43 +28,58 @@ interface FavoriteRoomCardProps {
   onPress: (roomId: string) => void;
 }
 
-const FavoriteRoomCard: React.FC<FavoriteRoomCardProps> = ({ item, onPress }) => {
+// Memoized component để tránh re-render không cần thiết
+const FavoriteRoomCard: React.FC<FavoriteRoomCardProps> = React.memo(({ item, onPress }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { user } = useSelector((state: RootState) => state.auth);
-  const { toggleFavoriteLoading } = useSelector((state: RootState) => state.room);
+  
+  // Chỉ lấy những giá trị cần thiết từ store
+  const authToken = useSelector((state: RootState) => state.auth.user?.auth_token);
+  const toggleFavoriteLoading = useSelector((state: RootState) => state.room.toggleFavoriteLoading);
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Chuyển đổi đường dẫn hình ảnh từ API thành URL đầy đủ
-  const images = item.photos?.map(photo => getImageUrl(photo)) || [];
+  // Chuyển đổi đường dẫn hình ảnh từ API thành URL đầy đủ (memoized)
+  const images = useMemo(() => {
+    return item.photos?.map(photo => getImageUrl(photo)) || [];
+  }, [item.photos]);
 
-  // Hàm xử lý khi người dùng scroll qua các hình ảnh
-  const handleScroll = (event: any) => {
+  // Hàm xử lý khi người dùng scroll qua các hình ảnh (memoized)
+  const handleScroll = useCallback((event: any) => {
     const slideSize = SCREEN.width - responsiveSpacing(32);
     const index = Math.round(event.nativeEvent.contentOffset.x / slideSize);
     setCurrentImageIndex(index);
-  };
+  }, []);
 
-  // Hàm xử lý khi nhấn vào card
-  const handleCardPress = () => {
+  // Hàm xử lý khi nhấn vào card (memoized)
+  const handleCardPress = useCallback(() => {
     if (item._id) {
       onPress(item._id);
     } else {
       console.warn('Room ID is undefined, cannot navigate');
     }
-  };
+  }, [item._id, onPress]);
 
-  // Hàm xử lý toggle favorite
+  // Hàm xử lý toggle favorite (optimized)
   const handleToggleFavorite = useCallback((event: any) => {
     event.stopPropagation(); // Prevent card press
 
-    if (!user?.auth_token || !item._id) {return;}
+    if (!authToken || !item._id) return;
 
     dispatch(toggleFavorite({
       roomId: item._id,
-      token: user.auth_token,
+      token: authToken,
     }));
-  }, [dispatch, user?.auth_token, item._id]);
+  }, [dispatch, authToken, item._id]);
+
+  // Formatted price (memoized)
+  const formattedPrice = useMemo(() => {
+    return item.rentPrice?.toLocaleString('vi-VN') || '0';
+  }, [item.rentPrice]);
+
+  // Location text (memoized)
+  const locationText = useMemo(() => {
+    return `${item.location.ward}, ${item.location.district}, ${item.location.province}`;
+  }, [item.location.ward, item.location.district, item.location.province]);
 
   return (
     <TouchableOpacity style={styles.card} onPress={handleCardPress} activeOpacity={0.8}>
@@ -100,7 +115,7 @@ const FavoriteRoomCard: React.FC<FavoriteRoomCardProps> = ({ item, onPress }) =>
         {/* Price tag overlay ở góc dưới bên trái */}
         <View style={styles.priceOverlay}>
           <Text style={styles.priceOverlayText}>
-            {item.rentPrice?.toLocaleString('vi-VN')}/ tháng
+            {formattedPrice}/ tháng
           </Text>
         </View>
 
@@ -130,7 +145,7 @@ const FavoriteRoomCard: React.FC<FavoriteRoomCardProps> = ({ item, onPress }) =>
         <View style={styles.detailContainer}>
           <Image source={{ uri: Icons.IconLocation }} style={styles.icon} />
           <Text style={styles.detail}>
-            {item.location.ward}, {item.location.district}, {item.location.province}
+            {locationText}
           </Text>
         </View>
         <View style={styles.detailContainer}>
@@ -140,7 +155,10 @@ const FavoriteRoomCard: React.FC<FavoriteRoomCardProps> = ({ item, onPress }) =>
       </View>
     </TouchableOpacity>
   );
-};
+});
+
+// Bọ qua re-render nếu props không thay đổi
+FavoriteRoomCard.displayName = 'FavoriteRoomCard';
 
 export default FavoriteRoomCard;
 

@@ -19,7 +19,8 @@ interface EmptyFavoriteProps {
   onLoginPress?: () => void;
 }
 
-const EmptyFavorite: React.FC<EmptyFavoriteProps> = ({
+// Memoized component để tránh re-render không cần thiết
+const EmptyFavorite: React.FC<EmptyFavoriteProps> = React.memo(({
   isLoggedIn,
   onLoginPress,
 }) => {
@@ -51,7 +52,10 @@ const EmptyFavorite: React.FC<EmptyFavoriteProps> = ({
       </Text>
     </View>
   );
-};
+});
+
+// Bỏ qua re-render nếu props không thay đổi
+EmptyFavorite.displayName = 'EmptyFavorite';
 
 export default EmptyFavorite;
 

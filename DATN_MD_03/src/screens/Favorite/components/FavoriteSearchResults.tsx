@@ -26,16 +26,12 @@ interface FavoriteSearchResultsProps {
   onRoomPress: (roomId: string) => void;
 }
 
-const FavoriteSearchResults: React.FC<FavoriteSearchResultsProps> = ({
-  title,
-  rooms,
-  onRoomPress,
-}) => {
+const FavoriteSearchResults: React.FC<FavoriteSearchResultsProps> = React.memo(({ title, rooms, onRoomPress }) => {
   // Animation for room cards
   const animatedValues = useRef<Map<string, Animated.Value>>(new Map()).current;
   const viewableItems = useRef<Set<string>>(new Set()).current;
-
-  // Use pagination hook with 8 items per page for better performance
+  
+  // Sử dụng pagination hook với 10 items per page cho hiệu suất tốt hơn
   const {
     displayedData,
     hasMore,
@@ -43,17 +39,16 @@ const FavoriteSearchResults: React.FC<FavoriteSearchResultsProps> = ({
     loadMore,
     reset,
     totalItems,
-    currentPage,
   } = usePaginatedData({
     data: rooms,
-    pageSize: 8, // Show 8 rooms initially, then load 8 more each time
+    pageSize: 10, // Tăng lên 10 để giảm số lần render
     initialPageCount: 1,
   });
 
-  // Reset pagination when rooms data changes (new search)
+  // Reset pagination when rooms data changes (new search) - optimized
   useEffect(() => {
     reset();
-  }, [rooms, reset]);
+  }, [rooms.length, reset]); // Chỉ reset khi length thay đổi
 
   // Initialize animation value for a room
   const getAnimatedValue = useCallback((roomId: string) => {
@@ -63,60 +58,51 @@ const FavoriteSearchResults: React.FC<FavoriteSearchResultsProps> = ({
     return animatedValues.get(roomId)!;
   }, [animatedValues]);
 
-  // Handle viewability change for room cards
+  // Handle viewability change for room cards (optimized)
   const onViewableItemsChanged = useCallback(({ viewableItems: visibleItems }: { viewableItems: ViewToken[] }) => {
     visibleItems.forEach(({ item, isViewable }) => {
-      if (item && item._id) {
-        const animValue = getAnimatedValue(item._id);
+      if (item?._id) {
+        const roomId = item._id;
+        const animValue = getAnimatedValue(roomId);
 
-        if (isViewable && !viewableItems.has(item._id)) {
-          viewableItems.add(item._id);
+        if (isViewable && !viewableItems.has(roomId)) {
+          viewableItems.add(roomId);
 
-          // Animate in with stagger effect
+          // Animate in với stagger effect
           Animated.timing(animValue, {
             toValue: 1,
-            duration: 600,
+            duration: 400, // Giảm duration để mượt hơn
             easing: Easing.out(Easing.cubic),
             useNativeDriver: true,
           }).start();
-        } else if (!isViewable && viewableItems.has(item._id)) {
-          viewableItems.delete(item._id);
-
-          // Optional: animate out when not viewable
-          Animated.timing(animValue, {
-            toValue: 0,
-            duration: 300,
-            easing: Easing.in(Easing.cubic),
-            useNativeDriver: true,
-          }).start();
+        } else if (!isViewable && viewableItems.has(roomId)) {
+          viewableItems.delete(roomId);
         }
       }
     });
   }, [getAnimatedValue, viewableItems]);
 
-  // Viewability config
+  // Viewability config (optimized)
   const viewabilityConfig = useMemo(() => ({
-    itemVisiblePercentThreshold: 20, // Trigger when 20% of item is visible
-    minimumViewTime: 100, // Minimum time in ms before triggering
+    itemVisiblePercentThreshold: 30, // Tăng từ 20% lên 30% để giảm trigger
+    minimumViewTime: 200, // Tăng thời gian để giảm animation không cần thiết
   }), []);
 
-  // Animated Room Card Component
+  // Animated Room Card Component (optimized)
   const AnimatedFavoriteRoomCard = useCallback(({ item }: { item: Room }) => {
-    const animValue = getAnimatedValue(item._id || '');
+    const roomId = item._id || '';
+    if (!roomId) return <FavoriteRoomCard item={item} onPress={onRoomPress} />;
+    
+    const animValue = getAnimatedValue(roomId);
 
     const translateY = animValue.interpolate({
       inputRange: [0, 1],
-      outputRange: [50, 0], // Slide up from 50px below
+      outputRange: [30, 0], // Giảm từ 50px xuống 30px
     });
 
     const opacity = animValue.interpolate({
       inputRange: [0, 1],
       outputRange: [0, 1],
-    });
-
-    const scale = animValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0.8, 1], // Scale from 80% to 100%
     });
 
     return (
@@ -125,10 +111,7 @@ const FavoriteSearchResults: React.FC<FavoriteSearchResultsProps> = ({
           styles.animatedCard,
           {
             opacity,
-            transform: [
-              { translateY },
-              { scale },
-            ],
+            transform: [{ translateY }],
           },
         ]}
       >
@@ -164,9 +147,8 @@ const FavoriteSearchResults: React.FC<FavoriteSearchResultsProps> = ({
     return null;
   };
 
-  // Empty component with Lottie animation
-  const renderEmptyComponent = () => {
-    // Check if this is a search result or general favorite list
+  // Empty component với Lottie animation (memoized)
+  const renderEmptyComponent = useMemo(() => {
     const isSearching = title.includes('Tìm kiếm trong yêu thích');
 
     return (
@@ -175,15 +157,14 @@ const FavoriteSearchResults: React.FC<FavoriteSearchResultsProps> = ({
         subtitle={isSearching ? 'Thử thay đổi từ khóa tìm kiếm khác' : 'Hãy thêm phòng vào danh sách yêu thích'}
       />
     );
-  };
+  }, [title]);
 
-  // Handle end reached for loading more data
-  const handleEndReached = () => {
-    if (hasMore && !isLoading) {
-      console.log(`🔄 Loading page ${currentPage + 1}...`);
+  // Handle end reached for loading more data (optimized)
+  const handleEndReached = useCallback(() => {
+    if (hasMore && !isLoading && displayedData.length > 0) {
       loadMore();
     }
-  };
+  }, [hasMore, isLoading, loadMore, displayedData.length]);
 
   return (
     <View style={styles.container}>
@@ -199,7 +180,7 @@ const FavoriteSearchResults: React.FC<FavoriteSearchResultsProps> = ({
         </Text>
       </View>
 
-      {/* Danh sách kết quả với lazy loading */}
+      {/* Danh sách kết quả với lazy loading - optimized */}
       <FlatList
         data={displayedData}
         renderItem={AnimatedFavoriteRoomCard}
@@ -209,26 +190,24 @@ const FavoriteSearchResults: React.FC<FavoriteSearchResultsProps> = ({
           styles.listContainer,
           displayedData.length === 0 && styles.emptyListContainer,
         ]}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmptyComponent}
         onEndReached={handleEndReached}
-        onEndReachedThreshold={0.1} // Trigger when 10% from bottom
+        onEndReachedThreshold={0.2}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
-        removeClippedSubviews={true} // Optimize for large lists
-        maxToRenderPerBatch={8} // Render 8 items per batch
-        windowSize={10} // Keep 10 screens worth of content
-        initialNumToRender={8} // Render 8 items initially
-        getItemLayout={(data, index) => ({
-          length: 120, // Approximate height of FavoriteRoomCard
-          offset: 120 * index,
-          index,
-        })}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={5}
+        windowSize={8}
+        initialNumToRender={5}
+        updateCellsBatchingPeriod={100}
       />
     </View>
   );
-};
+});
+
+// Memoized component để tránh re-render không cần thiết
+FavoriteSearchResults.displayName = 'FavoriteSearchResults';
 
 export default FavoriteSearchResults;
 
