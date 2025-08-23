@@ -311,7 +311,7 @@ const StatisticScreen = () => {
           </View>
         )}
 
-        {/* Bottom Summary Card - chỉ hiển thị ở tab Tổng quan */}
+    
         {primaryTab === 'overview' && (
           <View style={styles.bottomRevenueCard}>
             <Text style={styles.bottomRevenueTitle}>
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
     marginTop: responsiveSpacing(8), // Giảm khoảng cách từ 20 xuống 8
     padding: responsiveSpacing(20),
     borderRadius: 16,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     shadowColor: Colors.limeGreen,
     shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.3,
@@ -457,14 +457,13 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   bottomRevenueTitle: {
-    fontFamily: Fonts.Roboto_Medium,
-    fontSize: responsiveFont(16),
+    fontSize: responsiveFont(20),
     color: Colors.black,
     marginBottom: responsiveSpacing(8),
   },
   bottomRevenueValue: {
     fontFamily: Fonts.Roboto_Bold,
-    fontSize: responsiveFont(20),
+    fontSize: responsiveFont(24),
     color: Colors.black,
   },
 
