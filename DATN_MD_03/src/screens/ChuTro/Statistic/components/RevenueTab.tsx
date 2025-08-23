@@ -100,7 +100,7 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={() => navigation.navigate('Bill')}
-          style={[styles.quickCard, {backgroundColor: Colors.darkGreen}]}
+          style={[styles.quickCard, {backgroundColor: Colors.limeGreen}]}
         >
           <View style={styles.quickGradient}>
             <View style={styles.quickLeft}>
@@ -265,11 +265,11 @@ const styles = StyleSheet.create({
   quickText: {
     fontFamily: Fonts.Roboto_Bold, 
     fontSize: responsiveFont(16), 
-    color: Colors.white,
+    color: Colors.black,
   },
   quickArrow: {
-    width: scale(18), 
+    width: scale(12), 
     height: scale(18), 
-    tintColor: Colors.white,
+    tintColor: Colors.black,
   },
 });

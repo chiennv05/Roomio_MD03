@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    top: '10%',
+    top: '30%',
     left: '5%',
   },
   styleIconButton: {
@@ -145,6 +145,7 @@ const styles = StyleSheet.create({
   styleImageRoomio: {
     width: SCREEN.width * 0.45,
     height: (SCREEN.width * 0.45) / 5,
+    marginTop: '20%',
   },
   textStart: {
     fontSize: responsiveFont(18),

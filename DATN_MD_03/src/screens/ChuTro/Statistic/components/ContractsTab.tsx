@@ -154,7 +154,7 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
                 style={styles.performanceIcon}
               />
             </View>
-            <Text style={styles.performanceTitle}>Hiệu suất hợp đồng</Text>
+            <Text style={styles.performanceTitle}>Trạng thái hợp đồng</Text>
           </View>
 
           <View style={styles.performanceStats}>
@@ -318,7 +318,7 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={() => navigation.navigate('ContractManagement')}
-          style={[styles.quickCard, {backgroundColor: Colors.darkGreen}]}>
+          style={[styles.quickCard, {backgroundColor: Colors.limeGreen}]}>
           <View style={styles.quickGradient}>
             <View style={styles.quickLeft}>
               <View style={styles.quickIconWrap}>
@@ -614,11 +614,11 @@ const styles = StyleSheet.create({
   quickText: {
     fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(16),
-    color: Colors.white,
+    color: Colors.black,
   },
   quickArrow: {
-    width: scale(18),
+    width: scale(12),
     height: scale(18),
-    tintColor: Colors.white,
+    tintColor: Colors.black,
   },
 });

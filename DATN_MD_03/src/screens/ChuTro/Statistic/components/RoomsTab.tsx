@@ -117,7 +117,7 @@ const RoomsTab = ({data, navigateToRoomDetail, navigation}: RoomsTabProps) => {
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={() => navigation.navigate('LandlordRoom')}
-          style={[styles.quickCard, {backgroundColor: Colors.darkGreen}]}
+          style={[styles.quickCard, {backgroundColor: Colors.limeGreen}]}
         >
           <View style={styles.quickGradient}>
             <View style={styles.quickLeft}>
@@ -272,6 +272,6 @@ const styles = StyleSheet.create({
     marginRight: responsiveSpacing(10),
   },
   quickIcon: {width: scale(18), height: scale(18), tintColor: Colors.darkGreen},
-  quickText: {fontFamily: Fonts.Roboto_Bold, fontSize: responsiveFont(16), color: Colors.white},
-  quickArrow: {width: scale(18), height: scale(18), tintColor: Colors.white},
+  quickText: {fontFamily: Fonts.Roboto_Bold, fontSize: responsiveFont(16), color: Colors.black },
+  quickArrow: {width: scale(12), height: scale(18), tintColor: Colors.black},
 });

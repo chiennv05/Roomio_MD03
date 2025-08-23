@@ -55,25 +55,33 @@ const styles = StyleSheet.create({
   priceTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#4CAF50',
+    backgroundColor: Colors.white,
     paddingHorizontal: responsiveSpacing(8),
     paddingVertical: responsiveSpacing(4),
     borderRadius: responsiveSpacing(16),
     gap: responsiveSpacing(4),
+    shadowColor: Colors.limeGreen,
+    shadowOffset: {
+      width: 1,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   selectedPriceTag: {
-    backgroundColor: '#2E7D32',
+    backgroundColor: Colors.limeGreen,
     transform: [{scale: 1.1}],
   },
   priceText: {
-    color: Colors.white,
-    fontSize: responsiveFont(13),
+    color: Colors.black,
+    fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Bold,
   },
   homeIcon: {
     width: responsiveIcon(14),
     height: responsiveIcon(14),
-    tintColor: Colors.white,
+    tintColor: Colors.black,
   },
 });
 

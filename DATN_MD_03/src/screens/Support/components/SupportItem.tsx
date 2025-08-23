@@ -28,18 +28,18 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
       case 'mo':
         return {
           color: Colors.statusOpen, // gray badge bg
-          text: 'Mở',
+          text: 'Mới Mở',
           bgColor: Colors.statusOpenBg,
         };
       case 'dangXuLy':
         return {
           color: Colors.warning,
           text: 'Đang xử lý',
-          bgColor: Colors.lightYellowBackground,
+          bgColor: Colors.limeGreenOpacityLight,
         };
       case 'hoanTat':
         return {
-          color: Colors.darkGreen,
+          color: Colors.limeGreen,
           text: 'Hoàn tất',
           bgColor: Colors.lightGreenBackground,
         };
@@ -192,16 +192,16 @@ const styles = StyleSheet.create({
     marginBottom: responsiveSpacing(8),
   },
   title: {
-    fontSize: responsiveFont(16),
+    fontSize: responsiveFont(20),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
     flex: 1,
     marginRight: responsiveSpacing(8),
   },
   statusBadge: {
-    paddingHorizontal: responsiveSpacing(8),
-    paddingVertical: responsiveSpacing(4),
-    borderRadius: scale(12),
+    paddingHorizontal: responsiveSpacing(20),
+    paddingVertical: responsiveSpacing(8),
+    borderRadius: scale(20),
     minWidth: scale(50),
     alignItems: 'center',
   },
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     color: Colors.white,
   },
   description: {
-    fontSize: responsiveFont(14),
+    fontSize: responsiveFont(13),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.textGray,
     marginBottom: responsiveSpacing(8),

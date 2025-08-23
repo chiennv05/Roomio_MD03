@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.brandPrimary,
+    color: Colors.darkGreen,
     marginBottom: responsiveSpacing(8),
   },
   stats: {flexDirection: 'row', alignItems: 'center'},
