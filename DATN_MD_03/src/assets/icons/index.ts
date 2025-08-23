@@ -771,4 +771,46 @@ export const Icons = {
     ios: 'iconSolar',
     android: 'asset:/icons/iconSolar.png',
   }),
+  //Icon_hop_dong_thue 
+  // icon_hop_dong_active
+  IconHopDongThue: Platform.select({
+    ios: 'icon_hop_dong_thue',
+    android: 'asset:/icons/icon_hop_dong_thue.png',
+  }),
+  IconHopDongActive: Platform.select({
+    ios: 'icon_hop_dong_active',
+    android: 'asset:/icons/icon_hop_dong_active.png',
+  }),
+  IconPhongTrong: Platform.select({
+    ios: 'icon_phong_trong',
+    android: 'asset:/icons/icon_phong_trong.png',
+  }),
+  IconChoDuyet: Platform.select({
+    ios: 'icon_cho_duyet',
+    android: 'asset:/icons/icon_cho_duyet.png',
+  }),
+  IconGiaTrungBinh: Platform.select({
+    ios: 'icon_gia_trung_binh',
+    android: 'asset:/icons/icon_gia_trung_binh.png',
+  }),
+  IconHieuSuat: Platform.select({
+    ios: 'icon_hieu_suat_hop_dong',
+    android: 'asset:/icons/icon_hieu_suat_hop_dong.png',
+  }),
+  IconDaChamDut: Platform.select({
+    ios: 'icon_da_cham_dut',
+    android: 'asset:/icons/icon_da_cham_dut.png',
+  }),
+  IconDaHetHan: Platform.select({
+    ios: 'icon_da_het_han',
+    android: 'asset:/icons/icon_da_het_han.png',
+  }),
+  IconChoKy: Platform.select({
+    ios: 'icon_cho_ky',
+    android: 'asset:/icons/icon_cho_ky.png',
+  }),
+  IconDaHuy: Platform.select({
+    ios: 'icon_da_huy',
+    android: 'asset:/icons/icon_da_huy.png',
+  }),
 };

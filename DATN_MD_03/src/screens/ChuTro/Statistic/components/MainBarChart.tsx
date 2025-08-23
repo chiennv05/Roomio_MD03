@@ -33,6 +33,10 @@ interface Props {
 export default function MainBarChart({title, onNavigate, onMonthSelect, chartType = 'revenue', onTabChange}: Props) {
   const screenWidth = Dimensions.get('window').width - responsiveSpacing(60); // Giảm width để căn giữa
   const {data: dashboardData} = useSelector((state: RootState) => state.dashboard);
+  
+  // State for tracking pressed month for visual feedback
+  const [pressedMonthIndex, setPressedMonthIndex] = React.useState<number | null>(null);
+  const [selectedMonthIndex, setSelectedMonthIndex] = React.useState<number | null>(null);
 
   // State for current period navigation
   const [currentPeriod, setCurrentPeriod] = React.useState(() => {
@@ -41,6 +45,23 @@ export default function MainBarChart({title, onNavigate, onMonthSelect, chartTyp
     const currentYear = now.getFullYear();
     return { month: currentMonth, year: currentYear };
   });
+
+  // Effect to set the current month as selected by default
+  React.useEffect(() => {
+    if (dashboardData?.monthlyStats?.labels) {
+      const labels = dashboardData.monthlyStats.labels;
+      const currentMonthLabel = `thg ${currentPeriod.month} ${currentPeriod.year}`;
+      const currentMonthIndex = labels.findIndex(label => label === currentMonthLabel);
+      
+      if (currentMonthIndex !== -1) {
+        const startIndex = Math.max(0, currentMonthIndex - 5);
+        const displayIndex = currentMonthIndex - startIndex;
+        if (displayIndex >= 0 && displayIndex < 6) {
+          setSelectedMonthIndex(displayIndex);
+        }
+      }
+    }
+  }, [dashboardData, currentPeriod]);
 
   // Generate month labels for current period
   const generateMonthLabels = () => {
@@ -224,6 +245,32 @@ export default function MainBarChart({title, onNavigate, onMonthSelect, chartTyp
     return `Cập nhật: ${hours}:${minutes}:${seconds}, ${day}/${month}/${year}`;
   };
 
+  // Handle bar click to select specific month
+  const handleBarPress = (index: number) => {
+    if (onMonthSelect && dashboardData?.monthlyStats?.labels) {
+      const labels = dashboardData.monthlyStats.labels;
+      const currentMonthLabel = `thg ${currentPeriod.month} ${currentPeriod.year}`;
+      const currentMonthIndex = labels.findIndex(label => label === currentMonthLabel);
+      
+      if (currentMonthIndex !== -1) {
+        // Calculate the actual month index based on display index
+        const startIndex = Math.max(0, currentMonthIndex - 5);
+        const actualMonthIndex = startIndex + index;
+        
+        if (actualMonthIndex < labels.length) {
+          const selectedLabel = labels[actualMonthIndex];
+          const monthMatch = selectedLabel.match(/thg (\d+) \d+/);
+          if (monthMatch) {
+            const monthNumber = parseInt(monthMatch[1]);
+            onMonthSelect(monthNumber);
+            // Set selected month for visual feedback
+            setSelectedMonthIndex(index);
+          }
+        }
+      }
+    }
+  };
+
 
 
   return (
@@ -263,69 +310,91 @@ export default function MainBarChart({title, onNavigate, onMonthSelect, chartTyp
         <View style={styles.contentContainer}>        
           <Text style={styles.chartTitle}>{title}</Text>
 
-                      <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => {
-                // Tạm thời chọn tháng hiện tại khi bấm vào chart
-                if (onMonthSelect) {
-                  onMonthSelect(currentPeriod.month);
-                }
+                      <View style={styles.chartWrapper}>
+            <BarChart
+              data={{
+                labels: displayLabels,
+                datasets: [
+                  {
+                    data: displayData,
+                    colors: displayData.map((value, index) => {
+                      // Nếu giá trị = 0 thì không hiển thị (transparent)
+                      if (value === 0) {
+                        return () => 'transparent';
+                      }
+                      
+                      // Nếu đang bấm vào bar này, hiện thị màu nhấn mạnh hơn
+                      if (pressedMonthIndex === index) {
+                        return () => '#0F120B'; // Màu đen đậm hơn khi bấm
+                      }
+                      
+                      // Nếu đây là tháng được chọn, hiện thị màu đen
+                      if (selectedMonthIndex === index) {
+                        return () => '#17190F'; // Màu đen cho tháng được chọn
+                      }
+                      
+                      // Lấy tháng tương ứng với index
+                      const labels = dashboardData?.monthlyStats?.labels || [];
+                      const currentMonthLabel = `thg ${currentPeriod.month} ${currentPeriod.year}`;
+                      const currentMonthIndex = labels.findIndex(label => label === currentMonthLabel);
+                      
+                      if (currentMonthIndex !== -1) {
+                        // Tính index của tháng trong displayData
+                        const startIndex = Math.max(0, currentMonthIndex - 5);
+                        const monthIndex = startIndex + index;
+                        
+                        // Nếu là tháng hiện tại thì màu đen
+                        if (monthIndex === currentMonthIndex) {
+                          return () => '#17190F'; // Màu đen cho tháng hiện tại
+                        }
+                      }
+                      
+                      // Các tháng khác dùng màu nhạt hơn theo Figma (#17190F với 40% opacity)
+                      return () => 'rgba(23, 25, 15, 0.4)'; // Màu xanh nhạt cho các tháng khác
+                    }),
+                  },
+                ],
               }}
-            >
-              <BarChart
-                data={{
-                  labels: displayLabels,
-                  datasets: [
-                    {
-                      data: displayData,
-                      colors: displayData.map((value, index) => {
-                        // Nếu giá trị = 0 thì không hiển thị (transparent)
-                        if (value === 0) {
-                          return () => 'transparent';
-                        }
-                        
-                        // Lấy tháng tương ứng với index
-                        const labels = dashboardData?.monthlyStats?.labels || [];
-                        const currentMonthLabel = `thg ${currentPeriod.month} ${currentPeriod.year}`;
-                        const currentMonthIndex = labels.findIndex(label => label === currentMonthLabel);
-                        
-                        if (currentMonthIndex !== -1) {
-                          // Tính index của tháng trong displayData
-                          const startIndex = Math.max(0, currentMonthIndex - 5);
-                          const monthIndex = startIndex + index;
-                          
-                          // Nếu là tháng hiện tại thì màu đen
-                          if (monthIndex === currentMonthIndex) {
-                            return () => '#17190F'; // Màu đen cho tháng hiện tại
-                          }
-                        }
-                        
-                        // Tất cả đều là dữ liệu thực từ API
-                        return () => 'rgba(23, 25, 15, 0.6)'; // Màu đen với 60% opacity
-                      }),
-                    },
-                  ],
-                }}
-                width={screenWidth}
-                height={200}
-                fromZero
-                yAxisInterval={1}
-                yLabelsOffset={8}
-                xLabelsOffset={8}
-                chartConfig={chartConfig}
-                style={styles.chart}
-                withInnerLines={true}
-                showBarTops={false}
-                withCustomBarColorFromData={true}
-                flatColor={true}
-                segments={4}
-                yAxisLabel=""
-                yAxisSuffix=""
-                showValuesOnTopOfBars={false}
-                withVerticalLabels={true}
-                withHorizontalLabels={true}
-              />
-            </TouchableOpacity>
+              width={screenWidth}
+              height={200}
+              fromZero
+              yAxisInterval={1}
+              yLabelsOffset={8}
+              xLabelsOffset={8}
+              chartConfig={chartConfig}
+              style={styles.chart}
+              withInnerLines={true}
+              showBarTops={false}
+              withCustomBarColorFromData={true}
+              flatColor={true}
+              segments={4}
+              yAxisLabel=""
+              yAxisSuffix=""
+              showValuesOnTopOfBars={false}
+              withVerticalLabels={true}
+              withHorizontalLabels={true}
+            />
+            
+            {/* Overlay tạo các vùng click cho từng tháng */}
+            <View style={styles.chartOverlay}>
+              {displayLabels.map((label, index) => (
+                <TouchableOpacity
+                  key={`month-${index}`}
+                  style={[
+                    styles.monthTouchArea,
+                    pressedMonthIndex === index && styles.monthTouchAreaPressed
+                  ]}
+                  onPress={() => {
+                    handleBarPress(index);
+                    setSelectedMonthIndex(index);
+                  }}
+                  onPressIn={() => setPressedMonthIndex(index)}
+                  onPressOut={() => setPressedMonthIndex(null)}
+                  activeOpacity={0.7}
+                />
+              ))}
+            </View>
+          </View>
 
           {/* Navigation Arrows */}
           <View style={styles.navigationContainer}>
@@ -409,10 +478,32 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: responsiveSpacing(12),
   },
+  chartWrapper: {
+    position: 'relative',
+    alignSelf: 'center',
+  },
   chart: {
     marginVertical: responsiveSpacing(8),
     borderRadius: 12,
     alignSelf: 'center', // Căn giữa chart
+  },
+  chartOverlay: {
+    position: 'absolute',
+    top: 8,
+    left: 40, // Offset để khớp với vị trí bars
+    right: 20,
+    bottom: 40, // Để tránh label ở dưới
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  monthTouchArea: {
+    flex: 1,
+    height: '100%',
+    marginHorizontal: 2,
+  },
+  monthTouchAreaPressed: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Hiệu ứng nhấn mạnh khi bấm
+    borderRadius: 4,
   },
   navigationContainer: {
     flexDirection: 'row',

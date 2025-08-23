@@ -4,6 +4,7 @@ import {Colors} from '../../../../theme/color';
 import {Fonts} from '../../../../theme/fonts';
 import {responsiveFont, responsiveSpacing} from '../../../../utils/responsive';
 import {API_CONFIG} from '../../../../configs';
+import {Icons} from '../../../../assets/icons';
 
 interface TopRoomCardFancyProps {
   roomNumber: string;
@@ -50,7 +51,7 @@ const TopRoomCardFancy = ({
         <View style={styles.stats}>
           <View style={styles.statItem}>
             <Image
-              source={require('../../../../assets/icons/icon_view_light.png')}
+              source={{uri: Icons.IconViewLight}}
               style={styles.statIcon}
             />
             <Text style={styles.statValue}>{viewCount}</Text>
@@ -59,7 +60,7 @@ const TopRoomCardFancy = ({
           <View style={styles.dot} />
           <View style={styles.statItem}>
             <Image
-              source={require('../../../../assets/icons/icon_heart_favourite.png')}
+              source={{uri: Icons.IconHeartFavourite}}
               style={styles.statIcon}
             />
             <Text style={styles.statValue}>{favoriteCount}</Text>

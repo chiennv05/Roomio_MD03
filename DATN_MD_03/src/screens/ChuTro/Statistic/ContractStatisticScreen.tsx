@@ -72,18 +72,18 @@ const ContractStatisticScreen = () => {
   const getContractStatusBgColor = (status: string) => {
     switch (status) {
       case 'active':
-        return Colors.limeGreen + '20'; // Light lime green background to match performance dot
+        return Colors.limeGreen; // Lime green background for active contracts
       case 'pending_signature':
       case 'draft':
-        return Colors.mediumGray + '20'; // Light gray background to match performance dot
+        return Colors.mediumGray; // Gray background for pending signature
       case 'pending_approval':
-        return '#ffc107' + '20'; // Light yellow background to match performance dot
+        return '#ffc107'; // Yellow background for pending approval
       case 'expired':
       case 'terminated':
       case 'cancelled':
-        return Colors.lightRed + '20'; // Light red background to match performance dot
+        return Colors.lightRed; // Red background for expired/terminated
       default:
-        return Colors.mediumGray + '20';
+        return Colors.mediumGray;
     }
   };
 

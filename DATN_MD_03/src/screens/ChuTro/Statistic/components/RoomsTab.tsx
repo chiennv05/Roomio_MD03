@@ -4,6 +4,7 @@ import {Colors} from '../../../../theme/color';
 import {Fonts} from '../../../../theme/fonts';
 import {responsiveFont, responsiveSpacing, scale} from '../../../../utils/responsive';
 import {TopRoomCardFancy} from './index';
+import {Icons} from '../../../../assets/icons';
 
 interface RoomsTabProps {
   data: any;
@@ -19,7 +20,7 @@ const RoomsTab = ({data, navigateToRoomDetail, navigation}: RoomsTabProps) => {
         {/* Tổng số phòng */}
         <View style={[styles.overviewCardSimple, styles.cardTotal]}>
           <View style={[styles.iconBadge, styles.iconWrap]}>
-            <Image source={require('../../../../assets/icons/icon_room.png')} style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]} />
+            <Image source={{uri: Icons.IconRoom}} style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]} />
           </View>
           <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Tổng số phòng</Text>
@@ -30,7 +31,7 @@ const RoomsTab = ({data, navigateToRoomDetail, navigation}: RoomsTabProps) => {
         {/* Phòng đã thuê */}
         <View style={[styles.overviewCardSimple, styles.cardRented]}>
           <View style={[styles.iconBadge, styles.iconWrap]}>
-            <Image source={require('../../../../assets/icons/icon_person.png')} style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]} />
+            <Image source={{uri: Icons.IconHopDongThue}} style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]} />
           </View>
           <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Phòng đã thuê</Text>
@@ -41,7 +42,7 @@ const RoomsTab = ({data, navigateToRoomDetail, navigation}: RoomsTabProps) => {
         {/* Phòng trống */}
         <View style={[styles.overviewCardSimple, styles.cardAvailable]}>
           <View style={[styles.iconBadge, styles.iconWrap]}>
-            <Image source={require('../../../../assets/icons/icon_room.png')} style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]} />
+            <Image source={{uri: Icons.IconPhongTrong}} style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]} />
           </View>
           <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Phòng trống</Text>
@@ -51,8 +52,8 @@ const RoomsTab = ({data, navigateToRoomDetail, navigation}: RoomsTabProps) => {
 
         {/* Chờ duyệt */}
         <View style={[styles.overviewCardSimple, styles.cardPending]}>
-          <View style={[styles.iconBadge, styles.iconWrapNeutral]}>
-            <Image source={require('../../../../assets/icons/icon_light_report.png')} style={[styles.overviewIcon, {tintColor: Colors.textSecondary}]} />
+          <View style={[styles.iconBadge, styles.iconWrap]}>
+            <Image source={{uri: Icons.IconChoDuyet}} style={[styles.overviewIcon, {tintColor: Colors.warning}]} />
           </View>
           <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Chờ duyệt</Text>
@@ -64,7 +65,7 @@ const RoomsTab = ({data, navigateToRoomDetail, navigation}: RoomsTabProps) => {
       {/* Top Viewed Rooms */}
       <View style={styles.topRoomsContainer}>
         <View style={styles.sectionHeader}>
-          <Image source={require('../../../../assets/icons/icon_view_light.png')} style={styles.sectionIcon} />
+          <Image source={{uri: Icons.IconViewLight}} style={styles.sectionIcon} />
           <Text style={styles.sectionTitle}>Phòng được xem nhiều nhất</Text>
         </View>
         {data?.topViewedRooms && data.topViewedRooms.length > 0 ? (
@@ -87,7 +88,7 @@ const RoomsTab = ({data, navigateToRoomDetail, navigation}: RoomsTabProps) => {
       {/* Top Favorite Rooms */}
       <View style={styles.topRoomsContainer}>
         <View style={styles.sectionHeader}>
-          <Image source={require('../../../../assets/icons/icon_heart_favourite.png')} style={styles.sectionIcon} />
+          <Image source={{uri: Icons.IconHeartFavourite}} style={styles.sectionIcon} />
           <Text style={styles.sectionTitle}>Phòng được yêu thích nhất</Text>
         </View>
         {data?.topFavoriteRooms && data.topFavoriteRooms.length > 0 ? (
@@ -110,7 +111,7 @@ const RoomsTab = ({data, navigateToRoomDetail, navigation}: RoomsTabProps) => {
       {/* Quick Actions */}
       <View style={styles.actionsContainer}>
         <View style={styles.sectionHeader}>
-          <Image source={require('../../../../assets/icons/icon_light_report.png')} style={styles.sectionIcon} />
+          <Image source={{uri: Icons.IconLightReport}} style={styles.sectionIcon} />
           <Text style={styles.sectionTitle}>Thao tác nhanh</Text>
         </View>
 
@@ -123,14 +124,14 @@ const RoomsTab = ({data, navigateToRoomDetail, navigation}: RoomsTabProps) => {
             <View style={styles.quickLeft}>
               <View style={styles.quickIconWrap}>
                 <Image
-                  source={require('../../../../assets/icons/icon_room.png')}
+                  source={{uri: Icons.IconRoom}}
                   style={styles.quickIcon}
                 />
               </View>
               <Text style={styles.quickText}>Xem tất cả phòng</Text>
             </View>
             <Image
-              source={require('../../../../assets/icons/icon_arrow_right.png')}
+              source={{uri: Icons.IconArrowRight}}
               style={styles.quickArrow}
             />
           </View>
@@ -196,6 +197,7 @@ const styles = StyleSheet.create({
   overviewIcon: {
     width: scale(20),
     height: scale(20),
+    tintColor: Colors.brandPrimary,
   },
   overviewContent: {
     flex: 1,

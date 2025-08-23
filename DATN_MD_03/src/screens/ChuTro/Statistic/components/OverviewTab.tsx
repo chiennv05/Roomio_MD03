@@ -2,7 +2,8 @@ import React from 'react';
 import {StyleSheet, Text, View, Image} from 'react-native';
 import {Colors} from '../../../../theme/color';
 import {Fonts} from '../../../../theme/fonts';
-import {responsiveFont, responsiveSpacing} from '../../../../utils/responsive';
+import {responsiveFont, responsiveSpacing, scale} from '../../../../utils/responsive';
+import {Icons} from '../../../../assets/icons';
 
 interface OverviewTabProps {
   data: any;
@@ -16,7 +17,7 @@ const OverviewTab = ({data, formatMoney}: OverviewTabProps) => {
       <View style={[styles.statCard, styles.whiteCard]}>
         <View style={styles.statHeaderRow}>
           <Image
-            source={require('../../../../assets/icons/icon_tien_coc.png')}
+            source={{uri: Icons.IconTienCoc}}
             style={styles.statIcon}
           />
           <Text style={styles.statLabel}>Tổng doanh thu</Text>
@@ -28,7 +29,7 @@ const OverviewTab = ({data, formatMoney}: OverviewTabProps) => {
       <View style={[styles.statCard, styles.whiteCard]}>
         <View style={styles.statHeaderRow}>
           <Image
-            source={require('../../../../assets/icons/icon_room.png')}
+            source={{uri: Icons.IconRoom}}
             style={styles.statIcon}
           />
           <Text style={styles.statLabel}>Tổng phòng</Text>
@@ -40,7 +41,7 @@ const OverviewTab = ({data, formatMoney}: OverviewTabProps) => {
       <View style={[styles.statCard, styles.whiteCard]}>
         <View style={styles.statHeaderRow}>
           <Image
-            source={require('../../../../assets/icons/icon_contract.png')}
+            source={{uri: Icons.IconHopDongActive}}
             style={styles.statIcon}
           />
           <Text style={styles.statLabel}>Hợp đồng hiệu lực</Text>
@@ -52,7 +53,7 @@ const OverviewTab = ({data, formatMoney}: OverviewTabProps) => {
       <View style={[styles.statCard, styles.whiteCard]}>
         <View style={styles.statHeaderRow}>
           <Image
-            source={require('../../../../assets/icons/icon_person.png')}
+            source={{uri: Icons.IconHopDongThue}}
             style={styles.statIcon}
           />
           <Text style={styles.statLabel}>Phòng đang thuê</Text>
@@ -92,14 +93,14 @@ const styles = StyleSheet.create({
     marginBottom: responsiveSpacing(8),
   },
   statIcon: {
-    width: 16,
-    height: 16,
+    width: scale(20),
+    height: scale(20),
     tintColor: Colors.darkGreen,
     marginRight: responsiveSpacing(8),
   },
   statLabel: {
     fontFamily: Fonts.Roboto_Medium,
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(14),
     color: Colors.textSecondary,
   },
   statValue: {

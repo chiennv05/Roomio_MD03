@@ -41,7 +41,7 @@ const StatisticScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [primaryTab, setPrimaryTab] = useState<'overview' | 'rooms' | 'revenue' | 'contracts'>('overview');
-  const [selectedMonth, _setSelectedMonth] = useState(8); // Tháng được chọn, mặc định tháng 8
+  const [selectedMonth, setSelectedMonth] = useState(8); // Tháng được chọn, mặc định tháng 8
   const [chartTab, setChartTab] = useState<'revenue' | 'rooms' | 'contracts'>('revenue'); // Tab con trong biểu đồ
 
 
@@ -115,14 +115,45 @@ const StatisticScreen = () => {
     setChartTab(tabType);
   };
 
+  // Xử lý khi người dùng chọn tháng
+  const handleMonthSelect = (month: number) => {
+    setSelectedMonth(month);
+  };
+
+  // Lấy dữ liệu cho tháng được chọn
+  const getSelectedMonthData = () => {
+    if (!data?.monthlyStats) {
+      return { revenue: 0, rooms: 0, contracts: 0 };
+    }
+
+    const { labels, revenue, rooms, contracts } = data.monthlyStats;
+    
+    // Tìm index của tháng được chọn
+    const currentYear = new Date().getFullYear();
+    const selectedMonthLabel = `thg ${selectedMonth} ${currentYear}`;
+    const monthIndex = labels?.findIndex(label => label === selectedMonthLabel) ?? -1;
+    
+    if (monthIndex === -1) {
+      return { revenue: 0, rooms: 0, contracts: 0 };
+    }
+    
+    return {
+      revenue: revenue?.[monthIndex] ?? 0,
+      rooms: rooms?.[monthIndex] ?? 0,
+      contracts: contracts?.[monthIndex] ?? 0,
+    };
+  };
+
+  const selectedMonthData = getSelectedMonthData();
+
   // Helper functions for contract status
   const getContractStatusText = (status: string) => {
     switch (status) {
-      case 'active': return 'Hiệu lực';
+      case 'active': return 'Đang hiệu lực';
       case 'pending_signature': return 'Chờ ký';
       case 'expired': return 'Hết hạn';
       case 'terminated': return 'Đã chấm dứt';
-      case 'cancelled': return 'Đã chấm dứt';
+      case 'cancelled': return 'Đã huỷ';
       case 'draft': return 'Nháp';
       case 'pending_approval': return 'Chờ duyệt';
       case 'rejected': return 'Từ chối';
@@ -182,7 +213,12 @@ const StatisticScreen = () => {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            colors={[Colors.darkGreen]}
+            tintColor={Colors.darkGreen}
+          />
         }>
         
         {/* Primary Navigation Tabs */}
@@ -263,16 +299,13 @@ const StatisticScreen = () => {
           <View style={styles.chartsContainer}>
             <MainBarChart
               title={`Biểu đồ ${chartTab === 'revenue' ? 'doanh thu' : 
-                     chartTab === 'rooms' ? 'phòng trọ' : 'hợp đồng'} 6 tháng đầu năm 2025`}
+                     chartTab === 'rooms' ? 'phòng trọ' : 'hợp đồng'} 6 tháng gần đây`}
               chartType={chartTab}
               onNavigate={(direction: 'prev' | 'next') => {
                 console.log(`Navigating ${direction}`);
                 // Handle navigation logic here if needed
               }}
-              onMonthSelect={(month) => {
-                console.log(`Selected month: ${month}`);
-                // Handle month selection if needed
-              }}
+              onMonthSelect={handleMonthSelect}
               onTabChange={handleChartTabChange}
             />
           </View>
@@ -287,9 +320,9 @@ const StatisticScreen = () => {
               {chartTab === 'contracts' && `Hợp đồng tháng ${selectedMonth}`}
             </Text>
             <Text style={styles.bottomRevenueValue}>
-              {chartTab === 'revenue' && `${formatMoney(data?.monthlyStats?.revenue?.[selectedMonth - 3] || 0)} VND`}
-              {chartTab === 'rooms' && `${data?.monthlyStats?.rooms?.[selectedMonth - 3] || 0} Phòng`}
-              {chartTab === 'contracts' && `${data?.monthlyStats?.contracts?.[selectedMonth - 3] || 0} Hợp đồng`}
+              {chartTab === 'revenue' && `${formatMoney(selectedMonthData.revenue)} VND`}
+              {chartTab === 'rooms' && `${selectedMonthData.rooms} Phòng`}
+              {chartTab === 'contracts' && `${selectedMonthData.contracts} Hợp đồng`}
             </Text>
           </View>
         )}
@@ -441,7 +474,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.backgroud,
+    // backgroundColor: Colors.limeGreen,
   },
   errorContainer: {
     flex: 1,

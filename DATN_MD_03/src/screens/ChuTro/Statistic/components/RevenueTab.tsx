@@ -6,6 +6,7 @@ import {RootStackParamList} from '../../../../types/route';
 import {Colors} from '../../../../theme/color';
 import {Fonts} from '../../../../theme/fonts';
 import {responsiveFont, responsiveSpacing, scale} from '../../../../utils/responsive';
+import {Icons} from '../../../../assets/icons';
 
 type RevenueTabNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -17,6 +18,31 @@ interface RevenueTabProps {
 const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
   const navigation = useNavigation<RevenueTabNavigationProp>();
 
+  // Debug: Log the revenue data to identify the averageRent issue
+  console.log('Debug - Revenue data:', {
+    totalRevenue: data?.revenue?.totalRevenue,
+    averageRent: data?.revenue?.averageRent,
+    occupancyRate: data?.revenue?.occupancyRate
+  });
+
+  // Temporary fix: Validate and correct potentially incorrect averageRent data
+  const getValidatedAverageRent = () => {
+    const apiAverageRent = data?.revenue?.averageRent || 0;
+    const totalRevenue = data?.revenue?.totalRevenue || 0;
+    const totalRooms = data?.overview?.totalRooms || 1;
+    
+    // If averageRent seems unreasonably high (over 100 million), 
+    // calculate it as totalRevenue / totalRooms as a fallback
+    if (apiAverageRent > 100000000) { // 100 million VND
+      console.log('Warning: averageRent seems too high, using calculated value');
+      return totalRooms > 0 ? Math.round(totalRevenue / totalRooms) : 0;
+    }
+    
+    return apiAverageRent;
+  };
+
+  const validatedAverageRent = getValidatedAverageRent();
+
   return (
     <View style={styles.tabContent}>
       {/* Stats Grid - consistent with room tab style */}
@@ -25,7 +51,7 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
         <View style={[styles.overviewCardFull, styles.cardTotal]}>
           <View style={[styles.iconBadge, styles.iconWrap]}>
             <Image
-              source={require('../../../../assets/icons/icon_tien_coc.png')}
+              source={{uri: Icons.IconTienCoc}}
               style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]}
             />
           </View>
@@ -39,13 +65,13 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
         <View style={[styles.overviewCardFull, styles.cardRented]}>
           <View style={[styles.iconBadge, styles.iconWrap]}>
             <Image
-              source={require('../../../../assets/icons/icon_light_report.png')}
+              source={{uri: Icons.IconGiaTrungBinh}}
               style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]}
             />
           </View>
           <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Giá thuê TB</Text>
-            <Text style={styles.overviewValue}>{formatMoney(data?.revenue?.averageRent || 0)} đ</Text>
+            <Text style={styles.overviewValue}>{formatMoney(validatedAverageRent)} đ</Text>
           </View>
         </View>
       </View>
@@ -57,8 +83,8 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
         <View style={styles.breakdownCard}>
           <View style={styles.breakdownItem}>
             <View style={styles.breakdownLeft}>
-              <View style={[styles.iconBadge, {backgroundColor: Colors.lightBlueBackground}]}>
-                <Image source={require('../../../../assets/icons/icon_room.png')} style={[styles.breakdownIcon, {tintColor: Colors.brandPrimary}]} />
+              <View style={[styles.iconBadge, styles.iconWrap]}>
+                <Image source={{uri: Icons.IconRoom}} style={[styles.breakdownIcon, {tintColor: Colors.brandPrimary}]} />
               </View>
               <Text style={styles.breakdownLabel}>Tiền thuê phòng</Text>
             </View>
@@ -69,8 +95,8 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
 
           <View style={styles.breakdownItem}>
             <View style={styles.breakdownLeft}>
-              <View style={[styles.iconBadge, {backgroundColor: '#E9F7F0'}]}>
-                <Image source={require('../../../../assets/icons/icon_servive_black.png')} style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]} />
+              <View style={[styles.iconBadge, styles.iconWrap]}>
+                <Image source={{uri: Icons.IconServiceSelected}} style={[styles.breakdownIcon, {tintColor: Colors.brandPrimary}]} />
               </View>
               <Text style={styles.breakdownLabel}>Phí dịch vụ</Text>
             </View>
@@ -81,8 +107,8 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
 
           <View style={styles.breakdownItem}>
             <View style={styles.breakdownLeft}>
-              <View style={[styles.iconBadge, {backgroundColor: '#F1F7FF'}]}>
-                <Image source={require('../../../../assets/icons/icon_union.png')} style={[styles.breakdownIcon, {tintColor: Colors.accentSupport}]} />
+              <View style={[styles.iconBadge, styles.iconWrap]}>
+                <Image source={{uri: Icons.IconTienCoc}} style={[styles.breakdownIcon, {tintColor: Colors.brandPrimary}]} />
               </View>
               <Text style={styles.breakdownLabel}>Phí khác</Text>
             </View>
@@ -106,14 +132,14 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
             <View style={styles.quickLeft}>
               <View style={styles.quickIconWrap}>
                 <Image
-                  source={require('../../../../assets/icons/icon_thanh_toan.png')}
+                  source={{uri: Icons.IconThanhToan}}
                   style={styles.quickIcon}
                 />
               </View>
               <Text style={styles.quickText}>Xem tất cả hóa đơn</Text>
             </View>
             <Image
-              source={require('../../../../assets/icons/icon_arrow_right.png')}
+              source={{uri: Icons.IconArrowRight}}
               style={styles.quickArrow}
             />
           </View>
@@ -168,7 +194,7 @@ const styles = StyleSheet.create({
   },
   overviewContent: {flex: 1},
   overviewLabel: {
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.textSecondary,
     marginBottom: responsiveSpacing(4),

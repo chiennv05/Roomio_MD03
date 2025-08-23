@@ -11,6 +11,7 @@ import {
   scale,
 } from '../../../../utils/responsive';
 import {API_CONFIG} from '../../../../configs';
+import {Icons} from '../../../../assets/icons';
 
 type ContractsTabNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -39,18 +40,18 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
   const getContractStatusBgColor = (status: string) => {
     switch (status) {
       case 'active':
-        return Colors.limeGreen + '20'; // Light lime green background to match performance dot
+        return Colors.limeGreen; // Lime green background for active contracts
       case 'pending_signature':
       case 'draft':
-        return Colors.mediumGray + '20'; // Light gray background to match performance dot
+        return Colors.mediumGray; // Gray background for pending signature
       case 'pending_approval':
-        return '#ffc107' + '20'; // Light yellow background to match performance dot
+        return '#ffc107'; // Yellow background for pending approval
       case 'expired':
       case 'terminated':
       case 'cancelled':
-        return Colors.lightRed + '20'; // Light red background to match performance dot
+        return Colors.lightRed; // Red background for expired/terminated
       default:
-        return Colors.mediumGray + '20';
+        return Colors.mediumGray;
     }
   };
 
@@ -64,7 +65,7 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
         <View style={[styles.overviewCardSimple, styles.cardTotal]}>
           <View style={[styles.iconBadge, styles.iconWrap]}>
             <Image
-              source={require('../../../../assets/icons/icon_contract.png')}
+              source={{uri: Icons.IconHopDongActive}}
               style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]}
             />
           </View>
@@ -80,8 +81,8 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
         <View style={[styles.overviewCardSimple, styles.cardRented]}>
           <View style={[styles.iconBadge, styles.iconWrap]}>
             <Image
-              source={require('../../../../assets/icons/icon_check.png')}
-              style={[styles.overviewIcon, {tintColor: Colors.limeGreen}]}
+              source={{uri: Icons.IconHopDongActive}}
+              style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]}
             />
           </View>
           <View style={styles.overviewContent}>
@@ -96,7 +97,7 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
         <View style={[styles.overviewCardSimple, styles.cardAvailable]}>
           <View style={[styles.iconBadge, styles.iconWrapNeutral]}>
             <Image
-              source={require('../../../../assets/icons/icon_select_date.png')}
+              source={{uri: Icons.IconChoKy}}
               style={[styles.overviewIcon, {tintColor: Colors.mediumGray}]}
             />
           </View>
@@ -112,7 +113,7 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
         <View style={[styles.overviewCardSimple, styles.cardExpired]}>
           <View style={[styles.iconBadge, styles.iconWrapWarning]}>
             <Image
-              source={require('../../../../assets/icons/icon_warning.png')}
+              source={{uri: Icons.IconDaHetHan}}
               style={[styles.overviewIcon, {tintColor: Colors.lightRed}]}
             />
           </View>
@@ -128,8 +129,8 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
         <View style={[styles.overviewCardSimple, styles.cardPending]}>
           <View style={[styles.iconBadge, styles.iconWrapWarning]}>
             <Image
-              source={require('../../../../assets/icons/icon_warning.png')}
-              style={[styles.overviewIcon, {tintColor: Colors.lightRed}]}
+              source={{uri: Icons.IconDaChamDut}}
+              style={[styles.overviewIcon]}
             />
           </View>
           <View style={styles.overviewContent}>
@@ -150,7 +151,7 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
           <View style={styles.performanceHeader}>
             <View style={styles.performanceIconContainer}>
               <Image
-                source={require('../../../../assets/icons/icon_light_report.png')}
+                source={{uri: Icons.IconHieuSuat}}
                 style={styles.performanceIcon}
               />
             </View>
@@ -293,7 +294,7 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
                   {/* Arrow */}
                   <View style={styles.contractArrow}>
                     <Image
-                      source={require('../../../../assets/icons/icon_arrow_right.png')}
+                      source={{uri: Icons.IconArrowRight}}
                       style={styles.arrowIcon}
                     />
                   </View>
@@ -303,7 +304,7 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
         ) : (
           <View style={styles.emptyState}>
             <Image
-              source={require('../../../../assets/icons/icon_contract.png')}
+              source={{uri: Icons.IconContract}}
               style={styles.emptyIcon}
             />
             <Text style={styles.emptyText}>Chưa có hợp đồng nào</Text>
@@ -323,14 +324,14 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
             <View style={styles.quickLeft}>
               <View style={styles.quickIconWrap}>
                 <Image
-                  source={require('../../../../assets/icons/icon_contract.png')}
+                  source={{uri: Icons.IconHopDongActive}}
                   style={styles.quickIcon}
                 />
               </View>
               <Text style={styles.quickText}>Xem tất cả hợp đồng</Text>
             </View>
             <Image
-              source={require('../../../../assets/icons/icon_arrow_right.png')}
+              source={{uri: Icons.IconArrowRight}}
               style={styles.quickArrow}
             />
           </View>
@@ -408,7 +409,7 @@ const styles = StyleSheet.create({
   },
   overviewContent: {flex: 1},
   overviewLabel: {
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(13),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.textSecondary,
     marginBottom: responsiveSpacing(4),
@@ -447,7 +448,7 @@ const styles = StyleSheet.create({
   performanceIconContainer: {
     width: scale(40),
     height: scale(40),
-    borderRadius: scale(20),
+    borderRadius: scale(12),
     backgroundColor: Colors.brandPrimary,
     justifyContent: 'center',
     alignItems: 'center',

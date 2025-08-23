@@ -18,7 +18,7 @@ export const getContractStatusInfo = (status: string) => {
     case 'draft':
       return {
         label: 'Bản nháp',
-        color: Colors.white,
+        color: Colors.black,
         backgroudColor: Colors.gray,
         backgroudStatus: Colors.mediumGray,
         textColor: Colors.dearkOlive,
@@ -27,7 +27,7 @@ export const getContractStatusInfo = (status: string) => {
     case 'pending_signature':
       return {
         label: 'Chờ ký',
-        color: Colors.white,
+        color: Colors.black,
         backgroudColor: Colors.gray,
         backgroudStatus: Colors.mediumGray,
         textColor: Colors.dearkOlive,
@@ -36,16 +36,16 @@ export const getContractStatusInfo = (status: string) => {
     case 'cancelled':
       return {
         label: 'Đã hủy',
-        color: Colors.white,
+        color: Colors.black,
         backgroudColor: Colors.gray,
-        backgroudStatus: Colors.mediumGray,
+        backgroudStatus: Colors.lightRed,
         textColor: Colors.dearkOlive,
         textColorLabel: Colors.darkGray,
       };
     case 'pending_approval':
       return {
         label: 'Chờ phê duyệt',
-        color: Colors.white,
+        color: Colors.black,
         backgroudColor: Colors.gray,
         backgroudStatus: '#ffc107',
         textColor: Colors.dearkOlive,
@@ -63,7 +63,7 @@ export const getContractStatusInfo = (status: string) => {
     case 'expired':
       return {
         label: 'Hết hạn',
-        color: Colors.white,
+        color: Colors.black,
         backgroudColor: Colors.textGray,
         backgroudStatus: Colors.lightRed,
         textColor: Colors.dearkOlive,
@@ -72,7 +72,7 @@ export const getContractStatusInfo = (status: string) => {
     case 'terminated':
       return {
         label: 'Đã chấm dứt',
-        color: Colors.white,
+        color: Colors.black,
         backgroudColor: Colors.textGray,
         backgroudStatus: Colors.lightRed,
         textColor: Colors.dearkOlive,
@@ -81,7 +81,7 @@ export const getContractStatusInfo = (status: string) => {
     case 'needs_resigning':
       return {
         label: 'Cần ký lại',
-        color: Colors.white,
+        color: Colors.black,
         backgroudColor: Colors.gray,
         backgroudStatus: Colors.mediumGray,
         textColor: Colors.dearkOlive,
@@ -90,7 +90,7 @@ export const getContractStatusInfo = (status: string) => {
     case 'rejected':
       return {
         label: 'Bị từ chối',
-        color: Colors.white,
+        color: Colors.black,
         backgroudColor: Colors.textGray,
         backgroudStatus: Colors.lightRed,
         textColor: Colors.dearkOlive,
