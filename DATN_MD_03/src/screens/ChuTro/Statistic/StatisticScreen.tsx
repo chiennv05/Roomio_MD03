@@ -40,13 +40,14 @@ const StatisticScreen = () => {
     (state: RootState) => state.dashboard,
   );
   const [refreshing, setRefreshing] = useState(false);
-  const [chartType, setChartType] = useState<
-    'revenue' | 'rooms' | 'contracts'
-  >('revenue');
+  const [chartType, setChartType] = useState<'revenue' | 'rooms' | 'contracts'>(
+    'revenue',
+  );
 
   // Segmented control animation for filter tabs (Option B)
   const [tabsW, setTabsW] = useState(0);
-  const currentIndex = chartType === 'revenue' ? 0 : chartType === 'rooms' ? 1 : 2;
+  const currentIndex =
+    chartType === 'revenue' ? 0 : chartType === 'rooms' ? 1 : 2;
   const tabAnim = React.useRef(new Animated.Value(currentIndex)).current;
   useEffect(() => {
     Animated.timing(tabAnim, {
@@ -189,14 +190,19 @@ const StatisticScreen = () => {
         <View style={styles.statsGrid}>
           {/* Trên trái - LimeGreen thuần */}
           <View style={[styles.statCard, styles.limeCard]}>
-            <View style={[styles.statIconContainer, styles.statIconContainerLight]}>
+            <View
+              style={[styles.statIconContainer, styles.statIconContainerLight]}>
               <Image
                 source={require('../../../assets/icons/icon_tien_coc.png')}
                 style={[styles.statIcon, styles.statIconDark]}
               />
             </View>
-            <Text style={[styles.statValue, styles.statValueDark]}>{formatMoney(data?.revenue?.totalRevenue || 4338000)}</Text>
-            <Text style={[styles.statLabel, styles.statLabelDark]}>Tổng doanh thu</Text>
+            <Text style={[styles.statValue, styles.statValueDark]}>
+              {formatMoney(data?.revenue?.totalRevenue || 0)}
+            </Text>
+            <Text style={[styles.statLabel, styles.statLabelDark]}>
+              Tổng doanh thu
+            </Text>
           </View>
 
           {/* Trên phải - Đen (đổi sang xám than mềm) */}
@@ -207,7 +213,9 @@ const StatisticScreen = () => {
                 style={styles.statIcon}
               />
             </View>
-            <Text style={styles.statValue}>{data?.overview?.totalRooms || 4}</Text>
+            <Text style={styles.statValue}>
+              {data?.overview?.totalRooms || 4}
+            </Text>
             <Text style={styles.statLabel}>Tổng phòng</Text>
           </View>
 
@@ -219,20 +227,27 @@ const StatisticScreen = () => {
                 style={styles.statIcon}
               />
             </View>
-            <Text style={styles.statValue}>{data?.overview?.totalContracts || 19}</Text>
+            <Text style={styles.statValue}>
+              {data?.overview?.totalContracts || 19}
+            </Text>
             <Text style={styles.statLabel}>Hợp đồng</Text>
           </View>
 
           {/* Dưới phải - LimeGreen thuần */}
           <View style={[styles.statCard, styles.limeCard]}>
-            <View style={[styles.statIconContainer, styles.statIconContainerLight]}>
+            <View
+              style={[styles.statIconContainer, styles.statIconContainerLight]}>
               <Image
                 source={require('../../../assets/icons/icon_person.png')}
                 style={[styles.statIcon, styles.statIconDark]}
               />
             </View>
-            <Text style={[styles.statValue, styles.statValueDark]}>{data?.overview?.rentedRooms || 3}</Text>
-            <Text style={[styles.statLabel, styles.statLabelDark]}>Đang thuê</Text>
+            <Text style={[styles.statValue, styles.statValueDark]}>
+              {data?.overview?.rentedRooms || 3}
+            </Text>
+            <Text style={[styles.statLabel, styles.statLabelDark]}>
+              Đang thuê
+            </Text>
           </View>
         </View>
 
@@ -241,8 +256,7 @@ const StatisticScreen = () => {
           {/* Chart Tabs */}
           <View
             style={styles.chartTabs}
-            onLayout={e => setTabsW(e.nativeEvent.layout.width)}
-          >
+            onLayout={e => setTabsW(e.nativeEvent.layout.width)}>
             {(() => {
               const padding = responsiveSpacing(6);
               const segmentWidth = Math.max((tabsW - padding * 2) / 3, 0);
@@ -268,25 +282,34 @@ const StatisticScreen = () => {
 
             <TouchableOpacity
               style={[styles.chartTab]}
-              onPress={() => setChartType('revenue')}
-            >
-              <Text style={[styles.chartTabText, chartType === 'revenue' && styles.chartTabTextActive]}>
+              onPress={() => setChartType('revenue')}>
+              <Text
+                style={[
+                  styles.chartTabText,
+                  chartType === 'revenue' && styles.chartTabTextActive,
+                ]}>
                 Doanh thu
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.chartTab]}
-              onPress={() => setChartType('rooms')}
-            >
-              <Text style={[styles.chartTabText, chartType === 'rooms' && styles.chartTabTextActive]}>
+              onPress={() => setChartType('rooms')}>
+              <Text
+                style={[
+                  styles.chartTabText,
+                  chartType === 'rooms' && styles.chartTabTextActive,
+                ]}>
                 Phòng
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.chartTab]}
-              onPress={() => setChartType('contracts')}
-            >
-              <Text style={[styles.chartTabText, chartType === 'contracts' && styles.chartTabTextActive]}>
+              onPress={() => setChartType('contracts')}>
+              <Text
+                style={[
+                  styles.chartTabText,
+                  chartType === 'contracts' && styles.chartTabTextActive,
+                ]}>
                 Hợp đồng
               </Text>
             </TouchableOpacity>
@@ -335,7 +358,12 @@ const StatisticScreen = () => {
             activeOpacity={0.7}
             style={[styles.modernAnalysisCard, styles.greenBorder]}
             onPress={navigateToRevenueStatistic}>
-            <View style={[styles.modernCardBorder, {backgroundColor: Colors.brandPrimary}]} />
+            <View
+              style={[
+                styles.modernCardBorder,
+                {backgroundColor: Colors.brandPrimary},
+              ]}
+            />
             <View style={styles.modernCardContent}>
               <View style={[styles.modernIconContainer, styles.greenIconBg]}>
                 <Image
@@ -363,7 +391,12 @@ const StatisticScreen = () => {
             activeOpacity={0.7}
             style={[styles.modernAnalysisCard, styles.cyanBorder]}
             onPress={navigateToRoomStatistic}>
-            <View style={[styles.modernCardBorder, {backgroundColor: Colors.accentSupport}]} />
+            <View
+              style={[
+                styles.modernCardBorder,
+                {backgroundColor: Colors.accentSupport},
+              ]}
+            />
             <View style={styles.modernCardContent}>
               <View style={[styles.modernIconContainer, styles.cyanIconBg]}>
                 <Image
@@ -391,7 +424,12 @@ const StatisticScreen = () => {
             activeOpacity={0.7}
             style={[styles.modernAnalysisCard, styles.blueBorder]}
             onPress={navigateToContractStatistic}>
-            <View style={[styles.modernCardBorder, {backgroundColor: Colors.accentContract}]} />
+            <View
+              style={[
+                styles.modernCardBorder,
+                {backgroundColor: Colors.accentContract},
+              ]}
+            />
             <View style={styles.modernCardContent}>
               <View style={[styles.modernIconContainer, styles.blueIconBg]}>
                 <Image
@@ -414,7 +452,6 @@ const StatisticScreen = () => {
             </View>
           </TouchableOpacity>
         </View>
-
       </ScrollView>
     </SafeAreaView>
   );
