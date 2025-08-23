@@ -323,7 +323,7 @@ export default function MainBarChart({title, onNavigate, onMonthSelect, chartTyp
                 yAxisSuffix=""
                 showValuesOnTopOfBars={false}
                 withVerticalLabels={true}
-                withHorizontalLabels={false}
+                withHorizontalLabels={true}
               />
             </TouchableOpacity>
 

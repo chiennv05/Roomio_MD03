@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   quickIcon: {
     width: scale(18), 
     height: scale(18), 
-    tintColor: Colors.white,
+    tintColor: Colors.darkGreen,
   },
   quickText: {
     fontFamily: Fonts.Roboto_Bold, 

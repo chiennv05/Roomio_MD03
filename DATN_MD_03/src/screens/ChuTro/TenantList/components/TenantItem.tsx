@@ -149,7 +149,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginBottom: responsiveSpacing(16),
   },
-  roomImageContainer: {},
+  roomImageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   roomBasicInfo: {
     flex: 1,
     justifyContent: 'space-between',

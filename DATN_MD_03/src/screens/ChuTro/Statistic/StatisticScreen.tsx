@@ -312,12 +312,12 @@ const styles = StyleSheet.create({
   
   // Primary Navigation Tabs
   primaryTabsWrapper: {
-    marginHorizontal: responsiveSpacing(16),
+    marginHorizontal: responsiveSpacing(-6),
     marginTop: responsiveSpacing(20),
   },
   primaryTabsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: responsiveSpacing(20),
+    paddingHorizontal: responsiveSpacing(24),
     gap: responsiveSpacing(8),
     height: 44,
   },
