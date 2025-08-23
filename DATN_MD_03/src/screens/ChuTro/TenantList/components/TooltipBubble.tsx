@@ -10,14 +10,16 @@ interface TooltipBubbleProps {
 }
 
 const TooltipBubble: React.FC<TooltipBubbleProps> = ({text, visible}) => {
-  if (!visible) {return null;}
+  if (!visible) {
+    return null;
+  }
 
   return (
     <View style={styles.container}>
+      <View style={styles.arrow} />
       <View style={styles.bubble}>
         <Text style={styles.text}>{text}</Text>
       </View>
-      <View style={styles.arrow} />
     </View>
   );
 };
@@ -25,7 +27,7 @@ const TooltipBubble: React.FC<TooltipBubbleProps> = ({text, visible}) => {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: '100%',
+    top: '100%',
     alignSelf: 'center',
     marginBottom: scale(8),
     alignItems: 'center',
@@ -52,10 +54,10 @@ const styles = StyleSheet.create({
     borderStyle: 'solid',
     borderLeftWidth: scale(8),
     borderRightWidth: scale(8),
-    borderTopWidth: scale(8),
+    borderBottomWidth: scale(8), // đổi từ borderTopWidth sang borderBottomWidth
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderTopColor: Colors.darkGreen,
+    borderBottomColor: Colors.darkGreen, // đổi từ borderTopColor sang borderBottomColor
     alignSelf: 'center',
   },
 });
