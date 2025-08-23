@@ -5,7 +5,11 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../../types/route';
 import {Colors} from '../../../../theme/color';
 import {Fonts} from '../../../../theme/fonts';
-import {responsiveFont, responsiveSpacing, scale} from '../../../../utils/responsive';
+import {
+  responsiveFont,
+  responsiveSpacing,
+  scale,
+} from '../../../../utils/responsive';
 import {API_CONFIG} from '../../../../configs';
 
 type ContractsTabNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -50,6 +54,8 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
     }
   };
 
+  console.log('object', data);
+
   return (
     <View style={styles.tabContent}>
       {/* Stats Grid - consistent with room tab style */}
@@ -64,7 +70,9 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
           </View>
           <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Tổng hợp đồng</Text>
-            <Text style={styles.overviewValue}>{data?.overview?.totalContracts || 0}</Text>
+            <Text style={styles.overviewValue}>
+              {data?.overview?.totalContracts || 0}
+            </Text>
           </View>
         </View>
 
@@ -78,7 +86,9 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
           </View>
           <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Đang hiệu lực</Text>
-            <Text style={styles.overviewValue}>{data?.overview?.activeContracts || 0}</Text>
+            <Text style={styles.overviewValue}>
+              {data?.overview?.activeContracts || 0}
+            </Text>
           </View>
         </View>
 
@@ -92,7 +102,9 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
           </View>
           <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Chờ ký</Text>
-            <Text style={styles.overviewValue}>{data?.overview?.pendingContracts || 0}</Text>
+            <Text style={styles.overviewValue}>
+              {data?.overview?.pendingContracts || 0}
+            </Text>
           </View>
         </View>
 
@@ -106,7 +118,9 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
           </View>
           <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Đã hết hạn</Text>
-            <Text style={styles.overviewValue}>{data?.overview?.expiredContracts || 0}</Text>
+            <Text style={styles.overviewValue}>
+              {data?.overview?.expiredContracts || 0}
+            </Text>
           </View>
         </View>
 
@@ -120,7 +134,9 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
           </View>
           <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Đã chấm dứt</Text>
-            <Text style={styles.overviewValue}>{data?.overview?.terminatedContracts || 0}</Text>
+            <Text style={styles.overviewValue}>
+              {data?.overview?.terminatedContracts || 0}
+            </Text>
           </View>
         </View>
       </View>
@@ -143,33 +159,65 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
 
           <View style={styles.performanceStats}>
             <View style={styles.performanceItem}>
-              <View style={[styles.performanceDot, {backgroundColor: Colors.limeGreen}]} />
+              <View
+                style={[
+                  styles.performanceDot,
+                  {backgroundColor: Colors.limeGreen},
+                ]}
+              />
               <Text style={styles.performanceLabel}>Đang hiệu lực</Text>
-              <Text style={styles.performanceValue}>{data?.overview?.activeContracts || 0}</Text>
+              <Text style={styles.performanceValue}>
+                {data?.overview?.activeContracts || 0}
+              </Text>
             </View>
 
             <View style={styles.performanceItem}>
-              <View style={[styles.performanceDot, {backgroundColor: Colors.mediumGray}]} />
+              <View
+                style={[
+                  styles.performanceDot,
+                  {backgroundColor: Colors.mediumGray},
+                ]}
+              />
               <Text style={styles.performanceLabel}>Chờ ký</Text>
-              <Text style={styles.performanceValue}>{data?.overview?.pendingContracts || 0}</Text>
+              <Text style={styles.performanceValue}>
+                {data?.overview?.pendingContracts || 0}
+              </Text>
             </View>
 
             <View style={styles.performanceItem}>
-              <View style={[styles.performanceDot, {backgroundColor: '#ffc107'}]} />
+              <View
+                style={[styles.performanceDot, {backgroundColor: '#ffc107'}]}
+              />
               <Text style={styles.performanceLabel}>Chờ duyệt</Text>
-              <Text style={styles.performanceValue}>{data?.overview?.pendingContracts || 0}</Text>
+              <Text style={styles.performanceValue}>
+                {data?.overview?.pendingContracts || 0}
+              </Text>
             </View>
 
             <View style={styles.performanceItem}>
-              <View style={[styles.performanceDot, {backgroundColor: Colors.lightRed}]} />
+              <View
+                style={[
+                  styles.performanceDot,
+                  {backgroundColor: Colors.lightRed},
+                ]}
+              />
               <Text style={styles.performanceLabel}>Đã hết hạn</Text>
-              <Text style={styles.performanceValue}>{data?.overview?.expiredContracts || 0}</Text>
+              <Text style={styles.performanceValue}>
+                {data?.overview?.expiredContracts || 0}
+              </Text>
             </View>
 
             <View style={styles.performanceItem}>
-              <View style={[styles.performanceDot, {backgroundColor: Colors.lightRed}]} />
+              <View
+                style={[
+                  styles.performanceDot,
+                  {backgroundColor: Colors.lightRed},
+                ]}
+              />
               <Text style={styles.performanceLabel}>Đã chấm dứt</Text>
-              <Text style={styles.performanceValue}>{data?.overview?.terminatedContracts || 0}</Text>
+              <Text style={styles.performanceValue}>
+                {data?.overview?.terminatedContracts || 0}
+              </Text>
             </View>
           </View>
         </View>
@@ -180,6 +228,13 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
         <Text style={styles.modernSectionTitle}>Hợp đồng gần đây</Text>
         {data?.recentContracts && data.recentContracts.length > 0 ? (
           data.recentContracts
+            .filter(
+              (contract: any) =>
+                contract.roomId &&
+                contract.roomId.roomNumber !== 'Phòng đã bị xóa' &&
+                Array.isArray(contract.roomId.photos) &&
+                contract.roomId.photos.length > 0,
+            )
             .slice(0, 4)
             .map((contract: any, index: number) => (
               <TouchableOpacity
@@ -187,17 +242,13 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
                 style={styles.modernContractCard}
                 onPress={() => navigateToContractDetail(contract._id)}
                 activeOpacity={0.8}>
-
                 <View style={styles.contractContent}>
-
                   {/* Room Image */}
                   <View style={styles.contractImageContainer}>
                     <Image
-                      source={
-                        contract.roomId.photos && contract.roomId.photos.length > 0
-                          ? {uri: `${API_CONFIG.BASE_URL}${contract.roomId.photos[0]}`}
-                          : require('../../../../assets/images/image_backgroud_button.png')
-                      }
+                      source={{
+                        uri: `${API_CONFIG.BASE_URL}${contract.roomId.photos[0]}`,
+                      }}
                       style={styles.contractImage}
                       resizeMode="cover"
                     />
@@ -212,14 +263,24 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
                       {contract.tenantId.fullName}
                     </Text>
                     <View style={styles.contractMeta}>
-                      <View style={[
-                        styles.contractStatusBadge,
-                        {backgroundColor: getContractStatusBgColor(contract.status)}
-                      ]}>
-                        <Text style={[
-                          styles.contractStatusText,
-                          {color: getContractStatusTextColor(contract.status)}
+                      <View
+                        style={[
+                          styles.contractStatusBadge,
+                          {
+                            backgroundColor: getContractStatusBgColor(
+                              contract.status,
+                            ),
+                          },
                         ]}>
+                        <Text
+                          style={[
+                            styles.contractStatusText,
+                            {
+                              color: getContractStatusTextColor(
+                                contract.status,
+                              ),
+                            },
+                          ]}>
                           {getContractStatusText(contract.status)}
                         </Text>
                       </View>
@@ -257,8 +318,7 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={() => navigation.navigate('ContractManagement')}
-          style={[styles.quickCard, {backgroundColor: Colors.darkGreen}]}
-        >
+          style={[styles.quickCard, {backgroundColor: Colors.darkGreen}]}>
           <View style={styles.quickGradient}>
             <View style={styles.quickLeft}>
               <View style={styles.quickIconWrap}>
@@ -547,18 +607,18 @@ const styles = StyleSheet.create({
     marginRight: responsiveSpacing(10),
   },
   quickIcon: {
-    width: scale(18), 
-    height: scale(18), 
+    width: scale(18),
+    height: scale(18),
     tintColor: Colors.darkGreen,
   },
   quickText: {
-    fontFamily: Fonts.Roboto_Bold, 
-    fontSize: responsiveFont(16), 
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(16),
     color: Colors.white,
   },
   quickArrow: {
-    width: scale(18), 
-    height: scale(18), 
+    width: scale(18),
+    height: scale(18),
     tintColor: Colors.white,
   },
 });
