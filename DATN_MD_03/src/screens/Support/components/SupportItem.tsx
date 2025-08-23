@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Image} from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import {Support} from '../../../types/Support';
 import {useNavigation} from '@react-navigation/native';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -27,27 +27,27 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
     switch (status) {
       case 'mo':
         return {
-          color: Colors.statusOpen, // gray badge bg
-          text: 'Mới Mở',
+          color: '#A0A0A0', // Gray color for "Mở" status
+          text: 'Mở',
           bgColor: Colors.statusOpenBg,
         };
       case 'dangXuLy':
         return {
-          color: Colors.warning,
+          color: '#FFC107', // Yellow background for "Đang xử lý" status
           text: 'Đang xử lý',
           bgColor: Colors.limeGreenOpacityLight,
         };
       case 'hoanTat':
         return {
-          color: Colors.limeGreen,
+          color: Colors.limeGreen, // Green for "Hoàn tất"
           text: 'Hoàn tất',
-          bgColor: Colors.lightGreenBackground,
+          bgColor: Colors.limeGreenOpacityLight,
         };
       default:
         return {
-          color: Colors.textGray,
+          color: Colors.statusOpen,
           text: 'Không xác định',
-          bgColor: Colors.lightGray,
+          bgColor: Colors.statusOpenBg,
         };
     }
   };
@@ -88,21 +88,8 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
 
   const handleDelete = (e: any) => {
     e.stopPropagation(); // Prevent triggering the onPress event
-    console.log(
-      '🗑️ SupportItem handleDelete called for item:',
-      item._id,
-      'canModify:',
-      canModify,
-    );
     if (onDelete && canModify) {
       onDelete(item);
-    } else {
-      console.log(
-        '❌ Cannot delete - onDelete:',
-        !!onDelete,
-        'canModify:',
-        canModify,
-      );
     }
   };
 
@@ -125,26 +112,32 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
           </Text>
           <View
             style={[styles.statusBadge, {backgroundColor: statusInfo.color}]}>
-            <Text style={styles.statusBadgeText}>{statusInfo.text}</Text>
+            <Text style={[
+              styles.statusBadgeText, 
+              {color: (statusInfo.color === Colors.limeGreen || statusInfo.color === '#FFC107') ? Colors.black : Colors.white}
+            ]}>{statusInfo.text}</Text>
           </View>
+        </View>
+
+        {/* Hiển thị content mô tả với status badge */}
+        <View style={styles.categoryRow}>
+          <Text style={styles.categoryLabel} numberOfLines={1}>
+            {getCategoryText(item.category)}
+          </Text>
         </View>
 
         {/* Hiển thị nội dung mô tả */}
         {item.content && (
-          <Text style={styles.description} numberOfLines={2}>
+          <Text style={[styles.description,{color: "#444444" , fontSize: responsiveFont(16)}]} numberOfLines={2}>
             {item.content}
           </Text>
         )}
 
         <View style={styles.bottomRow}>
-          <View style={styles.metaInfo}>
-            <Text style={styles.dateText}>{formatDate(item.createdAt)}</Text>
-            <Text style={styles.categoryLabel}>
-              {getCategoryText(item.category)}
-            </Text>
-          </View>
+          <Text style={styles.dateText}>{formatDate(item.createdAt)}</Text>
         </View>
 
+        {/* Action buttons only for modifiable items */}
         {canModify && (
           <View style={styles.actionsRow}>
             <TouchableOpacity
@@ -172,15 +165,15 @@ const SupportItem: React.FC<SupportItemProps> = ({item, onPress, onDelete}) => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: Colors.white,
-    borderRadius: scale(12),
+    borderRadius: scale(24),
     padding: responsiveSpacing(16),
-    marginBottom: responsiveSpacing(8), // Giảm margin bottom
-    marginHorizontal: responsiveSpacing(8), // Giảm margin ngang để item rộng hơn
-    elevation: 2,
+    marginBottom: responsiveSpacing(12),
+    marginHorizontal: responsiveSpacing(0),
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 4,
   },
   content: {
     flex: 1,
@@ -192,17 +185,17 @@ const styles = StyleSheet.create({
     marginBottom: responsiveSpacing(8),
   },
   title: {
-    fontSize: responsiveFont(20),
+    fontSize: responsiveFont(24),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
     flex: 1,
-    marginRight: responsiveSpacing(8),
+    marginRight: responsiveSpacing(12),
   },
   statusBadge: {
-    paddingHorizontal: responsiveSpacing(20),
-    paddingVertical: responsiveSpacing(8),
+    paddingHorizontal: responsiveSpacing(12),
+    paddingVertical: responsiveSpacing(6),
     borderRadius: scale(20),
-    minWidth: scale(50),
+    minWidth: scale(60),
     alignItems: 'center',
   },
   statusBadgeText: {
@@ -210,29 +203,29 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.white,
   },
+  categoryRow: {
+    marginBottom: responsiveSpacing(8),
+  },
+  categoryLabel: {
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Medium,
+    color: Colors.darkGreen,
+    fontWeight: '700',
+  },
   description: {
-    fontSize: responsiveFont(13),
+    fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.textGray,
     marginBottom: responsiveSpacing(8),
     lineHeight: responsiveFont(20),
   },
   bottomRow: {
-    marginBottom: responsiveSpacing(12),
-  },
-  metaInfo: {
-    flexDirection: 'column',
+    marginBottom: responsiveSpacing(8),
   },
   dateText: {
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Regular,
-    color: Colors.textGray,
-    marginBottom: responsiveSpacing(4),
-  },
-  categoryLabel: {
-    fontSize: responsiveFont(12),
-    fontFamily: Fonts.Roboto_Regular,
-    color: Colors.textGray,
+    color: "#A0A0A0",
   },
   actionsRow: {
     flexDirection: 'row',
@@ -241,27 +234,28 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    paddingVertical: responsiveSpacing(10),
-    paddingHorizontal: responsiveSpacing(12),
-    borderRadius: scale(20),
+    paddingVertical: responsiveSpacing(12),
+    paddingHorizontal: responsiveSpacing(16),
+    borderRadius: scale(25),
     alignItems: 'center',
   },
   editButton: {
-    backgroundColor: Colors.figmaGreen,
+    backgroundColor: Colors.darkGreen,
   },
   deleteButton: {
     backgroundColor: Colors.figmaRed,
   },
   editButtonText: {
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.black,
+    color: Colors.white,
   },
   deleteButtonText: {
-    fontSize: responsiveFont(12),
+    fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.black,
+    color: Colors.white,
   },
+
 });
 
-export default SupportItem;
+export default React.memo(SupportItem);

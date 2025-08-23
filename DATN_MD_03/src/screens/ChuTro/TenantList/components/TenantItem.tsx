@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useCallback, useEffect} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Image} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import TooltipBubble from './TooltipBubble';
@@ -18,6 +18,16 @@ type NavigationProp = StackNavigationProp<RootStackParamList, 'TenantDetail'>;
 const TenantItem: React.FC<TenantItemProps> = ({item}) => {
   const navigation = useNavigation<NavigationProp>();
   const [selectedTenant, setSelectedTenant] = useState<string | null>(null);
+
+  // Auto-hide tooltip after 3 seconds
+  useEffect(() => {
+    if (selectedTenant) {
+      const timer = setTimeout(() => {
+        setSelectedTenant(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedTenant]);
 
   const roomNumber = item.room?.roomNumber || 'N/A';
   const tenantCount = item.tenantCount || 1;
@@ -45,18 +55,18 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
     })),
   ];
 
-  const handleViewDetail = () => {
+  const handleViewDetail = useCallback(() => {
     navigation.navigate('TenantDetail', {
       tenantId: item._id,
       ...({tenantData: item} as any),
     });
-  };
+  }, [navigation, item]);
 
-  const handleAvatarPress = (tenantName: string) => {
+  const handleAvatarPress = useCallback((tenantName: string) => {
     setSelectedTenant(prevName =>
       prevName === tenantName ? null : tenantName,
     );
-  };
+  }, []);
 
   const getInitials = (fullName: string) => {
     return fullName
@@ -68,16 +78,33 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
   };
 
   const renderTenantAvatars = () => {
+    // Calculate dynamic spacing based on tenant count
+    const isLowCount = allTenants.length <= 2;
+    const isHighCount = allTenants.length >= 4;
+    
     return (
-      <View style={styles.avatarContainer}>
+      <View style={[
+        styles.avatarContainer,
+        isLowCount && styles.avatarContainerLowCount,
+        isHighCount && styles.avatarContainerHighCount
+      ]}>
         {allTenants.map((tenant, index) => (
           <TouchableOpacity
             key={`${tenant._id}-${index}`}
             style={[
               styles.avatarWrapper,
-              index > 0 && styles.avatarWrapperOverlap,
+              index > 0 && {
+                marginLeft: isHighCount 
+                  ? responsiveSpacing(-32) // Closer spacing for 4+ people
+                  : isLowCount 
+                  ? responsiveSpacing(-20) // Less overlap for 1-2 people
+                  : responsiveSpacing(-24) // Default spacing for 3 people
+              },
             ]}
-            onPress={() => handleAvatarPress(tenant.fullName)}>
+            onPress={() => handleAvatarPress(tenant.fullName)}
+            activeOpacity={0.7}
+            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}} // Better touch area
+            >
             <View style={styles.avatarItemContainer}>
               <TooltipBubble
                 text={tenant.fullName}
@@ -86,13 +113,22 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
               {tenant.avatar ? (
                 <Image
                   source={{uri: tenant.avatar}}
-                  style={styles.avatarImage}
+                  style={[
+                    styles.avatarImage,
+                    isHighCount && styles.avatarImageCompact
+                  ]}
                 />
               ) : (
                 <LinearGradient
                   colors={['#7B9EFF', '#9B7BFF']}
-                  style={styles.avatar}>
-                  <Text style={styles.avatarText}>
+                  style={[
+                    styles.avatar,
+                    isHighCount && styles.avatarCompact
+                  ]}>
+                  <Text style={[
+                    styles.avatarText,
+                    isHighCount && styles.avatarTextCompact
+                  ]}>
                     {getInitials(tenant.fullName)}
                   </Text>
                 </LinearGradient>
@@ -110,17 +146,20 @@ const TenantItem: React.FC<TenantItemProps> = ({item}) => {
       <View style={styles.headerSection}>
         <View style={styles.roomImageContainer}>{renderTenantAvatars()}</View>
 
-        <View style={styles.roomBasicInfo}>
+        <View style={[
+          styles.roomBasicInfo,
+          allTenants.length <= 2 && styles.roomBasicInfoExpanded
+        ]}>
           <View style={styles.roomNumberContainer}>
-            <Text style={styles.roomNumber}>Phòng: {roomNumber}</Text>
+            <Text style={styles.roomNumber} numberOfLines={1}>Phòng: {roomNumber}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoText}>Số người: {tenantCount}</Text>
+            <Text style={styles.infoText} numberOfLines={1}>Số người: {tenantCount}</Text>
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.priceText}>Giá : {price}VNĐ/tháng</Text>
+            <Text style={styles.priceText} numberOfLines={1}>Giá : {price}VNĐ/tháng</Text>
           </View>
         </View>
       </View>
@@ -159,6 +198,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: responsiveSpacing(4),
     marginLeft: responsiveSpacing(8),
+    minWidth: 0, // Allow flex item to shrink below content size
+  },
+  roomBasicInfoExpanded: {
+    // For 1-2 people: more space for information
+    marginLeft: responsiveSpacing(16),
   },
   roomNumberContainer: {
     flexDirection: 'row',
@@ -174,30 +218,43 @@ const styles = StyleSheet.create({
     fontSize: responsiveFont(20),
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.black,
+    flexShrink: 1, // Allow room number to shrink if needed
   },
   infoText: {
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.black,
     fontWeight: '400',
+    flexShrink: 1, // Allow text to shrink if needed
   },
   priceText: {
     fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.black,
     fontWeight: '400',
+    flexShrink: 1, // Allow text to shrink if needed
   },
   avatarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexShrink: 0, // Prevent avatar container from shrinking
+  },
+  // Dynamic avatar container styles
+  avatarContainerLowCount: {
+    // For 1-2 people: more space between avatars and info
+    marginRight: responsiveSpacing(12),
+  },
+  avatarContainerHighCount: {
+    // For 4+ people: compact avatars to save space
+    marginRight: responsiveSpacing(8),
   },
   avatarItemContainer: {
     position: 'relative',
   },
-  avatarWrapper: {},
-  avatarWrapperOverlap: {
-    marginLeft: responsiveSpacing(-24),
+  avatarWrapper: {
+    flexShrink: 0, // Prevent avatar from shrinking
   },
+
   avatar: {
     width: responsiveSpacing(66),
     height: responsiveSpacing(66),
@@ -216,6 +273,20 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Roboto_Bold,
     color: Colors.white,
   },
+  // Compact styles for high tenant count
+  avatarCompact: {
+    width: responsiveSpacing(58),
+    height: responsiveSpacing(58),
+    borderRadius: responsiveSpacing(29),
+  },
+  avatarImageCompact: {
+    width: responsiveSpacing(58),
+    height: responsiveSpacing(58),
+    borderRadius: responsiveSpacing(29),
+  },
+  avatarTextCompact: {
+    fontSize: responsiveFont(14),
+  },
   actionButton: {
     backgroundColor: Colors.limeGreen,
     borderRadius: responsiveSpacing(46),
@@ -232,4 +303,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TenantItem;
+export default React.memo(TenantItem);

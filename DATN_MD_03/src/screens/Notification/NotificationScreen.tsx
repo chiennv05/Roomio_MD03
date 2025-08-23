@@ -1,4 +1,4 @@
-import {View, StyleSheet, Alert, StatusBar, Animated, Linking} from 'react-native';
+import {View, StyleSheet, StatusBar, Animated, Linking} from 'react-native';
 import React, {useEffect, useCallback, useState, useRef} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -19,7 +19,7 @@ import NotificationHeader from './components/NotificationHeader';
 import NotificationListContainer, {
   FormattedNotification,
 } from './components/NotificationListContainer';
-// import CustomAlertModal from '../../components/CustomAlertModal';
+import CustomAlertModal from '../../components/CustomAlertModal';
 import LoadingAnimation from '../../components/LoadingAnimation';
 import {useCustomAlert} from './components';
 import {Colors} from '../../theme/color';
@@ -54,6 +54,10 @@ const NotificationScreen = () => {
   const [selectedNotification, setSelectedNotification] =
     useState<FormattedNotification | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+
+  // State cho delete confirmation modal
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [notificationToDelete, setNotificationToDelete] = useState<string | null>(null);
 
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -138,29 +142,26 @@ const NotificationScreen = () => {
   // Handle delete notification
   const handleDeleteNotification = useCallback(
     (notificationId: string) => {
-      if (user && token) {
-        Alert.alert(
-          'Xác nhận xóa',
-          'Bạn có chắc chắn muốn xóa thông báo này?',
-          [
-            {
-              text: 'Hủy',
-              style: 'cancel',
-            },
-            {
-              text: 'Xóa',
-              style: 'destructive',
-              onPress: () => {
-                dispatch(deleteNotificationById({notificationId, token}));
-              },
-            },
-          ],
-          {cancelable: true},
-        );
-      }
+      setNotificationToDelete(notificationId);
+      setDeleteModalVisible(true);
     },
-    [dispatch, user, token],
+    [],
   );
+
+  // Confirm delete notification
+  const confirmDeleteNotification = useCallback(() => {
+    if (user && token && notificationToDelete) {
+      dispatch(deleteNotificationById({notificationId: notificationToDelete, token}));
+      setDeleteModalVisible(false);
+      setNotificationToDelete(null);
+    }
+  }, [dispatch, user, token, notificationToDelete]);
+
+  // Cancel delete notification
+  const cancelDeleteNotification = useCallback(() => {
+    setDeleteModalVisible(false);
+    setNotificationToDelete(null);
+  }, []);
 
   // Function để hiển thị modal chi tiết thông báo
   const showNotificationDetail = (notification: FormattedNotification) => {
@@ -465,6 +466,26 @@ const NotificationScreen = () => {
           arr.push({text: 'Đóng', onPress: closeModal, style: 'cancel'});
           return arr;
         })()}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <CustomAlertModal
+        visible={deleteModalVisible}
+        title="Xác nhận xóa"
+        message="Bạn có chắc chắn muốn xóa thông báo này?"
+        onClose={cancelDeleteNotification}
+        buttons={[
+          {
+            text: 'Hủy',
+            onPress: cancelDeleteNotification,
+            style: 'cancel',
+          },
+          {
+            text: 'Xóa',
+            onPress: confirmDeleteNotification,
+            style: 'destructive',
+          },
+        ]}
       />
 
       {/* Custom Alert Modal */}

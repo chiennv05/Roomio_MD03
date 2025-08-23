@@ -16,10 +16,10 @@ const TooltipBubble: React.FC<TooltipBubbleProps> = ({text, visible}) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.arrow} />
       <View style={styles.bubble}>
-        <Text style={styles.text}>{text}</Text>
+        <Text style={styles.text} numberOfLines={2}>{text}</Text>
       </View>
+      <View style={styles.arrow} />
     </View>
   );
 };
@@ -27,25 +27,31 @@ const TooltipBubble: React.FC<TooltipBubbleProps> = ({text, visible}) => {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: '100%',
+    bottom: '100%', // Changed from top to bottom to appear above avatar
     alignSelf: 'center',
     marginBottom: scale(8),
     alignItems: 'center',
+    zIndex: 1000, // Ensure tooltip appears above other elements
   },
   bubble: {
     backgroundColor: Colors.darkGreen,
-    paddingVertical: scale(4),
-    paddingHorizontal: scale(8),
+    paddingVertical: scale(6), // Slightly increased padding for better readability
+    paddingHorizontal: scale(12), // Increased horizontal padding
     borderRadius: scale(8),
     minWidth: scale(80),
+    maxWidth: scale(200), // Added max width to prevent very long names from breaking layout
+    elevation: 5, // Added elevation for Android shadow
+    shadowColor: Colors.black, // Added shadow for iOS
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
   },
   text: {
     color: Colors.white,
     fontSize: responsiveFont(12),
-    fontFamily: Fonts.Roboto_Regular,
+    fontFamily: Fonts.Roboto_Medium, // Changed to Medium for better readability
     textAlign: 'center',
     flexShrink: 1,
-    flexWrap: 'nowrap',
   },
   arrow: {
     width: 0,
@@ -54,10 +60,10 @@ const styles = StyleSheet.create({
     borderStyle: 'solid',
     borderLeftWidth: scale(8),
     borderRightWidth: scale(8),
-    borderBottomWidth: scale(8), // đổi từ borderTopWidth sang borderBottomWidth
+    borderTopWidth: scale(8), // Changed back to borderTopWidth for upward arrow
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderBottomColor: Colors.darkGreen, // đổi từ borderTopColor sang borderBottomColor
+    borderTopColor: Colors.darkGreen, // Changed back to borderTopColor
     alignSelf: 'center',
   },
 });

@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useMemo} from 'react';
+import React, {useState, useEffect, useMemo, useCallback} from 'react';
 import {
   StyleSheet,
   FlatList,
@@ -44,16 +44,11 @@ const TenantList = () => {
   // Lọc danh sách người thuê có contractStatus là "active"
   const activeTenants = useMemo(() => {
     if (!tenants || tenants.length === 0) {return [];}
-    console.log('Checking tenant contract statuses:');
-    tenants.forEach(tenant => {
-      console.log(`Tenant ${tenant.username} - contractStatus: ${tenant.contractStatus}`);
-    });
     return tenants.filter(tenant => tenant.contractStatus === 'active');
   }, [tenants]);
 
   useEffect(() => {
     if (token) {
-      console.log('Fetching tenants with token:', token ? 'Valid token' : 'No token');
       dispatch(fetchTenants({token, filters}));
     }
   }, [dispatch, token, filters]);
@@ -68,23 +63,20 @@ const TenantList = () => {
     }, [dispatch, token, filters]),
   );
 
-  // Log state để debug
-  console.log('TenantList state:', {
-    loading,
-    error,
-    tenantsLength: tenants?.length || 0,
-    activeTenantsLength: activeTenants.length,
-    hasToken: !!token,
-  });
+  // Optimized handlers with useCallback
+  const handleSearch = useCallback(() => {
+    // TODO: Implement search functionality
+  }, []);
 
-  // Log chi tiết về tenants
-  console.log('Tenants data:', JSON.stringify(tenants, null, 2));
-  console.log('Active tenants:', JSON.stringify(activeTenants, null, 2));
+  const handleRefresh = useCallback(() => {
+    if (token) {
+      dispatch(fetchTenants({token, filters}));
+    }
+  }, [dispatch, token, filters]);
 
-  // Hàm xử lý khi nhấn tìm kiếm
-  const handleSearch = () => {
-
-  };
+  const renderTenantItem = useCallback(({item}: {item: any}) => (
+    <TenantItem item={item} />
+  ), []);
 
   // Render khi đang loading
   if (loading && (!tenants || tenants.length === 0)) {
@@ -111,7 +103,7 @@ const TenantList = () => {
           <View style={styles.container}>
             <ErrorView
               error={error}
-              onRetry={() => dispatch(fetchTenants({token: token || '', filters}))}
+              onRetry={handleRefresh}
             />
           </View>
         </SafeAreaView>
@@ -121,7 +113,6 @@ const TenantList = () => {
 
   // Render khi không có người thuê active
   if (!loading && activeTenants.length === 0) {
-    console.log('Rendering empty tenant list - No active tenants');
     return (
       <View style={styles.mainContainer}>
         <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
@@ -155,12 +146,15 @@ const TenantList = () => {
           />
           <FlatList
             data={activeTenants}
-            renderItem={({item}) => <TenantItem item={item} />}
+            renderItem={renderTenantItem}
             keyExtractor={item => item._id}
             contentContainerStyle={styles.listContainer}
             showsVerticalScrollIndicator={false}
-            onRefresh={() => dispatch(fetchTenants({token: token || '', filters}))}
+            onRefresh={handleRefresh}
             refreshing={loading}
+            maxToRenderPerBatch={10}
+            windowSize={10}
+            initialNumToRender={8}
           />
         </View>
       </SafeAreaView>
@@ -183,6 +177,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingHorizontal: responsiveSpacing(20),
+    paddingTop: responsiveSpacing(26),
     paddingBottom: responsiveSpacing(20),
   },
 });

@@ -52,15 +52,15 @@ const SupportScreen: React.FC = () => {
   const statusBarHeight =
     Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
 
-  const handleAddNewSupport = () => {
+  // Optimized handle add new support with useCallback
+  const handleAddNewSupport = useCallback(() => {
     navigation.navigate('AddNewSupport');
-  };
+  }, [navigation]);
 
-  // Filter states
+  // Filter states - default to "Tất cả"
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('');
 
-  // Function to load support requests with filters
+  // Function to load support requests with optimized filtering
   const loadSupportRequests = useCallback(
     (page = 1) => {
       const params: any = {
@@ -68,25 +68,22 @@ const SupportScreen: React.FC = () => {
         limit: 10,
       };
 
+      // Only add status filter if not "Tất cả" (empty string)
       if (statusFilter) {
         params.status = statusFilter;
       }
 
-      if (categoryFilter) {
-        params.category = categoryFilter;
-      }
-
       dispatch(fetchSupportRequests(params));
     },
-    [dispatch, statusFilter, categoryFilter],
+    [dispatch, statusFilter],
   );
 
-  // Load support requests when filters change
+  // Load support requests when status filter changes
   useEffect(() => {
-    loadSupportRequests(1); // Reset to page 1 when filters change
-  }, [statusFilter, categoryFilter, loadSupportRequests]);
+    loadSupportRequests(1); // Reset to page 1 when filter changes
+  }, [statusFilter, loadSupportRequests]);
 
-  // Refresh data when screen comes into focus
+  // Refresh data when screen comes into focus (ensures UI updates after add/edit operations)
   useFocusEffect(
     useCallback(() => {
       loadSupportRequests(pagination.page || 1);
@@ -95,15 +92,13 @@ const SupportScreen: React.FC = () => {
     }, [loadSupportRequests, pagination.page]),
   );
 
-  // Handle item press
-  const handleItemPress = (item: Support) => {
+  // Optimized handle item press with useCallback
+  const handleItemPress = useCallback((item: Support) => {
     navigation.navigate('SupportDetail', {supportId: item._id || ''});
-  };
+  }, [navigation]);
 
-  // Handle delete item
-  const handleDeleteItem = (item: Support) => {
-    console.log('🗑️ Attempting to delete support item:', item);
-
+  // Optimized handle delete item with useCallback and removed console.log
+  const handleDeleteItem = useCallback((item: Support) => {
     // Kiểm tra điều kiện xóa - chỉ cho phép xóa khi status là 'mo'
     if (item.status !== 'mo') {
       const statusText =
@@ -122,17 +117,14 @@ const SupportScreen: React.FC = () => {
     }
 
     const performDelete = () => {
-      console.log('🔄 Dispatching delete action for ID:', item._id);
       dispatch(deleteSupportRequest(item._id!))
         .unwrap()
         .then(() => {
-          console.log('✅ Delete successful');
           showSuccess('Đã xóa yêu cầu hỗ trợ', 'Thành công');
-          // Refresh danh sách sau khi xóa thành công
+          // Refresh current page to reflect changes immediately
           loadSupportRequests(pagination.page || 1);
         })
         .catch((err: any) => {
-          console.log('❌ Delete failed:', err);
           showError(err || 'Không thể xóa yêu cầu hỗ trợ', 'Lỗi');
         });
     };
@@ -153,14 +145,14 @@ const SupportScreen: React.FC = () => {
         },
       ],
     );
-  };
+  }, [dispatch, showError, showSuccess, showConfirm, hideAlert, loadSupportRequests, pagination.page]);
 
-  // Handle page change
-  const handlePageChange = (page: number) => {
+  // Optimized handle page change with useCallback
+  const handlePageChange = useCallback((page: number) => {
     loadSupportRequests(page);
-  };
+  }, [loadSupportRequests]);
 
-  // Status filter options - keys match backend values
+  // Status filter options - including "Tất cả" option
   const statusOptions = [
     {key: '', label: 'Tất cả'},
     {key: 'mo', label: 'Mở'},
@@ -168,24 +160,15 @@ const SupportScreen: React.FC = () => {
     {key: 'hoanTat', label: 'Hoàn tất'},
   ];
 
-  // Category filter options - keys match backend values
-  const categoryOptions = [
-    {key: '', label: 'Tất cả'},
-    {key: 'kyThuat', label: 'Kỹ thuật'},
-    {key: 'thanhToan', label: 'Thanh toán'},
-    {key: 'hopDong', label: 'Hợp đồng'},
-    {key: 'khac', label: 'Khác'},
-  ];
-
-  // Render the filter section
+  // Render the filter section - only status tabs
   const renderFilters = () => (
     <FilterTabsRow
       statusOptions={statusOptions}
-      categoryOptions={categoryOptions}
+      categoryOptions={[]} // No category options
       selectedStatus={statusFilter}
-      selectedCategory={categoryFilter}
+      selectedCategory={''}
       onSelectStatus={setStatusFilter}
-      onSelectCategory={setCategoryFilter}
+      onSelectCategory={() => {}} // No category selection
     />
   );
 
@@ -282,15 +265,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.backgroud,
     paddingBottom: Platform.OS === 'ios' ? 0 : responsiveSpacing(16),
-    paddingTop: responsiveSpacing(5), // Giảm marginTop để đẩy lên trên
   },
   contentContainer: {
     flex: 1,
   },
   listContent: {
-    paddingHorizontal: responsiveSpacing(8), // Giảm padding ngang
-    paddingVertical: responsiveSpacing(8), // Giảm padding dọc
-    paddingBottom: responsiveSpacing(100), // Tăng padding để tránh che nội dung bởi FAB
+    paddingHorizontal: responsiveSpacing(16),
+    paddingVertical: responsiveSpacing(8),
+    paddingBottom: responsiveSpacing(120), // Tăng padding để tránh che nội dung bởi FAB
   },
   centerContainer: {
     flex: 1,
@@ -309,7 +291,7 @@ const styles = StyleSheet.create({
     marginTop: responsiveSpacing(16),
     paddingVertical: responsiveSpacing(12),
     paddingHorizontal: responsiveSpacing(20),
-    backgroundColor: Colors.figmaGreen,
+    backgroundColor: Colors.darkGreen,
     borderRadius: scale(8),
   },
   retryButtonText: {
@@ -341,13 +323,13 @@ const styles = StyleSheet.create({
   },
   fabButton: {
     position: 'absolute',
-    right: responsiveSpacing(20),
+    right: responsiveSpacing(16),
     bottom:
-      Platform.OS === 'ios' ? responsiveSpacing(20) : responsiveSpacing(30),
+      Platform.OS === 'ios' ? responsiveSpacing(32) : responsiveSpacing(32),
     width: scale(56),
     height: scale(56),
     borderRadius: scale(28),
-    backgroundColor: Colors.figmaGreen,
+    backgroundColor: Colors.darkGreen,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
@@ -359,7 +341,7 @@ const styles = StyleSheet.create({
   fabIcon: {
     width: scale(24),
     height: scale(24),
-    tintColor: Colors.black,
+    tintColor: Colors.white,
   },
 });
 

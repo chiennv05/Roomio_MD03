@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   dropdownText: {
-    fontSize: responsiveFont(14),
+    fontSize: responsiveFont(16),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.black,
   },
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
     marginTop: responsiveSpacing(12),
   },
   submitButtonText: {
-    color: Colors.white,
+    color: Colors.black,
     fontFamily: Fonts.Roboto_Bold,
     fontSize: responsiveFont(16),
   },

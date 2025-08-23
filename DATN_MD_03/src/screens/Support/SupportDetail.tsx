@@ -23,7 +23,7 @@ import {Fonts} from '../../theme/fonts';
 import {responsiveFont, responsiveSpacing} from '../../utils/responsive';
 import {SupportHeader} from './components';
 import {Icons} from '../../assets/icons';
-import CustomAlertModal from '../../components/CustomAlertModal';
+
 import {useCustomAlert} from '../../hooks/useCustomAlrert';
 type SupportDetailRouteParams = {
   supportId: string;
@@ -42,7 +42,7 @@ const SupportDetail: React.FC = () => {
   const [message, setMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
-  const {alertConfig, showError, showSuccess, hideAlert} = useCustomAlert();
+  const {showError, showSuccess} = useCustomAlert();
 
   const fetchSupportDetail = useCallback(async () => {
     if (!supportId) {
@@ -87,26 +87,26 @@ const SupportDetail: React.FC = () => {
     });
   };
 
-  // Get status styles (match Admin UI)
+  // Get status styles (match SupportItem UI)
   const getStatusInfo = (status: string) => {
     switch (status) {
       case 'mo':
-        return {color: Colors.statusOpen, textColor: Colors.white, text: 'Mở'};
+        return {color: '#A0A0A0', textColor: Colors.white, text: 'Mở'};
       case 'dangXuLy':
         return {
-          color: Colors.warning,
-          textColor: Colors.white,
+          color: '#FFC107',
+          textColor: Colors.black,
           text: 'Đang xử lý',
         };
       case 'hoanTat':
         return {
-          color: Colors.darkGreen,
-          textColor: Colors.white,
+          color: Colors.limeGreen,
+          textColor: Colors.black,
           text: 'Hoàn tất',
         };
       default:
         return {
-          color: Colors.textGray,
+          color: '#A0A0A0',
           textColor: Colors.white,
           text: 'Không xác định',
         };

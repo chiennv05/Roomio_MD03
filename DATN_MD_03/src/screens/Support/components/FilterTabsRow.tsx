@@ -39,7 +39,8 @@ const FilterTabsRow: React.FC<FilterTabsRowProps> = ({
   // Combine all options into one array with type indicator
   const allOptions = [
     ...statusOptions.map(option => ({...option, type: 'status'})),
-    ...categoryOptions.slice(1).map(option => ({...option, type: 'category'})), // Skip "Tất cả" for category
+    // Only include category options if they exist and have more than just "Tất cả"
+    ...(categoryOptions.length > 1 ? categoryOptions.slice(1).map(option => ({...option, type: 'category'})) : []),
   ];
 
   const handleOptionPress = (option: any) => {
@@ -66,19 +67,23 @@ const FilterTabsRow: React.FC<FilterTabsRowProps> = ({
         contentContainerStyle={styles.scrollContent}>
         {allOptions.map((option, index) => {
           const selected = isSelected(option);
+          const isGoiDangKy = option.key === 'goiDangKy';
           return (
             <TouchableOpacity
               key={`${option.type}-${option.key}`}
               style={[
                 styles.tab,
-                selected && styles.selectedTab,
+                selected && (isGoiDangKy ? styles.selectedTabBlack : styles.selectedTab),
                 index === 0 && styles.firstTab,
                 index === allOptions.length - 1 && styles.lastTab,
               ]}
               onPress={() => handleOptionPress(option)}
               activeOpacity={0.7}>
               <Text
-                style={[styles.tabText, selected && styles.selectedTabText]}>
+                style={[
+                  styles.tabText, 
+                  selected && (isGoiDangKy ? styles.selectedTabTextWhite : styles.selectedTabText)
+                ]}>
                 {option.label}
               </Text>
             </TouchableOpacity>
@@ -91,24 +96,41 @@ const FilterTabsRow: React.FC<FilterTabsRowProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: responsiveSpacing(8), // Giảm padding vertical
-    paddingHorizontal: responsiveSpacing(8), // Thêm lại padding ngang nhỏ
+    paddingVertical: responsiveSpacing(12),
+    paddingHorizontal: responsiveSpacing(16),
+    backgroundColor: Colors.backgroud,
   },
   scrollContent: {
-    paddingHorizontal: responsiveSpacing(4),
+    paddingHorizontal: responsiveSpacing(0),
   },
   tab: {
-    paddingHorizontal: responsiveSpacing(16),
-    paddingVertical: responsiveSpacing(8),
+    paddingHorizontal: responsiveSpacing(28),
+    paddingVertical: responsiveSpacing(12),
     marginHorizontal: responsiveSpacing(4),
-    borderRadius: scale(20),
+    borderRadius: scale(50),
     backgroundColor: Colors.white,
     borderWidth: 1,
     borderColor: Colors.divider,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
   selectedTab: {
     backgroundColor: Colors.limeGreen,
     borderColor: Colors.limeGreen,
+    elevation: 3,
+    shadowOpacity: 0.9,
+    borderRadius: scale(50),
+    color: Colors.black,
+  },
+  selectedTabBlack: {
+    backgroundColor: Colors.black,
+    borderColor: Colors.black,
+    elevation: 3,
+    shadowOpacity: 0.15,
+    borderRadius: scale(50),
   },
   firstTab: {
     marginLeft: 0,
@@ -117,8 +139,8 @@ const styles = StyleSheet.create({
     marginRight: 0,
   },
   tabText: {
-    fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Regular,
+    fontSize: responsiveFont(16),
+    fontFamily: Fonts.Roboto_Medium,
     color: Colors.black,
     textAlign: 'center',
   },
@@ -126,6 +148,10 @@ const styles = StyleSheet.create({
     color: Colors.black,
     fontFamily: Fonts.Roboto_Bold,
   },
+  selectedTabTextWhite: {
+    color: Colors.white,
+    fontFamily: Fonts.Roboto_Bold,
+  },
 });
 
-export default FilterTabsRow;
+export default React.memo(FilterTabsRow);
