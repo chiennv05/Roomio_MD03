@@ -167,14 +167,11 @@ const BillScreen = () => {
 
         
 
-        // Nếu người dùng là người ở cùng, chỉ hiển thị hóa đơn người ở cùng
         // Nếu người dùng không phải người ở cùng, ẩn tất cả hóa đơn người ở cùng
-        if (isUserCoTenant === true) {
-            // Người ở cùng: chỉ hiển thị hóa đơn có isRoommate = true
-            allInvoices = allInvoices.filter(invoice => invoice.isRoommate === true);
-        } else if (isUserCoTenant === false) {
-            // Không phải người ở cùng: ẩn tất cả hóa đơn có isRoommate = true
+        if (isUserCoTenant === false) {
+            
             allInvoices = allInvoices.filter(invoice => invoice.isRoommate !== true);
+            
         }
 
         // Lọc theo khoảng thời gian theo ngày hết hạn (dueDate). Fallback: createdAt, period

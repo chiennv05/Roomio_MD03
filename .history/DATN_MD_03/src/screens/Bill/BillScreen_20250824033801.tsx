@@ -159,22 +159,25 @@ const BillScreen = () => {
         // Tạo bản sao của mảng invoices để không ảnh hưởng đến dữ liệu gốc
         let allInvoices = [...invoices];
 
-        
+        console.log('🔍 FILTER: Starting with invoices count:', allInvoices.length);
+        console.log('🔍 FILTER: isUserCoTenant status:', isUserCoTenant);
 
         // Kiểm tra từng hóa đơn xem có phải người ở cùng không
         let roommateInvoices = allInvoices.filter(invoice => invoice.isRoommate === true);
         let regularInvoices = allInvoices.filter(invoice => invoice.isRoommate !== true);
 
-        
+        console.log('🏠 FILTER: Roommate invoices found:', roommateInvoices.length);
+        console.log('🏢 FILTER: Regular invoices found:', regularInvoices.length);
 
-        // Nếu người dùng là người ở cùng, chỉ hiển thị hóa đơn người ở cùng
         // Nếu người dùng không phải người ở cùng, ẩn tất cả hóa đơn người ở cùng
-        if (isUserCoTenant === true) {
-            // Người ở cùng: chỉ hiển thị hóa đơn có isRoommate = true
-            allInvoices = allInvoices.filter(invoice => invoice.isRoommate === true);
-        } else if (isUserCoTenant === false) {
-            // Không phải người ở cùng: ẩn tất cả hóa đơn có isRoommate = true
+        if (isUserCoTenant === false) {
+            console.log('❌ FILTER: User is NOT co-tenant, filtering out roommate invoices');
             allInvoices = allInvoices.filter(invoice => invoice.isRoommate !== true);
+            console.log('📊 FILTER: After filtering roommate invoices, count:', allInvoices.length);
+        } else if (isUserCoTenant === true) {
+            console.log('✅ FILTER: User IS co-tenant, keeping roommate invoices');
+        } else {
+            console.log('❓ FILTER: isUserCoTenant is undefined, keeping all invoices');
         }
 
         // Lọc theo khoảng thời gian theo ngày hết hạn (dueDate). Fallback: createdAt, period
@@ -430,17 +433,17 @@ const BillScreen = () => {
         useCallback(() => {
             // Tạo một biến để theo dõi component đã unmount chưa
             let isMounted = true;
-            
+            console.log('🔍 BillScreen: useFocusEffect triggered');
 
             // Nếu không có token hoặc đang logout, không gọi API
             if (!token) {
-                
+                console.log('❌ No token available, skipping API calls');
                 return;
             }
 
             // Kiểm tra role trước khi quyết định gọi API
             if (isLandlord) {
-                
+                console.log('👑 User is landlord, fetching regular invoices');
                 dispatch(fetchInvoices({
                     token,
                     page: 1,
@@ -452,25 +455,26 @@ const BillScreen = () => {
 
             // Chỉ gọi API check người ở cùng nếu là người thuê và có token
             if (user?.role === 'nguoiThue') {
-                
+                console.log('👤 User is tenant, checking co-tenant status...');
 
                 const checkAndLoadData = async () => {
                     try {
                         if (!isMounted) return;
 
-                        
+                        console.log('🔄 Calling checkUserIsCoTenant...');
                         const result = await checkUserIsCoTenant(token);
 
                         // Nếu component unmounted trong quá trình gọi API, dừng lại
                         if (!isMounted) return;
 
-                        
+                        console.log('✅ checkUserIsCoTenant result:', result);
                         const isCoTenant = result.success && result.isCoTenant;
                         setIsUserCoTenant(isCoTenant);
 
-                        
+                        console.log('🎯 Final isCoTenant status:', isCoTenant);
 
                         if (isCoTenant) {
+                            console.log('🏠 User is co-tenant, fetching roommate invoices...');
                             dispatch(fetchRoommateInvoices({
                                 token,
                                 page: 1,
@@ -478,6 +482,7 @@ const BillScreen = () => {
                                 status: selectedStatus || undefined,
                             }));
                         } else {
+                            console.log('🏠 User is primary tenant, fetching regular invoices...');
                             dispatch(fetchInvoices({
                                 token,
                                 page: 1,
@@ -487,7 +492,7 @@ const BillScreen = () => {
                         }
 
                     } catch (error) {
-                        console.error('Error in checkAndLoadData:', error);
+                        console.error('❌ Error in checkAndLoadData:', error);
 
                         // Nếu có lỗi, vẫn đảm bảo gọi API lấy hóa đơn thông thường
                         if (isMounted) {
@@ -506,13 +511,13 @@ const BillScreen = () => {
                 checkAndLoadData();
             } else {
                 // Người dùng không phải landlord và không phải tenant
-                
+                console.log('❓ User role is not tenant or landlord:', user?.role);
             }
 
             // Cleanup function
             return () => {
                 isMounted = false;
-                
+                console.log('🧹 BillScreen: useFocusEffect cleanup');
             };
         }, [dispatch, token, isLandlord, user?.role, selectedStatus])
     );
@@ -657,6 +662,13 @@ const BillScreen = () => {
 
         // Đảm bảo invoiceId là string
         invoiceId = invoiceId.toString();
+
+        // Nếu là hóa đơn người ở cùng, loại bỏ hậu tố "-roommate" khỏi ID trước khi gọi API chi tiết
+        if (invoice.isRoommate === true && invoiceId.includes('-roommate')) {
+            invoiceId = invoiceId.replace('-roommate', '');
+        }
+
+        //
 
         // Kiểm tra nếu đây là hóa đơn của người ở cùng
         if (invoice.isRoommate === true) {

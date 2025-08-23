@@ -68,7 +68,7 @@ const BillScreen = () => {
     const isLandlord = user?.role === 'chuTro';
 
     // State để theo dõi xem người dùng có phải là người ở cùng không
-    const [isUserCoTenant, setIsUserCoTenant] = useState(false);
+    const [isUserCoTenant, setIsUserCoTenant] = useState<boolean | undefined>(undefined);
 
     // Thêm state cho bộ lọc mới
     const [activeFilter, setActiveFilter] = useState<FilterType>('status');
@@ -167,14 +167,20 @@ const BillScreen = () => {
 
         
 
-        // Nếu người dùng là người ở cùng, chỉ hiển thị hóa đơn người ở cùng
-        // Nếu người dùng không phải người ở cùng, ẩn tất cả hóa đơn người ở cùng
+        // Lọc hóa đơn theo vai trò người dùng
         if (isUserCoTenant === true) {
-            // Người ở cùng: chỉ hiển thị hóa đơn có isRoommate = true
+            // Người ở cùng chỉ thấy hóa đơn người ở cùng
+            console.log('🏠 FILTERING: User is CO-TENANT, showing only roommate invoices');
             allInvoices = allInvoices.filter(invoice => invoice.isRoommate === true);
+            
         } else if (isUserCoTenant === false) {
-            // Không phải người ở cùng: ẩn tất cả hóa đơn có isRoommate = true
+            // Người thuê thường chỉ thấy hóa đơn thường
+            console.log('🏠 FILTERING: User is REGULAR TENANT, showing only regular invoices');
             allInvoices = allInvoices.filter(invoice => invoice.isRoommate !== true);
+            
+        } else {
+            // isUserCoTenant === undefined - chưa xác định được, chờ API
+            console.log('🏠 FILTERING: User role not determined yet, showing all invoices temporarily');
         }
 
         // Lọc theo khoảng thời gian theo ngày hết hạn (dueDate). Fallback: createdAt, period
@@ -458,17 +464,22 @@ const BillScreen = () => {
                     try {
                         if (!isMounted) return;
 
-                        
+                        console.log('🔍 API checkUserIsCoTenant called');
                         const result = await checkUserIsCoTenant(token);
 
                         // Nếu component unmounted trong quá trình gọi API, dừng lại
                         if (!isMounted) return;
 
+                        console.log('🔍 API checkUserIsCoTenant result:', {
+                            success: result.success,
+                            isCoTenant: result.isCoTenant,
+                            contractsCount: result.contracts?.length || 0
+                        });
                         
                         const isCoTenant = result.success && result.isCoTenant;
                         setIsUserCoTenant(isCoTenant);
 
-                        
+                        console.log('🔍 Setting isUserCoTenant to:', isCoTenant);
 
                         if (isCoTenant) {
                             dispatch(fetchRoommateInvoices({
@@ -519,9 +530,8 @@ const BillScreen = () => {
 
     // Thêm lại useEffect cho các thay đổi về bộ lọc
     useEffect(() => {
-        // CHỈ gọi API khi đã xác định được trạng thái isUserCoTenant và có token
         if (token && isUserCoTenant !== undefined) {
-            
+            console.log('Filter changed, reloading with isUserCoTenant:', isUserCoTenant);
             // Tải lại dữ liệu khi bộ lọc thay đổi
             if (isUserCoTenant) {
                 dispatch(fetchRoommateInvoices({
@@ -539,7 +549,7 @@ const BillScreen = () => {
                 }));
             }
         }
-    }, [dispatch, token, selectedStatus]); // Bỏ isUserCoTenant khỏi dependency để tránh gọi API trùng lặp
+    }, [dispatch, token, selectedStatus, isUserCoTenant]);
 
     useEffect(() => {
         return () => {
@@ -657,6 +667,13 @@ const BillScreen = () => {
 
         // Đảm bảo invoiceId là string
         invoiceId = invoiceId.toString();
+
+        // Nếu là hóa đơn người ở cùng, loại bỏ hậu tố "-roommate" khỏi ID trước khi gọi API chi tiết
+        if (invoice.isRoommate === true && invoiceId.includes('-roommate')) {
+            invoiceId = invoiceId.replace('-roommate', '');
+        }
+
+        //
 
         // Kiểm tra nếu đây là hóa đơn của người ở cùng
         if (invoice.isRoommate === true) {

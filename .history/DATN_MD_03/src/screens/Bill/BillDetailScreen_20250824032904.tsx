@@ -1387,12 +1387,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
     },
-    overdueButton: {
-        backgroundColor: '#DC3545', // Màu đỏ cho nút quá hạn
-    },
-    overdueButtonText: {
-        color: Colors.white, // Chữ màu trắng cho nút quá hạn
-    },
 });
 
 export default BillDetailScreen;

@@ -636,7 +636,7 @@ const billSlice = createSlice({
                 state.confirmPaymentSuccess = true;
 
                 // Log the received invoice data
-                const receivedInvoice = action.payload;
+                console.log('confirmPayment.fulfilled - received invoice data:', action.payload);
 
                 // Cập nhật hóa đơn được chọn
                 if (action.payload && action.payload._id) {

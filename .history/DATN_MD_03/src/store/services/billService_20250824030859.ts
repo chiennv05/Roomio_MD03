@@ -1282,73 +1282,144 @@ export const checkUserIsCoTenant = async (token: string) => {
     }
 
     console.log('Current user ID:', currentUserId);
+    
+    // Lấy thông tin chi tiết người dùng để kiểm tra role/type
+    const userInfo = userResponse.data.data?.user;
+    console.log('👤 Current user info:', {
+      _id: userInfo?._id,
+      email: userInfo?.email,
+      username: userInfo?.username,
+      role: userInfo?.role
+    });
 
-    // Trước tiên, gọi API để lấy hóa đơn thông thường của người dùng
-    console.log('Calling /billing/invoices API to check user role...');
+    // Trực tiếp gọi API để lấy danh sách hóa đơn người ở cùng
+    console.log('Calling /billing/roommate/invoices API...');
 
     try {
-      const regularResponse = await api.get('/billing/invoices', {
+      const response = await api.get('/billing/roommate/invoices', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if ('isError' in regularResponse) {
-        console.error('Error getting regular invoices:', regularResponse.message);
-        throw new Error(regularResponse.message || 'Không thể lấy hóa đơn thông thường');
+      // Log chi tiết về response
+      console.log('API Response Status:', response.status);
+      console.log('API Response has data:', !!response.data);
+      console.log('API Response success:', response.data?.success);
+
+      if ('isError' in response) {
+        console.error('API returned error:', response.message);
+        throw new Error(
+          response.message || 'Có lỗi xảy ra khi lấy hóa đơn người ở cùng',
+        );
       }
 
-      const regularInvoices = regularResponse.data?.invoices || [];
-      console.log('Regular invoices returned:', regularInvoices.length);
+      // Kiểm tra có invoices không
+      const invoices = response.data?.invoices || [];
+      console.log('API returned', invoices.length, 'roommate invoices');
 
-      // Kiểm tra xem user có phải là tenant chính không
-      let isTenantInAnyContract = false;
-      let isCoTenantInAnyContract = false;
+      // QUAN TRỌNG: Kiểm tra từng hóa đơn xem có thật sự là của người ở cùng không
+      // Kiểm tra xem mỗi hợp đồng có chứa người dùng hiện tại trong danh sách coTenants không
+      let isReallyCoTenant = false;
+      let contractsUserIsCoTenantIn: any[] = [];
 
-      // Duyệt qua các hóa đơn thông thường
-      for (const invoice of regularInvoices) {
+      // Duyệt qua các hóa đơn để kiểm tra
+      for (const invoice of invoices) {
+        // Kiểm tra nếu invoice có contractId và contractInfo
         if (
           invoice.contractId &&
           typeof invoice.contractId === 'object' &&
-          invoice.contractId.contractInfo
+          invoice.contractId.contractInfo &&
+          invoice.contractId.contractInfo.coTenants
         ) {
           const contractInfo = invoice.contractId.contractInfo;
           
-          // Kiểm tra xem user có phải là tenant chính không
-          if (contractInfo.tenantId === currentUserId) {
-            isTenantInAnyContract = true;
-            console.log('User is primary tenant in contract:', invoice.contractId._id);
-          }
+          console.log('📋 Contract:', invoice.contractId._id);
+          console.log('👤 Contract tenant info:', {
+            tenantEmail: contractInfo.tenantEmail,
+            tenantName: contractInfo.tenantName
+          });
           
-          // Kiểm tra xem user có trong danh sách coTenants không
-          if (contractInfo.coTenants && Array.isArray(contractInfo.coTenants)) {
-            const isUserInCoTenants = contractInfo.coTenants.some(
-              (coTenant: any) => coTenant.userId === currentUserId,
-            );
-            
-            if (isUserInCoTenants) {
-              isCoTenantInAnyContract = true;
-              console.log('User is co-tenant in contract:', invoice.contractId._id);
+          // Kiểm tra xem người dùng hiện tại có phải là người thuê chính không
+          const isMainTenant = contractInfo.tenantEmail === userInfo?.email ||
+                              contractInfo.tenantName === userInfo?.username;
+          
+          console.log('🏠 Is main tenant:', isMainTenant);
+          
+          // Lấy danh sách coTenants
+          const coTenants = contractInfo.coTenants;
+          
+          console.log('📋 Contract:', invoice.contractId._id);
+          console.log('👥 CoTenants list:', JSON.stringify(coTenants, null, 2));
+          console.log('🔍 Looking for currentUserId:', currentUserId);
+
+          // Kiểm tra xem người dùng hiện tại có trong danh sách coTenants không
+          const isUserInCoTenants = coTenants.some(
+            (coTenant: any) => {
+              // Kiểm tra cả userId và _id để đảm bảo tương thích
+              const matches = coTenant.userId === currentUserId || 
+                             coTenant._id === currentUserId ||
+                             coTenant.id === currentUserId;
+              
+              console.log(`🔸 Checking coTenant:`, {
+                userId: coTenant.userId,
+                _id: coTenant._id,
+                id: coTenant.id,
+                username: coTenant.username,
+                email: coTenant.email,
+                matches: matches
+              });
+              
+              return matches;
+            }
+          );
+
+          console.log(
+            'Contract',
+            invoice.contractId._id,
+            'has user in coTenants:',
+            isUserInCoTenants,
+          );
+          
+          // Logic xác định người ở cùng:
+          // 1. Nếu user trong danh sách coTenants -> là người ở cùng
+          // 2. Nếu user KHÔNG phải là người thuê chính VÀ có hóa đơn roommate -> có thể là người ở cùng
+          let isCoTenantInThisContract = false;
+          
+          if (isUserInCoTenants) {
+            console.log('✅ User found in coTenants list');
+            isCoTenantInThisContract = true;
+          } else if (!isMainTenant && invoice.isRoommate === true) {
+            console.log('✅ User is not main tenant and has roommate invoice');
+            isCoTenantInThisContract = true;
+          }
+
+          if (isCoTenantInThisContract) {
+            isReallyCoTenant = true;
+
+            // Thêm hợp đồng vào danh sách nếu chưa có
+            if (
+              !contractsUserIsCoTenantIn.some(
+                c => c._id === invoice.contractId._id,
+              )
+            ) {
+              contractsUserIsCoTenantIn.push(invoice.contractId);
             }
           }
         }
       }
 
-      // Logic quyết định:
-      // - Nếu user là tenant chính → không phải co-tenant
-      // - Nếu user chỉ là co-tenant → là co-tenant
-      // - Nếu user vừa là tenant vừa là co-tenant → ưu tiên tenant chính
-      const isCoTenant = isCoTenantInAnyContract && !isTenantInAnyContract;
-
-      console.log('isTenantInAnyContract:', isTenantInAnyContract);
-      console.log('isCoTenantInAnyContract:', isCoTenantInAnyContract);
-      console.log('Final isCoTenant determination:', isCoTenant);
+      console.log('Final isCoTenant determination:', isReallyCoTenant);
+      console.log(
+        'User is co-tenant in',
+        contractsUserIsCoTenantIn.length,
+        'contracts',
+      );
 
       const result = {
         success: true,
-        isCoTenant: isCoTenant,
-        isTenant: isTenantInAnyContract,
-        contracts: [], // Có thể thêm danh sách contracts nếu cần
+        isCoTenant: isReallyCoTenant,
+        contracts: contractsUserIsCoTenantIn,
       };
 
       console.log(
@@ -1367,7 +1438,6 @@ export const checkUserIsCoTenant = async (token: string) => {
     const errorResult = {
       success: false,
       isCoTenant: false,
-      isTenant: false,
       contracts: [],
       error: error.message || 'Lỗi không xác định',
     };

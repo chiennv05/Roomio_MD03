@@ -535,9 +535,6 @@ const BillDetailScreen = () => {
         const renderItemDetails = (item: InvoiceItem, align: 'left' | 'right') => {
             const rows: { label: string; value: string }[] = [];
             
-            // Lấy priceType để kiểm tra điều kiện hiển thị
-            const priceType = getItemPriceType(item);
-            
             // Hiển thị loại dịch vụ
             rows.push({ label: 'Loại dịch vụ', value: getCategoryText(item.category) });    
             
@@ -549,20 +546,16 @@ const BillDetailScreen = () => {
             if (item.isPerPerson) {
                 rows.push({ label: 'Tính theo người', value: `${item.personCount || 1} người` });
             }
-            
-            // Chỉ hiển thị chỉ số đồng hồ khi priceType là 'perUsage'
-            if (priceType === 'perUsage') {
-                if (item.previousReading !== undefined) {
-                    rows.push({ label: 'Chỉ số cũ', value: `${item.previousReading}` });
-                }
-                if (item.currentReading !== undefined) {
-                    rows.push({ label: 'Chỉ số mới', value: `${item.currentReading}` });
-                }
-                // Thêm dòng hiển thị số đã sử dụng chỉ khi có đầy đủ chỉ số
-                if (item.previousReading !== undefined && item.currentReading !== undefined) {
-                    const usage = item.currentReading - item.previousReading;
-                    rows.push({ label: 'Số đã sử dụng', value: `${usage}` });
-                }
+            if (item.previousReading !== undefined) {
+                rows.push({ label: 'Chỉ số cũ', value: `${item.previousReading}` });
+            }
+            if (item.currentReading !== undefined) {
+                rows.push({ label: 'Chỉ số mới', value: `${item.currentReading}` });
+            }
+            // Thêm dòng hiển thị số đã sử dụng
+            if (item.previousReading !== undefined && item.currentReading !== undefined) {
+                const usage = item.currentReading - item.previousReading;
+                rows.push({ label: 'Số đã sử dụng', value: `${usage}` });
             }
             
 
@@ -807,20 +800,14 @@ const BillDetailScreen = () => {
                     {!isLandlord && (selectedInvoice.status === 'issued' || selectedInvoice.status === 'overdue') && (
                         <View style={styles.paymentButtonContainer}>
                             <TouchableOpacity
-                                style={[
-                                    styles.paymentButton, 
-                                    selectedInvoice.status === 'overdue' && styles.overdueButton
-                                ]}
+                                style={styles.paymentButton}
                                 onPress={selectedInvoice.status === 'overdue' ? handleOverduePress : handlePayment}
                                 disabled={markAsPaidLoading}
                             >
                                 {markAsPaidLoading && selectedInvoice.status !== 'overdue' ? (
                                     <ActivityIndicator size="small" color={Colors.white} />
                                 ) : (
-                                    <Text style={[
-                                        styles.paymentButtonText,
-                                        selectedInvoice.status === 'overdue' && styles.overdueButtonText
-                                    ]}>
+                                    <Text style={styles.paymentButtonText}>
                                         {selectedInvoice.status === 'overdue' ? 'Quá hạn' : 'Xác nhận thanh toán'}
                                     </Text>
                                 )}
@@ -1386,12 +1373,6 @@ const styles = StyleSheet.create({
         color: Colors.black,
         fontWeight: 'bold',
         fontSize: 16,
-    },
-    overdueButton: {
-        backgroundColor: '#DC3545', // Màu đỏ cho nút quá hạn
-    },
-    overdueButtonText: {
-        color: Colors.white, // Chữ màu trắng cho nút quá hạn
     },
 });
 

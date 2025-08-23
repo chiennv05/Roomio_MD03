@@ -128,9 +128,6 @@ const EditInvoiceScreen = () => {
     // State để theo dõi xem hóa đơn đã được lưu thành mẫu hay chưa
     const [hasBeenSavedAsTemplate, setHasBeenSavedAsTemplate] = useState(false);
 
-    // State để theo dõi xem form đã được khởi tạo lần đầu chưa
-    const [isFormInitialized, setIsFormInitialized] = useState(false);
-
     // State để lưu trữ dữ liệu ban đầu của hóa đơn
     const [initialInvoiceData, setInitialInvoiceData] = useState({
         dueDate: '',
@@ -173,10 +170,7 @@ const EditInvoiceScreen = () => {
     // Initialize form with invoice data when available
     useEffect(() => {
         if (selectedInvoice) {
-            // Chỉ set note lần đầu tiên, không reset khi refresh
-            if (!isFormInitialized) {
-                setNote(selectedInvoice.note || '');
-            }
+            setNote(selectedInvoice.note || '');
 
             // Set due date string and date object
             if (selectedInvoice.dueDate) {
@@ -207,55 +201,57 @@ const EditInvoiceScreen = () => {
                 setInvoiceItems([...selectedInvoice.items]);
 
                 // Preserve existing input data and only initialize new items
-                setItemInputs(prevInputs => {
-                    const newItemInputs = { ...prevInputs }; // Preserve existing inputs
-
-                    if (selectedInvoice.items) {
-                        selectedInvoice.items.forEach((item, index) => {
-                            const itemKey = item._id || `item-${index}`;
-
-                            // Only initialize if not already exists (new item)
-                            if (!newItemInputs[itemKey]) {
-                                newItemInputs[itemKey] = {
-                                    name: item.name,
-                                    description: item.description,
-                                    previousReading: item.previousReading?.toString() || '0',
-                                    currentReading: item.currentReading?.toString() || '0',
-                                    quantity: item.quantity?.toString() || '0',
-                                    unitPrice: item.unitPrice?.toString() || '0',
-                                };
-                            }
-                        });
-
-                        // Remove inputs for deleted items
-                        const currentItemIds = selectedInvoice.items.map(item => item._id || '').filter(id => id);
-                        const filteredInputs: typeof newItemInputs = {};
-                        Object.keys(newItemInputs).forEach(itemId => {
-                            if (currentItemIds.includes(itemId) || itemId.startsWith('item-')) {
-                                filteredInputs[itemId] = newItemInputs[itemId];
-                            }
-                        });
-
-                        return filteredInputs;
+                const newItemInputs: {
+                    [itemId: string]: {
+                        name?: string;
+                        description?: string;
+                        previousReading?: string;
+                        currentReading?: string;
+                        quantity?: string;
+                        unitPrice?: string;
                     }
+                } = { ...itemInputs }; // Preserve existing inputs
 
-                    return newItemInputs;
+                selectedInvoice.items.forEach((item, index) => {
+                    const itemKey = item._id || `item-${index}`;
+
+                    // Only initialize if not already exists (new item)
+                    if (!newItemInputs[itemKey]) {
+                        newItemInputs[itemKey] = {
+                            name: item.name,
+                            description: item.description,
+                            previousReading: item.previousReading?.toString() || '0',
+                            currentReading: item.currentReading?.toString() || '0',
+                            quantity: item.quantity?.toString() || '0',
+                            unitPrice: item.unitPrice?.toString() || '0',
+                        };
+                    }
                 });
+
+                // Remove inputs for deleted items
+                const currentItemIds = selectedInvoice.items.map(item => item._id || '').filter(id => id);
+                const filteredInputs: typeof newItemInputs = {};
+                Object.keys(newItemInputs).forEach(itemId => {
+                    if (currentItemIds.includes(itemId) || itemId.startsWith('item-')) {
+                        filteredInputs[itemId] = newItemInputs[itemId];
+                    }
+                });
+
+                setItemInputs(filteredInputs);
             }
 
             setTotalAmount(selectedInvoice.totalAmount);
 
             // Lưu trữ dữ liệu ban đầu để so sánh sau này - chỉ update lần đầu
-            if (!isFormInitialized) {
+            if (Object.keys(initialInvoiceData.items).length === 0) {
                 setInitialInvoiceData({
                     dueDate: selectedInvoice.dueDate || '',
                     note: selectedInvoice.note || '',
                     items: JSON.parse(JSON.stringify(selectedInvoice.items || [])),
                 });
-                setIsFormInitialized(true);
             }
         }
-    }, [selectedInvoice, isFormInitialized]);
+    }, [selectedInvoice, itemInputs]);
 
     // Handle hardware back button
     useEffect(() => {
@@ -842,8 +838,8 @@ const EditInvoiceScreen = () => {
 
                 // ✅ Cập nhật initialInvoiceData để reset trạng thái "đã thay đổi"
                 setInitialInvoiceData({
-                    dueDate: dueDateISO || selectedInvoice.dueDate || '',
-                    note: note || selectedInvoice.note || '',
+                    dueDate: dueDateISO || selectedInvoice.dueDate,
+                    note: note || selectedInvoice.note,
                     items: JSON.parse(JSON.stringify(updatedItems)),
                 });
 
@@ -2085,7 +2081,7 @@ const EditInvoiceScreen = () => {
                 {canEditInvoice() && (
                     <View style={styles.customItemNote}>
                         <Text style={styles.customItemNoteText}>
-                            Bạn có thể thêm các khoản mục tùy chỉnh như dịch vụ, bảo trì hoặc các khoản khác.
+                            Bạn có thể thêm các khoản mục tùy chỉnh như điện nước, dịch vụ, bảo trì hoặc các khoản khác.
                         </Text>
 
                     </View>

@@ -169,6 +169,7 @@ export const fetchRoommateInvoices = createAsyncThunk(
         signal?: AbortSignal;
     }, { rejectWithValue }) => {
         try {
+            console.log('THUNK: fetchRoommateInvoices called with', { page, limit, status });
             const response = await getRoommateInvoices(token, page, limit, status, query, signal);
 
             if (!response.success) {
@@ -177,11 +178,15 @@ export const fetchRoommateInvoices = createAsyncThunk(
 
             // Đánh dấu tất cả các hóa đơn là của người ở cùng
             const invoicesWithRoommate = response.data.invoices?.map(invoice => {
+                // Đảm bảo rằng isRoommate được set là true
+                console.log('Marking invoice as roommate:', invoice._id || invoice.id);
                 return {
                     ...invoice,
                     isRoommate: true, // Đánh dấu rõ ràng là hóa đơn người ở cùng
                 };
             }) || [];
+
+            console.log('THUNK: Processed', invoicesWithRoommate.length, 'roommate invoices');
 
             return {
                 invoices: invoicesWithRoommate,
@@ -618,6 +623,7 @@ const billSlice = createSlice({
                     ...action.payload,
                     isRoommate: true,
                 };
+                console.log('Roommate invoice details loaded:', state.roommateInvoice._id);
             })
             .addCase(fetchRoommateInvoiceDetails.rejected, (state, action) => {
                 state.loading = false;
@@ -636,7 +642,7 @@ const billSlice = createSlice({
                 state.confirmPaymentSuccess = true;
 
                 // Log the received invoice data
-                const receivedInvoice = action.payload;
+                console.log('confirmPayment.fulfilled - received invoice data:', action.payload);
 
                 // Cập nhật hóa đơn được chọn
                 if (action.payload && action.payload._id) {

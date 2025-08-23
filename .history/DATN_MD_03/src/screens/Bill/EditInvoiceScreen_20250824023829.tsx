@@ -255,7 +255,7 @@ const EditInvoiceScreen = () => {
                 setIsFormInitialized(true);
             }
         }
-    }, [selectedInvoice, isFormInitialized]);
+    }, [selectedInvoice]);
 
     // Handle hardware back button
     useEffect(() => {

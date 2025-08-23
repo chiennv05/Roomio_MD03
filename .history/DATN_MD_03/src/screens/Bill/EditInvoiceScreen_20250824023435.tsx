@@ -128,9 +128,6 @@ const EditInvoiceScreen = () => {
     // State để theo dõi xem hóa đơn đã được lưu thành mẫu hay chưa
     const [hasBeenSavedAsTemplate, setHasBeenSavedAsTemplate] = useState(false);
 
-    // State để theo dõi xem form đã được khởi tạo lần đầu chưa
-    const [isFormInitialized, setIsFormInitialized] = useState(false);
-
     // State để lưu trữ dữ liệu ban đầu của hóa đơn
     const [initialInvoiceData, setInitialInvoiceData] = useState({
         dueDate: '',
@@ -173,10 +170,7 @@ const EditInvoiceScreen = () => {
     // Initialize form with invoice data when available
     useEffect(() => {
         if (selectedInvoice) {
-            // Chỉ set note lần đầu tiên, không reset khi refresh
-            if (!isFormInitialized) {
-                setNote(selectedInvoice.note || '');
-            }
+            setNote(selectedInvoice.note || '');
 
             // Set due date string and date object
             if (selectedInvoice.dueDate) {
@@ -210,52 +204,47 @@ const EditInvoiceScreen = () => {
                 setItemInputs(prevInputs => {
                     const newItemInputs = { ...prevInputs }; // Preserve existing inputs
 
-                    if (selectedInvoice.items) {
-                        selectedInvoice.items.forEach((item, index) => {
-                            const itemKey = item._id || `item-${index}`;
+                    selectedInvoice.items.forEach((item, index) => {
+                        const itemKey = item._id || `item-${index}`;
 
-                            // Only initialize if not already exists (new item)
-                            if (!newItemInputs[itemKey]) {
-                                newItemInputs[itemKey] = {
-                                    name: item.name,
-                                    description: item.description,
-                                    previousReading: item.previousReading?.toString() || '0',
-                                    currentReading: item.currentReading?.toString() || '0',
-                                    quantity: item.quantity?.toString() || '0',
-                                    unitPrice: item.unitPrice?.toString() || '0',
-                                };
-                            }
-                        });
+                        // Only initialize if not already exists (new item)
+                        if (!newItemInputs[itemKey]) {
+                            newItemInputs[itemKey] = {
+                                name: item.name,
+                                description: item.description,
+                                previousReading: item.previousReading?.toString() || '0',
+                                currentReading: item.currentReading?.toString() || '0',
+                                quantity: item.quantity?.toString() || '0',
+                                unitPrice: item.unitPrice?.toString() || '0',
+                            };
+                        }
+                    });
 
-                        // Remove inputs for deleted items
-                        const currentItemIds = selectedInvoice.items.map(item => item._id || '').filter(id => id);
-                        const filteredInputs: typeof newItemInputs = {};
-                        Object.keys(newItemInputs).forEach(itemId => {
-                            if (currentItemIds.includes(itemId) || itemId.startsWith('item-')) {
-                                filteredInputs[itemId] = newItemInputs[itemId];
-                            }
-                        });
+                    // Remove inputs for deleted items
+                    const currentItemIds = selectedInvoice.items.map(item => item._id || '').filter(id => id);
+                    const filteredInputs: typeof newItemInputs = {};
+                    Object.keys(newItemInputs).forEach(itemId => {
+                        if (currentItemIds.includes(itemId) || itemId.startsWith('item-')) {
+                            filteredInputs[itemId] = newItemInputs[itemId];
+                        }
+                    });
 
-                        return filteredInputs;
-                    }
-
-                    return newItemInputs;
+                    return filteredInputs;
                 });
             }
 
             setTotalAmount(selectedInvoice.totalAmount);
 
             // Lưu trữ dữ liệu ban đầu để so sánh sau này - chỉ update lần đầu
-            if (!isFormInitialized) {
+            if (Object.keys(initialInvoiceData.items).length === 0) {
                 setInitialInvoiceData({
                     dueDate: selectedInvoice.dueDate || '',
                     note: selectedInvoice.note || '',
                     items: JSON.parse(JSON.stringify(selectedInvoice.items || [])),
                 });
-                setIsFormInitialized(true);
             }
         }
-    }, [selectedInvoice, isFormInitialized]);
+    }, [selectedInvoice]);
 
     // Handle hardware back button
     useEffect(() => {

@@ -807,20 +807,14 @@ const BillDetailScreen = () => {
                     {!isLandlord && (selectedInvoice.status === 'issued' || selectedInvoice.status === 'overdue') && (
                         <View style={styles.paymentButtonContainer}>
                             <TouchableOpacity
-                                style={[
-                                    styles.paymentButton, 
-                                    selectedInvoice.status === 'overdue' && styles.overdueButton
-                                ]}
+                                style={styles.paymentButton}
                                 onPress={selectedInvoice.status === 'overdue' ? handleOverduePress : handlePayment}
                                 disabled={markAsPaidLoading}
                             >
                                 {markAsPaidLoading && selectedInvoice.status !== 'overdue' ? (
                                     <ActivityIndicator size="small" color={Colors.white} />
                                 ) : (
-                                    <Text style={[
-                                        styles.paymentButtonText,
-                                        selectedInvoice.status === 'overdue' && styles.overdueButtonText
-                                    ]}>
+                                    <Text style={styles.paymentButtonText}>
                                         {selectedInvoice.status === 'overdue' ? 'Quá hạn' : 'Xác nhận thanh toán'}
                                     </Text>
                                 )}
@@ -1386,12 +1380,6 @@ const styles = StyleSheet.create({
         color: Colors.black,
         fontWeight: 'bold',
         fontSize: 16,
-    },
-    overdueButton: {
-        backgroundColor: '#DC3545', // Màu đỏ cho nút quá hạn
-    },
-    overdueButtonText: {
-        color: Colors.white, // Chữ màu trắng cho nút quá hạn
     },
 });
 

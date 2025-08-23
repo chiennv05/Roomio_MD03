@@ -128,9 +128,6 @@ const EditInvoiceScreen = () => {
     // State để theo dõi xem hóa đơn đã được lưu thành mẫu hay chưa
     const [hasBeenSavedAsTemplate, setHasBeenSavedAsTemplate] = useState(false);
 
-    // State để theo dõi xem form đã được khởi tạo lần đầu chưa
-    const [isFormInitialized, setIsFormInitialized] = useState(false);
-
     // State để lưu trữ dữ liệu ban đầu của hóa đơn
     const [initialInvoiceData, setInitialInvoiceData] = useState({
         dueDate: '',
@@ -173,48 +170,48 @@ const EditInvoiceScreen = () => {
     // Initialize form with invoice data when available
     useEffect(() => {
         if (selectedInvoice) {
-            // Chỉ set note lần đầu tiên, không reset khi refresh
-            if (!isFormInitialized) {
+            // Chỉ cập nhật note và dueDate nếu chưa có dữ liệu hoặc lần đầu load
+            if (!note && !dueDate) {
                 setNote(selectedInvoice.note || '');
-            }
 
-            // Set due date string and date object
-            if (selectedInvoice.dueDate) {
-                const dueDateDate = new Date(selectedInvoice.dueDate);
-                // Kiểm tra nếu đã quá ngày hết hạn (so sánh theo ngày, bỏ qua thời gian)
-                const now = new Date();
-                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                const dueDayOnly = new Date(
-                    dueDateDate.getFullYear(),
-                    dueDateDate.getMonth(),
-                    dueDateDate.getDate()
-                );
+                // Set due date string and date object
+                if (selectedInvoice.dueDate) {
+                    const dueDateDate = new Date(selectedInvoice.dueDate);
+                    // Kiểm tra nếu đã quá ngày hết hạn (so sánh theo ngày, bỏ qua thời gian)
+                    const now = new Date();
+                    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                    const dueDayOnly = new Date(
+                        dueDateDate.getFullYear(),
+                        dueDateDate.getMonth(),
+                        dueDateDate.getDate()
+                    );
 
-                if (dueDayOnly < today) {
-                    // Nếu quá hạn: tự động đặt lại = hôm nay + 5 ngày
-                    const newDue = new Date(today);
-                    newDue.setDate(newDue.getDate() + 5);
-                    setDueDateObj(newDue);
-                    setDueDate(formatDate(newDue.toISOString()));
-                } else {
-                    // Chưa quá hạn: giữ nguyên
-                    setDueDateObj(dueDateDate);
-                    setDueDate(formatDate(selectedInvoice.dueDate));
+                    if (dueDayOnly < today) {
+                        // Nếu quá hạn: tự động đặt lại = hôm nay + 5 ngày
+                        const newDue = new Date(today);
+                        newDue.setDate(newDue.getDate() + 5);
+                        setDueDateObj(newDue);
+                        setDueDate(formatDate(newDue.toISOString()));
+                    } else {
+                        // Chưa quá hạn: giữ nguyên
+                        setDueDateObj(dueDateDate);
+                        setDueDate(formatDate(selectedInvoice.dueDate));
+                    }
                 }
             }
 
             if (selectedInvoice.items && selectedInvoice.items.length > 0) {
                 setInvoiceItems([...selectedInvoice.items]);
 
-                // Preserve existing input data and only initialize new items
+                // Preserve existing user inputs và chỉ initialize cho items mới
                 setItemInputs(prevInputs => {
-                    const newItemInputs = { ...prevInputs }; // Preserve existing inputs
+                    const newItemInputs = { ...prevInputs };
 
                     if (selectedInvoice.items) {
                         selectedInvoice.items.forEach((item, index) => {
                             const itemKey = item._id || `item-${index}`;
 
-                            // Only initialize if not already exists (new item)
+                            // Chỉ initialize nếu item chưa có trong inputs (item mới)
                             if (!newItemInputs[itemKey]) {
                                 newItemInputs[itemKey] = {
                                     name: item.name,
@@ -227,16 +224,13 @@ const EditInvoiceScreen = () => {
                             }
                         });
 
-                        // Remove inputs for deleted items
-                        const currentItemIds = selectedInvoice.items.map(item => item._id || '').filter(id => id);
-                        const filteredInputs: typeof newItemInputs = {};
+                        // Xóa inputs của items không còn tồn tại (đã bị xóa)
+                        const existingItemIds = selectedInvoice.items.map(item => item._id || '');
                         Object.keys(newItemInputs).forEach(itemId => {
-                            if (currentItemIds.includes(itemId) || itemId.startsWith('item-')) {
-                                filteredInputs[itemId] = newItemInputs[itemId];
+                            if (!existingItemIds.includes(itemId) && !itemId.startsWith('item-')) {
+                                delete newItemInputs[itemId];
                             }
                         });
-
-                        return filteredInputs;
                     }
 
                     return newItemInputs;
@@ -245,17 +239,14 @@ const EditInvoiceScreen = () => {
 
             setTotalAmount(selectedInvoice.totalAmount);
 
-            // Lưu trữ dữ liệu ban đầu để so sánh sau này - chỉ update lần đầu
-            if (!isFormInitialized) {
-                setInitialInvoiceData({
-                    dueDate: selectedInvoice.dueDate || '',
-                    note: selectedInvoice.note || '',
-                    items: JSON.parse(JSON.stringify(selectedInvoice.items || [])),
-                });
-                setIsFormInitialized(true);
-            }
+            // Lưu trữ dữ liệu ban đầu để so sánh sau này
+            setInitialInvoiceData({
+                dueDate: selectedInvoice.dueDate || '',
+                note: selectedInvoice.note || '',
+                items: JSON.parse(JSON.stringify(selectedInvoice.items || [])),
+            });
         }
-    }, [selectedInvoice, isFormInitialized]);
+    }, [selectedInvoice]);
 
     // Handle hardware back button
     useEffect(() => {
@@ -2085,7 +2076,7 @@ const EditInvoiceScreen = () => {
                 {canEditInvoice() && (
                     <View style={styles.customItemNote}>
                         <Text style={styles.customItemNoteText}>
-                            Bạn có thể thêm các khoản mục tùy chỉnh như dịch vụ, bảo trì hoặc các khoản khác.
+                            Bạn có thể thêm các khoản mục tùy chỉnh như điện nước, dịch vụ, bảo trì hoặc các khoản khác.
                         </Text>
 
                     </View>

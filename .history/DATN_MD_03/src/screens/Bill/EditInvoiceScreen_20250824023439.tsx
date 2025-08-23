@@ -128,9 +128,6 @@ const EditInvoiceScreen = () => {
     // State để theo dõi xem hóa đơn đã được lưu thành mẫu hay chưa
     const [hasBeenSavedAsTemplate, setHasBeenSavedAsTemplate] = useState(false);
 
-    // State để theo dõi xem form đã được khởi tạo lần đầu chưa
-    const [isFormInitialized, setIsFormInitialized] = useState(false);
-
     // State để lưu trữ dữ liệu ban đầu của hóa đơn
     const [initialInvoiceData, setInitialInvoiceData] = useState({
         dueDate: '',
@@ -173,10 +170,7 @@ const EditInvoiceScreen = () => {
     // Initialize form with invoice data when available
     useEffect(() => {
         if (selectedInvoice) {
-            // Chỉ set note lần đầu tiên, không reset khi refresh
-            if (!isFormInitialized) {
-                setNote(selectedInvoice.note || '');
-            }
+            setNote(selectedInvoice.note || '');
 
             // Set due date string and date object
             if (selectedInvoice.dueDate) {
@@ -246,16 +240,15 @@ const EditInvoiceScreen = () => {
             setTotalAmount(selectedInvoice.totalAmount);
 
             // Lưu trữ dữ liệu ban đầu để so sánh sau này - chỉ update lần đầu
-            if (!isFormInitialized) {
+            if (Object.keys(initialInvoiceData.items).length === 0) {
                 setInitialInvoiceData({
                     dueDate: selectedInvoice.dueDate || '',
                     note: selectedInvoice.note || '',
                     items: JSON.parse(JSON.stringify(selectedInvoice.items || [])),
                 });
-                setIsFormInitialized(true);
             }
         }
-    }, [selectedInvoice, isFormInitialized]);
+    }, [selectedInvoice]);
 
     // Handle hardware back button
     useEffect(() => {

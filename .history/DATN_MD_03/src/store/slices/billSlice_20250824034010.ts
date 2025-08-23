@@ -618,6 +618,7 @@ const billSlice = createSlice({
                     ...action.payload,
                     isRoommate: true,
                 };
+                console.log('Roommate invoice details loaded:', state.roommateInvoice._id);
             })
             .addCase(fetchRoommateInvoiceDetails.rejected, (state, action) => {
                 state.loading = false;
@@ -636,7 +637,7 @@ const billSlice = createSlice({
                 state.confirmPaymentSuccess = true;
 
                 // Log the received invoice data
-                const receivedInvoice = action.payload;
+                console.log('confirmPayment.fulfilled - received invoice data:', action.payload);
 
                 // Cập nhật hóa đơn được chọn
                 if (action.payload && action.payload._id) {
