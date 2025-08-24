@@ -421,3 +421,22 @@ export const resignContract = async (contractId: string) => {
     };
   }
 };
+
+export const getInvoiceToContractId = async (contractId: string) => {
+  try {
+    const response = await api.get('/billing/invoices', {
+      params: {
+        contractId: contractId,
+        status: 'draft',
+      },
+    });
+    if (!response.data || !response.data.success) {
+      throw new Error(response.data?.message || 'Không lấy được hóa đơn');
+    }
+    return response.data;
+  } catch (error: any) {
+    throw {
+      message: error.response?.data?.message || error.message,
+    };
+  }
+};
