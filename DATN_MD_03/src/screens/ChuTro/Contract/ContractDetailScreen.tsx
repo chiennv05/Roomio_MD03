@@ -49,6 +49,7 @@ import ContractMenu from './components/ContractMenu';
 import ModalConfirmContract from './components/ModalConfirmContract';
 import {useCustomAlert} from '../../../hooks/useCustomAlrert';
 import CustomAlertModal from '../../../components/CustomAlertModal';
+import {getInvoiceToContractId} from '../../../store/services/contractApi';
 // Format tiền tệ
 const formatCurrency = (amount: number) => {
   return amount.toLocaleString('vi-VN') + ' đ';
@@ -265,58 +266,70 @@ const ContractDetailScreen = () => {
     setShowModal(true);
   };
 
-  const onTerminateContract = () => {
-    if (!selectedContract) {
-      return;
-    }
-    if (selectedContract.status === 'terminated') {
-      showError('Hợp đồng đã bị chấm dứt trước đó.', 'Không thể chấm dứt');
-      return;
-    }
-    if (selectedContract.status === 'draft') {
-      showError(
-        'Hợp đồng ở trạng thái Nháp không thể chấm dứt.',
-        'Không thể chấm dứt',
-      );
-      return;
-    }
-    if (selectedContract.status === 'pending_signature') {
-      showError(
-        'Hợp đồng ở trạng thái Chờ ký không thể chấm dứt.',
-        'Không thể chấm dứt',
-      );
-      return;
-    }
-    if (selectedContract.status === 'pending_approval') {
-      showError(
-        'Hợp đồng ở trạng thái Chờ duyệt không thể chấm dứt.',
-        'Không thể chấm dứt',
-      );
-      return;
-    }
-    if (selectedContract.status === 'rejected') {
-      showError(
-        'Hợp đồng đã bị từ chối không thể chấm dứt.',
-        'Không thể chấm dứt',
-      );
-      return;
-    }
-    if (selectedContract.status === 'cancelled') {
-      showError('Hợp đồng đã hủy không thể chấm dứt.', 'Không thể chấm dứt');
-      return;
-    }
-    if (selectedContract.status === 'expired') {
-      showError(
-        'Hợp đồng đã hết hạn không thể chấm dứt.',
-        'Không thể chấm dứt',
-      );
+  const onTerminateContract = async () => {
+    if (!selectedContract) return;
+
+    const invalidStatuses: Record<string, string> = {
+      terminated: 'Hợp đồng đã bị chấm dứt trước đó.',
+      draft: 'Hợp đồng ở trạng thái Nháp không thể chấm dứt.',
+      pending_signature: 'Hợp đồng ở trạng thái Chờ ký không thể chấm dứt.',
+      pending_approval: 'Hợp đồng ở trạng thái Chờ duyệt không thể chấm dứt.',
+      rejected: 'Hợp đồng đã bị từ chối không thể chấm dứt.',
+      cancelled: 'Hợp đồng đã hủy không thể chấm dứt.',
+      expired: 'Hợp đồng đã hết hạn không thể chấm dứt.',
+    };
+
+    // check trạng thái hợp đồng
+    if (invalidStatuses[selectedContract.status]) {
+      showError(invalidStatuses[selectedContract.status], 'Không thể chấm dứt');
       return;
     }
 
+    try {
+      const invoices = await getInvoiceToContractId(selectedContract._id);
+      if (
+        selectedContract.status === 'active' &&
+        invoices.invoices.length > 0
+      ) {
+        showConfirm(
+          `Hiện đang có ${invoices.invoices.length} Hóa đơn nháp chưa hoàn thiện của Hợp đồng này, nếu bạn tiếp tục thì Hóa đơn sẽ bị xóa, bạn có muốn tiếp tục?`,
+          () => {
+            setAction('terminate');
+            setValue('');
+            setShowModal(true);
+          },
+          'Xác nhận chấm dứt',
+          [
+            {
+              text: 'Hủy',
+              onPress: hideAlert,
+              style: 'cancel',
+            },
+            {
+              text: 'Tiếp tục',
+              onPress: () => {
+                hideAlert();
+                setAction('terminate');
+                setValue('');
+                setShowModal(true);
+              },
+              style: 'destructive',
+            },
+          ],
+        );
+        return;
+      }
+    } catch (error) {
+      showError('Không thể kiểm tra hóa đơn của hợp đồng', 'Lỗi', true);
+      return;
+    }
+
+    // default action khi hợp đồng hợp lệ và không có hóa đơn nháp
     setAction('terminate');
     setValue('');
     setShowModal(true);
   };
+
   const handleSubmit = async () => {
     if (!selectedContract) {
       return;
