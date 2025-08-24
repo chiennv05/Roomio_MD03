@@ -264,13 +264,15 @@ const BillDetailScreen = () => {
             case 'rent':
                 return 'Tiền phòng';
             case 'utility':
-                return 'Tiền điện';
+                return 'Tiện ích';
             case 'service':
-                return 'Phí dịch vụ';
+                return 'Dịch vụ';
             case 'maintenance':
-                return 'Phí đỗ xe';
-            default:
+                return 'Bảo trì';
+            case 'other':
                 return 'Khác';
+            default:
+                return 'Không xác định';
         }
     };
 
@@ -286,6 +288,36 @@ const BillDetailScreen = () => {
             default:
                 return pm || '-';
         }
+    };
+
+    // Get price type from contract for a specific item
+    const getItemPriceType = (item: InvoiceItem): 'perRoom' | 'perUsage' | 'perPerson' | null => {
+        if (!selectedInvoice?.contractId?.contractInfo?.serviceFeeConfig) {
+            return null;
+        }
+
+        const serviceFeeConfig = selectedInvoice.contractId.contractInfo.serviceFeeConfig;
+        
+        // Kiểm tra các dịch vụ tiện ích cơ bản
+        if (item.name.toLowerCase().includes('điện') || item.name.toLowerCase().includes('electricity')) {
+            return serviceFeeConfig.electricity || null;
+        }
+        
+        if (item.name.toLowerCase().includes('nước') || item.name.toLowerCase().includes('water')) {
+            return serviceFeeConfig.water || null;
+        }
+
+        // Kiểm tra custom services
+        if (selectedInvoice.contractId.contractInfo.customServices) {
+            const customService = selectedInvoice.contractId.contractInfo.customServices.find(
+                (service: any) => service.name === item.name
+            );
+            if (customService) {
+                return customService.priceType || null;
+            }
+        }
+
+        return null;
     };
 
     // Xử lý xác nhận thanh toán
@@ -477,6 +509,12 @@ const BillDetailScreen = () => {
                             {selectedInvoice.contractId?.contractInfo?.roomAddress || 'Không có địa chỉ'}
                         </Text>
                     </View>
+                    {selectedInvoice.note && (
+                        <View style={styles.detailRow}>
+                            <Text style={styles.detailLabel}>Ghi chú</Text>
+                            <Text style={styles.detailValue}>{selectedInvoice.note}</Text>
+                        </View>
+                    )}
                 </View>
             </View>
         );
@@ -496,6 +534,13 @@ const BillDetailScreen = () => {
 
         const renderItemDetails = (item: InvoiceItem, align: 'left' | 'right') => {
             const rows: { label: string; value: string }[] = [];
+            
+            // Lấy priceType để kiểm tra điều kiện hiển thị
+            const priceType = getItemPriceType(item);
+            
+            // Hiển thị loại dịch vụ
+            rows.push({ label: 'Loại dịch vụ', value: getCategoryText(item.category) });    
+            
             if (item.description) {rows.push({ label: 'Mô tả', value: item.description });}
             if (item.quantity > 0) {
                 rows.push({ label: 'Số lượng', value: `${item.quantity}` });
@@ -504,16 +549,20 @@ const BillDetailScreen = () => {
             if (item.isPerPerson) {
                 rows.push({ label: 'Tính theo người', value: `${item.personCount || 1} người` });
             }
-            if (item.previousReading !== undefined) {
-                rows.push({ label: 'Chỉ số cũ', value: `${item.previousReading}` });
-            }
-            if (item.currentReading !== undefined) {
-                rows.push({ label: 'Chỉ số mới', value: `${item.currentReading}` });
-            }
-            // Thêm dòng hiển thị số đã sử dụng
-            if (item.previousReading !== undefined && item.currentReading !== undefined) {
-                const usage = item.currentReading - item.previousReading;
-                rows.push({ label: 'Số đã sử dụng', value: `${usage}` });
+            
+            // Chỉ hiển thị chỉ số đồng hồ khi priceType là 'perUsage'
+            if (priceType === 'perUsage') {
+                if (item.previousReading !== undefined) {
+                    rows.push({ label: 'Chỉ số cũ', value: `${item.previousReading}` });
+                }
+                if (item.currentReading !== undefined) {
+                    rows.push({ label: 'Chỉ số mới', value: `${item.currentReading}` });
+                }
+                // Thêm dòng hiển thị số đã sử dụng chỉ khi có đầy đủ chỉ số
+                if (item.previousReading !== undefined && item.currentReading !== undefined) {
+                    const usage = item.currentReading - item.previousReading;
+                    rows.push({ label: 'Số đã sử dụng', value: `${usage}` });
+                }
             }
             
 
@@ -758,14 +807,20 @@ const BillDetailScreen = () => {
                     {!isLandlord && (selectedInvoice.status === 'issued' || selectedInvoice.status === 'overdue') && (
                         <View style={styles.paymentButtonContainer}>
                             <TouchableOpacity
-                                style={styles.paymentButton}
+                                style={[
+                                    styles.paymentButton, 
+                                    selectedInvoice.status === 'overdue' && styles.overdueButton
+                                ]}
                                 onPress={selectedInvoice.status === 'overdue' ? handleOverduePress : handlePayment}
                                 disabled={markAsPaidLoading}
                             >
                                 {markAsPaidLoading && selectedInvoice.status !== 'overdue' ? (
                                     <ActivityIndicator size="small" color={Colors.white} />
                                 ) : (
-                                    <Text style={styles.paymentButtonText}>
+                                    <Text style={[
+                                        styles.paymentButtonText,
+                                        selectedInvoice.status === 'overdue' && styles.overdueButtonText
+                                    ]}>
                                         {selectedInvoice.status === 'overdue' ? 'Quá hạn' : 'Xác nhận thanh toán'}
                                     </Text>
                                 )}
@@ -1331,6 +1386,12 @@ const styles = StyleSheet.create({
         color: Colors.black,
         fontWeight: 'bold',
         fontSize: 16,
+    },
+    overdueButton: {
+        backgroundColor: '#DC3545', // Màu đỏ cho nút quá hạn
+    },
+    overdueButtonText: {
+        color: Colors.white, // Chữ màu trắng cho nút quá hạn
     },
 });
 

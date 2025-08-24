@@ -128,6 +128,9 @@ const EditInvoiceScreen = () => {
     // State để theo dõi xem hóa đơn đã được lưu thành mẫu hay chưa
     const [hasBeenSavedAsTemplate, setHasBeenSavedAsTemplate] = useState(false);
 
+    // State để theo dõi xem form đã được khởi tạo lần đầu chưa
+    const [isFormInitialized, setIsFormInitialized] = useState(false);
+
     // State để lưu trữ dữ liệu ban đầu của hóa đơn
     const [initialInvoiceData, setInitialInvoiceData] = useState({
         dueDate: '',
@@ -170,7 +173,10 @@ const EditInvoiceScreen = () => {
     // Initialize form with invoice data when available
     useEffect(() => {
         if (selectedInvoice) {
-            setNote(selectedInvoice.note || '');
+            // Chỉ set note lần đầu tiên, không reset khi refresh
+            if (!isFormInitialized) {
+                setNote(selectedInvoice.note || '');
+            }
 
             // Set due date string and date object
             if (selectedInvoice.dueDate) {
@@ -200,45 +206,56 @@ const EditInvoiceScreen = () => {
             if (selectedInvoice.items && selectedInvoice.items.length > 0) {
                 setInvoiceItems([...selectedInvoice.items]);
 
-                // Initialize string inputs for meter readings, quantities, and unit prices
-                const newItemInputs: {
-                    [itemId: string]: {
-                        name?: string;
-                        description?: string;
-                        previousReading?: string;
-                        currentReading?: string;
-                        quantity?: string;
-                        unitPrice?: string;
+                // Preserve existing input data and only initialize new items
+                setItemInputs(prevInputs => {
+                    const newItemInputs = { ...prevInputs }; // Preserve existing inputs
+
+                    if (selectedInvoice.items) {
+                        selectedInvoice.items.forEach((item, index) => {
+                            const itemKey = item._id || `item-${index}`;
+
+                            // Only initialize if not already exists (new item)
+                            if (!newItemInputs[itemKey]) {
+                                newItemInputs[itemKey] = {
+                                    name: item.name,
+                                    description: item.description,
+                                    previousReading: item.previousReading?.toString() || '0',
+                                    currentReading: item.currentReading?.toString() || '0',
+                                    quantity: item.quantity?.toString() || '0',
+                                    unitPrice: item.unitPrice?.toString() || '0',
+                                };
+                            }
+                        });
+
+                        // Remove inputs for deleted items
+                        const currentItemIds = selectedInvoice.items.map(item => item._id || '').filter(id => id);
+                        const filteredInputs: typeof newItemInputs = {};
+                        Object.keys(newItemInputs).forEach(itemId => {
+                            if (currentItemIds.includes(itemId) || itemId.startsWith('item-')) {
+                                filteredInputs[itemId] = newItemInputs[itemId];
+                            }
+                        });
+
+                        return filteredInputs;
                     }
-                } = {};
 
-                selectedInvoice.items.forEach((item, index) => {
-                    const itemKey = item._id || `item-${index}`;
-
-                    // Initialize meter readings
-                    newItemInputs[itemKey] = {
-                        name: item.name,
-                        description: item.description,
-                        previousReading: item.previousReading?.toString() || '0',
-                        currentReading: item.currentReading?.toString() || '0',
-                        quantity: item.quantity?.toString() || '0',
-                        unitPrice: item.unitPrice?.toString() || '0',
-                    };
+                    return newItemInputs;
                 });
-
-                setItemInputs(newItemInputs);
             }
 
             setTotalAmount(selectedInvoice.totalAmount);
 
-            // Lưu trữ dữ liệu ban đầu để so sánh sau này
-            setInitialInvoiceData({
-                dueDate: selectedInvoice.dueDate || '',
-                note: selectedInvoice.note || '',
-                items: JSON.parse(JSON.stringify(selectedInvoice.items || [])),
-            });
+            // Lưu trữ dữ liệu ban đầu để so sánh sau này - chỉ update lần đầu
+            if (!isFormInitialized) {
+                setInitialInvoiceData({
+                    dueDate: selectedInvoice.dueDate || '',
+                    note: selectedInvoice.note || '',
+                    items: JSON.parse(JSON.stringify(selectedInvoice.items || [])),
+                });
+                setIsFormInitialized(true);
+            }
         }
-    }, [selectedInvoice]);
+    }, [selectedInvoice, isFormInitialized]);
 
     // Handle hardware back button
     useEffect(() => {
@@ -369,6 +386,11 @@ const EditInvoiceScreen = () => {
         }
 
         return result !== undefined ? result : defaultValue;
+    };
+
+    // Helper function to check if invoice can be edited
+    const canEditInvoice = () => {
+        return selectedInvoice && (selectedInvoice.status === 'draft' || selectedInvoice.status === 'overdue');
     };
 
     // Format date function
@@ -742,10 +764,6 @@ const EditInvoiceScreen = () => {
                 updatedItem.currentReading = inputData.currentReading === '' ? 0 : parseInt(inputData.currentReading);
             }
 
-            // Không cập nhật số lượng từ input
-
-            // Không cập nhật đơn giá từ input
-
             // Tính toán lại amount
             if (updatedItem.type === 'fixed') {
                 // Tính toán amount dựa trên priceType
@@ -822,11 +840,20 @@ const EditInvoiceScreen = () => {
                 // Cập nhật store sau khi lưu thành công
                 dispatch(updateInvoiceInStore(updatedInvoice));
 
+                // ✅ Cập nhật initialInvoiceData để reset trạng thái "đã thay đổi"
+                setInitialInvoiceData({
+                    dueDate: dueDateISO || selectedInvoice.dueDate || '',
+                    note: note || selectedInvoice.note || '',
+                    items: JSON.parse(JSON.stringify(updatedItems)),
+                });
+
                 // Hiển thị thông báo thành công
                 showSuccess("Đã lưu nháp hóa đơn thành công!");
 
                 // Đặt lại trạng thái loading
                 setIsLoading(false);
+
+                
             })
             .catch((error) => {
                 setIsLoading(false);
@@ -1211,19 +1238,43 @@ const EditInvoiceScreen = () => {
             .filter(item => {
                 // Sử dụng hàm getItemEditability để kiểm tra item có thể chỉnh sửa
                 const editability = getItemEditability(item);
-                return item._id && editability.isEditable;
+                // ✅ FIX: Chỉ filter items có ít nhất một trường có thể chỉnh sửa
+                return item._id && (editability.isEditable || editability.canEditMeterReadings || editability.canEditDescription);
             })
             .map(item => {
                 const itemId = item._id as string;
                 const inputData = itemInputs[itemId];
+                const editability = getItemEditability(item);
                 const isUtility = item.category === 'utility';
                 const priceType = getItemPriceType(item);
                 const itemData: any = { itemId };
 
-                // Thêm các trường cần thiết dựa trên loại item
+                // ✅ FIX: Luôn thêm description nếu có thể chỉnh sửa
+                if (editability.canEditDescription) {
+                    itemData.description = inputData?.description !== undefined ? inputData.description : item.description;
+                }
+
+                // ✅ FIX: Thêm chỉ số đồng hồ nếu có thể chỉnh sửa
+                if (editability.canEditMeterReadings) {
+                    itemData.previousReading = inputData?.previousReading !== undefined ?
+                        (inputData.previousReading === '' ? 0 : parseInt(inputData.previousReading)) :
+                        item.previousReading;
+
+                    itemData.currentReading = inputData?.currentReading !== undefined ?
+                        (inputData.currentReading === '' ? 0 : parseInt(inputData.currentReading)) :
+                        item.currentReading;
+                }
+
+                // ✅ FIX: Thêm tên nếu có thể chỉnh sửa (cho custom items)
+                if (editability.canEditName) {
+                    itemData.name = inputData?.name || item.name;
+                }
+
+                // Thêm các trường cần thiết dựa trên loại item (legacy logic)
                 if (isUtility) {
                     // Chỉ cập nhật chỉ số đồng hồ nếu priceType là perUsage
-                    if (priceType === 'perUsage') {
+                    if (priceType === 'perUsage' && !editability.canEditMeterReadings) {
+                        // Fallback cho trường hợp cũ   
                         itemData.previousReading = inputData?.previousReading !== undefined ?
                             (inputData.previousReading === '' ? 0 : parseInt(inputData.previousReading)) :
                             item.previousReading;
@@ -1232,8 +1283,8 @@ const EditInvoiceScreen = () => {
                             (inputData.currentReading === '' ? 0 : parseInt(inputData.currentReading)) :
                             item.currentReading;
                     }
-                } else {
-                    // Với các item khác, cập nhật các trường cơ bản
+                } else if (!editability.canEditDescription && !editability.canEditMeterReadings) {
+                    // Với các item khác, cập nhật các trường cơ bản (legacy)
                     itemData.name = inputData?.name || item.name;
                     itemData.description = inputData?.description !== undefined ? inputData.description : item.description;
                     // Không cho phép cập nhật đơn giá cho bất kỳ item nào
@@ -1285,9 +1336,12 @@ const EditInvoiceScreen = () => {
         }
 
         // Hiển thị xác nhận phát hành
+        const confirmMessage = selectedInvoice.status === 'overdue' 
+            ? "Bạn có chắc chắn muốn cập nhật và phát hành lại hóa đơn quá hạn này không? Sau khi phát hành, hóa đơn sẽ được gửi đến người thuê và không thể chỉnh sửa."
+            : "Bạn có chắc chắn muốn phát hành hóa đơn này không? Sau khi phát hành, hóa đơn sẽ được gửi đến người thuê và không thể chỉnh sửa.";
 
         showConfirm(
-            "Bạn có chắc chắn muốn phát hành hóa đơn này không? Sau khi phát hành, hóa đơn sẽ được gửi đến người thuê và không thể chỉnh sửa.",
+            confirmMessage,
             () => {
                         // Hiển thị loading
                         setIsLoading(true);
@@ -1511,20 +1565,21 @@ const EditInvoiceScreen = () => {
             
             // Xử lý theo priceType
             if (priceType === 'perRoom') {
-                // perRoom: Không thể chỉnh sửa gì - ẩn input fields nhưng vẫn cho phép chỉnh sửa description
-                result.isEditable = false;
-                result.canEditDescription = true; // Vẫn cho phép chỉnh sửa description
+                // perRoom: Chỉ cho phép chỉnh sửa description
+                result.isEditable = true; // ✅ FIX: Đặt isEditable = true để item không bị filter
+                result.canEditDescription = true;
                 result.canEditMeterReadings = false;
                 result.canEditUnitPrice = false;
             } else if (priceType === 'perUsage') {
                 // perUsage: Có thể chỉnh sửa chỉ số đồng hồ - hiển thị input fields cho meter readings
+                result.isEditable = true;
                 result.canEditMeterReadings = true;
                 // Đơn giá vẫn không được chỉnh sửa cho các item từ hợp đồng
                 result.canEditUnitPrice = false;
             } else if (priceType === 'perPerson') {
-                // perPerson: Không thể chỉnh sửa gì - ẩn input fields nhưng vẫn cho phép chỉnh sửa description
-                result.isEditable = false;
-                result.canEditDescription = true; // Vẫn cho phép chỉnh sửa description
+                // perPerson: Chỉ cho phép chỉnh sửa description
+                result.isEditable = true; // ✅ FIX: Đặt isEditable = true để item không bị filter
+                result.canEditDescription = true;
                 result.canEditMeterReadings = false;
                 result.canEditUnitPrice = false;
             }
@@ -2014,7 +2069,7 @@ const EditInvoiceScreen = () => {
             <View style={styles.itemsSection}>
                                       <View style={styles.sectionTitleRow}>
                          
-                                                      {selectedInvoice && selectedInvoice.status === 'draft' && (
+                                                      {canEditInvoice() && (
                                 <TouchableOpacity
                                     style={styles.addItemButton}
                                     onPress={() => setCustomItemModalVisible(true)}
@@ -2027,17 +2082,17 @@ const EditInvoiceScreen = () => {
                                 </TouchableOpacity>
                             )}
                       </View>
-                {selectedInvoice && selectedInvoice.status === 'draft' && (
+                {canEditInvoice() && (
                     <View style={styles.customItemNote}>
                         <Text style={styles.customItemNoteText}>
-                            Bạn có thể thêm các khoản mục tùy chỉnh như điện nước, dịch vụ, bảo trì hoặc các khoản khác.
+                            Bạn có thể thêm các khoản mục tùy chỉnh như dịch vụ, bảo trì hoặc các khoản khác.
                         </Text>
 
                     </View>
                 )}
 
                 {/* Nút áp dụng chỉ số từ kỳ trước */}
-                {selectedInvoice && selectedInvoice.status === 'draft' && 
+                {canEditInvoice() && 
                  previousInvoiceData.meterReadings && 
                  Object.keys(previousInvoiceData.meterReadings).length > 0 && 
                  !hasAppliedPreviousReadings && (
@@ -2085,7 +2140,7 @@ const EditInvoiceScreen = () => {
                 )}
 
                 {/* Hiển thị thông báo khi không tìm thấy dữ liệu kỳ trước */}
-                {selectedInvoice && selectedInvoice.status === 'draft' && 
+                {canEditInvoice() && 
                  !loadingPreviousInvoice && 
                  !previousInvoiceData.meterReadings && 
                  !hasAppliedPreviousReadings && (
@@ -2128,7 +2183,7 @@ const EditInvoiceScreen = () => {
                                     <Text style={styles.itemCategory}>{getCategoryText(item.category)}</Text>
                                     
                                     {/* Delete button for all items except rent */}
-                                    {item.category !== 'rent' && selectedInvoice?.status === 'draft' && (
+                                    {item.category !== 'rent' && canEditInvoice() && (
                                         <TouchableOpacity
                                             style={styles.deleteButton}
                                             onPress={() => handleDeleteItem(item)}
@@ -2471,29 +2526,33 @@ const EditInvoiceScreen = () => {
                 {renderInvoiceItems()}
                 {renderSummary()}
 
-                <View style={styles.buttonGroup}>
-                    <TouchableOpacity
-                        style={styles.saveDraftButton}
-                        onPress={handleSaveDraft}
-                        disabled={isLoading || !selectedInvoice}>
-                        {isLoading ? (
-                            <ActivityIndicator size="small" color={Colors.black} />
-                        ) : (
-                            <Text style={styles.saveDraftText}>Lưu nháp</Text>
-                        )}
-                    </TouchableOpacity>
+                {canEditInvoice() && (
+                    <View style={styles.buttonGroup}>
+                        <TouchableOpacity
+                            style={styles.saveDraftButton}
+                            onPress={handleSaveDraft}
+                            disabled={isLoading || !selectedInvoice}>
+                            {isLoading ? (
+                                <ActivityIndicator size="small" color={Colors.black} />
+                            ) : (
+                                <Text style={styles.saveDraftText}>Lưu nháp</Text>
+                            )}
+                        </TouchableOpacity>
 
-                    <TouchableOpacity
-                        style={[styles.saveButton, { backgroundColor: Colors.limeGreen }]}
-                        onPress={handleIssueInvoice}
-                        disabled={updateInvoiceLoading}>
-                        {updateInvoiceLoading ? (
-                            <ActivityIndicator size="small" color={Colors.black} />
-                        ) : (
-                            <Text style={styles.saveButtonText}>Phát hành hóa đơn</Text>
-                        )}
-                    </TouchableOpacity>
-                </View>
+                        <TouchableOpacity
+                            style={[styles.saveButton, { backgroundColor: Colors.limeGreen }]}
+                            onPress={handleIssueInvoice}
+                            disabled={updateInvoiceLoading}>
+                            {updateInvoiceLoading ? (
+                                <ActivityIndicator size="small" color={Colors.black} />
+                            ) : (
+                                <Text style={styles.saveButtonText}>
+                                    {selectedInvoice?.status === 'overdue' ? 'Cập nhật hóa đơn' : 'Phát hành hóa đơn'}
+                                </Text>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                )}
             </ScrollView>
 
             {/* Modal container */}
