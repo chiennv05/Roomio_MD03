@@ -20,7 +20,7 @@ const RoomsTab = ({data, navigateToRoomDetail, navigation}: RoomsTabProps) => {
         {/* Tổng số phòng */}
         <View style={[styles.overviewCardSimple, styles.cardTotal]}>
           <View style={[styles.iconBadge, styles.iconWrap]}>
-            <Image source={{uri: Icons.IconRoom}} style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]} />
+            <Image source={{uri: Icons.IconRoom}} style={[styles.overviewIcon, {tintColor: Colors.darkGreen}]} />
           </View>
           <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Tổng số phòng</Text>
@@ -31,7 +31,7 @@ const RoomsTab = ({data, navigateToRoomDetail, navigation}: RoomsTabProps) => {
         {/* Phòng đã thuê */}
         <View style={[styles.overviewCardSimple, styles.cardRented]}>
           <View style={[styles.iconBadge, styles.iconWrap]}>
-            <Image source={{uri: Icons.IconHopDongThue}} style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]} />
+            <Image source={{uri: Icons.IconHopDongThue}} style={[styles.overviewIcon, {tintColor: Colors.darkGreen}]} />
           </View>
           <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Phòng đã thuê</Text>
@@ -42,7 +42,7 @@ const RoomsTab = ({data, navigateToRoomDetail, navigation}: RoomsTabProps) => {
         {/* Phòng trống */}
         <View style={[styles.overviewCardSimple, styles.cardAvailable]}>
           <View style={[styles.iconBadge, styles.iconWrap]}>
-            <Image source={{uri: Icons.IconPhongTrong}} style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]} />
+            <Image source={{uri: Icons.IconPhongTrong}} style={[styles.overviewIcon, {tintColor: Colors.darkGreen}]} />
           </View>
           <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Phòng trống</Text>

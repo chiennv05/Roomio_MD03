@@ -72,7 +72,7 @@ export const getContractStatusInfo = (status: string) => {
     case 'terminated':
       return {
         label: 'Đã chấm dứt',
-        color: Colors.black,
+        color: Colors.white,
         backgroudColor: Colors.textGray,
         backgroudStatus: Colors.lightRed,
         textColor: Colors.dearkOlive,

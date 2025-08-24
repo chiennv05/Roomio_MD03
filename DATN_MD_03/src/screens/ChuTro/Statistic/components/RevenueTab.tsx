@@ -52,7 +52,7 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
           <View style={[styles.iconBadge, styles.iconWrap]}>
             <Image
               source={{uri: Icons.IconTienCoc}}
-              style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]}
+              style={[styles.overviewIcon, {tintColor: Colors.darkGreen}]}
             />
           </View>
           <View style={styles.overviewContent}>
@@ -66,7 +66,7 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
           <View style={[styles.iconBadge, styles.iconWrap]}>
             <Image
               source={{uri: Icons.IconGiaTrungBinh}}
-              style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]}
+              style={[styles.overviewIcon, {tintColor: Colors.darkGreen}]}
             />
           </View>
           <View style={styles.overviewContent}>
@@ -84,7 +84,7 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
           <View style={styles.breakdownItem}>
             <View style={styles.breakdownLeft}>
               <View style={[styles.iconBadge, styles.iconWrap]}>
-                <Image source={{uri: Icons.IconRoom}} style={[styles.breakdownIcon, {tintColor: Colors.brandPrimary}]} />
+                <Image source={{uri: Icons.IconRoom}} style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]} />
               </View>
               <Text style={styles.breakdownLabel}>Tiền thuê phòng</Text>
             </View>
@@ -96,7 +96,7 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
           <View style={styles.breakdownItem}>
             <View style={styles.breakdownLeft}>
               <View style={[styles.iconBadge, styles.iconWrap]}>
-                <Image source={{uri: Icons.IconServiceSelected}} style={[styles.breakdownIcon, {tintColor: Colors.brandPrimary}]} />
+                <Image source={{uri: Icons.IconServiceSelected}} style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]} />
               </View>
               <Text style={styles.breakdownLabel}>Phí dịch vụ</Text>
             </View>
@@ -108,7 +108,7 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
           <View style={styles.breakdownItem}>
             <View style={styles.breakdownLeft}>
               <View style={[styles.iconBadge, styles.iconWrap]}>
-                <Image source={{uri: Icons.IconTienCoc}} style={[styles.breakdownIcon, {tintColor: Colors.brandPrimary}]} />
+                <Image source={{uri: Icons.IconTienCoc}} style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]} />
               </View>
               <Text style={styles.breakdownLabel}>Phí khác</Text>
             </View>

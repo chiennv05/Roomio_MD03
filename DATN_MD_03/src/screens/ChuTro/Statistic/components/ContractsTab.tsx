@@ -31,8 +31,11 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
   const navigation = useNavigation<ContractsTabNavigationProp>();
 
   // Helper function to get readable text color for status badges
-  const getContractStatusTextColor = (_status: string) => {
-    // Using black for all status text for better readability
+  const getContractStatusTextColor = (status: string) => {
+    // Using white text for terminated status, black for others
+    if (status === 'terminated') {
+      return Colors.white;
+    }
     return Colors.black;
   };
 
@@ -66,7 +69,7 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
           <View style={[styles.iconBadge, styles.iconWrap]}>
             <Image
               source={{uri: Icons.IconHopDongActive}}
-              style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]}
+              style={[styles.overviewIcon, {tintColor: Colors.darkGreen}]}
             />
           </View>
           <View style={styles.overviewContent}>
@@ -82,7 +85,7 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
           <View style={[styles.iconBadge, styles.iconWrap]}>
             <Image
               source={{uri: Icons.IconHopDongActive}}
-              style={[styles.overviewIcon, {tintColor: Colors.brandPrimary}]}
+              style={[styles.overviewIcon, {tintColor: Colors.darkGreen}]}
             />
           </View>
           <View style={styles.overviewContent}>
