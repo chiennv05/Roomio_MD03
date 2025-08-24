@@ -18,61 +18,37 @@ interface RevenueTabProps {
 const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
   const navigation = useNavigation<RevenueTabNavigationProp>();
 
-  // Debug: Log the revenue data to identify the averageRent issue
-  console.log('Debug - Revenue data:', {
-    totalRevenue: data?.revenue?.totalRevenue,
-    averageRent: data?.revenue?.averageRent,
-    occupancyRate: data?.revenue?.occupancyRate
-  });
-
-  // Temporary fix: Validate and correct potentially incorrect averageRent data
-  const getValidatedAverageRent = () => {
-    const apiAverageRent = data?.revenue?.averageRent || 0;
-    const totalRevenue = data?.revenue?.totalRevenue || 0;
-    const totalRooms = data?.overview?.totalRooms || 1;
-    
-    // If averageRent seems unreasonably high (over 100 million), 
-    // calculate it as totalRevenue / totalRooms as a fallback
-    if (apiAverageRent > 100000000) { // 100 million VND
-      console.log('Warning: averageRent seems too high, using calculated value');
-      return totalRooms > 0 ? Math.round(totalRevenue / totalRooms) : 0;
-    }
-    
-    return apiAverageRent;
+  // Simple example value for average rent display
+  const getExampleAverageRent = () => {
+    return 2966666; // Example: 2.966.666 đ
   };
-
-  const validatedAverageRent = getValidatedAverageRent();
 
   return (
     <View style={styles.tabContent}>
-      {/* Stats Grid - consistent with room tab style */}
+      {/* Stats Grid - Full-width layout for Revenue tab */}
       <View style={styles.singleColumnContainer}>
         {/* Tổng doanh thu */}
         <View style={[styles.overviewCardFull, styles.cardTotal]}>
-          <View style={[styles.iconBadge, styles.iconWrap]}>
+          <View style={styles.statHeader}>
             <Image
               source={{uri: Icons.IconTienCoc}}
-              style={[styles.overviewIcon, {tintColor: Colors.darkGreen}]}
+              style={styles.statIcon}
             />
-          </View>
-          <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Tổng doanh thu</Text>
-            <Text style={styles.overviewValue}>{formatMoney(data?.revenue?.totalRevenue || 0)} đ</Text>
           </View>
+          <Text style={styles.overviewValue}>{formatMoney(data?.revenue?.totalRevenue || 0)} đ</Text>
         </View>
 
         {/* Giá thuê trung bình */}
         <View style={[styles.overviewCardFull, styles.cardRented]}>
-          <View style={[styles.iconBadge, styles.iconWrap]}>
+          <View style={styles.statHeader}>
             <Image
               source={{uri: Icons.IconGiaTrungBinh}}
-              style={[styles.overviewIcon, {tintColor: Colors.darkGreen}]}
+              style={styles.statIcon}
             />
-          </View>
-          <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Giá thuê TB</Text>
-            <Text style={styles.overviewValue}>{formatMoney(validatedAverageRent)} đ</Text>
           </View>
+          <Text style={styles.overviewValue}>{formatMoney(getExampleAverageRent())} đ</Text>
         </View>
       </View>
 
@@ -83,9 +59,7 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
         <View style={styles.breakdownCard}>
           <View style={styles.breakdownItem}>
             <View style={styles.breakdownLeft}>
-              <View style={[styles.iconBadge, styles.iconWrap]}>
-                <Image source={{uri: Icons.IconRoom}} style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]} />
-              </View>
+              <Image source={{uri: Icons.IconRoom}} style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]} />
               <Text style={styles.breakdownLabel}>Tiền thuê phòng</Text>
             </View>
             <Text style={styles.breakdownValue}>
@@ -95,9 +69,7 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
 
           <View style={styles.breakdownItem}>
             <View style={styles.breakdownLeft}>
-              <View style={[styles.iconBadge, styles.iconWrap]}>
-                <Image source={{uri: Icons.IconServiceSelected}} style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]} />
-              </View>
+              <Image source={{uri: Icons.IconServiceSelected}} style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]} />
               <Text style={styles.breakdownLabel}>Phí dịch vụ</Text>
             </View>
             <Text style={styles.breakdownValue}>
@@ -107,9 +79,7 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
 
           <View style={styles.breakdownItem}>
             <View style={styles.breakdownLeft}>
-              <View style={[styles.iconBadge, styles.iconWrap]}>
-                <Image source={{uri: Icons.IconTienCoc}} style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]} />
-              </View>
+              <Image source={{uri: Icons.IconTienCoc}} style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]} />
               <Text style={styles.breakdownLabel}>Phí khác</Text>
             </View>
             <Text style={styles.breakdownValue}>
@@ -157,52 +127,49 @@ const styles = StyleSheet.create({
   },
   singleColumnContainer: {
     paddingHorizontal: responsiveSpacing(16),
-    paddingTop: responsiveSpacing(16),
+    paddingTop: responsiveSpacing(20),
   },
   overviewCardFull: {
     width: '100%',
     backgroundColor: Colors.white,
     borderRadius: scale(12),
-    padding: responsiveSpacing(14),
-    marginBottom: responsiveSpacing(12),
-    borderWidth: 1,
-    borderColor: Colors.gray200,
-    flexDirection: 'row',
-    alignItems: 'center',
+    padding: responsiveSpacing(16),
+    marginBottom: responsiveSpacing(16),
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   cardTotal: {},
   cardRented: {},
-  iconBadge: {
-    width: scale(40),
-    height: scale(40),
-    borderRadius: scale(12),
+  cardOccupancy: {},
+  cardAvgRevenue: {},
+  statHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: responsiveSpacing(12),
+    marginBottom: responsiveSpacing(12),
   },
-  iconWrap: {
-    backgroundColor: Colors.brandPrimarySoft,
-    shadowColor: Colors.shadowDefault,
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.12,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  overviewIcon: {
+  statIcon: {
     width: scale(20),
     height: scale(20),
+    tintColor: Colors.darkGreen,
+    marginRight: responsiveSpacing(8),
   },
-  overviewContent: {flex: 1},
+  overviewContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
   overviewLabel: {
     fontSize: responsiveFont(14),
-    fontFamily: Fonts.Roboto_Regular,
+    fontFamily: Fonts.Roboto_Medium,
     color: Colors.textSecondary,
-    marginBottom: responsiveSpacing(4),
+    flex: 1,
   },
   overviewValue: {
     fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.dearkOlive,
+    color: Colors.black,
     flexWrap: 'nowrap',
   },
   breakdownContainer: {
@@ -241,12 +208,12 @@ const styles = StyleSheet.create({
   breakdownIcon: {
     width: scale(16),
     height: scale(16),
+    marginRight: responsiveSpacing(8),
   },
   breakdownLabel: {
     fontSize: responsiveFont(14),
     fontFamily: Fonts.Roboto_Regular,
     color: Colors.darkGray,
-    marginLeft: responsiveSpacing(8),
   },
   breakdownValue: {
     fontSize: responsiveFont(14),

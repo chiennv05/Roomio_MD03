@@ -62,86 +62,76 @@ const ContractsTab: React.FC<ContractsTabProps> = ({
 
   return (
     <View style={styles.tabContent}>
-      {/* Stats Grid - consistent with room tab style */}
+      {/* Stats Grid - 5 cards in flexible grid layout */}
       <View style={styles.overviewContainer}>
         {/* Tổng hợp đồng */}
         <View style={[styles.overviewCardSimple, styles.cardTotal]}>
-          <View style={[styles.iconBadge, styles.iconWrap]}>
+          <View style={styles.statHeader}>
             <Image
               source={{uri: Icons.IconHopDongActive}}
-              style={[styles.overviewIcon, {tintColor: Colors.darkGreen}]}
+              style={styles.statIcon}
             />
-          </View>
-          <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Tổng hợp đồng</Text>
-            <Text style={styles.overviewValue}>
-              {data?.overview?.totalContracts || 0}
-            </Text>
           </View>
+          <Text style={styles.overviewValue}>
+            {data?.overview?.totalContracts || 0}
+          </Text>
         </View>
 
         {/* Đang hiệu lực */}
         <View style={[styles.overviewCardSimple, styles.cardRented]}>
-          <View style={[styles.iconBadge, styles.iconWrap]}>
+          <View style={styles.statHeader}>
             <Image
               source={{uri: Icons.IconHopDongActive}}
-              style={[styles.overviewIcon, {tintColor: Colors.darkGreen}]}
+              style={styles.statIcon}
             />
-          </View>
-          <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Đang hiệu lực</Text>
-            <Text style={styles.overviewValue}>
-              {data?.overview?.activeContracts || 0}
-            </Text>
           </View>
+          <Text style={styles.overviewValue}>
+            {data?.overview?.activeContracts || 0}
+          </Text>
         </View>
 
         {/* Chờ ký */}
         <View style={[styles.overviewCardSimple, styles.cardAvailable]}>
-          <View style={[styles.iconBadge, styles.iconWrapNeutral]}>
+          <View style={styles.statHeader}>
             <Image
               source={{uri: Icons.IconChoKy}}
-              style={[styles.overviewIcon, {tintColor: Colors.mediumGray}]}
+              style={[styles.statIcon, {tintColor: Colors.mediumGray}]}
             />
-          </View>
-          <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Chờ ký</Text>
-            <Text style={styles.overviewValue}>
-              {data?.overview?.pendingContracts || 0}
-            </Text>
           </View>
+          <Text style={styles.overviewValue}>
+            {data?.overview?.pendingContracts || 0}
+          </Text>
         </View>
 
         {/* Đã hết hạn */}
         <View style={[styles.overviewCardSimple, styles.cardExpired]}>
-          <View style={[styles.iconBadge, styles.iconWrapWarning]}>
+          <View style={styles.statHeader}>
             <Image
               source={{uri: Icons.IconDaHetHan}}
-              style={[styles.overviewIcon, {tintColor: Colors.lightRed}]}
+              style={[styles.statIcon, {tintColor: Colors.lightRed}]}
             />
-          </View>
-          <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Đã hết hạn</Text>
-            <Text style={styles.overviewValue}>
-              {data?.overview?.expiredContracts || 0}
-            </Text>
           </View>
+          <Text style={styles.overviewValue}>
+            {data?.overview?.expiredContracts || 0}
+          </Text>
         </View>
 
         {/* Đã chấm dứt */}
-        <View style={[styles.overviewCardSimple, styles.cardPending]}>
-          <View style={[styles.iconBadge, styles.iconWrapWarning]}>
+        <View style={[styles.overviewCardSimple, styles.cardTerminated]}>
+          <View style={styles.statHeader}>
             <Image
               source={{uri: Icons.IconDaChamDut}}
-              style={[styles.overviewIcon]}
+              style={styles.statIcon}
             />
-          </View>
-          <View style={styles.overviewContent}>
             <Text style={styles.overviewLabel}>Đã chấm dứt</Text>
-            <Text style={styles.overviewValue}>
-              {data?.overview?.terminatedContracts || 0}
-            </Text>
           </View>
+          <Text style={styles.overviewValue}>
+            {data?.overview?.terminatedContracts || 0}
+          </Text>
         </View>
       </View>
 
@@ -354,73 +344,51 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: responsiveSpacing(16),
-    paddingTop: responsiveSpacing(16),
-    justifyContent: 'space-between',
-    // Allow for 5 cards: 2-2-1 layout
+    paddingTop: responsiveSpacing(20),
+    gap: responsiveSpacing(16),
   },
   overviewCardSimple: {
-    width: '48%',
+    width: '47%',
     backgroundColor: Colors.white,
     borderRadius: scale(12),
-    padding: responsiveSpacing(14),
-    marginBottom: responsiveSpacing(12),
-    borderWidth: 1,
-    borderColor: Colors.gray200,
-    flexDirection: 'row',
-    alignItems: 'center',
+    padding: responsiveSpacing(16),
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   cardTotal: {},
   cardRented: {},
   cardAvailable: {},
   cardExpired: {},
+  cardTerminated: {},
   cardPending: {},
-  iconBadge: {
-    width: scale(40),
-    height: scale(40),
-    borderRadius: scale(12),
+  statHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: responsiveSpacing(12),
+    marginBottom: responsiveSpacing(12),
   },
-  iconWrap: {
-    backgroundColor: Colors.brandPrimarySoft,
-    shadowColor: Colors.shadowDefault,
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.12,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  iconWrapWarning: {
-    backgroundColor: 'rgba(255, 56, 60, 0.1)', // Light red background matching Colors.lightRed
-    shadowColor: Colors.shadowDefault,
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.12,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  iconWrapNeutral: {
-    backgroundColor: Colors.neutralSoft,
-    shadowColor: Colors.shadowDefault,
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  overviewIcon: {
+  statIcon: {
     width: scale(20),
     height: scale(20),
+    // tintColor: Colors.darkGreen,
+    marginRight: responsiveSpacing(8),
   },
-  overviewContent: {flex: 1},
+  overviewContent: {
+    flex: 1,
+    justifyContent: 'center',
+  },
   overviewLabel: {
-    fontSize: responsiveFont(13),
-    fontFamily: Fonts.Roboto_Regular,
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Medium,
     color: Colors.textSecondary,
-    marginBottom: responsiveSpacing(4),
+    flex: 1,
   },
   overviewValue: {
     fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.dearkOlive,
+    color: Colors.black,
     flexWrap: 'nowrap',
   },
   modernAnalysisSection: {

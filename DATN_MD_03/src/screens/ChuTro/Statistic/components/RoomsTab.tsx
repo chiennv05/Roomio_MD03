@@ -19,46 +19,38 @@ const RoomsTab = ({data, navigateToRoomDetail, navigation}: RoomsTabProps) => {
       <View style={styles.overviewContainer}>
         {/* Tổng số phòng */}
         <View style={[styles.overviewCardSimple, styles.cardTotal]}>
-          <View style={[styles.iconBadge, styles.iconWrap]}>
-            <Image source={{uri: Icons.IconRoom}} style={[styles.overviewIcon, {tintColor: Colors.darkGreen}]} />
-          </View>
-          <View style={styles.overviewContent}>
+          <View style={styles.statHeader}>
+            <Image source={{uri: Icons.IconRoom}} style={styles.statIcon} />
             <Text style={styles.overviewLabel}>Tổng số phòng</Text>
-            <Text style={styles.overviewValue}>{data?.overview?.totalRooms || 0}</Text>
           </View>
+          <Text style={styles.overviewValue}>{data?.overview?.totalRooms || 0}</Text>
         </View>
 
         {/* Phòng đã thuê */}
         <View style={[styles.overviewCardSimple, styles.cardRented]}>
-          <View style={[styles.iconBadge, styles.iconWrap]}>
-            <Image source={{uri: Icons.IconHopDongThue}} style={[styles.overviewIcon, {tintColor: Colors.darkGreen}]} />
-          </View>
-          <View style={styles.overviewContent}>
+          <View style={styles.statHeader}>
+            <Image source={{uri: Icons.IconHopDongThue}} style={styles.statIcon} />
             <Text style={styles.overviewLabel}>Phòng đã thuê</Text>
-            <Text style={styles.overviewValue}>{data?.overview?.rentedRooms || 0}</Text>
           </View>
+          <Text style={styles.overviewValue}>{data?.overview?.rentedRooms || 0}</Text>
         </View>
 
         {/* Phòng trống */}
         <View style={[styles.overviewCardSimple, styles.cardAvailable]}>
-          <View style={[styles.iconBadge, styles.iconWrap]}>
-            <Image source={{uri: Icons.IconPhongTrong}} style={[styles.overviewIcon, {tintColor: Colors.darkGreen}]} />
-          </View>
-          <View style={styles.overviewContent}>
+          <View style={styles.statHeader}>
+            <Image source={{uri: Icons.IconPhongTrong}} style={styles.statIcon} />
             <Text style={styles.overviewLabel}>Phòng trống</Text>
-            <Text style={styles.overviewValue}>{data?.overview?.availableRooms || 0}</Text>
           </View>
+          <Text style={styles.overviewValue}>{data?.overview?.availableRooms || 0}</Text>
         </View>
 
         {/* Chờ duyệt */}
         <View style={[styles.overviewCardSimple, styles.cardPending]}>
-          <View style={[styles.iconBadge, styles.iconWrap]}>
-            <Image source={{uri: Icons.IconChoDuyet}} style={[styles.overviewIcon, {tintColor: Colors.warning}]} />
-          </View>
-          <View style={styles.overviewContent}>
+          <View style={styles.statHeader}>
+            <Image source={{uri: Icons.IconChoDuyet}} style={[styles.statIcon, {tintColor: Colors.warning}]} />
             <Text style={styles.overviewLabel}>Chờ duyệt</Text>
-            <Text style={styles.overviewValue}>{data?.overview?.pendingRooms || 0}</Text>
           </View>
+          <Text style={styles.overviewValue}>{data?.overview?.pendingRooms || 0}</Text>
         </View>
       </View>
 
@@ -151,69 +143,45 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: responsiveSpacing(16),
-    paddingTop: responsiveSpacing(16),
-    justifyContent: 'space-between',
+    paddingTop: responsiveSpacing(20),
+    gap: responsiveSpacing(16),
   },
   overviewCardSimple: {
-    width: '48%',
+    width: '47%',
     backgroundColor: Colors.white,
     borderRadius: scale(12),
-    padding: responsiveSpacing(12),
-    marginBottom: responsiveSpacing(12),
-    borderWidth: 1,
-    borderColor: Colors.gray200,
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: scale(80),
+    padding: responsiveSpacing(16),
+    shadowColor: Colors.shadowDefault,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   cardTotal: {},
   cardRented: {},
   cardAvailable: {},
   cardPending: {},
-  iconBadge: {
-    width: scale(40),
-    height: scale(40),
-    borderRadius: scale(12),
+  statHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: responsiveSpacing(12),
+    marginBottom: responsiveSpacing(12),
   },
-  iconWrap: {
-    backgroundColor: Colors.brandPrimarySoft,
-    shadowColor: Colors.shadowDefault,
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.12,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  iconWrapNeutral: {
-    backgroundColor: Colors.neutralSoft,
-    shadowColor: Colors.shadowDefault,
-    shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  overviewIcon: {
+  statIcon: {
     width: scale(20),
     height: scale(20),
-    tintColor: Colors.brandPrimary,
-  },
-  overviewContent: {
-    flex: 1,
-    justifyContent: 'center',
+    tintColor: Colors.darkGreen,
+    marginRight: responsiveSpacing(8),
   },
   overviewLabel: {
-    fontSize: responsiveFont(12),
-    fontFamily: Fonts.Roboto_Regular,
+    fontSize: responsiveFont(14),
+    fontFamily: Fonts.Roboto_Medium,
     color: Colors.textSecondary,
-    marginBottom: responsiveSpacing(4),
+    flex: 1,
   },
   overviewValue: {
     fontSize: responsiveFont(18),
     fontFamily: Fonts.Roboto_Bold,
-    color: Colors.dearkOlive,
-    flexWrap: 'nowrap',
+    color: Colors.black,
   },
   sectionHeader: {
     flexDirection: 'row',
