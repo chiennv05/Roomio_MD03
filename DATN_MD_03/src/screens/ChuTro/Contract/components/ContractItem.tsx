@@ -36,7 +36,7 @@ export const getContractStatusInfo = (status: string) => {
     case 'cancelled':
       return {
         label: 'Đã hủy',
-        color: Colors.black,
+        color: Colors.white,
         backgroudColor: Colors.gray,
         backgroudStatus: Colors.lightRed,
         textColor: Colors.dearkOlive,
@@ -63,7 +63,7 @@ export const getContractStatusInfo = (status: string) => {
     case 'expired':
       return {
         label: 'Hết hạn',
-        color: Colors.black,
+        color: Colors.white,
         backgroudColor: Colors.textGray,
         backgroudStatus: Colors.lightRed,
         textColor: Colors.dearkOlive,
@@ -90,7 +90,7 @@ export const getContractStatusInfo = (status: string) => {
     case 'rejected':
       return {
         label: 'Bị từ chối',
-        color: Colors.black,
+        color: Colors.white,
         backgroudColor: Colors.textGray,
         backgroudStatus: Colors.lightRed,
         textColor: Colors.dearkOlive,
