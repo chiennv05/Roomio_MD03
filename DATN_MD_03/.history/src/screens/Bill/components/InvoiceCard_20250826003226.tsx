@@ -448,18 +448,20 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     infoLabel: {
-        fontSize: 14,
-        color: Colors.textSecondary, // theme secondary text
+        fontSize: 15,
+        color: '#1E293B', // slate-700
         flex: 1,
         marginRight: 6,
-        fontWeight: '500',
+        fontWeight: '600',
+        letterSpacing: 0.15,
     },
     infoValue: {
-        fontSize: 14,
-        color: Colors.black,
-        fontWeight: '600',
+        fontSize: 15,
+        color: '#0F172A', // slate-900
+        fontWeight: '700',
         flex: 1,
         textAlign: 'right',
+        letterSpacing: 0.2,
     },
     actionContainer: {
         flexDirection: 'row',
@@ -517,28 +519,39 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     roommateBadgeInline: {
-        backgroundColor: Colors.brandPrimarySoft,
-        borderColor: Colors.brandPrimary,
+        backgroundColor: '#2F6B00', // solid dark green for max contrast
+        borderColor: '#A3E635',
         borderWidth: 1,
         paddingHorizontal: 10,
-        paddingVertical: 4,
-        minHeight: 24,
-        borderRadius: 16,
+        paddingVertical: 5,
+        minHeight: 26,
+        borderRadius: 18,
         flexDirection: 'row',
         alignItems: 'center',
         marginLeft: 6,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#2F6B00',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+            },
+            android: {
+                elevation: 3,
+            },
+        }),
     },
     roommateText: {
-        fontSize: 12,
+        fontSize: 13,
         fontWeight: '700',
-    color: Colors.black,
-        letterSpacing: 0.2,
+        color: '#FFFFFF', // white text on dark green
+        letterSpacing: 0.3,
     },
     roommateIcon: {
         width: 14,
         height: 14,
         marginRight: 6,
-    tintColor: Colors.black,
+        tintColor: '#FFFFFF',
     },
     greenFooter: {
         backgroundColor: Colors.limeGreen,
@@ -550,14 +563,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     periodText: {
-        fontSize: 15,
-        color: Colors.black,
+        fontSize: 16,
+        color: '#0F172A',
         fontWeight: '700',
     },
     amountText: {
-        fontSize: 19,
-        fontWeight: '700',
-        color: Colors.black,
+        fontSize: 20,
+        fontWeight: '800',
+        color: '#0F172A',
+        letterSpacing: 0.3,
     },
 });
 

@@ -531,14 +531,14 @@ const styles = StyleSheet.create({
     roommateText: {
         fontSize: 12,
         fontWeight: '700',
-    color: Colors.black,
+        color: Colors.brandPrimary,
         letterSpacing: 0.2,
     },
     roommateIcon: {
         width: 14,
         height: 14,
         marginRight: 6,
-    tintColor: Colors.black,
+        tintColor: Colors.brandPrimary,
     },
     greenFooter: {
         backgroundColor: Colors.limeGreen,

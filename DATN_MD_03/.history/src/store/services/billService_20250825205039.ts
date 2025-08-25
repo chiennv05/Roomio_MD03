@@ -224,6 +224,7 @@ export const getRoommateInvoices = async (
 // Lấy chi tiết hóa đơn
 export const getInvoiceDetails = async (token: string, invoiceId: string) => {
   try {
+    console.log('Fetching invoice details for:', invoiceId);
 
     const response = await api.get<{
       success: boolean;
@@ -233,6 +234,28 @@ export const getInvoiceDetails = async (token: string, invoiceId: string) => {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+    });
+
+    console.log('Invoice details API response structure:', {
+      success: response.data.success,
+      hasInvoice: !!response.data.invoice,
+      hasItems: Array.isArray(response.data.items),
+      invoiceStructure: response.data.invoice
+        ? {
+            hasRoomId: !!response.data.invoice.roomId,
+            roomIdType: response.data.invoice.roomId
+              ? typeof response.data.invoice.roomId
+              : 'undefined',
+            hasTenantId: !!response.data.invoice.tenantId,
+            tenantIdType: response.data.invoice.tenantId
+              ? typeof response.data.invoice.tenantId
+              : 'undefined',
+            hasContractId: !!response.data.invoice.contractId,
+            contractIdType: response.data.invoice.contractId
+              ? typeof response.data.invoice.contractId
+              : 'undefined',
+          }
+        : 'No invoice data',
     });
 
     if ('isError' in response) {
@@ -253,6 +276,10 @@ export const getInvoiceDetails = async (token: string, invoiceId: string) => {
       typeof processedInvoice.contractId === 'object' &&
       !processedInvoice.contractId.contractInfo
     ) {
+      console.log(
+        'Phát hiện contractId thiếu thông tin contractInfo, cố gắng lấy thêm dữ liệu',
+      );
+
       // Lưu ID của hợp đồng để có thể tham chiếu sau này
       const contractId =
         typeof processedInvoice.contractId === 'object'
@@ -288,6 +315,8 @@ export const getRoommateInvoiceDetails = async (
   invoiceId: string,
 ) => {
   try {
+    console.log('Fetching roommate invoice details for:', invoiceId);
+
     const response = await api.get<{
       success: boolean;
       invoice: Invoice;
@@ -395,6 +424,11 @@ export const confirmInvoicePayment = async (
           'Content-Type': 'application/json',
         },
       },
+    );
+
+    console.log(
+      'Confirm payment API response:',
+      JSON.stringify(response.data, null, 2),
     );
 
     if ('isError' in response) {
@@ -510,6 +544,11 @@ export const getMyContracts = async (
     const queryParams = new URLSearchParams();
     queryParams.append('page', page.toString());
     queryParams.append('limit', limit.toString());
+
+    console.log(
+      'API Request to:',
+      `/contract/my-contracts?${queryParams.toString()}`,
+    );
 
     const response = await api.get<ContractsResponse>(
       `/contract/my-contracts?${queryParams.toString()}`,
@@ -1215,7 +1254,163 @@ export const applyInvoiceTemplate = async (
 };
 
 // Kiểm tra xem người dùng có trong danh sách coTenants không
-// ĐÃ LOẠI BỎ: Hàm kiểm tra người ở cùng (checkUserIsCoTenant) theo yêu cầu
+export const checkUserIsCoTenant = async (token: string) => {
+  try {
+    console.log('START: checkUserIsCoTenant using contract method');
+
+    // Lấy danh sách hợp đồng của người dùng hiện tại
+    console.log('Getting user contracts...');
+    const contractsResponse = await getMyContracts(token, 1, 100); // Lấy nhiều hợp đồng để kiểm tra
+    
+    if (!contractsResponse.success || !contractsResponse.data.contracts) {
+      console.log('No contracts found or failed to fetch contracts');
+      return {
+        success: true,
+        isCoTenant: false,
+        isTenant: false,
+        contracts: []
+      };
+    }
+
+    const contracts = contractsResponse.data.contracts;
+    console.log('Found contracts:', contracts.length);
+
+    // Lấy thông tin user hiện tại
+    const userResponse = await api.get('/user/profile', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if ('isError' in userResponse) {
+      console.error('Error getting user profile:', userResponse.message);
+      throw new Error(userResponse.message || 'Không thể lấy thông tin người dùng');
+    }
+
+    const currentUserId = userResponse.data.data?.user?._id;
+    const currentUserEmail = userResponse.data.data?.user?.email;
+
+    if (!currentUserId) {
+      console.log('Cannot determine current user ID');
+      throw new Error('Không thể xác định ID người dùng hiện tại');
+    }
+
+    console.log('Current user:', { id: currentUserId, email: currentUserEmail });
+
+    let isTenantInAnyContract = false;
+    let isCoTenantInAnyContract = false;
+
+    // Kiểm tra từng hợp đồng
+    for (const contract of contracts) {
+      if (!contract.contractInfo) continue;
+
+      const contractInfo = contract.contractInfo;
+      
+      // Kiểm tra xem user có phải là tenant chính không (dựa vào email hoặc ID)
+      if (contractInfo.tenantEmail === currentUserEmail || 
+          (contractInfo.tenantId && contractInfo.tenantId === currentUserId)) {
+        isTenantInAnyContract = true;
+        console.log('User is primary tenant in contract:', contract._id);
+      }
+      
+      // Kiểm tra xem user có trong danh sách coTenants không
+      if (contractInfo.coTenants && Array.isArray(contractInfo.coTenants) && contractInfo.coTenants.length > 0) {
+        const isUserInCoTenants = contractInfo.coTenants.some((coTenant: any) => {
+          // Kiểm tra theo nhiều cách: email, username, hoặc _id
+          return coTenant.email === currentUserEmail || 
+                 coTenant._id === currentUserId ||
+                 (coTenant.userId && coTenant.userId === currentUserId);
+        });
+        
+        if (isUserInCoTenants) {
+          isCoTenantInAnyContract = true;
+          console.log('User is co-tenant in contract:', contract._id);
+        }
+      }
+    }
+
+    // Logic quyết định:
+    // - Nếu user là tenant chính → không phải co-tenant
+    // - Nếu user chỉ là co-tenant → là co-tenant  
+    // - Nếu user vừa là tenant vừa là co-tenant → ưu tiên tenant chính
+    const isCoTenant = isCoTenantInAnyContract && !isTenantInAnyContract;
+
+    console.log('Analysis result:', {
+      isTenantInAnyContract,
+      isCoTenantInAnyContract,
+      finalIsCoTenant: isCoTenant
+    });
+
+    const result = {
+      success: true,
+      isCoTenant: isCoTenant,
+      isTenant: isTenantInAnyContract,
+      contracts: contracts
+    };
+
+    console.log('END: checkUserIsCoTenant with success, returning:', JSON.stringify(result, null, 2));
+    return result;
+    
+  } catch (error: any) {
+    console.error('ERROR in checkUserIsCoTenant:', error.message || error);
+
+    // Trả về là không phải người ở cùng nếu có lỗi xảy ra
+    const errorResult = {
+      success: false,
+      isCoTenant: false,
+      isTenant: false,
+      contracts: [],
+      error: error.message || 'Lỗi không xác định',
+    };
+
+    console.log('END: checkUserIsCoTenant with error, returning:', JSON.stringify(errorResult, null, 2));
+    return errorResult;
+  }
+};
+        }
+      }
+
+      // Logic quyết định:
+      // - Nếu user là tenant chính → không phải co-tenant
+      // - Nếu user chỉ là co-tenant → là co-tenant
+      // - Nếu user vừa là tenant vừa là co-tenant → ưu tiên tenant chính
+      const isCoTenant = isCoTenantInAnyContract && !isTenantInAnyContract;
+
+      const result = {
+        success: true,
+        isCoTenant: isCoTenant,
+        isTenant: isTenantInAnyContract,
+        contracts: [], // Có thể thêm danh sách contracts nếu cần
+      };
+
+      console.log(
+        'END: checkUserIsCoTenant with success, returning:',
+        JSON.stringify(result, null, 2),
+      );
+      return result;
+    } catch (apiError: any) {
+      console.error('API call failed:', apiError.message || apiError);
+      throw apiError;
+    }
+  } catch (error: any) {
+    console.error('ERROR in checkUserIsCoTenant:', error.message || error);
+
+    // Trả về là không phải người ở cùng nếu có lỗi xảy ra
+    const errorResult = {
+      success: false,
+      isCoTenant: false,
+      isTenant: false,
+      contracts: [],
+      error: error.message || 'Lỗi không xác định',
+    };
+
+    console.log(
+      'END: checkUserIsCoTenant with error, returning:',
+      JSON.stringify(errorResult, null, 2),
+    );
+    return errorResult;
+  }
+};
 
 // Lấy hóa đơn kỳ trước để tự động điền chỉ số đồng hồ
 export const getPreviousInvoice = async (

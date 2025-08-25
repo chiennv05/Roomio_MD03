@@ -348,7 +348,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress, onEdit, onD
             <View style={styles.greenFooter}>
                 <Text style={styles.periodText}>{getInvoiceTitle(invoice)}</Text>
                 <Text style={styles.amountText}>
-                    {(invoice.totalAmount ?? 0).toLocaleString('vi-VN')} VNĐ
+                    {invoice.totalAmount.toLocaleString('vi-VN')}VNĐ
                 </Text>
             </View>
         </View>
@@ -449,14 +449,14 @@ const styles = StyleSheet.create({
     },
     infoLabel: {
         fontSize: 14,
-        color: Colors.textSecondary, // theme secondary text
+        color: '#374151', // darker gray for better readability
         flex: 1,
         marginRight: 6,
         fontWeight: '500',
     },
     infoValue: {
         fontSize: 14,
-        color: Colors.black,
+        color: '#111827', // near-black for high contrast
         fontWeight: '600',
         flex: 1,
         textAlign: 'right',
@@ -517,28 +517,39 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     roommateBadgeInline: {
-        backgroundColor: Colors.brandPrimarySoft,
-        borderColor: Colors.brandPrimary,
+        backgroundColor: 'rgba(139,195,74,0.28)', // slightly stronger tint
+        borderColor: 'rgba(139,195,74,0.55)',
         borderWidth: 1,
         paddingHorizontal: 10,
-        paddingVertical: 4,
+        paddingVertical: 5,
         minHeight: 24,
-        borderRadius: 16,
+        borderRadius: 18,
         flexDirection: 'row',
         alignItems: 'center',
         marginLeft: 6,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#8BC34A',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.25,
+                shadowRadius: 3,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
     },
     roommateText: {
-        fontSize: 12,
+        fontSize: 13,
         fontWeight: '700',
-    color: Colors.black,
+        color: '#2F6B00', // darker green for readability
         letterSpacing: 0.2,
     },
     roommateIcon: {
         width: 14,
         height: 14,
         marginRight: 6,
-    tintColor: Colors.black,
+        tintColor: Colors.primaryGreen,
     },
     greenFooter: {
         backgroundColor: Colors.limeGreen,
@@ -551,13 +562,13 @@ const styles = StyleSheet.create({
     },
     periodText: {
         fontSize: 15,
-        color: Colors.black,
+        color: '#1F2937', // slate-800
         fontWeight: '700',
     },
     amountText: {
         fontSize: 19,
-        fontWeight: '700',
-        color: Colors.black,
+        fontWeight: '800',
+        color: '#111827',
     },
 });
 

@@ -528,7 +528,7 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
               const isRightExpanded = rightKey ? expandedKey === rightKey : false;
               rows.push(
                 <View key={`row-${i}`} style={[styles.itemsRow, (isLeftExpanded || isRightExpanded) && styles.itemsRowExpanded]}>
-                  <TouchableOpacity style={[styles.itemCard, isLeftExpanded && styles.itemCardShadow, isLeftExpanded && styles.itemCardExpanded, isLeftExpanded && styles.itemCardExpandedLeft]} activeOpacity={0.85} onPress={() => toggleItemExpanded(leftKey)}>
+                  <TouchableOpacity style={[styles.itemCard, isLeftExpanded && styles.itemCardExpanded, isLeftExpanded && styles.itemCardExpandedLeft]} activeOpacity={0.85} onPress={() => toggleItemExpanded(leftKey)}>
                     <View style={styles.itemHeaderRow}>
                       <View style={styles.itemIconContainer}>
                         <Image source={getItemIcon(left)} style={styles.itemIcon} resizeMode="contain" />
@@ -538,7 +538,7 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
                     <Text style={styles.itemCardAmount}>{left.amount.toLocaleString('vi-VN')} VND</Text>
                   </TouchableOpacity>
                   {right && (
-                    <TouchableOpacity style={[styles.itemCard, isRightExpanded && styles.itemCardShadow, isRightExpanded && styles.itemCardExpanded, isRightExpanded && styles.itemCardExpandedRight]} activeOpacity={0.85} onPress={() => rightKey && toggleItemExpanded(rightKey)}>
+                    <TouchableOpacity style={[styles.itemCard, isRightExpanded && styles.itemCardExpanded, isRightExpanded && styles.itemCardExpandedRight]} activeOpacity={0.85} onPress={() => rightKey && toggleItemExpanded(rightKey)}>
                       <View style={styles.itemHeaderRow}>
                         <View style={styles.itemIconContainer}>
                           <Image source={getItemIcon(right)} style={styles.itemIcon} resizeMode="contain" />
@@ -889,14 +889,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.lightGray,
     alignItems: 'flex-start',
-  // No shadow when collapsed (parity with BillDetailScreen)
-  elevation: 0,
-  shadowColor: 'transparent',
-  shadowOffset: { width: 0, height: 0 },
-  shadowOpacity: 0,
-  shadowRadius: 0,
-  },
-  itemCardShadow: {
   shadowColor: '#000',
   shadowOffset: { width: 0, height: 1 },
   shadowOpacity: 0.06,

@@ -1214,8 +1214,88 @@ export const applyInvoiceTemplate = async (
   }
 };
 
-// Kiểm tra xem người dùng có trong danh sách coTenants không
-// ĐÃ LOẠI BỎ: Hàm kiểm tra người ở cùng (checkUserIsCoTenant) theo yêu cầu
+// Kiểm tra xem người dùng có phải là người ở cùng bằng cách gọi trực tiếp endpoint roommate
+export const checkUserIsCoTenant = async (token: string) => {
+  try {
+    // 1. Lấy hồ sơ để biết userId nhằm phân biệt tenant chính
+    const userResponse = await api.get('/user/profile', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if ('isError' in userResponse) {
+      throw new Error(userResponse.message || 'Không thể lấy thông tin người dùng');
+    }
+    const currentUserId = userResponse.data.data?.user?._id;
+    if (!currentUserId) throw new Error('Không xác định được ID người dùng');
+
+    // 2. Gọi nhanh endpoint roommate invoices (chỉ cần 1 bản ghi để xác nhận)
+    const qp = new URLSearchParams();
+    qp.append('page', '1');
+    qp.append('limit', '1');
+    let roommateInvoices: Invoice[] = [];
+    let roommateSuccess = false;
+    try {
+      const roommateResp = await api.get<InvoicesResponse>(
+        `/billing/roommate/invoices?${qp.toString()}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (!('isError' in roommateResp)) {
+        roommateInvoices = roommateResp.data.invoices || [];
+        roommateSuccess = roommateResp.data.success;
+      } else {
+        // Nếu API trả về isError coi như không phải co-tenant
+        console.log('Roommate invoices endpoint returned error flag');
+      }
+    } catch (rmErr: any) {
+      // Nếu lỗi 403/404 => khả năng không phải người ở cùng
+      const status = rmErr?.status || rmErr?.response?.status;
+      console.log('Roommate endpoint error status:', status);
+    }
+
+    const isCoTenant = roommateSuccess && roommateInvoices.length > 0;
+
+    // 3. (Tuỳ chọn) Nếu muốn phân biệt user là tenant chính: kiểm tra 1 hóa đơn thường
+    let isTenantInAnyContract = false;
+    if (!isCoTenant) {
+      // Chỉ cần kiểm tra nếu chưa xác nhận là co-tenant; giảm số request không cần thiết
+      try {
+        const regularResp = await api.get<InvoicesResponse>(
+          '/billing/invoices?limit=1&page=1',
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (!('isError' in regularResp)) {
+          const inv = regularResp.data.invoices?.[0];
+          if (
+            inv &&
+            inv.contractId &&
+            typeof inv.contractId === 'object' &&
+            inv.contractId.contractInfo &&
+            inv.contractId.contractInfo.tenantId === currentUserId
+          ) {
+            isTenantInAnyContract = true;
+          }
+        }
+      } catch (e) {
+        // Bỏ qua
+      }
+    }
+
+    return {
+      success: true,
+      isCoTenant,
+      isTenant: isTenantInAnyContract,
+      contracts: [],
+    };
+  } catch (error: any) {
+    console.error('ERROR in checkUserIsCoTenant (roommate version):', error.message || error);
+    return {
+      success: false,
+      isCoTenant: false,
+      isTenant: false,
+      contracts: [],
+      error: error.message || 'Lỗi không xác định',
+    };
+  }
+};
 
 // Lấy hóa đơn kỳ trước để tự động điền chỉ số đồng hồ
 export const getPreviousInvoice = async (

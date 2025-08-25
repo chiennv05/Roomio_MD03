@@ -1,6 +1,7 @@
 import {api} from '../../api/api';
 import {Invoice} from '../../types/Bill';
 import {Contract} from '../../types/Contract';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Định nghĩa response type từ API thực tế
 interface InvoicesResponse {
@@ -1214,8 +1215,194 @@ export const applyInvoiceTemplate = async (
   }
 };
 
-// Kiểm tra xem người dùng có trong danh sách coTenants không
-// ĐÃ LOẠI BỎ: Hàm kiểm tra người ở cùng (checkUserIsCoTenant) theo yêu cầu
+// Kiểm tra vai trò của user và lấy danh sách hóa đơn phù hợp
+export const checkUserRoleAndGetInvoices = async (token: string, page: number = 1, limit: number = 10, status?: string) => {
+  try {
+    console.log('START: checkUserRoleAndGetInvoices');
+
+    // Lấy thông tin user hiện tại để so sánh userId
+    const userInfo = await AsyncStorage.getItem('user');
+    if (!userInfo) {
+      console.log('Không tìm thấy thông tin user trong AsyncStorage');
+      throw new Error('Không thể xác định thông tin người dùng');
+    }
+
+    const currentUser = JSON.parse(userInfo);
+    const currentUserId = currentUser._id || currentUser.id;
+    console.log('Current user ID để so sánh:', currentUserId);
+
+    // Gọi song song cả 2 API
+    const [regularResponse, roommateResponse] = await Promise.allSettled([
+      api.get<InvoicesResponse>(`/billing/invoices?page=${page}&limit=${limit}${status ? `&status=${status}` : ''}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      api.get<InvoicesResponse>(`/billing/roommate/invoices?page=${page}&limit=${limit}${status ? `&status=${status}` : ''}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    ]);
+
+    console.log('Kết quả gọi song song API:', {
+      regularStatus: regularResponse.status,
+      roommateStatus: roommateResponse.status,
+    });
+
+    let regularInvoices: any[] = [];
+    let roommateInvoices: any[] = [];
+    let userRoleInfo = {
+      isCoTenant: false,
+      isTenant: false,
+      hasRegularAccess: false,
+      hasRoommateAccess: false,
+    };
+
+    // Xử lý response từ regular invoices
+    if (regularResponse.status === 'fulfilled' && !('isError' in regularResponse.value)) {
+      regularInvoices = regularResponse.value.data.invoices || [];
+      userRoleInfo.hasRegularAccess = true;
+      console.log('✅ Có quyền truy cập regular invoices, số lượng:', regularInvoices.length);
+
+      // Kiểm tra user có phải tenant chính không
+      for (const invoice of regularInvoices) {
+        const tenantId = typeof invoice.tenantId === 'object' ? invoice.tenantId._id : invoice.tenantId;
+        if (tenantId === currentUserId) {
+          userRoleInfo.isTenant = true;
+          console.log('✅ User là tenant chính trong invoice:', invoice._id);
+          break;
+        }
+      }
+    } else {
+      console.log('❌ Không có quyền truy cập regular invoices hoặc có lỗi');
+    }
+
+    // Xử lý response từ roommate invoices
+    if (roommateResponse.status === 'fulfilled' && !('isError' in roommateResponse.value)) {
+      roommateInvoices = roommateResponse.value.data.invoices || [];
+      userRoleInfo.hasRoommateAccess = true;
+      console.log('✅ Có quyền truy cập roommate invoices, số lượng:', roommateInvoices.length);
+
+      // Kiểm tra user có trong coTenants không
+      for (const invoice of roommateInvoices) {
+        if (invoice.contractId && 
+            typeof invoice.contractId === 'object' && 
+            invoice.contractId.contractInfo && 
+            invoice.contractId.contractInfo.coTenants && 
+            Array.isArray(invoice.contractId.contractInfo.coTenants)) {
+          
+          const coTenants = invoice.contractId.contractInfo.coTenants;
+          const isInCoTenants = coTenants.some((coTenant: any) => coTenant.userId === currentUserId);
+          if (isInCoTenants) {
+            userRoleInfo.isCoTenant = true;
+            console.log('✅ User có trong danh sách coTenants của contract:', invoice.contractId._id);
+            break;
+          }
+        }
+      }
+
+      // Đánh dấu tất cả roommate invoices
+      roommateInvoices = roommateInvoices.map(invoice => ({
+        ...invoice,
+        isRoommate: true,
+      }));
+    } else {
+      console.log('❌ Không có quyền truy cập roommate invoices hoặc có lỗi');
+    }
+
+    // Quyết định hiển thị hóa đơn nào dựa trên vai trò
+    let finalInvoices: any[] = [];
+    
+    if (userRoleInfo.isCoTenant && userRoleInfo.isTenant) {
+      // User vừa là tenant chính vừa là coTenant - hiển thị cả hai
+      console.log('📋 User vừa là tenant chính vừa là coTenant - hiển thị cả hai loại hóa đơn');
+      finalInvoices = [...regularInvoices, ...roommateInvoices];
+    } else if (userRoleInfo.isCoTenant) {
+      // User chỉ là coTenant - chỉ hiển thị roommate invoices
+      console.log('📋 User chỉ là coTenant - hiển thị roommate invoices');
+      finalInvoices = roommateInvoices;
+    } else if (userRoleInfo.isTenant) {
+      // User chỉ là tenant chính - chỉ hiển thị regular invoices
+      console.log('📋 User chỉ là tenant chính - hiển thị regular invoices');
+      finalInvoices = regularInvoices;
+    } else {
+      // User không có vai trò gì - có thể là chủ trọ hoặc không có quyền
+      console.log('📋 User không có vai trò tenant/coTenant - hiển thị regular invoices (có thể là chủ trọ)');
+      finalInvoices = regularInvoices;
+    }
+
+    const result = {
+      success: true,
+      data: {
+        invoices: finalInvoices,
+        pagination: {
+          totalDocs: finalInvoices.length,
+          totalPages: Math.ceil(finalInvoices.length / limit),
+          page: page,
+          limit: limit,
+          hasNextPage: finalInvoices.length >= limit,
+          hasPrevPage: page > 1,
+        },
+      },
+      userRole: userRoleInfo,
+    };
+
+    console.log('END: checkUserRoleAndGetInvoices - Kết quả:', {
+      totalInvoices: finalInvoices.length,
+      userRole: userRoleInfo,
+    });
+    
+    return result;
+
+  } catch (error: any) {
+    console.error('ERROR in checkUserRoleAndGetInvoices:', error.message || error);
+
+    // Trả về kết quả rỗng nếu có lỗi
+    const errorResult = {
+      success: false,
+      data: {
+        invoices: [],
+        pagination: {
+          totalDocs: 0,
+          totalPages: 1,
+          page: 1,
+          limit: 10,
+          hasNextPage: false,
+          hasPrevPage: false,
+        },
+      },
+      userRole: {
+        isCoTenant: false,
+        isTenant: false,
+        hasRegularAccess: false,
+        hasRoommateAccess: false,
+      },
+      error: error.message || 'Lỗi không xác định',
+    };
+
+    console.log('END: checkUserRoleAndGetInvoices with error, returning:', JSON.stringify(errorResult, null, 2));
+    return errorResult;
+  }
+};
+
+// Kiểm tra xem người dùng có trong danh sách coTenants không (giữ lại để tương thích)
+export const checkUserIsCoTenant = async (token: string) => {
+  try {
+    const result = await checkUserRoleAndGetInvoices(token, 1, 5);
+    return {
+      success: result.success,
+      isCoTenant: result.userRole.isCoTenant,
+      isTenant: result.userRole.isTenant,
+      contracts: [],
+      error: (result as any).error,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      isCoTenant: false,
+      isTenant: false,
+      contracts: [],
+      error: error.message || 'Lỗi không xác định',
+    };
+  }
+};
 
 // Lấy hóa đơn kỳ trước để tự động điền chỉ số đồng hồ
 export const getPreviousInvoice = async (

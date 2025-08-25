@@ -20,7 +20,7 @@ import {
 import LoadingAnimationWrapper from '../../components/LoadingAnimationWrapper';
 import UIHeader from '../ChuTro/MyRoom/components/UIHeader';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
-import { fetchInvoices, fetchTenantCombinedInvoices } from '../../store/slices/billSlice';
+import { fetchInvoices } from '../../store/slices/billSlice';
 import { Invoice } from '../../types/Bill';
 import { Colors } from '../../theme/color';
 import { useNavigation, CommonActions, useFocusEffect, useIsFocused } from '@react-navigation/native';
@@ -424,6 +424,7 @@ const BillScreen = () => {
 
             // Kiểm tra role trước khi quyết định gọi API
             if (isLandlord) {
+                
                 dispatch(fetchInvoices({
                     token,
                     page: 1,
@@ -433,9 +434,9 @@ const BillScreen = () => {
                 return;
             }
 
-            // Người thuê: lấy cả 2 loại hóa đơn (thường + người ở cùng)
+            // Người thuê: hiện tại không phân biệt người ở cùng, chỉ lấy hóa đơn
             if (user?.role === 'nguoiThue') {
-                dispatch(fetchTenantCombinedInvoices({
+                dispatch(fetchInvoices({
                     token,
                     page: 1,
                     limit: 10,
@@ -454,23 +455,14 @@ const BillScreen = () => {
     // Cập nhật: chỉ cần gọi lại API invoices khi thay đổi selectedStatus
     useEffect(() => {
         if (token) {
-            if (isLandlord) {
-                dispatch(fetchInvoices({
-                    token,
-                    page: 1,
-                    limit: 10,
-                    status: selectedStatus || undefined,
-                }));
-            } else if (user?.role === 'nguoiThue') {
-                dispatch(fetchTenantCombinedInvoices({
-                    token,
-                    page: 1,
-                    limit: 10,
-                    status: selectedStatus || undefined,
-                }));
-            }
+            dispatch(fetchInvoices({
+                token,
+                page: 1,
+                limit: 10,
+                status: selectedStatus || undefined,
+            }));
         }
-    }, [dispatch, token, selectedStatus, isLandlord, user?.role]);
+    }, [dispatch, token, selectedStatus]);
 
     useEffect(() => {
         return () => {
@@ -492,25 +484,34 @@ const BillScreen = () => {
             try {
                 // Nếu là chủ trọ, chỉ cần lấy hóa đơn thông thường
                 if (isLandlord) {
+                    console.log('Refreshing as landlord, fetching regular invoices');
                     await dispatch(fetchInvoices({
                         token,
                         page: 1,
                         limit: 10,
+
                         status: selectedStatus || undefined
+
                     })).unwrap();
-                } else if (user?.role === 'nguoiThue') {
-                    await dispatch(fetchTenantCombinedInvoices({
+                    setRefreshing(false);
+                    return;
+                }
+
+                if (user?.role === 'nguoiThue') {
+                    await dispatch(fetchInvoices({
                         token,
                         page: 1,
                         limit: 10,
                         status: selectedStatus || undefined
                     })).unwrap();
                 } else {
+                    console.log('Refreshing with unknown role, fetching regular invoices');
                     await dispatch(fetchInvoices({
                         token,
                         page: 1,
                         limit: 10,
-                        status: selectedStatus || undefined
+                    status: selectedStatus || undefined
+
                     })).unwrap();
                 }
             } catch (error) {
@@ -525,28 +526,14 @@ const BillScreen = () => {
 
     const handleLoadMore = () => {
         if (pagination.page < pagination.totalPages && !loading && token) {
-            if (isLandlord) {
-                dispatch(fetchInvoices({
+            dispatch(
+                fetchInvoices({
                     token,
                     page: pagination.page + 1,
                     limit: pagination.limit,
                     status: selectedStatus || undefined,
-                }));
-            } else if (user?.role === 'nguoiThue') {
-                dispatch(fetchTenantCombinedInvoices({
-                    token,
-                    page: pagination.page + 1,
-                    limit: pagination.limit,
-                    status: selectedStatus || undefined,
-                }));
-            } else {
-                dispatch(fetchInvoices({
-                    token,
-                    page: pagination.page + 1,
-                    limit: pagination.limit,
-                    status: selectedStatus || undefined,
-                }));
-            }
+                }),
+            );
         }
     };
 
@@ -560,12 +547,8 @@ const BillScreen = () => {
 
         // Đảm bảo invoiceId là string
         invoiceId = invoiceId.toString();
-        // Điều hướng theo loại hóa đơn
-        if (invoice.isRoommate) {
-            navigation.navigate('RoommateInvoiceDetails', { invoiceId });
-        } else {
-            navigation.navigate('BillDetails', { invoiceId });
-        }
+
+    navigation.navigate('BillDetails', { invoiceId });
     };
 
     // Xử lý thay đổi loại bộ lọc (tab)
@@ -1083,21 +1066,12 @@ const BillScreen = () => {
         // Chỉ tải lại danh sách hóa đơn khi còn mounted và có token
         if (isMounted.current && token) {
             console.log('Reloading invoices after creation success');
-            if (isLandlord) {
-                dispatch(fetchInvoices({
-                    token,
-                    page: 1,
-                    limit: 10,
-                    status: selectedStatus || undefined,
-                }));
-            } else if (user?.role === 'nguoiThue') {
-                dispatch(fetchTenantCombinedInvoices({
-                    token,
-                    page: 1,
-                    limit: 10,
-                    status: selectedStatus || undefined,
-                }));
-            }
+            dispatch(fetchInvoices({
+                token,
+                page: 1,
+                limit: 10,
+                status: selectedStatus || undefined,
+            }));
         }
     };
 

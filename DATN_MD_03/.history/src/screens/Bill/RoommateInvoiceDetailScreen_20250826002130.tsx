@@ -29,7 +29,7 @@ import { Colors } from '../../theme/color';
 import { Icons } from '../../assets/icons';
 import { scale, verticalScale, responsiveSpacing } from '../../utils/responsive';
 import { formatDate } from '../../utils/formatDate';
-import { InvoiceStatus, BillStatus, InvoiceItem } from '../../types/Bill';
+import { InvoiceStatus, BillStatus } from '../../types/Bill';
 import CustomAlertModal from '../../components/CustomAlertModal';
 import { useCustomAlert } from '../../hooks/useCustomAlrert';
 
@@ -200,23 +200,6 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
     }
   };
 
-  // Đồng bộ logic màu chữ badge trạng thái với BillDetailScreen
-  const getStatusTextColor = (status: string) => {
-    switch (status) {
-      case 'issued': // yellow background
-        return Colors.black;
-      case 'paid': // bright lime
-        return Colors.black;
-      case 'draft':
-      case 'pending':
-      case 'pending_confirmation':
-      case 'overdue':
-      case 'canceled':
-      default:
-        return Colors.white;
-    }
-  };
-
   // Get status color
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -253,37 +236,6 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
       default:
         return 'Khác';
     }
-  };
-
-  // Map payment method similar to BillDetailScreen
-  const getPaymentMethodText = (pm?: string) => {
-    const key = (pm || '').toLowerCase();
-    switch (key) {
-      case 'bank_transfer':
-      case 'bank-transfer':
-        return 'Chuyển khoản ngân hàng';
-      case 'cash':
-        return 'Tiền mặt';
-      default:
-        return pm || '-';
-    }
-  };
-
-  // Derive price type per item similar to BillDetailScreen
-  const getItemPriceType = (item: InvoiceItem): 'perRoom' | 'perUsage' | 'perPerson' | null => {
-    const contractInfo: any = roommateInvoice?.contractId?.contractInfo;
-    if (!contractInfo || !contractInfo.serviceFeeConfig) return null;
-    const serviceFeeConfig = contractInfo.serviceFeeConfig;
-
-    const lower = (item.name || '').toLowerCase();
-    if (lower.includes('điện') || lower.includes('electric')) return serviceFeeConfig.electricity || null;
-    if (lower.includes('nước') || lower.includes('water')) return serviceFeeConfig.water || null;
-
-    if (contractInfo.customServices) {
-      const custom = contractInfo.customServices.find((s: any) => s.name === item.name);
-      if (custom) return custom.priceType || null;
-    }
-    return null;
   };
 
   // Hàm helper để lấy icon cho từng loại item
@@ -392,7 +344,7 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
         <View style={styles.roomNumberRow}>
           <Text style={styles.roomNumber}>{roomNumber}</Text>
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor(roommateInvoice.status) }]}>
-            <Text style={[styles.statusBadgeText, { color: getStatusTextColor(roommateInvoice.status) }]}>{status.text}</Text>
+            <Text style={styles.statusBadgeText}>{status.text}</Text>
           </View>
         </View>
         
@@ -420,29 +372,10 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
             <Text style={styles.detailLabel}>Địa chỉ</Text>
             <Text style={styles.detailValue}>{roomAddress || 'Không có địa chỉ'}</Text>
           </View>
-          {/* Ngày phát hành giống BillDetailScreen */}
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Ngày phát hành</Text>
-            <Text style={styles.detailValue}>
-              {roommateInvoice.issueDate ? formatDate(roommateInvoice.issueDate) : 'Chưa phát hành'}
-            </Text>
-          </View>
           {roommateInvoice.status === 'paid' && roommateInvoice.paymentDate && (
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Ngày thanh toán</Text>
+              <Text style={styles.detailLabel}>Đã thanh toán</Text>
               <Text style={styles.detailValue}>{formatDate(roommateInvoice.paymentDate)}</Text>
-            </View>
-          )}
-          {(roommateInvoice.status === 'pending_confirmation' || roommateInvoice.status === 'paid') && !!roommateInvoice.paymentMethod && (
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Phương thức thanh toán</Text>
-              <Text style={styles.detailValue}>{getPaymentMethodText(String(roommateInvoice.paymentMethod))}</Text>
-            </View>
-          )}
-          {roommateInvoice.note && (
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Ghi chú</Text>
-              <Text style={styles.detailValue}>{roommateInvoice.note}</Text>
             </View>
           )}
         </View>
@@ -462,39 +395,27 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
 
     const items = roommateInvoice.items;
 
-  const renderItemDetails = (item: InvoiceItem, align: 'left' | 'right') => {
+    const renderItemDetails = (item: any, align: 'left' | 'right') => {
       const rows: { label: string; value: string }[] = [];
-
-      // Loại dịch vụ (đặt trước cho thống nhất)
-      rows.push({ label: 'Loại dịch vụ', value: getCategoryText(item.category) });
-
-      if (item.description) { rows.push({ label: 'Mô tả', value: item.description }); }
-      if (item.quantity > 0) { rows.push({ label: 'Số lượng', value: `${item.quantity}` }); }
-
-      rows.push({
-        label: 'Đơn giá',
-        value: `${item.unitPrice.toLocaleString('vi-VN')} VND${item.category === 'rent' ? '/tháng' : ''}`,
-      });
-
+      if (item.description) {rows.push({ label: 'Mô tả', value: item.description });}
+      if (item.quantity > 0) {
+        rows.push({ label: 'Số lượng', value: `${item.quantity}` });
+      }
+      rows.push({ label: 'Đơn giá', value: `${item.unitPrice.toLocaleString('vi-VN')}VND${item.category === 'rent' ? '/tháng' : ''}` });
       if (item.isPerPerson) {
         rows.push({ label: 'Tính theo người', value: `${item.personCount || 1} người` });
       }
-
-      // Xác định priceType để chỉ hiển thị chỉ số khi perUsage
-      const priceType = getItemPriceType(item);
-      if (priceType === 'perUsage') {
-        if (item.previousReading !== undefined) {
-          rows.push({ label: 'Chỉ số cũ', value: `${item.previousReading}` });
-        }
-        if (item.currentReading !== undefined) {
-          rows.push({ label: 'Chỉ số mới', value: `${item.currentReading}` });
-        }
-        if (item.previousReading !== undefined && item.currentReading !== undefined) {
-          const usage = item.currentReading - item.previousReading;
-          rows.push({ label: 'Số đã sử dụng', value: `${usage}` });
-        }
+      if (item.previousReading !== undefined) {
+        rows.push({ label: 'Chỉ số cũ', value: `${item.previousReading}` });
       }
-
+      if (item.currentReading !== undefined) {
+        rows.push({ label: 'Chỉ số mới', value: `${item.currentReading}` });
+      }
+      // Thêm dòng hiển thị số đã sử dụng
+      if (item.previousReading !== undefined && item.currentReading !== undefined) {
+        const usage = item.currentReading - item.previousReading;
+        rows.push({ label: 'Số đã sử dụng', value: `${usage}` });
+      }
       if (roommateInvoice?.dueDate) {
         rows.push({ label: 'Hạn thanh toán', value: formatDate(roommateInvoice.dueDate) });
       }
@@ -528,24 +449,24 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
               const isRightExpanded = rightKey ? expandedKey === rightKey : false;
               rows.push(
                 <View key={`row-${i}`} style={[styles.itemsRow, (isLeftExpanded || isRightExpanded) && styles.itemsRowExpanded]}>
-                  <TouchableOpacity style={[styles.itemCard, isLeftExpanded && styles.itemCardShadow, isLeftExpanded && styles.itemCardExpanded, isLeftExpanded && styles.itemCardExpandedLeft]} activeOpacity={0.85} onPress={() => toggleItemExpanded(leftKey)}>
+                  <TouchableOpacity style={[styles.itemCard, isLeftExpanded && styles.itemCardExpanded, isLeftExpanded && styles.itemCardExpandedLeft]} activeOpacity={0.85} onPress={() => toggleItemExpanded(leftKey)}>
                     <View style={styles.itemHeaderRow}>
                       <View style={styles.itemIconContainer}>
                         <Image source={getItemIcon(left)} style={styles.itemIcon} resizeMode="contain" />
                       </View>
                       <Text style={styles.itemCardName}>{left.name || getCategoryText(left.category)}</Text>
                     </View>
-                    <Text style={styles.itemCardAmount}>{left.amount.toLocaleString('vi-VN')} VND</Text>
+                    <Text style={styles.itemCardAmount}>{left.amount.toLocaleString('vi-VN')}VND</Text>
                   </TouchableOpacity>
                   {right && (
-                    <TouchableOpacity style={[styles.itemCard, isRightExpanded && styles.itemCardShadow, isRightExpanded && styles.itemCardExpanded, isRightExpanded && styles.itemCardExpandedRight]} activeOpacity={0.85} onPress={() => rightKey && toggleItemExpanded(rightKey)}>
+                    <TouchableOpacity style={[styles.itemCard, isRightExpanded && styles.itemCardExpanded, isRightExpanded && styles.itemCardExpandedRight]} activeOpacity={0.85} onPress={() => rightKey && toggleItemExpanded(rightKey)}>
                       <View style={styles.itemHeaderRow}>
                         <View style={styles.itemIconContainer}>
                           <Image source={getItemIcon(right)} style={styles.itemIcon} resizeMode="contain" />
                         </View>
                         <Text style={styles.itemCardName}>{right.name || getCategoryText(right.category)}</Text>
                       </View>
-                      <Text style={styles.itemCardAmount}>{right.amount.toLocaleString('vi-VN')} VND</Text>
+                      <Text style={styles.itemCardAmount}>{right.amount.toLocaleString('vi-VN')}VND</Text>
                     </TouchableOpacity>
                   )}
                   {!right && <View style={{ width: '49%' }} />}
@@ -566,11 +487,14 @@ const RoommateInvoiceDetailScreen = ({ route, navigation }: Props) => {
 
   const renderSummary = () => {
     if (!roommateInvoice) return null;
+
     return (
       <View style={styles.totalAmountSection}>
         <View style={styles.totalAmountContainer}>
           <Text style={styles.totalAmountLabel}>Tổng tiền</Text>
-          <Text style={styles.totalAmountValue}>{roommateInvoice.totalAmount.toLocaleString('vi-VN')} VND</Text>
+          <Text style={styles.totalAmountValue}>
+            {roommateInvoice.totalAmount.toLocaleString('vi-VN')}VND
+          </Text>
         </View>
       </View>
     );
@@ -814,11 +738,6 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     borderRadius: 8,
     marginHorizontal: 15,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.08,
-  shadowRadius: 4,
-  elevation: 3,
   },
   roomNumberRow: {
     flexDirection: 'row',
@@ -889,23 +808,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.lightGray,
     alignItems: 'flex-start',
-  // No shadow when collapsed (parity with BillDetailScreen)
-  elevation: 0,
-  shadowColor: 'transparent',
-  shadowOffset: { width: 0, height: 0 },
-  shadowOpacity: 0,
-  shadowRadius: 0,
-  },
-  itemCardShadow: {
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.06,
-  shadowRadius: 3,
-  elevation: 2,
   },
   itemCardExpanded: {
-  // Themed highlight color consistent with BillDetailScreen
-  backgroundColor: Colors.limeGreen,
+    backgroundColor: '#BAFD00',
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
     marginBottom: -5,
@@ -972,17 +877,12 @@ const styles = StyleSheet.create({
   },
   expandedDetailContainer: {
     width: '100%',
-  backgroundColor: Colors.limeGreen,
+    backgroundColor: '#BAFD00',
     borderRadius: 8,
     paddingVertical: 14,
     paddingHorizontal: 16,
     marginBottom: 8,
     borderTopWidth: 0,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.08,
-  shadowRadius: 3,
-  elevation: 2,
   },
   expandedDetailConnectedLeft: {
     borderTopLeftRadius: 0,
@@ -1002,40 +902,6 @@ const styles = StyleSheet.create({
     color: Colors.black,
     marginBottom: 10,
   },
-  // Summary styles (aligned with BillDetailScreen)
-  summarySection: {
-    backgroundColor: Colors.white,
-    marginTop: 10,
-    paddingHorizontal: responsiveSpacing(20),
-    paddingVertical: 15,
-    borderRadius: 8,
-    marginHorizontal: 15,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 0,
-  },
-  summaryLabel: {
-    fontSize: 14,
-    color: Colors.dearkOlive,
-  },
-  summaryValue: {
-    fontSize: 14,
-    color: Colors.black,
-    fontWeight: '500',
-  },
-  summaryTotal: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.dearkOlive,
-  },
-  summaryTotalValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.primaryGreen,
-  },
-  // Total amount styles mirroring BillDetailScreen
   totalAmountSection: {
     backgroundColor: 'transparent',
     marginTop: 10,
@@ -1043,7 +909,7 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   totalAmountContainer: {
-    backgroundColor: Colors.limeGreen,
+    backgroundColor: '#BAFD00',
     borderRadius: 10,
     padding: 20,
     alignItems: 'flex-start',
@@ -1051,12 +917,6 @@ const styles = StyleSheet.create({
     minHeight: 80,
     width: '100%',
     marginHorizontal: 0,
-  // Shadow for emphasis
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.15,
-  shadowRadius: 4,
-  elevation: 4,
   },
   totalAmountLabel: {
     fontSize: 14,
@@ -1076,22 +936,15 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   paymentButton: {
-  backgroundColor: Colors.limeGreen,
-  padding: 15,
-  // Use pill radius like BillDetailScreen button
-  borderRadius: 50,
+    backgroundColor: '#BAFD00',
+    padding: 15,
+    borderRadius: 10,
     alignItems: 'center',
     width: '100%',
     marginHorizontal: 0,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.15,
-  shadowRadius: 4,
-  elevation: 4,
   },
   paymentButtonText: {
-  // Match BillDetailScreen where lime button text is black
-  color: Colors.black,
+    color: Colors.white,
     fontWeight: 'bold',
     fontSize: 16,
   },

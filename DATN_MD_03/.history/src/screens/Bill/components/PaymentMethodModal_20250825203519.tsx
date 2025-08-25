@@ -1,17 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     View,
     Text,
     Modal,
     StyleSheet,
     TouchableOpacity,
-    ActivityIndicator,
     SafeAreaView,
     Image,
     Platform,
 } from 'react-native';
+import LoadingAnimationWrapper from '../../../components/LoadingAnimationWrapper';
 import { Colors } from '../../../theme/color';
-import { scale, verticalScale } from '../../../utils/responsive';
+import { scale, verticalScale, responsiveSpacing, responsiveFont } from '../../../utils/responsive';
 
 interface PaymentMethodModalProps {
     visible: boolean;
@@ -29,7 +29,7 @@ const PaymentMethodModal = ({
     const paymentMethods = [
         { id: 'cash', name: 'Tiền mặt' },
         { id: 'bank_transfer', name: 'Chuyển khoản' },
-        
+
     ];
 
     return (
@@ -52,10 +52,11 @@ const PaymentMethodModal = ({
                     </View>
 
                     {isLoading ? (
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color={Colors.primaryGreen} />
-                            <Text style={styles.loadingText}>Đang xử lý thanh toán...</Text>
-                        </View>
+                        <LoadingAnimationWrapper 
+                            visible={true}
+                            message="Đang xử lý thanh toán..."
+                            size="medium"
+                        />
                     ) : (
                         <View style={styles.paymentMethodsContainer}>
                             {paymentMethods.map((method) => (
@@ -83,61 +84,41 @@ const styles = StyleSheet.create({
     },
     modalContent: {
         backgroundColor: Colors.white,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        padding: 20,
-        paddingBottom: Platform.OS === 'ios' ? 40 : 20,
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: -3 },
-                shadowOpacity: 0.1,
-                shadowRadius: 3,
-            },
-            android: {
-                elevation: 5,
-            },
-        }),
+        borderTopLeftRadius: scale(20),
+        borderTopRightRadius: scale(20),
+        padding: responsiveSpacing(20),
+        paddingBottom: Platform.OS === 'ios' ? responsiveSpacing(40) : responsiveSpacing(20),
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: responsiveSpacing(20),
     },
     title: {
-        fontSize: 18,
+        fontSize: responsiveFont(18),
         fontWeight: 'bold',
         color: Colors.dearkOlive,
     },
     closeIcon: {
-        width: 24,
-        height: 24,
+        width: scale(24),
+        height: scale(24),
     },
     paymentMethodsContainer: {
-        marginTop: 10,
+        marginTop: responsiveSpacing(10),
     },
     paymentMethodItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 15,
+        paddingVertical: responsiveSpacing(15),
         borderBottomWidth: 1,
         borderBottomColor: Colors.lightGray,
     },
     paymentMethodText: {
-        fontSize: 16,
+        fontSize: responsiveFont(16),
         color: Colors.dearkOlive,
-    },
-    loadingContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-    },
-    loadingText: {
-        marginTop: 10,
-        fontSize: 16,
-        color: Colors.dearkOlive,
+        fontWeight: '500',
     },
 });
 
-export default PaymentMethodModal; 
+export default PaymentMethodModal;

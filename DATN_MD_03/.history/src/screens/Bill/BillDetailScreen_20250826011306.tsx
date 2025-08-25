@@ -1208,12 +1208,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: Colors.lightGray,
         alignItems: 'flex-start',
-    // Force no shadow when collapsed
-    elevation: 0,
-    shadowColor: 'transparent',
-    shadowOpacity: 0,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 0,
     },
     itemCardShadow: {
         shadowColor: '#000',

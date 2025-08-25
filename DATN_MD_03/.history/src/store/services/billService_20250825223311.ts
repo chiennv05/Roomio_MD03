@@ -224,6 +224,7 @@ export const getRoommateInvoices = async (
 // Lấy chi tiết hóa đơn
 export const getInvoiceDetails = async (token: string, invoiceId: string) => {
   try {
+    console.log('Fetching invoice details for:', invoiceId);
 
     const response = await api.get<{
       success: boolean;
@@ -233,6 +234,28 @@ export const getInvoiceDetails = async (token: string, invoiceId: string) => {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+    });
+
+    console.log('Invoice details API response structure:', {
+      success: response.data.success,
+      hasInvoice: !!response.data.invoice,
+      hasItems: Array.isArray(response.data.items),
+      invoiceStructure: response.data.invoice
+        ? {
+            hasRoomId: !!response.data.invoice.roomId,
+            roomIdType: response.data.invoice.roomId
+              ? typeof response.data.invoice.roomId
+              : 'undefined',
+            hasTenantId: !!response.data.invoice.tenantId,
+            tenantIdType: response.data.invoice.tenantId
+              ? typeof response.data.invoice.tenantId
+              : 'undefined',
+            hasContractId: !!response.data.invoice.contractId,
+            contractIdType: response.data.invoice.contractId
+              ? typeof response.data.invoice.contractId
+              : 'undefined',
+          }
+        : 'No invoice data',
     });
 
     if ('isError' in response) {
@@ -253,6 +276,10 @@ export const getInvoiceDetails = async (token: string, invoiceId: string) => {
       typeof processedInvoice.contractId === 'object' &&
       !processedInvoice.contractId.contractInfo
     ) {
+      console.log(
+        'Phát hiện contractId thiếu thông tin contractInfo, cố gắng lấy thêm dữ liệu',
+      );
+
       // Lưu ID của hợp đồng để có thể tham chiếu sau này
       const contractId =
         typeof processedInvoice.contractId === 'object'
@@ -288,6 +315,8 @@ export const getRoommateInvoiceDetails = async (
   invoiceId: string,
 ) => {
   try {
+    console.log('Fetching roommate invoice details for:', invoiceId);
+
     const response = await api.get<{
       success: boolean;
       invoice: Invoice;
@@ -395,6 +424,11 @@ export const confirmInvoicePayment = async (
           'Content-Type': 'application/json',
         },
       },
+    );
+
+    console.log(
+      'Confirm payment API response:',
+      JSON.stringify(response.data, null, 2),
     );
 
     if ('isError' in response) {
@@ -1215,7 +1249,115 @@ export const applyInvoiceTemplate = async (
 };
 
 // Kiểm tra xem người dùng có trong danh sách coTenants không
-// ĐÃ LOẠI BỎ: Hàm kiểm tra người ở cùng (checkUserIsCoTenant) theo yêu cầu
+export const checkUserIsCoTenant = async (token: string) => {
+  try {
+    const userResponse = await api.get('/user/profile', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if ('isError' in userResponse) {
+      console.error('Error getting user profile:', userResponse.message);
+      throw new Error(
+        userResponse.message || 'Không thể lấy thông tin người dùng',
+      );
+    }
+
+    // Dữ liệu người dùng nằm trong data.user theo cấu trúc mới
+    const currentUserId = userResponse.data.data?.user?._id;
+
+    if (!currentUserId) {
+      console.log('Cannot determine current user ID');
+      throw new Error('Không thể xác định ID người dùng hiện tại');
+    }
+    try {
+      const regularResponse = await api.get('/billing/invoices', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if ('isError' in regularResponse) {
+        console.error('Error getting regular invoices:', regularResponse.message);
+        throw new Error(regularResponse.message || 'Không thể lấy hóa đơn thông thường');
+      }
+
+      const regularInvoices = regularResponse.data?.invoices || [];
+
+
+      // Kiểm tra xem user có phải là tenant chính không
+      let isTenantInAnyContract = false;
+      let isCoTenantInAnyContract = false;
+
+      // Duyệt qua các hóa đơn thông thường
+      for (const invoice of regularInvoices) {
+        if (
+          invoice.contractId &&
+          typeof invoice.contractId === 'object' &&
+          invoice.contractId.contractInfo
+        ) {
+          const contractInfo = invoice.contractId.contractInfo;
+          
+          // Kiểm tra xem user có phải là tenant chính không
+          if (contractInfo.tenantId === currentUserId) {
+            isTenantInAnyContract = true;
+          }
+          
+          // Kiểm tra xem user có trong danh sách coTenants không
+          if (contractInfo.coTenants && Array.isArray(contractInfo.coTenants)) {
+            const isUserInCoTenants = contractInfo.coTenants.some(
+              (coTenant: any) => coTenant.userId === currentUserId,
+            );
+            
+            if (isUserInCoTenants) {
+              isCoTenantInAnyContract = true;
+            }
+          }
+        }
+      }
+
+      // Logic quyết định:
+      // - Nếu user là tenant chính → không phải co-tenant
+      // - Nếu user chỉ là co-tenant → là co-tenant
+      // - Nếu user vừa là tenant vừa là co-tenant → ưu tiên tenant chính
+      const isCoTenant = isCoTenantInAnyContract && !isTenantInAnyContract;
+
+      const result = {
+        success: true,
+        isCoTenant: isCoTenant,
+        isTenant: isTenantInAnyContract,
+        contracts: [], // Có thể thêm danh sách contracts nếu cần
+      };
+
+      console.log(
+        'END: checkUserIsCoTenant with success, returning:',
+        JSON.stringify(result, null, 2),
+      );
+      return result;
+    } catch (apiError: any) {
+      console.error('API call failed:', apiError.message || apiError);
+      throw apiError;
+    }
+  } catch (error: any) {
+    console.error('ERROR in checkUserIsCoTenant:', error.message || error);
+
+    // Trả về là không phải người ở cùng nếu có lỗi xảy ra
+    const errorResult = {
+      success: false,
+      isCoTenant: false,
+      isTenant: false,
+      contracts: [],
+      error: error.message || 'Lỗi không xác định',
+    };
+
+    console.log(
+      'END: checkUserIsCoTenant with error, returning:',
+      JSON.stringify(errorResult, null, 2),
+    );
+    return errorResult;
+  }
+};
 
 // Lấy hóa đơn kỳ trước để tự động điền chỉ số đồng hồ
 export const getPreviousInvoice = async (

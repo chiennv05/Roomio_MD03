@@ -1,6 +1,7 @@
 import {api} from '../../api/api';
 import {Invoice} from '../../types/Bill';
 import {Contract} from '../../types/Contract';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Định nghĩa response type từ API thực tế
 interface InvoicesResponse {
@@ -1215,7 +1216,154 @@ export const applyInvoiceTemplate = async (
 };
 
 // Kiểm tra xem người dùng có trong danh sách coTenants không
-// ĐÃ LOẠI BỎ: Hàm kiểm tra người ở cùng (checkUserIsCoTenant) theo yêu cầu
+export const checkUserIsCoTenant = async (token: string) => {
+  try {
+    console.log('START: checkUserIsCoTenant');
+
+    // Lấy thông tin user hiện tại để so sánh userId
+    const userInfo = await AsyncStorage.getItem('user');
+    if (!userInfo) {
+      console.log('Không tìm thấy thông tin user trong AsyncStorage');
+      throw new Error('Không thể xác định thông tin người dùng');
+    }
+
+    const currentUser = JSON.parse(userInfo);
+    const currentUserId = currentUser._id || currentUser.id;
+    console.log('Current user ID để so sánh:', currentUserId);
+
+    // Thử gọi endpoint roommate invoices trước để kiểm tra chính xác
+    try {
+      console.log('Gọi API /billing/roommate/invoices để kiểm tra người ở cùng');
+      
+      const roommateResponse = await api.get<InvoicesResponse>(
+        `/billing/roommate/invoices?page=1&limit=5`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log('Response từ /billing/roommate/invoices:', {
+        success: roommateResponse.data.success,
+        hasInvoices: !!roommateResponse.data.invoices?.length,
+        invoiceCount: roommateResponse.data.invoices?.length || 0
+      });
+
+      if ('isError' in roommateResponse) {
+        console.log('API roommate invoices trả về lỗi:', roommateResponse.message);
+        throw new Error(roommateResponse.message);
+      }
+
+      // Nếu API trả về thành công, kiểm tra chi tiết để xác định chính xác
+      if (roommateResponse.data.success && roommateResponse.data.invoices?.length > 0) {
+        let isCoTenant = false;
+        let isTenant = false;
+        const contracts: any[] = [];
+
+        for (const invoice: any of roommateResponse.data.invoices) {
+          console.log('Kiểm tra invoice từ roommate endpoint:', {
+            invoiceId: invoice._id,
+            tenantId: typeof invoice.tenantId === 'object' ? invoice.tenantId._id : invoice.tenantId,
+            hasContractInfo: !!(invoice.contractId && typeof invoice.contractId === 'object' && invoice.contractId.contractInfo)
+          });
+
+          // Kiểm tra nếu user là tenant chính
+          const tenantId = typeof invoice.tenantId === 'object' ? invoice.tenantId._id : invoice.tenantId;
+          if (tenantId === currentUserId) {
+            isTenant = true;
+            console.log('User là tenant chính trong invoice:', invoice._id);
+          }
+
+          // Kiểm tra nếu user có trong coTenants (điều kiện chính để xác định người ở cùng)
+          if (invoice.contractId && 
+              typeof invoice.contractId === 'object' && 
+              invoice.contractId.contractInfo && 
+              invoice.contractId.contractInfo.coTenants && 
+              Array.isArray(invoice.contractId.contractInfo.coTenants)) {
+            
+            const coTenants = invoice.contractId.contractInfo.coTenants;
+            console.log('Kiểm tra coTenants trong contract:', {
+              contractId: invoice.contractId._id,
+              coTenantsCount: coTenants.length,
+              coTenantIds: coTenants.map((ct: any) => ct.userId)
+            });
+
+            const isInCoTenants = coTenants.some((coTenant: any) => coTenant.userId === currentUserId);
+            if (isInCoTenants) {
+              isCoTenant = true;
+              console.log('✅ User có trong danh sách coTenants của contract:', invoice.contractId._id);
+              break; // Đã tìm thấy, không cần kiểm tra thêm
+            }
+          }
+
+          // Thu thập thông tin contract
+          if (invoice.contractId && typeof invoice.contractId === 'object') {
+            contracts.push(invoice.contractId);
+          }
+        }
+
+        // Logic xác định cuối cùng: chỉ khi user có trong coTenants mới là người ở cùng
+        // Nếu user chỉ là tenantId thì là người thuê chính, không phải người ở cùng
+        const finalResult = {
+          success: true,
+          isCoTenant: isCoTenant && !isTenant, // Chỉ là người ở cùng khi có trong coTenants và không phải tenant chính
+          isTenant: isTenant,
+          contracts,
+        };
+
+        console.log('END: checkUserIsCoTenant - kết quả từ roommate endpoint:', JSON.stringify(finalResult, null, 2));
+        return finalResult;
+
+      } else {
+        console.log('❌ Không có hóa đơn từ endpoint roommate - user không phải người ở cùng');
+        
+        return {
+          success: true,
+          isCoTenant: false,
+          isTenant: false,
+          contracts: [],
+        };
+      }
+
+    } catch (roommateApiError: any) {
+      console.log('Lỗi khi gọi API roommate invoices:', roommateApiError.message);
+      
+      // Nếu lỗi 403/401, có thể user không có quyền truy cập endpoint này
+      if (roommateApiError.response?.status === 403 || roommateApiError.response?.status === 401) {
+        console.log('User không có quyền truy cập endpoint roommate - không phải người ở cùng');
+        
+        return {
+          success: true,
+          isCoTenant: false,
+          isTenant: false,
+          contracts: [],
+        };
+      }
+      
+      // Ném lỗi để fallback xử lý
+      throw roommateApiError;
+    }
+
+  } catch (error: any) {
+    console.error('ERROR in checkUserIsCoTenant:', error.message || error);
+
+    // Trả về là không phải người ở cùng nếu có lỗi xảy ra
+    const errorResult = {
+      success: false,
+      isCoTenant: false,
+      isTenant: false,
+      contracts: [],
+      error: error.message || 'Lỗi không xác định',
+    };
+
+    console.log(
+      'END: checkUserIsCoTenant with error, returning:',
+      JSON.stringify(errorResult, null, 2),
+    );
+    return errorResult;
+  }
+};
 
 // Lấy hóa đơn kỳ trước để tự động điền chỉ số đồng hồ
 export const getPreviousInvoice = async (

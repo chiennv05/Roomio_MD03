@@ -560,12 +560,8 @@ const BillScreen = () => {
 
         // Đảm bảo invoiceId là string
         invoiceId = invoiceId.toString();
-        // Điều hướng theo loại hóa đơn
-        if (invoice.isRoommate) {
-            navigation.navigate('RoommateInvoiceDetails', { invoiceId });
-        } else {
-            navigation.navigate('BillDetails', { invoiceId });
-        }
+
+    navigation.navigate('BillDetails', { invoiceId });
     };
 
     // Xử lý thay đổi loại bộ lọc (tab)

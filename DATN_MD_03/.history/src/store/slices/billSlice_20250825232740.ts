@@ -15,6 +15,7 @@ import {
     getInvoiceTemplates as getInvoiceTemplatesService,
     deleteInvoiceTemplate as deleteInvoiceTemplateService,
     markInvoiceAsPaid as markInvoiceAsPaidService,
+    checkUserRoleAndGetInvoices,
 } from '../services/billService';
 
 // Tạo action để cập nhật hóa đơn trong store mà không cần gọi API
@@ -33,6 +34,13 @@ interface BillState {
         totalPages: number;
         hasNextPage: boolean;
         hasPrevPage: boolean;
+    };
+    // Thông tin vai trò người dùng
+    userRole: {
+        isCoTenant: boolean;
+        isTenant: boolean;
+        hasRegularAccess: boolean;
+        hasRoommateAccess: boolean;
     };
     confirmPaymentLoading: boolean;
     confirmPaymentSuccess: boolean;
@@ -79,6 +87,13 @@ const initialState: BillState = {
         totalPages: 1,
         hasNextPage: false,
         hasPrevPage: false,
+    },
+    // Khởi tạo thông tin vai trò người dùng
+    userRole: {
+        isCoTenant: false,
+        isTenant: false,
+        hasRegularAccess: false,
+        hasRoommateAccess: false,
     },
     confirmPaymentLoading: false,
     confirmPaymentSuccess: false,
@@ -192,78 +207,6 @@ export const fetchRoommateInvoices = createAsyncThunk(
                 return rejectWithValue('Request was cancelled');
             }
             return rejectWithValue(err.message || 'Không thể tải danh sách hóa đơn người ở cùng');
-        }
-    },
-);
-
-// Thunk dành riêng cho người thuê: lấy cả hóa đơn thường và hóa đơn người ở cùng rồi gộp
-export const fetchTenantCombinedInvoices = createAsyncThunk(
-    'bill/fetchTenantCombinedInvoices',
-    async ({
-        token,
-        page = 1,
-        limit = 10,
-        status,
-        query,
-        signal,
-    }: {
-        token: string;
-        page?: number;
-        limit?: number;
-        status?: string;
-        query?: string;
-        signal?: AbortSignal;
-    }, { rejectWithValue }) => {
-        try {
-            // Gọi song song 2 endpoint
-            const [regularRes, roommateRes] = await Promise.all([
-                getInvoices(token, page, limit, status, query, signal),
-                getRoommateInvoices(token, page, limit, status, query, signal),
-            ]);
-
-            if (!regularRes.success && !roommateRes.success) {
-                throw new Error('Không thể tải danh sách hóa đơn');
-            }
-
-            const regular = regularRes.success ? regularRes.data.invoices : [];
-            const roommate = roommateRes.success ? (roommateRes.data.invoices.map(inv => ({ ...inv, isRoommate: true }))) : [];
-
-            // Gộp và loại trùng theo _id / id
-            const map = new Map<string, any>();
-            [...regular, ...roommate].forEach(inv => {
-                const key = (inv._id || inv.id || inv.invoiceNumber || Math.random().toString()) as string;
-                if (!map.has(key)) map.set(key, inv);
-            });
-            let merged = Array.from(map.values()) as Invoice[];
-
-            // Sắp xếp mặc định: mới nhất trước theo createdAt
-            merged.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
-
-            // Tính pagination sơ bộ (không chính xác tuyệt đối nếu backend phân trang khác nhau)
-            const totalDocs = (regularRes.data.pagination?.totalDocs || regular.length) + (roommateRes.data.pagination?.totalDocs || roommate.length);
-            const totalPages = Math.max(
-                regularRes.data.pagination?.totalPages || 1,
-                roommateRes.data.pagination?.totalPages || 1,
-            );
-            const hasNextPage = (regularRes.data.pagination?.hasNextPage || false) || (roommateRes.data.pagination?.hasNextPage || false);
-            const hasPrevPage = page > 1;
-
-            return {
-                invoices: merged,
-                pagination: {
-                    page,
-                    limit,
-                    totalDocs,
-                    totalPages,
-                    hasNextPage,
-                    hasPrevPage,
-                },
-            };
-        } catch (err: any) {
-            if (err.name === 'AbortError') {
-                return rejectWithValue('Request was cancelled');
-            }
-            return rejectWithValue(err.message || 'Không thể tải danh sách hóa đơn');
         }
     },
 );
@@ -660,32 +603,6 @@ const billSlice = createSlice({
                 };
             })
             .addCase(fetchRoommateInvoices.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload as string;
-            })
-
-            // Xử lý fetchTenantCombinedInvoices
-            .addCase(fetchTenantCombinedInvoices.pending, state => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(fetchTenantCombinedInvoices.fulfilled, (state, action) => {
-                state.loading = false;
-                if (action.meta.arg.page && action.meta.arg.page > 1) {
-                    // Gộp thêm (tránh trùng)
-                    const existingMap = new Map<string, Invoice>();
-                    state.invoices.forEach(inv => existingMap.set((inv._id || inv.id || inv.invoiceNumber) as string, inv));
-                    action.payload.invoices.forEach(inv => {
-                        const key = (inv._id || inv.id || inv.invoiceNumber) as string;
-                        if (!existingMap.has(key)) existingMap.set(key, inv);
-                    });
-                    state.invoices = Array.from(existingMap.values());
-                } else {
-                    state.invoices = action.payload.invoices;
-                }
-                state.pagination = action.payload.pagination;
-            })
-            .addCase(fetchTenantCombinedInvoices.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             })

@@ -1215,7 +1215,115 @@ export const applyInvoiceTemplate = async (
 };
 
 // Kiểm tra xem người dùng có trong danh sách coTenants không
-// ĐÃ LOẠI BỎ: Hàm kiểm tra người ở cùng (checkUserIsCoTenant) theo yêu cầu
+export const checkUserIsCoTenant = async (token: string) => {
+  try {
+    const userResponse = await api.get('/user/profile', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if ('isError' in userResponse) {
+      console.error('Error getting user profile:', userResponse.message);
+      throw new Error(
+        userResponse.message || 'Không thể lấy thông tin người dùng',
+      );
+    }
+
+    // Dữ liệu người dùng nằm trong data.user theo cấu trúc mới
+    const currentUserId = userResponse.data.data?.user?._id;
+
+    if (!currentUserId) {
+      console.log('Cannot determine current user ID');
+      throw new Error('Không thể xác định ID người dùng hiện tại');
+    }
+    try {
+      const regularResponse = await api.get('/billing/invoices', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if ('isError' in regularResponse) {
+        console.error('Error getting regular invoices:', regularResponse.message);
+        throw new Error(regularResponse.message || 'Không thể lấy hóa đơn thông thường');
+      }
+
+      const regularInvoices = regularResponse.data?.invoices || [];
+
+
+      // Kiểm tra xem user có phải là tenant chính không
+      let isTenantInAnyContract = false;
+      let isCoTenantInAnyContract = false;
+
+      // Duyệt qua các hóa đơn thông thường
+      for (const invoice of regularInvoices) {
+        if (
+          invoice.contractId &&
+          typeof invoice.contractId === 'object' &&
+          invoice.contractId.contractInfo
+        ) {
+          const contractInfo = invoice.contractId.contractInfo;
+          
+          // Kiểm tra xem user có phải là tenant chính không
+          if (contractInfo.tenantId === currentUserId) {
+            isTenantInAnyContract = true;
+          }
+          
+          // Kiểm tra xem user có trong danh sách coTenants không
+          if (contractInfo.coTenants && Array.isArray(contractInfo.coTenants)) {
+            const isUserInCoTenants = contractInfo.coTenants.some(
+              (coTenant: any) => coTenant.userId === currentUserId,
+            );
+            
+            if (isUserInCoTenants) {
+              isCoTenantInAnyContract = true;
+            }
+          }
+        }
+      }
+
+      // Logic quyết định:
+      // - Nếu user là tenant chính → không phải co-tenant
+      // - Nếu user chỉ là co-tenant → là co-tenant
+      // - Nếu user vừa là tenant vừa là co-tenant → ưu tiên tenant chính
+      const isCoTenant = isCoTenantInAnyContract && !isTenantInAnyContract;
+
+      const result = {
+        success: true,
+        isCoTenant: isCoTenant,
+        isTenant: isTenantInAnyContract,
+        contracts: [], // Có thể thêm danh sách contracts nếu cần
+      };
+
+      console.log(
+        'END: checkUserIsCoTenant with success, returning:',
+        JSON.stringify(result, null, 2),
+      );
+      return result;
+    } catch (apiError: any) {
+      console.error('API call failed:', apiError.message || apiError);
+      throw apiError;
+    }
+  } catch (error: any) {
+    console.error('ERROR in checkUserIsCoTenant:', error.message || error);
+
+    // Trả về là không phải người ở cùng nếu có lỗi xảy ra
+    const errorResult = {
+      success: false,
+      isCoTenant: false,
+      isTenant: false,
+      contracts: [],
+      error: error.message || 'Lỗi không xác định',
+    };
+
+    console.log(
+      'END: checkUserIsCoTenant with error, returning:',
+      JSON.stringify(errorResult, null, 2),
+    );
+    return errorResult;
+  }
+};
 
 // Lấy hóa đơn kỳ trước để tự động điền chỉ số đồng hồ
 export const getPreviousInvoice = async (
