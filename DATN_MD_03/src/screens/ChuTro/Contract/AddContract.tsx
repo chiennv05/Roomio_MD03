@@ -46,7 +46,7 @@ export default function AddContract() {
   // State variables
   const [contractTerm, setContractTerm] = useState<string>('');
   const [startDate, setStartDate] = useState('');
-  const [rules, setRules] = useState('Hạn thu tiền quá 5 ngày sẽ bị phạt');
+  const [rules, setRules] = useState('Hạn thu tiền quá 5 ngày sẽ bị phạt 30k/ ngày');
   const [additionalTerms, setAdditionalTerms] = useState(
     'Không được phép sửa chữa phòng. Muốn sửa phòng phải được chủ trọ đồng ý',
   );

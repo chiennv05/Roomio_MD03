@@ -135,7 +135,7 @@ export default function SubscriptionPaymentScreen() {
               if (!token || !quote?.plan) { return; }
               dispatch(createSubscriptionUpgrade({token, plan: quote.plan})).then(() => {
                 // sau khi gửi yêu cầu, quay lại màn gói đăng ký
-                navigation.navigate('SubscriptionScreen');
+                navigation.goBack();
               });
             }}
           >
