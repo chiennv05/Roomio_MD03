@@ -771,7 +771,7 @@ export default function AddRoomScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}>
         <UIHeader
-          title="Tạo bài đăng"
+          title="Thêm phòng trọ"
           onPressLeft={handleGoBack}
           iconLeft={Icons.IconArrowLeft}
         />
@@ -937,7 +937,7 @@ export default function AddRoomScreen() {
           <View style={styles.containerButton}>
             <ItemButtonConfirm
               onPress={handleCreatePost}
-              title="Tạo bài đăng"
+              title="Thêm phòng trọ"
               icon={Icons.IconDelete}
               onPressIcon={handleCancel}
             />
