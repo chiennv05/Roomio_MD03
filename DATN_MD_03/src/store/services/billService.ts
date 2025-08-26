@@ -67,12 +67,7 @@ export const getInvoices = async (
     }
 
     // Log chỉ trong môi trường dev
-    if (__DEV__) {
-      console.log(
-        'API Request to:',
-        `/billing/invoices?${queryParams.toString()}`,
-      );
-    }
+  // Dev log removed
 
     const response = await api.get<InvoicesResponse>(
       `/billing/invoices?${queryParams.toString()}`,
@@ -106,7 +101,7 @@ export const getInvoices = async (
   } catch (error: any) {
     // Kiểm tra nếu là lỗi do abort
     if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
-      console.log('Request aborted');
+  // Request aborted
       throw error;
     }
 
@@ -152,12 +147,7 @@ export const getRoommateInvoices = async (
     }
 
     // Log chỉ trong môi trường dev
-    if (__DEV__) {
-      console.log(
-        'API Request to:',
-        `/billing/roommate/invoices?${queryParams.toString()}`,
-      );
-    }
+  // Dev log removed
 
     const response = await api.get<InvoicesResponse>(
       `/billing/roommate/invoices?${queryParams.toString()}`,
@@ -198,7 +188,7 @@ export const getRoommateInvoices = async (
   } catch (error: any) {
     // Kiểm tra nếu là lỗi do abort
     if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
-      console.log('Request aborted');
+  // Request aborted
       throw error;
     }
 
@@ -224,7 +214,6 @@ export const getRoommateInvoices = async (
 // Lấy chi tiết hóa đơn
 export const getInvoiceDetails = async (token: string, invoiceId: string) => {
   try {
-    console.log('Fetching invoice details for:', invoiceId);
 
     const response = await api.get<{
       success: boolean;
@@ -234,28 +223,6 @@ export const getInvoiceDetails = async (token: string, invoiceId: string) => {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    });
-
-    console.log('Invoice details API response structure:', {
-      success: response.data.success,
-      hasInvoice: !!response.data.invoice,
-      hasItems: Array.isArray(response.data.items),
-      invoiceStructure: response.data.invoice
-        ? {
-            hasRoomId: !!response.data.invoice.roomId,
-            roomIdType: response.data.invoice.roomId
-              ? typeof response.data.invoice.roomId
-              : 'undefined',
-            hasTenantId: !!response.data.invoice.tenantId,
-            tenantIdType: response.data.invoice.tenantId
-              ? typeof response.data.invoice.tenantId
-              : 'undefined',
-            hasContractId: !!response.data.invoice.contractId,
-            contractIdType: response.data.invoice.contractId
-              ? typeof response.data.invoice.contractId
-              : 'undefined',
-          }
-        : 'No invoice data',
     });
 
     if ('isError' in response) {
@@ -276,10 +243,6 @@ export const getInvoiceDetails = async (token: string, invoiceId: string) => {
       typeof processedInvoice.contractId === 'object' &&
       !processedInvoice.contractId.contractInfo
     ) {
-      console.log(
-        'Phát hiện contractId thiếu thông tin contractInfo, cố gắng lấy thêm dữ liệu',
-      );
-
       // Lưu ID của hợp đồng để có thể tham chiếu sau này
       const contractId =
         typeof processedInvoice.contractId === 'object'
@@ -289,11 +252,11 @@ export const getInvoiceDetails = async (token: string, invoiceId: string) => {
       // Lưu lại thông tin roomId và tenantId để sử dụng cho việc hiển thị
       // ngay cả khi không thể lấy được thông tin hợp đồng đầy đủ
       if (typeof processedInvoice.roomId === 'string' && contractId) {
-        console.log('roomId là string, cần hiển thị từ thông tin hợp đồng');
+  // roomId string fallback note
       }
 
       if (typeof processedInvoice.tenantId === 'string' && contractId) {
-        console.log('tenantId là string, cần hiển thị từ thông tin hợp đồng');
+  // tenantId string fallback note
       }
     }
 
@@ -315,8 +278,6 @@ export const getRoommateInvoiceDetails = async (
   invoiceId: string,
 ) => {
   try {
-    console.log('Fetching roommate invoice details for:', invoiceId);
-
     const response = await api.get<{
       success: boolean;
       invoice: Invoice;
@@ -327,7 +288,7 @@ export const getRoommateInvoiceDetails = async (
       },
     });
 
-    console.log('Roommate invoice details API response structure:', {
+  /* Debug removed: roommate invoice details structure
       success: response.data.success,
       hasInvoice: !!response.data.invoice,
       hasItems: Array.isArray(response.data.items),
@@ -347,7 +308,7 @@ export const getRoommateInvoiceDetails = async (
               : 'undefined',
           }
         : 'No invoice data',
-    });
+  }); */
 
     if ('isError' in response) {
       throw new Error(response.message);
@@ -370,9 +331,7 @@ export const getRoommateInvoiceDetails = async (
       typeof processedInvoice.contractId === 'object' &&
       !processedInvoice.contractId.contractInfo
     ) {
-      console.log(
-        'Phát hiện contractId thiếu thông tin contractInfo, cố gắng lấy thêm dữ liệu',
-      );
+  // Missing contractInfo; attempt enrichment (log removed)
 
       // Lưu ID của hợp đồng để có thể tham chiếu sau này
       const contractId =
@@ -383,11 +342,11 @@ export const getRoommateInvoiceDetails = async (
       // Lưu lại thông tin roomId và tenantId để sử dụng cho việc hiển thị
       // ngay cả khi không thể lấy được thông tin hợp đồng đầy đủ
       if (typeof processedInvoice.roomId === 'string' && contractId) {
-        console.log('roomId là string, cần hiển thị từ thông tin hợp đồng');
+        // roomId string fallback
       }
 
       if (typeof processedInvoice.tenantId === 'string' && contractId) {
-        console.log('tenantId là string, cần hiển thị từ thông tin hợp đồng');
+        // tenantId string fallback
       }
     }
 
@@ -409,7 +368,7 @@ export const confirmInvoicePayment = async (
   invoiceId: string,
 ) => {
   try {
-    console.log('Confirming payment for invoice:', invoiceId);
+  // Removed debug: confirming payment
 
     const response = await api.post<{
       success: boolean;
@@ -424,11 +383,6 @@ export const confirmInvoicePayment = async (
           'Content-Type': 'application/json',
         },
       },
-    );
-
-    console.log(
-      'Confirm payment API response:',
-      JSON.stringify(response.data, null, 2),
     );
 
     if ('isError' in response) {
@@ -512,10 +466,7 @@ export const confirmInvoiceCompletion = async (
       },
     );
 
-    console.log(
-      'Finalize invoice API response:',
-      JSON.stringify(response.data, null, 2),
-    );
+  // Removed finalize response debug
 
     if ('isError' in response) {
       throw new Error(response.message);
@@ -545,11 +496,6 @@ export const getMyContracts = async (
     queryParams.append('page', page.toString());
     queryParams.append('limit', limit.toString());
 
-    console.log(
-      'API Request to:',
-      `/contract/my-contracts?${queryParams.toString()}`,
-    );
-
     const response = await api.get<ContractsResponse>(
       `/contract/my-contracts?${queryParams.toString()}`,
       {
@@ -559,10 +505,7 @@ export const getMyContracts = async (
       },
     );
 
-    console.log(
-      'Contracts API response:',
-      JSON.stringify(response.data, null, 2),
-    );
+  // Removed contracts response debug
 
     if ('isError' in response) {
       throw new Error(response.message);
@@ -600,7 +543,7 @@ export const createInvoice = async (
   data: CreateInvoiceRequest,
 ) => {
   try {
-    console.log('Creating invoice with data:', data);
+  // Removed create invoice debug
 
     const response = await api.post<{
       success: boolean;
@@ -613,10 +556,7 @@ export const createInvoice = async (
       },
     });
 
-    console.log(
-      'Create invoice API response:',
-      JSON.stringify(response.data, null, 2),
-    );
+  // Removed create invoice response debug
 
     if ('isError' in response) {
       // Kiểm tra nếu lỗi là do trùng lặp
@@ -696,7 +636,7 @@ export const checkDuplicateInvoice = async (
     queryParams.append('month', month.toString());
     queryParams.append('year', year.toString());
 
-    console.log('Checking for duplicate invoice:', {contractId, month, year});
+  // Removed duplicate invoice check debug
 
     // Kiểm tra xem API endpoint có tồn tại không
     try {
@@ -710,10 +650,7 @@ export const checkDuplicateInvoice = async (
         },
       });
 
-      console.log(
-        'Check duplicate API response:',
-        JSON.stringify(response.data, null, 2),
-      );
+  // Removed duplicate API response debug
 
       if ('isError' in response) {
         throw new Error(response.message);
@@ -729,7 +666,7 @@ export const checkDuplicateInvoice = async (
 
       // Nếu API trả về 404 (Not Found), nghĩa là endpoint không tồn tại
       if (apiError.status === 404) {
-        console.log('API endpoint không tồn tại, thực hiện kiểm tra thủ công');
+  // Endpoint 404; fallback manual check
 
         // Thực hiện kiểm tra thủ công bằng cách lấy danh sách hóa đơn của hợp đồng
         // và kiểm tra xem có hóa đơn nào trùng tháng/năm không
@@ -798,7 +735,7 @@ export const checkDuplicateInvoice = async (
 // Xóa hóa đơn
 export const deleteInvoice = async (token: string, invoiceId: string) => {
   try {
-    console.log('Deleting invoice:', invoiceId);
+  // Removed deleting invoice debug
 
     const response = await api.delete<{success: boolean; message: string}>(
       `/billing/invoices/${invoiceId}`,
@@ -809,10 +746,7 @@ export const deleteInvoice = async (token: string, invoiceId: string) => {
       },
     );
 
-    console.log(
-      'Delete invoice API response:',
-      JSON.stringify(response, null, 2),
-    );
+  // Removed delete invoice response debug
 
     if ('isError' in response) {
       throw new Error(response.message || 'Có lỗi xảy ra khi xóa hóa đơn');
@@ -836,10 +770,7 @@ export const updateInvoice = async (
   updateType: 'basic' | 'items' | 'all' = 'all',
 ) => {
   try {
-    console.log(
-      `Updating invoice ${invoiceId} with type ${updateType}:`,
-      updateData,
-    );
+  // Removed updating invoice debug
 
     // Trước khi cập nhật, lấy thông tin hóa đơn hiện tại để lưu thông tin quan trọng
     let currentInvoice;
@@ -847,10 +778,10 @@ export const updateInvoice = async (
       const currentInvoiceResponse = await getInvoiceDetails(token, invoiceId);
       if (currentInvoiceResponse.success) {
         currentInvoice = currentInvoiceResponse.data.invoice;
-        console.log('Đã lấy thông tin hóa đơn hiện tại trước khi cập nhật');
+  // Retrieved current invoice
       }
     } catch (err) {
-      console.log('Không thể lấy thông tin hóa đơn hiện tại:', err);
+  // Could not fetch current invoice
     }
 
     // Endpoint depends on update type
@@ -870,10 +801,7 @@ export const updateInvoice = async (
       },
     });
 
-    console.log(
-      'Update invoice API response:',
-      JSON.stringify(response.data, null, 2),
-    );
+  // Removed update invoice response debug
 
     if ('isError' in response) {
       throw new Error(response.message || 'Có lỗi xảy ra khi cập nhật hóa đơn');
@@ -892,9 +820,7 @@ export const updateInvoice = async (
           !processedInvoice.contractId.contractInfo) ||
         typeof processedInvoice.contractId === 'string'
       ) {
-        console.log(
-          'Phát hiện mất dữ liệu contractId, khôi phục từ dữ liệu hiện tại',
-        );
+  // Restoring contractId from current invoice
         processedInvoice.contractId = currentInvoice.contractId;
       }
 
@@ -903,9 +829,7 @@ export const updateInvoice = async (
         typeof processedInvoice.roomId === 'string' &&
         typeof currentInvoice.roomId === 'object'
       ) {
-        console.log(
-          'Phát hiện roomId chuyển từ object sang string, khôi phục từ dữ liệu hiện tại',
-        );
+  // Restoring roomId object
         processedInvoice.roomId = currentInvoice.roomId;
       }
 
@@ -914,15 +838,13 @@ export const updateInvoice = async (
         typeof processedInvoice.tenantId === 'string' &&
         typeof currentInvoice.tenantId === 'object'
       ) {
-        console.log(
-          'Phát hiện tenantId chuyển từ object sang string, khôi phục từ dữ liệu hiện tại',
-        );
+  // Restoring tenantId object
         processedInvoice.tenantId = currentInvoice.tenantId;
       }
     }
 
     // Log the returned invoice structure to help debug issues
-    console.log('Invoice structure after update:', {
+  /* Removed invoice structure debug
       roomId: processedInvoice.roomId
         ? typeof processedInvoice.roomId === 'object'
           ? 'object'
@@ -943,7 +865,7 @@ export const updateInvoice = async (
         typeof processedInvoice.contractId === 'object'
           ? !!processedInvoice.contractId.contractInfo
           : false,
-    });
+  }); */
 
     return {
       success: response.data.success,
@@ -965,7 +887,7 @@ export const addCustomInvoiceItem = async (
   itemData: CustomInvoiceItem,
 ) => {
   try {
-    console.log('Adding custom item to invoice:', invoiceId, itemData);
+  // Removed add custom item debug
 
     const response = await api.post<{
       success: boolean;
@@ -979,10 +901,7 @@ export const addCustomInvoiceItem = async (
       },
     });
 
-    console.log(
-      'Add custom item API response:',
-      JSON.stringify(response.data, null, 2),
-    );
+  // Removed add custom item response debug
 
     if ('isError' in response) {
       throw new Error(
@@ -1012,7 +931,7 @@ export const updateInvoiceItems = async (
   itemsData: any[],
 ) => {
   try {
-    console.log('Updating specific invoice items:', invoiceId, itemsData);
+  // Removed updating specific items debug
 
     const response = await api.put<{
       success: boolean;
@@ -1029,10 +948,7 @@ export const updateInvoiceItems = async (
       },
     );
 
-    console.log(
-      'Update invoice items API response:',
-      JSON.stringify(response.data, null, 2),
-    );
+  // Removed update items response debug
 
     if ('isError' in response) {
       throw new Error(
@@ -1061,7 +977,7 @@ export const deleteInvoiceItem = async (
   itemId: string,
 ) => {
   try {
-    console.log('Deleting invoice item:', {invoiceId, itemId});
+  // Removed deleting invoice item debug
 
     const response = await api.delete<{
       success: boolean;
@@ -1073,10 +989,7 @@ export const deleteInvoiceItem = async (
       },
     });
 
-    console.log(
-      'Delete invoice item API response:',
-      JSON.stringify(response.data, null, 2),
-    );
+  // Removed delete invoice item response debug
 
     if ('isError' in response) {
       throw new Error(response.message || 'Có lỗi xảy ra khi xóa khoản mục');
@@ -1102,7 +1015,7 @@ export const saveInvoiceAsTemplate = async (
   templateName: string,
 ) => {
   try {
-    console.log('Saving invoice as template:', {invoiceId, templateName});
+  // Removed save as template debug
 
     const response = await api.post<{
       success: boolean;
@@ -1119,10 +1032,7 @@ export const saveInvoiceAsTemplate = async (
       },
     );
 
-    console.log(
-      'Save as template API response:',
-      JSON.stringify(response.data, null, 2),
-    );
+  // Removed save as template response debug
 
     if ('isError' in response) {
       throw new Error(response.message || 'Có lỗi xảy ra khi lưu mẫu hóa đơn');
@@ -1144,7 +1054,7 @@ export const saveInvoiceAsTemplate = async (
 // Lấy danh sách mẫu hóa đơn
 export const getInvoiceTemplates = async (token: string) => {
   try {
-    console.log('Fetching invoice templates');
+  // Removed fetching templates debug
 
     const response = await api.get<{success: boolean; templates: any[]}>(
       '/billing/templates',
@@ -1155,10 +1065,7 @@ export const getInvoiceTemplates = async (token: string) => {
       },
     );
 
-    console.log(
-      'Get templates API response:',
-      JSON.stringify(response.data, null, 2),
-    );
+  // Removed get templates response debug
 
     if ('isError' in response) {
       throw new Error(
@@ -1254,131 +1161,7 @@ export const applyInvoiceTemplate = async (
 };
 
 // Kiểm tra xem người dùng có trong danh sách coTenants không
-export const checkUserIsCoTenant = async (token: string) => {
-  try {
-    console.log('START: checkUserIsCoTenant');
-
-    // Lấy dữ liệu người dùng hiện tại từ profile endpoint
-    console.log('Getting user profile...');
-    const userResponse = await api.get('/user/profile', {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if ('isError' in userResponse) {
-      console.error('Error getting user profile:', userResponse.message);
-      throw new Error(
-        userResponse.message || 'Không thể lấy thông tin người dùng',
-      );
-    }
-
-    // Dữ liệu người dùng nằm trong data.user theo cấu trúc mới
-    const currentUserId = userResponse.data.data?.user?._id;
-
-    if (!currentUserId) {
-      console.log('Cannot determine current user ID');
-      throw new Error('Không thể xác định ID người dùng hiện tại');
-    }
-
-    console.log('Current user ID:', currentUserId);
-
-    // Trước tiên, gọi API để lấy hóa đơn thông thường của người dùng
-    console.log('Calling /billing/invoices API to check user role...');
-
-    try {
-      const regularResponse = await api.get('/billing/invoices', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if ('isError' in regularResponse) {
-        console.error('Error getting regular invoices:', regularResponse.message);
-        throw new Error(regularResponse.message || 'Không thể lấy hóa đơn thông thường');
-      }
-
-      const regularInvoices = regularResponse.data?.invoices || [];
-      console.log('Regular invoices returned:', regularInvoices.length);
-
-      // Kiểm tra xem user có phải là tenant chính không
-      let isTenantInAnyContract = false;
-      let isCoTenantInAnyContract = false;
-
-      // Duyệt qua các hóa đơn thông thường
-      for (const invoice of regularInvoices) {
-        if (
-          invoice.contractId &&
-          typeof invoice.contractId === 'object' &&
-          invoice.contractId.contractInfo
-        ) {
-          const contractInfo = invoice.contractId.contractInfo;
-          
-          // Kiểm tra xem user có phải là tenant chính không
-          if (contractInfo.tenantId === currentUserId) {
-            isTenantInAnyContract = true;
-            console.log('User is primary tenant in contract:', invoice.contractId._id);
-          }
-          
-          // Kiểm tra xem user có trong danh sách coTenants không
-          if (contractInfo.coTenants && Array.isArray(contractInfo.coTenants)) {
-            const isUserInCoTenants = contractInfo.coTenants.some(
-              (coTenant: any) => coTenant.userId === currentUserId,
-            );
-            
-            if (isUserInCoTenants) {
-              isCoTenantInAnyContract = true;
-              console.log('User is co-tenant in contract:', invoice.contractId._id);
-            }
-          }
-        }
-      }
-
-      // Logic quyết định:
-      // - Nếu user là tenant chính → không phải co-tenant
-      // - Nếu user chỉ là co-tenant → là co-tenant
-      // - Nếu user vừa là tenant vừa là co-tenant → ưu tiên tenant chính
-      const isCoTenant = isCoTenantInAnyContract && !isTenantInAnyContract;
-
-      console.log('isTenantInAnyContract:', isTenantInAnyContract);
-      console.log('isCoTenantInAnyContract:', isCoTenantInAnyContract);
-      console.log('Final isCoTenant determination:', isCoTenant);
-
-      const result = {
-        success: true,
-        isCoTenant: isCoTenant,
-        isTenant: isTenantInAnyContract,
-        contracts: [], // Có thể thêm danh sách contracts nếu cần
-      };
-
-      console.log(
-        'END: checkUserIsCoTenant with success, returning:',
-        JSON.stringify(result, null, 2),
-      );
-      return result;
-    } catch (apiError: any) {
-      console.error('API call failed:', apiError.message || apiError);
-      throw apiError;
-    }
-  } catch (error: any) {
-    console.error('ERROR in checkUserIsCoTenant:', error.message || error);
-
-    // Trả về là không phải người ở cùng nếu có lỗi xảy ra
-    const errorResult = {
-      success: false,
-      isCoTenant: false,
-      isTenant: false,
-      contracts: [],
-      error: error.message || 'Lỗi không xác định',
-    };
-
-    console.log(
-      'END: checkUserIsCoTenant with error, returning:',
-      JSON.stringify(errorResult, null, 2),
-    );
-    return errorResult;
-  }
-};
+// ĐÃ LOẠI BỎ: Hàm kiểm tra người ở cùng (checkUserIsCoTenant) theo yêu cầu
 
 // Lấy hóa đơn kỳ trước để tự động điền chỉ số đồng hồ
 export const getPreviousInvoice = async (

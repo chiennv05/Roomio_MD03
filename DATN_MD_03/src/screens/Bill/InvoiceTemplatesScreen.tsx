@@ -9,30 +9,24 @@ import {
     SafeAreaView,
     Image,
     Platform,
-    StatusBar,
+    Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAppSelector, useAppDispatch } from '../../hooks/redux';
 import { Colors } from '../../theme/color';
-import { scale, responsiveSpacing, responsiveFont } from '../../utils/responsive';
 import {
     fetchInvoiceTemplates,
     resetTemplatesState,
     deleteInvoiceTemplate,
-    resetDeleteTemplateState,
+    resetDeleteTemplateState
 } from '../../store/slices/billSlice';
 import ContractSelectionModal from './components/ContractSelectionModal';
 import ApplyTemplateModal from './components/ApplyTemplateModal';
 import { Contract } from '../../types/Contract';
-import CustomAlertModal from '../../components/CustomAlertModal';
-import { useCustomAlert } from '../../hooks/useCustomAlrert';
-import LoadingAnimationWrapper from '../../components/LoadingAnimationWrapper';
-import UIHeader from '../ChuTro/MyRoom/components/UIHeader';
 
 const InvoiceTemplatesScreen = () => {
     const navigation = useNavigation();
     const dispatch = useAppDispatch();
-    const { showAlert, showSuccess, showError, showConfirm, visible, alertConfig, hideAlert } = useCustomAlert();
     const { token } = useAppSelector(state => state.auth);
     const {
         templates,
@@ -40,7 +34,7 @@ const InvoiceTemplatesScreen = () => {
         templatesError,
         deleteTemplateLoading,
         deleteTemplateSuccess,
-        deleteTemplateError,
+        deleteTemplateError
     } = useAppSelector(state => state.bill);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -62,7 +56,7 @@ const InvoiceTemplatesScreen = () => {
     // Xử lý khi xóa mẫu thành công
     useEffect(() => {
         if (deleteTemplateSuccess) {
-            showSuccess('Đã xóa mẫu hóa đơn thành công');
+            Alert.alert('Thành công', 'Đã xóa mẫu hóa đơn thành công');
             dispatch(resetDeleteTemplateState());
         }
     }, [deleteTemplateSuccess]);
@@ -70,7 +64,7 @@ const InvoiceTemplatesScreen = () => {
     // Xử lý khi xóa mẫu thất bại
     useEffect(() => {
         if (deleteTemplateError) {
-            showError(`Không thể xóa mẫu hóa đơn: ${deleteTemplateError}`);
+            Alert.alert('Lỗi', `Không thể xóa mẫu hóa đơn: ${deleteTemplateError}`);
             dispatch(resetDeleteTemplateState());
         }
     }, [deleteTemplateError]);
@@ -109,21 +103,29 @@ const InvoiceTemplatesScreen = () => {
 
     // Xử lý xóa mẫu hóa đơn
     const handleDeleteTemplate = (template: any) => {
-        if (!token || !template._id) {return;}
+        if (!token || !template._id) return;
 
-        showConfirm(
+        Alert.alert(
+            'Xác nhận xóa',
             `Bạn có chắc chắn muốn xóa mẫu hóa đơn "${getTemplateName(template)}" không?`,
-
-            () => {
-                dispatch(deleteInvoiceTemplate({ token, templateId: template._id }));
-            },
-            'Xác nhận xóa'
-
+            [
+                {
+                    text: 'Hủy',
+                    style: 'cancel'
+                },
+                {
+                    text: 'Xóa',
+                    style: 'destructive',
+                    onPress: () => {
+                        dispatch(deleteInvoiceTemplate({ token, templateId: template._id }));
+                    }
+                }
+            ]
         );
     };
 
     const formatPeriod = (period: any) => {
-        if (!period) {return 'N/A';}
+        if (!period) return 'N/A';
         if (typeof period === 'string') {
             return period;
         }
@@ -201,11 +203,10 @@ const InvoiceTemplatesScreen = () => {
     const renderEmptyList = () => {
         if (templatesLoading) {
             return (
-                <LoadingAnimationWrapper 
-                    visible={true}
-                    message="Đang tải mẫu hóa đơn..."
-                    size="large"
-                />
+                <View style={styles.emptyContainer}>
+                    <ActivityIndicator size="large" color={Colors.primaryGreen} />
+                    <Text style={styles.emptyText}>Đang tải mẫu hóa đơn...</Text>
+                </View>
             );
         }
 
@@ -237,13 +238,15 @@ const InvoiceTemplatesScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             {/* Header */}
-            <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
-            <View style={{ paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) : 0, alignItems: 'center', marginBottom: 30 }}>
-                <UIHeader
-                    title={'Mẫu hóa đơn'}
-                    iconLeft={'back'}
-                    onPressLeft={handleGoBack}
-                />
+            <View style={styles.header}>
+                <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+                    <Image
+                        source={require('../../assets/icons/icon_arrow_back.png')}
+                        style={styles.backIcon}
+                    />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Mẫu hóa đơn</Text>
+                <View style={{ width: 24 }} />
             </View>
 
             <FlatList
@@ -272,16 +275,6 @@ const InvoiceTemplatesScreen = () => {
                 templateName={selectedTemplate ? getTemplateName(selectedTemplate) : ''}
                 onSuccess={handleApplyTemplateSuccess}
             />
-
-            {/* Custom Alert Modal */}
-            <CustomAlertModal
-                visible={visible}
-                title={alertConfig?.title || 'Thông báo'}
-                message={alertConfig?.message || ''}
-                onClose={hideAlert}
-                type={alertConfig?.type}
-                buttons={alertConfig?.buttons}
-            />
         </SafeAreaView>
     );
 };
@@ -293,116 +286,116 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     header: {
-        marginTop: responsiveSpacing(10),
+        marginTop: 10,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: responsiveSpacing(16),
-        paddingVertical: responsiveSpacing(12),
+        paddingHorizontal: 16,
+        paddingVertical: 12,
         backgroundColor: Colors.backgroud,
         position: 'relative',
     },
     backButton: {
-        width: scale(36),
-        height: scale(36),
+        width: 36,
+        height: 36,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: Colors.white,
-        borderRadius: scale(18),
+        borderRadius: 18,
         position: 'absolute',
-        left: responsiveSpacing(16),
+        left: 16,
         zIndex: 1,
     },
     backIcon: {
-        width: scale(20),
-        height: scale(20),
+        width: 20,
+        height: 20,
         resizeMode: 'contain',
     },
     headerTitle: {
-        fontSize: responsiveFont(18),
+        fontSize: 18,
         fontWeight: '700',
         color: Colors.black,
         textAlign: 'center',
     },
     listContent: {
-        padding: responsiveSpacing(16),
-        paddingBottom: responsiveSpacing(40),
+        padding: 16,
+        paddingBottom: 40,
     },
     templateItem: {
         backgroundColor: Colors.white,
-        borderRadius: scale(8),
-        marginBottom: responsiveSpacing(12),
+        borderRadius: 8,
+        marginBottom: 12,
         flexDirection: 'row',
         ...Platform.select({
             ios: {
                 shadowColor: '#000',
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 0.12,
-                shadowRadius: 12,
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.22,
+                shadowRadius: 2.22,
             },
             android: {
-                elevation: 6,
+                elevation: 3,
             },
         }),
     },
     templateContent: {
         flex: 1,
-        padding: responsiveSpacing(16),
+        padding: 16,
     },
     templateHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: responsiveSpacing(8),
+        marginBottom: 8,
     },
     templateName: {
-        fontSize: responsiveFont(16),
+        fontSize: 16,
         fontWeight: 'bold',
         color: Colors.dearkOlive,
         flex: 1,
     },
     templateAmount: {
-        fontSize: responsiveFont(16),
+        fontSize: 16,
         fontWeight: 'bold',
-        color: Colors.darkGreen,
+        color: Colors.primaryGreen,
     },
     templateDetails: {
-        marginBottom: responsiveSpacing(12),
+        marginBottom: 12,
     },
     templateDetail: {
-        fontSize: responsiveFont(14),
+        fontSize: 14,
         color: Colors.black,
-        marginBottom: responsiveSpacing(4),
+        marginBottom: 4,
     },
     detailLabel: {
-        color: Colors.black,
+        color: Colors.mediumGray,
     },
     templateFooter: {
         borderTopWidth: 1,
         borderTopColor: Colors.lightGray,
-        paddingTop: responsiveSpacing(8),
+        paddingTop: 8,
     },
     templatePeriod: {
-        fontSize: responsiveFont(13),
-        color: Colors.black,
+        fontSize: 13,
+        color: Colors.mediumGray,
     },
     emptyContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-        padding: responsiveSpacing(20),
-        height: scale(300),
+        padding: 20,
+        height: 300,
     },
     emptyText: {
-        fontSize: responsiveFont(16),
+        fontSize: 16,
         color: Colors.dearkOlive,
         textAlign: 'center',
-        marginTop: responsiveSpacing(10),
+        marginTop: 10,
     },
     emptySubText: {
-        fontSize: responsiveFont(14),
+        fontSize: 14,
         color: Colors.mediumGray,
         textAlign: 'center',
-        marginTop: responsiveSpacing(8),
+        marginTop: 8,
     },
     errorText: {
         fontSize: 16,
@@ -412,7 +405,7 @@ const styles = StyleSheet.create({
     },
     retryButton: {
         backgroundColor: Colors.primaryGreen,
-        paddingHorizontal: responsiveSpacing(20),
+        paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 8,
     },
@@ -435,4 +428,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default InvoiceTemplatesScreen;
+export default InvoiceTemplatesScreen; 

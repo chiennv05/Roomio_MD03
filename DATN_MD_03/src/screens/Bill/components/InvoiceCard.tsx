@@ -348,7 +348,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({ invoice, onPress, onEdit, onD
             <View style={styles.greenFooter}>
                 <Text style={styles.periodText}>{getInvoiceTitle(invoice)}</Text>
                 <Text style={styles.amountText}>
-                    {invoice.totalAmount.toLocaleString('vi-VN')}VNĐ
+                    {(invoice.totalAmount ?? 0).toLocaleString('vi-VN')} VNĐ
                 </Text>
             </View>
         </View>
@@ -449,14 +449,15 @@ const styles = StyleSheet.create({
     },
     infoLabel: {
         fontSize: 14,
-        color: Colors.black,
+        color: Colors.textSecondary, // theme secondary text
         flex: 1,
         marginRight: 6,
+        fontWeight: '500',
     },
     infoValue: {
         fontSize: 14,
         color: Colors.black,
-        fontWeight: '500',
+        fontWeight: '600',
         flex: 1,
         textAlign: 'right',
     },
@@ -516,37 +517,28 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     roommateBadgeInline: {
-        backgroundColor: 'rgba(139, 195, 74, 0.15)',
-        borderColor: 'rgba(139, 195, 74, 0.35)',
+        backgroundColor: Colors.brandPrimarySoft,
+        borderColor: Colors.brandPrimary,
         borderWidth: 1,
         paddingHorizontal: 10,
         paddingVertical: 4,
+        minHeight: 24,
         borderRadius: 16,
         flexDirection: 'row',
         alignItems: 'center',
         marginLeft: 6,
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.08,
-                shadowRadius: 4,
-            },
-            android: {
-                elevation: 1,
-            },
-        }),
     },
     roommateText: {
         fontSize: 12,
         fontWeight: '700',
-        color: Colors.primaryGreen,
+    color: Colors.black,
+        letterSpacing: 0.2,
     },
     roommateIcon: {
         width: 14,
         height: 14,
         marginRight: 6,
-        tintColor: Colors.primaryGreen,
+    tintColor: Colors.black,
     },
     greenFooter: {
         backgroundColor: Colors.limeGreen,
@@ -560,11 +552,11 @@ const styles = StyleSheet.create({
     periodText: {
         fontSize: 15,
         color: Colors.black,
-        fontWeight: 'bold',
+        fontWeight: '700',
     },
     amountText: {
         fontSize: 19,
-        fontWeight: 'bold',
+        fontWeight: '700',
         color: Colors.black,
     },
 });

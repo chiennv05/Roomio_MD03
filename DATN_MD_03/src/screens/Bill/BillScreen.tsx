@@ -20,7 +20,7 @@ import {
 import LoadingAnimationWrapper from '../../components/LoadingAnimationWrapper';
 import UIHeader from '../ChuTro/MyRoom/components/UIHeader';
 import { useAppDispatch, useAppSelector } from '../../hooks/redux';
-import { fetchInvoices, fetchRoommateInvoices } from '../../store/slices/billSlice';
+import { fetchInvoices, fetchTenantCombinedInvoices } from '../../store/slices/billSlice';
 import { Invoice } from '../../types/Bill';
 import { Colors } from '../../theme/color';
 import { useNavigation, CommonActions, useFocusEffect, useIsFocused } from '@react-navigation/native';
@@ -30,7 +30,7 @@ import { RootStackParamList } from '../../types/route';
 import { Icons } from '../../assets/icons';
 import { InvoiceCard, ContractSelectionModal, InvoiceCreationModal } from './components';
 import { Contract } from '../../types/Contract';
-import { deleteInvoice, checkUserIsCoTenant } from '../../store/services/billService';
+import { deleteInvoice } from '../../store/services/billService';
 import { api } from '../../api/api';
 import CustomAlertModal from '../../components/CustomAlertModal';
 import { useCustomAlert } from '../../hooks/useCustomAlrert';
@@ -67,8 +67,7 @@ const BillScreen = () => {
     // Kiểm tra xem người dùng có phải là chủ trọ không
     const isLandlord = user?.role === 'chuTro';
 
-    // State để theo dõi xem người dùng có phải là người ở cùng không
-    const [isUserCoTenant, setIsUserCoTenant] = useState(false);
+    // ĐÃ LOẠI BỎ: State kiểm tra người ở cùng
 
     // Thêm state cho bộ lọc mới
     const [activeFilter, setActiveFilter] = useState<FilterType>('status');
@@ -161,21 +160,7 @@ const BillScreen = () => {
 
         
 
-        // Kiểm tra từng hóa đơn xem có phải người ở cùng không
-        let roommateInvoices = allInvoices.filter(invoice => invoice.isRoommate === true);
-        let regularInvoices = allInvoices.filter(invoice => invoice.isRoommate !== true);
-
-        
-
-        // Nếu người dùng là người ở cùng, chỉ hiển thị hóa đơn người ở cùng
-        // Nếu người dùng không phải người ở cùng, ẩn tất cả hóa đơn người ở cùng
-        if (isUserCoTenant === true) {
-            // Người ở cùng: chỉ hiển thị hóa đơn có isRoommate = true
-            allInvoices = allInvoices.filter(invoice => invoice.isRoommate === true);
-        } else if (isUserCoTenant === false) {
-            // Không phải người ở cùng: ẩn tất cả hóa đơn có isRoommate = true
-            allInvoices = allInvoices.filter(invoice => invoice.isRoommate !== true);
-        }
+    // ĐÃ LOẠI BỎ: Lọc theo hóa đơn người ở cùng
 
         // Lọc theo khoảng thời gian theo ngày hết hạn (dueDate). Fallback: createdAt, period
         if (startDateFilter || endDateFilter) {
@@ -411,12 +396,11 @@ const BillScreen = () => {
         
 
         // Kiểm tra lại trạng thái của các hóa đơn cuối cùng
-        roommateInvoices = allInvoices.filter(invoice => invoice.isRoommate === true);
-        regularInvoices = allInvoices.filter(invoice => invoice.isRoommate !== true);
+    // ĐÃ LOẠI BỎ: Phân loại hóa đơn người ở cùng
 
         
 
-    }, [invoices, selectedStatus, selectedRoom, selectedTenant, sortOrder, searchText, isLandlord, user?.role, isUserCoTenant, startDateFilter, endDateFilter]);
+    }, [invoices, selectedStatus, selectedRoom, selectedTenant, sortOrder, searchText, isLandlord, user?.role, startDateFilter, endDateFilter]);
 
     useEffect(() => {
         // Log danh sách hóa đơn khi có thay đổi
@@ -440,7 +424,6 @@ const BillScreen = () => {
 
             // Kiểm tra role trước khi quyết định gọi API
             if (isLandlord) {
-                
                 dispatch(fetchInvoices({
                     token,
                     page: 1,
@@ -450,63 +433,14 @@ const BillScreen = () => {
                 return;
             }
 
-            // Chỉ gọi API check người ở cùng nếu là người thuê và có token
+            // Người thuê: lấy cả 2 loại hóa đơn (thường + người ở cùng)
             if (user?.role === 'nguoiThue') {
-                
-
-                const checkAndLoadData = async () => {
-                    try {
-                        if (!isMounted) return;
-
-                        
-                        const result = await checkUserIsCoTenant(token);
-
-                        // Nếu component unmounted trong quá trình gọi API, dừng lại
-                        if (!isMounted) return;
-
-                        
-                        const isCoTenant = result.success && result.isCoTenant;
-                        setIsUserCoTenant(isCoTenant);
-
-                        
-
-                        if (isCoTenant) {
-                            dispatch(fetchRoommateInvoices({
-                                token,
-                                page: 1,
-                                limit: 10,
-                                status: selectedStatus || undefined,
-                            }));
-                        } else {
-                            dispatch(fetchInvoices({
-                                token,
-                                page: 1,
-                                limit: 10,
-                                status: selectedStatus || undefined,
-                            }));
-                        }
-
-                    } catch (error) {
-                        console.error('Error in checkAndLoadData:', error);
-
-                        // Nếu có lỗi, vẫn đảm bảo gọi API lấy hóa đơn thông thường
-                        if (isMounted) {
-                            setIsUserCoTenant(false);
-                            dispatch(fetchInvoices({
-                                token,
-                                page: 1,
-                                limit: 10,
-                                status: selectedStatus || undefined
-                            }));
-                        }
-                    }
-                };
-
-                // Gọi hàm check ngay lập tức
-                checkAndLoadData();
-            } else {
-                // Người dùng không phải landlord và không phải tenant
-                
+                dispatch(fetchTenantCombinedInvoices({
+                    token,
+                    page: 1,
+                    limit: 10,
+                    status: selectedStatus || undefined,
+                }));
             }
 
             // Cleanup function
@@ -517,21 +451,18 @@ const BillScreen = () => {
         }, [dispatch, token, isLandlord, user?.role, selectedStatus])
     );
 
-    // Thêm lại useEffect cho các thay đổi về bộ lọc
+    // Cập nhật: chỉ cần gọi lại API invoices khi thay đổi selectedStatus
     useEffect(() => {
-        // CHỈ gọi API khi đã xác định được trạng thái isUserCoTenant và có token
-        if (token && isUserCoTenant !== undefined) {
-            
-            // Tải lại dữ liệu khi bộ lọc thay đổi
-            if (isUserCoTenant) {
-                dispatch(fetchRoommateInvoices({
+        if (token) {
+            if (isLandlord) {
+                dispatch(fetchInvoices({
                     token,
                     page: 1,
                     limit: 10,
                     status: selectedStatus || undefined,
                 }));
-            } else {
-                dispatch(fetchInvoices({
+            } else if (user?.role === 'nguoiThue') {
+                dispatch(fetchTenantCombinedInvoices({
                     token,
                     page: 1,
                     limit: 10,
@@ -539,7 +470,7 @@ const BillScreen = () => {
                 }));
             }
         }
-    }, [dispatch, token, selectedStatus]); // Bỏ isUserCoTenant khỏi dependency để tránh gọi API trùng lặp
+    }, [dispatch, token, selectedStatus, isLandlord, user?.role]);
 
     useEffect(() => {
         return () => {
@@ -561,55 +492,25 @@ const BillScreen = () => {
             try {
                 // Nếu là chủ trọ, chỉ cần lấy hóa đơn thông thường
                 if (isLandlord) {
-                    console.log('Refreshing as landlord, fetching regular invoices');
                     await dispatch(fetchInvoices({
                         token,
                         page: 1,
                         limit: 10,
-
                         status: selectedStatus || undefined
-
                     })).unwrap();
-                    setRefreshing(false);
-                    return;
-                }
-
-                // Kiểm tra lại trạng thái người ở cùng
-                if (user?.role === 'nguoiThue') {
-                    console.log('Refreshing as tenant, checking co-tenant status');
-                    const result = await checkUserIsCoTenant(token);
-                    const isCoTenant = result.success && result.isCoTenant;
-
-                    console.log('Refresh co-tenant check result:', isCoTenant);
-                    setIsUserCoTenant(isCoTenant);
-
-                    if (isCoTenant) {
-                        await dispatch(fetchRoommateInvoices({
-                            token,
-                            page: 1,
-                            limit: 10,
-
-                            status: selectedStatus || undefined
-
-                        })).unwrap();
-                    } else {
-                        await dispatch(fetchInvoices({
-                            token,
-                            page: 1,
-                            limit: 10,
-
-                            status: selectedStatus || undefined
-
-                        })).unwrap();
-                    }
+                } else if (user?.role === 'nguoiThue') {
+                    await dispatch(fetchTenantCombinedInvoices({
+                        token,
+                        page: 1,
+                        limit: 10,
+                        status: selectedStatus || undefined
+                    })).unwrap();
                 } else {
-                    console.log('Refreshing with unknown role, fetching regular invoices');
                     await dispatch(fetchInvoices({
                         token,
                         page: 1,
                         limit: 10,
-                    status: selectedStatus || undefined
-
+                        status: selectedStatus || undefined
                     })).unwrap();
                 }
             } catch (error) {
@@ -620,29 +521,31 @@ const BillScreen = () => {
         };
 
         refreshData();
-    }, [dispatch, token, selectedStatus, isLandlord, user?.role, isUserCoTenant]);
+    }, [dispatch, token, selectedStatus, isLandlord, user?.role]);
 
     const handleLoadMore = () => {
         if (pagination.page < pagination.totalPages && !loading && token) {
-            // Kiểm tra loại hóa đơn để gọi đúng API
-            if (isUserCoTenant) {
-                dispatch(
-                    fetchRoommateInvoices({
-                        token,
-                        page: pagination.page + 1,
-                        limit: pagination.limit,
-                        status: selectedStatus || undefined,
-                    }),
-                );
+            if (isLandlord) {
+                dispatch(fetchInvoices({
+                    token,
+                    page: pagination.page + 1,
+                    limit: pagination.limit,
+                    status: selectedStatus || undefined,
+                }));
+            } else if (user?.role === 'nguoiThue') {
+                dispatch(fetchTenantCombinedInvoices({
+                    token,
+                    page: pagination.page + 1,
+                    limit: pagination.limit,
+                    status: selectedStatus || undefined,
+                }));
             } else {
-                dispatch(
-                    fetchInvoices({
-                        token,
-                        page: pagination.page + 1,
-                        limit: pagination.limit,
-                        status: selectedStatus || undefined,
-                    }),
-                );
+                dispatch(fetchInvoices({
+                    token,
+                    page: pagination.page + 1,
+                    limit: pagination.limit,
+                    status: selectedStatus || undefined,
+                }));
             }
         }
     };
@@ -657,13 +560,10 @@ const BillScreen = () => {
 
         // Đảm bảo invoiceId là string
         invoiceId = invoiceId.toString();
-
-        // Kiểm tra nếu đây là hóa đơn của người ở cùng
-        if (invoice.isRoommate === true) {
-            // Điều hướng đến màn hình chi tiết hóa đơn người ở cùng
+        // Điều hướng theo loại hóa đơn
+        if (invoice.isRoommate) {
             navigation.navigate('RoommateInvoiceDetails', { invoiceId });
         } else {
-            // Điều hướng đến màn hình chi tiết hóa đơn thông thường
             navigation.navigate('BillDetails', { invoiceId });
         }
     };
@@ -726,16 +626,16 @@ const BillScreen = () => {
     // Theo dõi khi user role hoặc trạng thái co-tenant thay đổi để reset dropdown
     useEffect(() => {
         // Nếu người dùng là tenant hoặc co-tenant và dropdown đang mở là room hoặc tenant, đóng nó lại
-        if ((user?.role === 'nguoiThue' || isUserCoTenant) &&
-            (openDropdown === 'room' || openDropdown === 'tenant')) {
+    if ((user?.role === 'nguoiThue') &&
+        (openDropdown === 'room' || openDropdown === 'tenant')) {
             setOpenDropdown(null);
         }
-    }, [user?.role, isUserCoTenant, openDropdown]);
+    }, [user?.role, openDropdown]);
 
     // Render các dropdown bộ lọc
     const renderFilterTabs = () => {
         // Kiểm tra nếu người dùng là người thuê hoặc người ở cùng
-        const isTenantOrCoTenant = user?.role === 'nguoiThue' || isUserCoTenant;
+    const isTenantOrCoTenant = user?.role === 'nguoiThue';
 
         // Lọc tab dựa trên vai trò người dùng
         let tabs: { id: FilterType; label: string }[] = [
@@ -1183,15 +1083,15 @@ const BillScreen = () => {
         // Chỉ tải lại danh sách hóa đơn khi còn mounted và có token
         if (isMounted.current && token) {
             console.log('Reloading invoices after creation success');
-            if (isUserCoTenant) {
-                dispatch(fetchRoommateInvoices({
+            if (isLandlord) {
+                dispatch(fetchInvoices({
                     token,
                     page: 1,
                     limit: 10,
                     status: selectedStatus || undefined,
                 }));
-            } else {
-                dispatch(fetchInvoices({
+            } else if (user?.role === 'nguoiThue') {
+                dispatch(fetchTenantCombinedInvoices({
                     token,
                     page: 1,
                     limit: 10,
@@ -1248,21 +1148,12 @@ const BillScreen = () => {
                 // Tải lại danh sách hóa đơn, chỉ gọi API khi còn mounted
                 if (isMounted.current) {
                     console.log('Reloading invoices after deletion');
-                    if (isUserCoTenant) {
-                        dispatch(fetchRoommateInvoices({
-                            token,
-                            page: 1,
-                            limit: 10,
-                            status: selectedStatus || undefined,
-                        }));
-                    } else {
-                        dispatch(fetchInvoices({
-                            token,
-                            page: 1,
-                            limit: 10,
-                            status: selectedStatus || undefined,
-                        }));
-                    }
+                    dispatch(fetchInvoices({
+                        token,
+                        page: 1,
+                        limit: 10,
+                        status: selectedStatus || undefined,
+                    }));
                 }
             } else {
                 throw new Error(response.message || 'Có lỗi xảy ra khi xóa hóa đơn');
@@ -1309,7 +1200,7 @@ const BillScreen = () => {
             <StatusBar barStyle="dark-content" backgroundColor={Colors.white} />
             <View style={{ paddingTop: statusBarHeight, alignItems: 'center', marginBottom: 30 }}>
                 <UIHeader
-                    title={isUserCoTenant ? 'Hóa đơn người ở cùng' : 'Hóa đơn thu chi'}
+                    title={'Hóa đơn thu chi'}
                     iconLeft={'back'}
                     onPressLeft={handleBackToProfile}
                 />
@@ -1381,8 +1272,7 @@ const BillScreen = () => {
                     const baseId = item._id?.toString() || item.id?.toString() || item.invoiceNumber;
                     // Fallback ổn định theo index nếu thiếu ID/mã hóa đơn
                     const stableKey = baseId || `invoice-idx-${index}`;
-                    // Thêm hậu tố isRoommate để đảm bảo tính duy nhất giữa 2 loại
-                    return item.isRoommate ? `${stableKey}-roommate` : stableKey;
+                    return stableKey;
                 }}
                 renderItem={({ item }) => (
                     <InvoiceCard
