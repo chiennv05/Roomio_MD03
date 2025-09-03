@@ -5,7 +5,11 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {RootStackParamList} from '../../../../types/route';
 import {Colors} from '../../../../theme/color';
 import {Fonts} from '../../../../theme/fonts';
-import {responsiveFont, responsiveSpacing, scale} from '../../../../utils/responsive';
+import {
+  responsiveFont,
+  responsiveSpacing,
+  scale,
+} from '../../../../utils/responsive';
 import {Icons} from '../../../../assets/icons';
 
 type RevenueTabNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -18,11 +22,6 @@ interface RevenueTabProps {
 const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
   const navigation = useNavigation<RevenueTabNavigationProp>();
 
-  // Simple example value for average rent display
-  const getExampleAverageRent = () => {
-    return 2966666; // Example: 2.966.666 đ
-  };
-
   return (
     <View style={styles.tabContent}>
       {/* Stats Grid - Full-width layout for Revenue tab */}
@@ -30,13 +29,12 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
         {/* Tổng doanh thu */}
         <View style={[styles.overviewCardFull, styles.cardTotal]}>
           <View style={styles.statHeader}>
-            <Image
-              source={{uri: Icons.IconTienCoc}}
-              style={styles.statIcon}
-            />
+            <Image source={{uri: Icons.IconTienCoc}} style={styles.statIcon} />
             <Text style={styles.overviewLabel}>Tổng doanh thu</Text>
           </View>
-          <Text style={styles.overviewValue}>{formatMoney(data?.revenue?.totalRevenue || 0)} đ</Text>
+          <Text style={styles.overviewValue}>
+            {formatMoney(data?.revenue?.totalRevenue || 0)} đ
+          </Text>
         </View>
 
         {/* Giá thuê trung bình */}
@@ -46,9 +44,19 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
               source={{uri: Icons.IconGiaTrungBinh}}
               style={styles.statIcon}
             />
-            <Text style={styles.overviewLabel}>Giá thuê TB</Text>
+            <Text style={styles.overviewLabel}>Giá thuê TB / phòng</Text>
           </View>
-          <Text style={styles.overviewValue}>{formatMoney(getExampleAverageRent())} đ</Text>
+          <Text style={styles.overviewValue}>
+            {' '}
+            {parseFloat(data?.revenue?.averageRent || '0').toLocaleString(
+              'vi-VN',
+              {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1,
+              },
+            )}{' '}
+            đ{' '}
+          </Text>
         </View>
       </View>
 
@@ -59,7 +67,10 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
         <View style={styles.breakdownCard}>
           <View style={styles.breakdownItem}>
             <View style={styles.breakdownLeft}>
-              <Image source={{uri: Icons.IconRoom}} style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]} />
+              <Image
+                source={{uri: Icons.IconRoom}}
+                style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]}
+              />
               <Text style={styles.breakdownLabel}>Tiền thuê phòng</Text>
             </View>
             <Text style={styles.breakdownValue}>
@@ -69,7 +80,10 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
 
           <View style={styles.breakdownItem}>
             <View style={styles.breakdownLeft}>
-              <Image source={{uri: Icons.IconServiceSelected}} style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]} />
+              <Image
+                source={{uri: Icons.IconServiceSelected}}
+                style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]}
+              />
               <Text style={styles.breakdownLabel}>Phí dịch vụ</Text>
             </View>
             <Text style={styles.breakdownValue}>
@@ -79,7 +93,10 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
 
           <View style={styles.breakdownItem}>
             <View style={styles.breakdownLeft}>
-              <Image source={{uri: Icons.IconTienCoc}} style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]} />
+              <Image
+                source={{uri: Icons.IconTienCoc}}
+                style={[styles.breakdownIcon, {tintColor: Colors.darkGreen}]}
+              />
               <Text style={styles.breakdownLabel}>Phí khác</Text>
             </View>
             <Text style={styles.breakdownValue}>
@@ -96,8 +113,7 @@ const RevenueTab: React.FC<RevenueTabProps> = ({data, formatMoney}) => {
         <TouchableOpacity
           activeOpacity={0.9}
           onPress={() => navigation.navigate('Bill')}
-          style={[styles.quickCard, {backgroundColor: Colors.limeGreen}]}
-        >
+          style={[styles.quickCard, {backgroundColor: Colors.limeGreen}]}>
           <View style={styles.quickGradient}>
             <View style={styles.quickLeft}>
               <View style={styles.quickIconWrap}>
@@ -251,18 +267,18 @@ const styles = StyleSheet.create({
     marginRight: responsiveSpacing(10),
   },
   quickIcon: {
-    width: scale(18), 
-    height: scale(18), 
+    width: scale(18),
+    height: scale(18),
     tintColor: Colors.darkGreen,
   },
   quickText: {
-    fontFamily: Fonts.Roboto_Bold, 
-    fontSize: responsiveFont(16), 
+    fontFamily: Fonts.Roboto_Bold,
+    fontSize: responsiveFont(16),
     color: Colors.black,
   },
   quickArrow: {
-    width: scale(12), 
-    height: scale(18), 
+    width: scale(12),
+    height: scale(18),
     tintColor: Colors.black,
   },
 });
