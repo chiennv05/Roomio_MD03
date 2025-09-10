@@ -1,9 +1,7 @@
 1. Màn Hình & Video chi tiết
   - Ứng Dụng Quản Lý Phòng Trọ Gồm có 4 role ( Khách, Người Thuê, Chủ Trọ, Quản Trị Viên )
-    các tính năng như: Xác thực tài khoản, Quản lý phòng trọ, Quản lý danh sách yêu thích, 
-    Quản lý thông báo, Xem danh sách phòng trọ, Gửi yêu cầu thuê phòng, Xem người thuê phòng, 
-    Quản lý hợp đồng thuê, Xem hợp đồng thuê,Quản lý hoá đơn, Xem thống kê, Gửi yêu cầu hỗ trợ, 
-    Quản lý yêu cầu hỗ trợ, Quản lý User (Người dùng),  Quản lý hồ sơ cá nhân, Quản lý gói đăng ký, Nâng cấp gói đăng ký.
+    các tính năng như: Xác thực tài khoản, Quản lý phòng trọ, Quản lý danh sách yêu thích, Quản lý thông báo, Xem danh sách phòng trọ, Gửi yêu cầu thuê phòng, Xem người thuê phòng, 
+    Quản lý hợp đồng thuê, Xem hợp đồng thuê,Quản lý hoá đơn, Xem thống kê, Gửi yêu cầu hỗ trợ, Quản lý yêu cầu hỗ trợ, Quản lý User (Người dùng),  Quản lý hồ sơ cá nhân, Quản lý gói đăng ký, Nâng cấp gói đăng ký.
   -Link Video Demo: https://drive.google.com/file/d/1FlTEXNWWzqycDmQV5wUeujk9FuuGXZoU/view?usp=drive_link
   -Link Trải Nghiệm App (Đang gặp 1 chút vấn đề về map ở link trải nghiệm này): https://appetize.io/app/b_5am23n3tkbgogcvxjaq5dhpy24?device=pixel7&osVersion=13.0&toolbar=true
 2. Các tính năng chính
